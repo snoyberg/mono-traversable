@@ -33,7 +33,6 @@ module ClassyPrelude
     , Prelude.elem
     , Prelude.odd
     , Prelude.even
-    , Prelude.mod
       -- ** Type classes
     , Prelude.Ord (..)
     , Prelude.Eq (..)
@@ -48,6 +47,7 @@ module ClassyPrelude
     , Prelude.Char
     , Prelude.IO
     , Prelude.Either (..)
+    , Prelude.Integral (..)
       -- * Re-exports
       -- ** Packed reps
     , ByteString
@@ -138,6 +138,8 @@ module ClassyPrelude
     , CanReadFile (..)
     , CanWriteFile (..)
     , CanWriteFileFunc (..)
+      -- ** print
+    , Prelude.print
     ) where
 
 import qualified Prelude
