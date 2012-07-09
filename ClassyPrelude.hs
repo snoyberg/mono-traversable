@@ -33,6 +33,7 @@ module ClassyPrelude
     , Prelude.elem
     , Prelude.odd
     , Prelude.even
+    , Prelude.uncurry
       -- ** Type classes
     , Prelude.Ord (..)
     , Prelude.Eq (..)
