@@ -40,6 +40,7 @@ module ClassyPrelude
     , Prelude.Show
     , Prelude.Functor (..)
     , Prelude.Monad (..)
+    , (Control.Monad.=<<)
       -- ** Data types
     , Prelude.Maybe (..)
     , Prelude.Ordering (..)
