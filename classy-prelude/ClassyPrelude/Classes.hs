@@ -53,7 +53,7 @@ class CanMapM_ f i o m where
     mapM_ :: (i -> m o) -> f
 class CanMapM_Func ci i o m where
     mapM_Func :: (i -> m o) -> ci -> m ()
-instance CanMapM_Func ci i o m => CanMapM_ (ci -> m ()) i o m where
+instance (x ~ (), CanMapM_Func ci i o m) => CanMapM_ (ci -> m x) i o m where
     mapM_ = mapM_Func
 
 class CanLookup c k v | c -> k v where
