@@ -156,6 +156,7 @@ import ClassyPrelude.ByteString
 import ClassyPrelude.LByteString
 import ClassyPrelude.Text
 import ClassyPrelude.LText
+import ClassyPrelude.Map
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
@@ -170,9 +171,6 @@ import Data.Word (Word8, Word64, Word)
 import Data.Int (Int64)
 
 import qualified Data.Text.IO
-
-import Data.Map (Map)
-import qualified Data.Map as Map
 
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -198,38 +196,25 @@ infixr 5  ++
 instance Prelude.Monad m => CanMap (Pipe l i o r m r) i o where
     map = CL.map
 
-instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
-    mapFunc = Map.map
 instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
     mapFunc = Set.map
 
 instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
     filter = CL.filter
 
-instance Prelude.Ord k => CanFilterFunc (Map k v) (k, v) where
-    filterFunc = Map.filterWithKey . Prelude.curry
 
-instance CanLength (Map k v) Prelude.Int where
-    length = Map.size
 instance CanLength (Set x) Prelude.Int where
     length = Set.size
 
-instance (v' ~ v) => CanSingleton (v' -> Map k v) k where
-    singleton = Map.singleton
 instance CanSingleton (Set x) x where
     singleton = Set.singleton
 
-instance CanNull (Map k v) where
-    null = Map.null
 instance CanNull (Set x) where
     null = Set.null
 
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe
     unpack = Data.Maybe.maybeToList
-instance Prelude.Ord k => CanPack (Map k v) (k, v) where
-    pack = Map.fromList
-    unpack = Map.toList
 instance Prelude.Ord x => CanPack (Set x) x where
     pack = Set.fromList
     unpack = Set.toList
@@ -240,22 +225,14 @@ instance CanPack F.FilePath Prelude.Char where
 instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r, o' ~ ()) => CanMapM_ (Pipe l i o u m r) i' o' m' where
     mapM_ = CL.mapM_
 
-instance Prelude.Ord k => CanLookup (Map k v) k v where
-    lookup = Map.lookup
 
-instance CanEmpty (Map k v) where
-    empty = Map.empty
 instance CanEmpty (Set x) where
     empty = Set.empty
 
 instance (Prelude.Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
     insert = Set.insert
 
-instance Prelude.Ord k => CanInsertVal (Map k v) k v where
-    insertVal = Map.insert
 
-instance Prelude.Ord k => CanDelete (Map k v) k where
-    delete = Map.delete
 
 instance Prelude.Ord x => CanMember (Set x) x where
     member = Set.member
