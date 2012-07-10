@@ -154,6 +154,7 @@ import ClassyPrelude.Classes
 import ClassyPrelude.List ()
 import ClassyPrelude.ByteString
 import ClassyPrelude.LByteString
+import ClassyPrelude.Text
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
@@ -167,8 +168,6 @@ import qualified Text.XML as X
 import Data.Word (Word8, Word64, Word)
 import Data.Int (Int64)
 
-import Data.Text (Text)
-import qualified Data.Text as T
 import qualified Data.Text.IO
 import qualified Data.Text.Lazy as TL
 
@@ -201,8 +200,6 @@ infixr 5  ++
 instance Prelude.Monad m => CanMap (Pipe l i o r m r) i o where
     map = CL.map
 
-instance (co ~ Text, i ~ Char, o ~ Char) => CanMapFunc Text co i o where
-    mapFunc = T.map
 instance (co ~ LText, i ~ Char, o ~ Char) => CanMapFunc LText co i o where
     mapFunc = TL.map
 instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
@@ -210,30 +207,22 @@ instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
 instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
     mapFunc = Set.map
 
-instance (co ~ Text, i ~ Char, o ~ Text) => CanConcatMapFunc Text co i o where
-    concatMapFunc = T.concatMap
 instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMapFunc LText co i o where
     concatMapFunc = TL.concatMap
 
 instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
     filter = CL.filter
 
-instance CanFilterFunc Text Char where
-    filterFunc = T.filter
 instance CanFilterFunc LText Char where
     filterFunc = TL.filter
 instance Prelude.Ord k => CanFilterFunc (Map k v) (k, v) where
     filterFunc = Map.filterWithKey . Prelude.curry
 
-instance CanLength Text Prelude.Int where
-    length = T.length
 instance CanLength (Map k v) Prelude.Int where
     length = Map.size
 instance CanLength (Set x) Prelude.Int where
     length = Set.size
 
-instance CanSingleton Text Prelude.Char where
-    singleton = T.singleton
 instance CanSingleton LText Prelude.Char where
     singleton = TL.singleton
 instance (v' ~ v) => CanSingleton (v' -> Map k v) k where
@@ -241,8 +230,6 @@ instance (v' ~ v) => CanSingleton (v' -> Map k v) k where
 instance CanSingleton (Set x) x where
     singleton = Set.singleton
 
-instance CanNull Text where
-    null = T.null
 instance CanNull LText where
     null = TL.null
 instance CanNull (Map k v) where
@@ -253,9 +240,6 @@ instance CanNull (Set x) where
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe
     unpack = Data.Maybe.maybeToList
-instance CanPack Text Prelude.Char where
-    pack = T.pack
-    unpack = T.unpack
 instance CanPack LText Prelude.Char where
     pack = TL.pack
     unpack = TL.unpack
@@ -275,8 +259,6 @@ instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r, o' ~ ()) => CanMapM_ (Pipe l i
 instance Prelude.Ord k => CanLookup (Map k v) k v where
     lookup = Map.lookup
 
-instance CanEmpty Text where
-    empty = T.empty
 instance CanEmpty LText where
     empty = TL.empty
 instance CanEmpty (Map k v) where
@@ -309,31 +291,19 @@ instance CanWriteFileFunc X.Document where
 
 instance CanStripPrefix F.FilePath where
     stripPrefix = F.stripPrefix
-instance CanStripPrefix Text where
-    stripPrefix = T.stripPrefix
 instance CanStripPrefix LText where
     stripPrefix = TL.stripPrefix
 
-instance CanBreak Text Prelude.Char where
-    break = T.break
-    span = T.span
-    dropWhile = T.dropWhile
-    takeWhile = T.takeWhile
 instance CanBreak LText Prelude.Char where
     break = TL.break
     span = TL.span
     dropWhile = TL.dropWhile
     takeWhile = TL.takeWhile
 
-instance CanAny Text Prelude.Char where
-    any = T.any
-    all = T.all
 instance CanAny LText Prelude.Char where
     any = TL.any
     all = TL.all
 
-instance CanSplitAt Text Prelude.Int where
-    splitAt = T.splitAt
 instance CanSplitAt LText Int64 where
     splitAt = TL.splitAt
 
