@@ -11,8 +11,8 @@ import qualified Data.List
 
 instance (i ~ a, co ~ [b]) => CanMapFunc [a] co i b where
     mapFunc = Prelude.map
-instance (i ~ a, co ~ [b]) => CanConcatMap [a] co i [b] where
-    concatMap = Prelude.concatMap
+instance (i ~ a, co ~ [b]) => CanConcatMapFunc [a] co i [b] where
+    concatMapFunc = Prelude.concatMap
 instance CanFilterFunc [a] a where
     filterFunc = Prelude.filter
 instance CanLength [a] Prelude.Int where
@@ -24,10 +24,10 @@ instance CanNull [a] where
 instance CanPack [a] a where
     pack = Prelude.id
     unpack = Prelude.id
-instance Prelude.Monad m => CanMapM ([a] -> m [b]) (a -> m b) where
-    mapM = Prelude.mapM
-instance (x ~ (), Prelude.Monad m) => CanMapM_ ([a] -> m x) (a -> m b) where
-    mapM_ = Prelude.mapM_
+instance Prelude.Monad m => CanMapMFunc [a] [b] a b m where
+    mapMFunc = Prelude.mapM
+instance Prelude.Monad m => CanMapM_Func [a] a b m where
+    mapM_Func = Prelude.mapM_
 instance Prelude.Eq k => CanLookup [(k, v)] k v where
     lookup = Prelude.lookup
 instance CanEmpty [a] where

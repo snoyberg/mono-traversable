@@ -15,8 +15,12 @@ class CanMapFunc ci co i o where
 instance CanMapFunc ci co i o => CanMap (ci -> co) i o where
     map = mapFunc
 
-class CanConcatMap ci co i o where
-    concatMap :: (i -> o) -> ci -> co
+class CanConcatMap f i o where
+    concatMap :: (i -> o) -> f
+class CanConcatMapFunc ci co i o where
+    concatMapFunc :: (i -> o) -> ci -> co
+instance CanConcatMapFunc ci co i o => CanConcatMap (ci -> co) i o where
+    concatMap = concatMapFunc
 
 class CanFilter f a where
     filter :: (a -> Prelude.Bool) -> f
@@ -38,11 +42,19 @@ class CanPack c i | c -> i where
     pack :: [i] -> c
     unpack :: c -> [i]
 
-class CanMapM output input where
-    mapM :: input -> output
+class CanMapM f i o m where
+    mapM :: (i -> m o) -> f
+class CanMapMFunc ci co i o m where
+    mapMFunc :: (i -> m o) -> ci -> m co
+instance CanMapMFunc ci co i o m => CanMapM (ci -> m co) i o m where
+    mapM = mapMFunc
 
-class CanMapM_ output input where
-    mapM_ :: input -> output
+class CanMapM_ f i o m where
+    mapM_ :: (i -> m o) -> f
+class CanMapM_Func ci i o m where
+    mapM_Func :: (i -> m o) -> ci -> m ()
+instance CanMapM_Func ci i o m => CanMapM_ (ci -> m ()) i o m where
+    mapM_ = mapM_Func
 
 class CanLookup c k v | c -> k v where
     lookup :: k -> c -> Prelude.Maybe v
@@ -52,9 +64,10 @@ class CanEmpty c where
 
 class CanInsert f where
     insert :: f
-
 class CanInsertVal c k v | c -> k v where
     insertVal :: k -> v -> c -> c
+instance (CanInsertVal c' k v, c ~ c') => CanInsert (k -> v -> c -> c') where
+    insert = insertVal
 
 class CanDelete c k | c -> k where
     delete :: k -> c -> c

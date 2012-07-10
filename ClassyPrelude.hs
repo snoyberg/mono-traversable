@@ -216,14 +216,14 @@ instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
 instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
     mapFunc = Set.map
 
-instance (co ~ ByteString, i ~ Word8, o ~ ByteString) => CanConcatMap ByteString co i o where
-    concatMap = S.concatMap
-instance (co ~ LByteString, i ~ Word8, o ~ LByteString) => CanConcatMap LByteString co i o where
-    concatMap = L.concatMap
-instance (co ~ Text, i ~ Char, o ~ Text) => CanConcatMap Text co i o where
-    concatMap = T.concatMap
-instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMap LText co i o where
-    concatMap = TL.concatMap
+instance (co ~ ByteString, i ~ Word8, o ~ ByteString) => CanConcatMapFunc ByteString co i o where
+    concatMapFunc = S.concatMap
+instance (co ~ LByteString, i ~ Word8, o ~ LByteString) => CanConcatMapFunc LByteString co i o where
+    concatMapFunc = L.concatMap
+instance (co ~ Text, i ~ Char, o ~ Text) => CanConcatMapFunc Text co i o where
+    concatMapFunc = T.concatMap
+instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMapFunc LText co i o where
+    concatMapFunc = TL.concatMap
 
 instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
     filter = CL.filter
@@ -301,7 +301,7 @@ instance CanPack F.FilePath Prelude.Char where
     pack = F.decodeString
     unpack = F.encodeString
 
-instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r) => CanMapM_ (Pipe l i o u m r) (i' -> m' ()) where
+instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r, o' ~ ()) => CanMapM_ (Pipe l i o u m r) i' o' m' where
     mapM_ = CL.mapM_
 
 instance Prelude.Ord k => CanLookup (Map k v) k v where
@@ -320,8 +320,6 @@ instance CanEmpty (Map k v) where
 instance CanEmpty (Set x) where
     empty = Set.empty
 
-instance (CanInsertVal c' k v, c ~ c') => CanInsert (k -> v -> c -> c') where
-    insert = insertVal
 instance (Prelude.Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
     insert = Set.insert
 
