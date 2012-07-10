@@ -18,6 +18,7 @@ library
                        ClassyPrelude.ByteString
                        ClassyPrelude.LByteString
                        ClassyPrelude.Text
+                       ClassyPrelude.LText
   build-depends:       base                          >= 4          && < 5
                      , conduit                       >= 0.5        && < 0.6
                      , xml-conduit                   >= 1.0        && < 1.1
