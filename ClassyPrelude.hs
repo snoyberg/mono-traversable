@@ -157,6 +157,7 @@ import ClassyPrelude.LByteString
 import ClassyPrelude.Text
 import ClassyPrelude.LText
 import ClassyPrelude.Map
+import ClassyPrelude.Set
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
@@ -171,9 +172,6 @@ import Data.Word (Word8, Word64, Word)
 import Data.Int (Int64)
 
 import qualified Data.Text.IO
-
-import Data.Set (Set)
-import qualified Data.Set as Set
 
 import qualified Data.Maybe
 import qualified Data.Either
@@ -196,46 +194,19 @@ infixr 5  ++
 instance Prelude.Monad m => CanMap (Pipe l i o r m r) i o where
     map = CL.map
 
-instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
-    mapFunc = Set.map
 
 instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
     filter = CL.filter
 
-
-instance CanLength (Set x) Prelude.Int where
-    length = Set.size
-
-instance CanSingleton (Set x) x where
-    singleton = Set.singleton
-
-instance CanNull (Set x) where
-    null = Set.null
-
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe
     unpack = Data.Maybe.maybeToList
-instance Prelude.Ord x => CanPack (Set x) x where
-    pack = Set.fromList
-    unpack = Set.toList
 instance CanPack F.FilePath Prelude.Char where
     pack = F.decodeString
     unpack = F.encodeString
 
 instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r, o' ~ ()) => CanMapM_ (Pipe l i o u m r) i' o' m' where
     mapM_ = CL.mapM_
-
-
-instance CanEmpty (Set x) where
-    empty = Set.empty
-
-instance (Prelude.Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
-    insert = Set.insert
-
-
-
-instance Prelude.Ord x => CanMember (Set x) x where
-    member = Set.member
 
 instance MonadIO m => CanReadFile (m X.Document) where
     readFile = liftIO . X.readFile X.def
