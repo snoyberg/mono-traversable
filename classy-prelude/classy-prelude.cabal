@@ -23,6 +23,9 @@ library
                        ClassyPrelude.Set
                        ClassyPrelude.FilePath
                        ClassyPrelude.Vector
+                       ClassyPrelude.HashMap
+                       ClassyPrelude.LHashMap
+                       ClassyPrelude.HashSet
   build-depends:       base                          >= 4          && < 5
                      , system-filepath               >= 0.4        && < 0.5
                      , transformers
@@ -30,4 +33,6 @@ library
                      , text
                      , bytestring
                      , vector
+                     , unordered-containers
+                     , hashable
   ghc-options:         -Wall -fno-warn-orphans

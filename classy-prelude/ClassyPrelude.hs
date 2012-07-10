@@ -58,7 +58,10 @@ module ClassyPrelude
     , LText
       -- ** Containers
     , Map
+    , HashMap
+    , LHashMap
     , Set
+    , HashSet
     , Vector
       -- ** Numbers
     , Word8
@@ -153,6 +156,9 @@ import ClassyPrelude.Map
 import ClassyPrelude.Set
 import ClassyPrelude.FilePath ()
 import ClassyPrelude.Vector
+import ClassyPrelude.HashMap
+import ClassyPrelude.LHashMap
+import ClassyPrelude.HashSet
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
