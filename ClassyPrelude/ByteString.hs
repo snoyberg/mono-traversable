@@ -2,7 +2,9 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
-module ClassyPrelude.ByteString () where
+module ClassyPrelude.ByteString
+    ( ByteString
+    ) where
 
 import qualified Prelude
 import Prelude ((.))
