@@ -152,6 +152,7 @@ import Prelude (Char, (.))
 
 import ClassyPrelude.Classes
 import ClassyPrelude.List ()
+import ClassyPrelude.ByteString ()
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
@@ -163,7 +164,6 @@ import qualified Filesystem.Path.CurrentOS as F
 import qualified Text.XML as X
 
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8, Word64, Word)
 import Data.Int (Int64)
@@ -203,8 +203,6 @@ infixr 5  ++
 instance Prelude.Monad m => CanMap (Pipe l i o r m r) i o where
     map = CL.map
 
-instance (co ~ ByteString, i ~ Word8, o ~ Word8) => CanMapFunc ByteString co i o where
-    mapFunc = S.map
 instance (co ~ LByteString, i ~ Word8, o ~ Word8) => CanMapFunc LByteString co i o where
     mapFunc = L.map
 instance (co ~ Text, i ~ Char, o ~ Char) => CanMapFunc Text co i o where
@@ -216,8 +214,6 @@ instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
 instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
     mapFunc = Set.map
 
-instance (co ~ ByteString, i ~ Word8, o ~ ByteString) => CanConcatMapFunc ByteString co i o where
-    concatMapFunc = S.concatMap
 instance (co ~ LByteString, i ~ Word8, o ~ LByteString) => CanConcatMapFunc LByteString co i o where
     concatMapFunc = L.concatMap
 instance (co ~ Text, i ~ Char, o ~ Text) => CanConcatMapFunc Text co i o where
@@ -228,8 +224,6 @@ instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMapFunc LText co i o wher
 instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
     filter = CL.filter
 
-instance CanFilterFunc ByteString Word8 where
-    filterFunc = S.filter
 instance CanFilterFunc LByteString Word8 where
     filterFunc = L.filter
 instance CanFilterFunc Text Char where
@@ -239,8 +233,6 @@ instance CanFilterFunc LText Char where
 instance Prelude.Ord k => CanFilterFunc (Map k v) (k, v) where
     filterFunc = Map.filterWithKey . Prelude.curry
 
-instance CanLength ByteString Prelude.Int where
-    length = S.length
 instance CanLength LByteString Int64 where
     length = L.length
 instance CanLength Text Prelude.Int where
@@ -250,8 +242,6 @@ instance CanLength (Map k v) Prelude.Int where
 instance CanLength (Set x) Prelude.Int where
     length = Set.size
 
-instance CanSingleton ByteString Word8 where
-    singleton = S.singleton
 instance CanSingleton LByteString Word8 where
     singleton = L.singleton
 instance CanSingleton Text Prelude.Char where
@@ -263,8 +253,6 @@ instance (v' ~ v) => CanSingleton (v' -> Map k v) k where
 instance CanSingleton (Set x) x where
     singleton = Set.singleton
 
-instance CanNull ByteString where
-    null = S.null
 instance CanNull LByteString where
     null = L.null
 instance CanNull Text where
@@ -279,9 +267,6 @@ instance CanNull (Set x) where
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe
     unpack = Data.Maybe.maybeToList
-instance CanPack ByteString Word8 where
-    pack = S.pack
-    unpack = S.unpack
 instance CanPack LByteString Word8 where
     pack = L.pack
     unpack = L.unpack
@@ -307,8 +292,6 @@ instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r, o' ~ ()) => CanMapM_ (Pipe l i
 instance Prelude.Ord k => CanLookup (Map k v) k v where
     lookup = Map.lookup
 
-instance CanEmpty ByteString where
-    empty = S.empty
 instance CanEmpty LByteString where
     empty = L.empty
 instance CanEmpty Text where
@@ -332,8 +315,6 @@ instance Prelude.Ord k => CanDelete (Map k v) k where
 instance Prelude.Ord x => CanMember (Set x) x where
     member = Set.member
 
-instance MonadIO m => CanReadFile (m ByteString) where
-    readFile = liftIO . S.readFile . F.encodeString
 instance MonadIO m => CanReadFile (m LByteString) where
     readFile = liftIO . L.readFile . F.encodeString
 instance MonadIO m => CanReadFile (m X.Document) where
@@ -344,8 +325,6 @@ instance MonadResource m => CanReadFile (Pipe l i ByteString u m ()) where
 instance (u ~ r, MonadResource m) => CanWriteFile (Pipe l ByteString o u m r) where
     writeFile = CB.sinkFile . unpack
 
-instance CanWriteFileFunc ByteString where
-    writeFileFunc fp = liftIO . S.writeFile (F.encodeString fp)
 instance CanWriteFileFunc LByteString where
     writeFileFunc fp = liftIO . L.writeFile (F.encodeString fp)
 instance CanWriteFileFunc X.Document where
@@ -358,11 +337,6 @@ instance CanStripPrefix Text where
 instance CanStripPrefix LText where
     stripPrefix = TL.stripPrefix
 
-instance CanBreak ByteString Word8 where
-    break = S.break
-    span = S.span
-    dropWhile = S.dropWhile
-    takeWhile = S.takeWhile
 instance CanBreak LByteString Word8 where
     break = L.break
     span = L.span
@@ -379,9 +353,6 @@ instance CanBreak LText Prelude.Char where
     dropWhile = TL.dropWhile
     takeWhile = TL.takeWhile
 
-instance CanAny ByteString Word8 where
-    any = S.any
-    all = S.all
 instance CanAny LByteString Word8 where
     any = L.any
     all = L.all
@@ -392,8 +363,6 @@ instance CanAny LText Prelude.Char where
     any = TL.any
     all = TL.all
 
-instance CanSplitAt ByteString Prelude.Int where
-    splitAt = S.splitAt
 instance CanSplitAt LByteString Int64 where
     splitAt = L.splitAt
 instance CanSplitAt Text Prelude.Int where
