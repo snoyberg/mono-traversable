@@ -100,14 +100,6 @@ module ClassyPrelude
     , F.hasExtension
     , F.basename
     , F.filename
-      -- ** Conduit
-    , module Data.Conduit
-      -- ** XML
-    , X.Document (..)
-    , X.Name (..)
-    , X.Prologue (..)
-    , X.Node (..)
-    , X.Element (..)
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -167,7 +159,6 @@ import qualified Control.Monad
 import qualified Control.Exception
 
 import qualified Filesystem.Path.CurrentOS as F
-import qualified Text.XML as X
 
 import Data.Word (Word8, Word64, Word)
 import Data.Int (Int64)
@@ -179,11 +170,6 @@ import qualified Data.Either
 
 import qualified Control.Monad.Trans.Class
 import qualified Control.Monad.IO.Class
-import Control.Monad.IO.Class (MonadIO, liftIO)
-
-import Data.Conduit
-import qualified Data.Conduit.List as CL
-import qualified Data.Conduit.Binary as CB
 
 concat :: Monoid w => [w] -> w
 concat = mconcat
@@ -191,34 +177,6 @@ concat = mconcat
 infixr 5  ++
 (++) :: Monoid w => w -> w -> w
 (++) = mappend
-
-instance Prelude.Monad m => CanMap (Pipe l i o r m r) i o where
-    map = CL.map
-
-
-instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
-    filter = CL.filter
-
-instance CanPack (Prelude.Maybe a) a where
-    pack = Data.Maybe.listToMaybe
-    unpack = Data.Maybe.maybeToList
-
-instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r, o' ~ ()) => CanMapM_ (Pipe l i o u m r) i' o' m' where
-    mapM_ = CL.mapM_
-
-instance MonadIO m => CanReadFile (m X.Document) where
-    readFile = liftIO . X.readFile X.def
-instance MonadResource m => CanReadFile (Pipe l i ByteString u m ()) where
-    readFile = CB.sourceFile . unpack
-
-instance (u ~ r, MonadResource m) => CanWriteFile (Pipe l ByteString o u m r) where
-    writeFile = CB.sinkFile . unpack
-
-instance CanWriteFileFunc X.Document where
-    writeFileFunc fp = liftIO . X.writeFile X.def fp
-
-instance (Prelude.Monad m, accum ~ accum') => CanFold accum a (Pipe l a o u m accum') where
-    fold = CL.fold
 
 show :: (Prelude.Show a, CanPack c Prelude.Char) => a -> c
 show = pack . Prelude.show
@@ -228,3 +186,8 @@ fromList = pack
 
 toList :: CanPack c i => c -> [i]
 toList = unpack
+
+-- Misc instances
+instance CanPack (Prelude.Maybe a) a where
+    pack = Data.Maybe.listToMaybe
+    unpack = Data.Maybe.maybeToList

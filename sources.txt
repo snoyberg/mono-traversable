@@ -1,1 +1,2 @@
 ./classy-prelude
+./classy-prelude-conduit
