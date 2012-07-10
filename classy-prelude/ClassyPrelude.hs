@@ -59,6 +59,7 @@ module ClassyPrelude
       -- ** Containers
     , Map
     , Set
+    , Vector
       -- ** Numbers
     , Word8
     , Word64
@@ -151,6 +152,7 @@ import ClassyPrelude.LText
 import ClassyPrelude.Map
 import ClassyPrelude.Set
 import ClassyPrelude.FilePath ()
+import ClassyPrelude.Vector
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
