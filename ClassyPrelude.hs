@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude
     ( -- * Standard
@@ -110,44 +110,49 @@ module ClassyPrelude
     , X.Element (..)
       -- * Non-standard
       -- ** List-like classes
-    , CanMap (..)
-    , CanConcatMap (..)
-    , CanFilter (..)
-    , CanLength (..)
-    , CanSingleton (..)
-    , CanNull (..)
-    , CanPack (..)
-    , CanMapM (..)
-    , CanMapM_ (..)
-    , CanEmpty (..)
-    , CanStripPrefix (..)
-    , CanBreak (..)
-    , CanAny (..)
-    , CanSplitAt (..)
-    , CanFold (..)
+    , map
+    , concatMap
+    , filter
+    , length
+    , singleton
+    , null
+    , pack
+    , unpack
+    , fromList
+    , toList
+    , mapM
+    , mapM_
+    , empty
+    , stripPrefix
+    , break
+    , span
+    , dropWhile
+    , takeWhile
+    , any
+    , all
+    , splitAt
+    , fold
       -- ** Map-like
-    , CanLookup (..)
-    , CanInsert (..)
-    , CanInsertVal (..)
-    , CanDelete (..)
+    , lookup
+    , insert
+    , delete
       -- ** Set-like
-    , CanMember (..)
+    , member
       -- ** Text-like
-    , CanShow (..)
+    , show
       -- ** Files
-    , CanReadFile (..)
-    , CanWriteFile (..)
-      -- ** Helpers
-    , CanMapFunc (..)
-    , CanFilterFunc (..)
-    , CanFoldFunc (..)
-    , CanWriteFileFunc (..)
-      -- ** print
+    , readFile
+    , writeFile
+      -- ** Print
     , Prelude.print
     ) where
 
 import qualified Prelude
 import Prelude (Char, (.))
+
+import ClassyPrelude.Classes
+import ClassyPrelude.List ()
+
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
 import qualified Control.Applicative
@@ -185,8 +190,6 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import qualified Data.Conduit.Binary as CB
 
-import qualified Data.List
-
 type LByteString = L.ByteString
 type LText = TL.Text
 
@@ -197,17 +200,9 @@ infixr 5  ++
 (++) :: Monoid w => w -> w -> w
 (++) = mappend
 
-class CanMap f i o where
-    map :: (i -> o) -> f
-instance CanMapFunc ci co i o => CanMap (ci -> co) i o where
-    map = mapFunc
 instance Prelude.Monad m => CanMap (Pipe l i o r m r) i o where
     map = CL.map
 
-class CanMapFunc ci co i o where
-    mapFunc :: (i -> o) -> ci -> co
-instance (i ~ a, co ~ [b]) => CanMapFunc [a] co i b where
-    mapFunc = Prelude.map
 instance (co ~ ByteString, i ~ Word8, o ~ Word8) => CanMapFunc ByteString co i o where
     mapFunc = S.map
 instance (co ~ LByteString, i ~ Word8, o ~ Word8) => CanMapFunc LByteString co i o where
@@ -221,10 +216,6 @@ instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
 instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
     mapFunc = Set.map
 
-class CanConcatMap ci co i o where
-    concatMap :: (i -> o) -> ci -> co
-instance (i ~ a, co ~ [b]) => CanConcatMap [a] co i [b] where
-    concatMap = Prelude.concatMap
 instance (co ~ ByteString, i ~ Word8, o ~ ByteString) => CanConcatMap ByteString co i o where
     concatMap = S.concatMap
 instance (co ~ LByteString, i ~ Word8, o ~ LByteString) => CanConcatMap LByteString co i o where
@@ -234,17 +225,9 @@ instance (co ~ Text, i ~ Char, o ~ Text) => CanConcatMap Text co i o where
 instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMap LText co i o where
     concatMap = TL.concatMap
 
-class CanFilter f a where
-    filter :: (a -> Prelude.Bool) -> f
-instance (b ~ c, CanFilterFunc b a) => CanFilter (b -> c) a where
-    filter = filterFunc
 instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
     filter = CL.filter
 
-class CanFilterFunc c i | c -> i where
-    filterFunc :: (i -> Prelude.Bool) -> c -> c
-instance CanFilterFunc [a] a where
-    filterFunc = Prelude.filter
 instance CanFilterFunc ByteString Word8 where
     filterFunc = S.filter
 instance CanFilterFunc LByteString Word8 where
@@ -256,10 +239,6 @@ instance CanFilterFunc LText Char where
 instance Prelude.Ord k => CanFilterFunc (Map k v) (k, v) where
     filterFunc = Map.filterWithKey . Prelude.curry
 
-class CanLength c i | c -> i where
-    length :: c -> i
-instance CanLength [a] Prelude.Int where
-    length = Prelude.length
 instance CanLength ByteString Prelude.Int where
     length = S.length
 instance CanLength LByteString Int64 where
@@ -271,10 +250,6 @@ instance CanLength (Map k v) Prelude.Int where
 instance CanLength (Set x) Prelude.Int where
     length = Set.size
 
-class CanSingleton c i | c -> i where
-    singleton :: i -> c
-instance CanSingleton [a] a where
-    singleton = Prelude.return
 instance CanSingleton ByteString Word8 where
     singleton = S.singleton
 instance CanSingleton LByteString Word8 where
@@ -288,10 +263,6 @@ instance (v' ~ v) => CanSingleton (v' -> Map k v) k where
 instance CanSingleton (Set x) x where
     singleton = Set.singleton
 
-class CanNull c where
-    null :: c -> Prelude.Bool
-instance CanNull [a] where
-    null = Prelude.null
 instance CanNull ByteString where
     null = S.null
 instance CanNull LByteString where
@@ -305,12 +276,6 @@ instance CanNull (Map k v) where
 instance CanNull (Set x) where
     null = Set.null
 
-class CanPack c i | c -> i where
-    pack :: [i] -> c
-    unpack :: c -> [i]
-instance CanPack [a] a where
-    pack = Prelude.id
-    unpack = Prelude.id
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe
     unpack = Data.Maybe.maybeToList
@@ -336,38 +301,12 @@ instance CanPack F.FilePath Prelude.Char where
     pack = F.decodeString
     unpack = F.encodeString
 
-class CanMapM output input where
-    mapM :: input -> output
-instance Prelude.Monad m => CanMapM ([a] -> m [b]) (a -> m b) where
-    mapM = Prelude.mapM
-
-class CanMapM_ output input where
-    mapM_ :: input -> output
-instance (x ~ (), Prelude.Monad m) => CanMapM_ ([a] -> m x) (a -> m b) where
-    mapM_ = Prelude.mapM_
 instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r) => CanMapM_ (Pipe l i o u m r) (i' -> m' ()) where
     mapM_ = CL.mapM_
 
-class CanLookup c k v | c -> k v where
-    lookup :: k -> c -> Prelude.Maybe v
-instance Prelude.Eq k => CanLookup [(k, v)] k v where
-    lookup = Prelude.lookup
 instance Prelude.Ord k => CanLookup (Map k v) k v where
     lookup = Map.lookup
 
-class CanShow t where
-    show :: Prelude.Show a => a -> t
-instance CanShow Prelude.String where
-    show = Prelude.show
-instance CanShow Text where
-    show = T.pack . Prelude.show
-instance CanShow LText where
-    show = TL.pack . Prelude.show
-
-class CanEmpty c where
-    empty :: c
-instance CanEmpty [a] where
-    empty = []
 instance CanEmpty ByteString where
     empty = S.empty
 instance CanEmpty LByteString where
@@ -381,36 +320,20 @@ instance CanEmpty (Map k v) where
 instance CanEmpty (Set x) where
     empty = Set.empty
 
-class CanInsert f where
-    insert :: f
 instance (CanInsertVal c' k v, c ~ c') => CanInsert (k -> v -> c -> c') where
     insert = insertVal
 instance (Prelude.Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
     insert = Set.insert
 
-class CanInsertVal c k v | c -> k v where
-    insertVal :: k -> v -> c -> c
-instance Prelude.Eq k => CanInsertVal [(k, v)] k v where
-    insertVal k v c = (k, v) : delete k c
 instance Prelude.Ord k => CanInsertVal (Map k v) k v where
     insertVal = Map.insert
 
-class CanDelete c k | c -> k where
-    delete :: k -> c -> c
-instance Prelude.Eq k => CanDelete [(k, v)] k where
-    delete k = filter ((Prelude./= k) . Prelude.fst)
 instance Prelude.Ord k => CanDelete (Map k v) k where
     delete = Map.delete
 
-class CanMember c k | c -> k where
-    member :: k -> c -> Prelude.Bool
-instance Prelude.Eq x => CanMember [x] x where
-    member x = Prelude.any (Prelude.== x)
 instance Prelude.Ord x => CanMember (Set x) x where
     member = Set.member
 
-class CanReadFile a where
-    readFile :: F.FilePath -> a
 instance MonadIO m => CanReadFile (m ByteString) where
     readFile = liftIO . S.readFile . F.encodeString
 instance MonadIO m => CanReadFile (m LByteString) where
@@ -420,15 +343,9 @@ instance MonadIO m => CanReadFile (m X.Document) where
 instance MonadResource m => CanReadFile (Pipe l i ByteString u m ()) where
     readFile = CB.sourceFile . unpack
 
-class CanWriteFile a where
-    writeFile :: F.FilePath -> a
-instance (MonadIO m, b ~ (), CanWriteFileFunc a) => CanWriteFile (a -> m b) where
-    writeFile = writeFileFunc
 instance (u ~ r, MonadResource m) => CanWriteFile (Pipe l ByteString o u m r) where
     writeFile = CB.sinkFile . unpack
 
-class CanWriteFileFunc a where
-    writeFileFunc :: MonadIO m => F.FilePath -> a -> m ()
 instance CanWriteFileFunc ByteString where
     writeFileFunc fp = liftIO . S.writeFile (F.encodeString fp)
 instance CanWriteFileFunc LByteString where
@@ -436,10 +353,6 @@ instance CanWriteFileFunc LByteString where
 instance CanWriteFileFunc X.Document where
     writeFileFunc fp = liftIO . X.writeFile X.def fp
 
-class CanStripPrefix a where
-    stripPrefix :: a -> a -> Prelude.Maybe a
-instance Prelude.Eq a => CanStripPrefix [a] where
-    stripPrefix = Data.List.stripPrefix
 instance CanStripPrefix F.FilePath where
     stripPrefix = F.stripPrefix
 instance CanStripPrefix Text where
@@ -447,16 +360,6 @@ instance CanStripPrefix Text where
 instance CanStripPrefix LText where
     stripPrefix = TL.stripPrefix
 
-class CanBreak c i | c -> i where
-    break :: (i -> Prelude.Bool) -> c -> (c, c)
-    span :: (i -> Prelude.Bool) -> c -> (c, c)
-    dropWhile :: (i -> Prelude.Bool) -> c -> c
-    takeWhile :: (i -> Prelude.Bool) -> c -> c
-instance CanBreak [a] a where
-    break = Prelude.break
-    span = Prelude.span
-    dropWhile = Prelude.dropWhile
-    takeWhile = Prelude.takeWhile
 instance CanBreak ByteString Word8 where
     break = S.break
     span = S.span
@@ -478,12 +381,6 @@ instance CanBreak LText Prelude.Char where
     dropWhile = TL.dropWhile
     takeWhile = TL.takeWhile
 
-class CanAny c i | c -> i where
-    any :: (i -> Prelude.Bool) -> c -> Prelude.Bool
-    all :: (i -> Prelude.Bool) -> c -> Prelude.Bool
-instance CanAny [a] a where
-    any = Prelude.any
-    all = Prelude.all
 instance CanAny ByteString Word8 where
     any = S.any
     all = S.all
@@ -497,10 +394,6 @@ instance CanAny LText Prelude.Char where
     any = TL.any
     all = TL.all
 
-class CanSplitAt c i | c -> i where
-    splitAt :: i -> c -> (c, c)
-instance CanSplitAt [c] Prelude.Int where
-    splitAt = Prelude.splitAt
 instance CanSplitAt ByteString Prelude.Int where
     splitAt = S.splitAt
 instance CanSplitAt LByteString Int64 where
@@ -510,15 +403,14 @@ instance CanSplitAt Text Prelude.Int where
 instance CanSplitAt LText Int64 where
     splitAt = TL.splitAt
 
--- | Strict left fold.
-class CanFold accum a f where
-    fold :: (accum -> a -> accum) -> accum -> f
-instance (accum ~ accum', CanFoldFunc c accum a) => CanFold accum a (c -> accum') where
-    fold = foldFunc
 instance (Prelude.Monad m, accum ~ accum') => CanFold accum a (Pipe l a o u m accum') where
     fold = CL.fold
 
-class CanFoldFunc c accum a | c -> a where
-    foldFunc :: (accum -> a -> accum) -> accum -> c -> accum
-instance CanFoldFunc [a] accum a where
-    foldFunc = Data.List.foldl'
+show :: (Prelude.Show a, CanPack c Prelude.Char) => a -> c
+show = pack . Prelude.show
+
+fromList :: CanPack c i => [i] -> c
+fromList = pack
+
+toList :: CanPack c i => c -> [i]
+toList = unpack
