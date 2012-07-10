@@ -113,7 +113,6 @@ module ClassyPrelude
     , CanMap (..)
     , CanConcatMap (..)
     , CanFilter (..)
-    , CanFilterFunc (..)
     , CanLength (..)
     , CanSingleton (..)
     , CanNull (..)
@@ -126,7 +125,6 @@ module ClassyPrelude
     , CanAny (..)
     , CanSplitAt (..)
     , CanFold (..)
-    , CanFoldFunc (..)
       -- ** Map-like
     , CanLookup (..)
     , CanInsert (..)
@@ -139,6 +137,10 @@ module ClassyPrelude
       -- ** Files
     , CanReadFile (..)
     , CanWriteFile (..)
+      -- ** Helpers
+    , CanMapFunc (..)
+    , CanFilterFunc (..)
+    , CanFoldFunc (..)
     , CanWriteFileFunc (..)
       -- ** print
     , Prelude.print
@@ -195,22 +197,29 @@ infixr 5  ++
 (++) :: Monoid w => w -> w -> w
 (++) = mappend
 
-class CanMap ci co i o where
-    map :: (i -> o) -> ci -> co
-instance (i ~ a, co ~ [b]) => CanMap [a] co i b where
-    map = Prelude.map
-instance (co ~ ByteString, i ~ Word8, o ~ Word8) => CanMap ByteString co i o where
-    map = S.map
-instance (co ~ LByteString, i ~ Word8, o ~ Word8) => CanMap LByteString co i o where
-    map = L.map
-instance (co ~ Text, i ~ Char, o ~ Char) => CanMap Text co i o where
-    map = T.map
-instance (co ~ LText, i ~ Char, o ~ Char) => CanMap LText co i o where
-    map = TL.map
-instance CanMap (Map k v1) (Map k v2) v1 v2 where
-    map = Map.map
-instance (Prelude.Ord a, Prelude.Ord b) => CanMap (Set a) (Set b) a b where
-    map = Set.map
+class CanMap f i o where
+    map :: (i -> o) -> f
+instance CanMapFunc ci co i o => CanMap (ci -> co) i o where
+    map = mapFunc
+instance Prelude.Monad m => CanMap (Pipe l i o r m r) i o where
+    map = CL.map
+
+class CanMapFunc ci co i o where
+    mapFunc :: (i -> o) -> ci -> co
+instance (i ~ a, co ~ [b]) => CanMapFunc [a] co i b where
+    mapFunc = Prelude.map
+instance (co ~ ByteString, i ~ Word8, o ~ Word8) => CanMapFunc ByteString co i o where
+    mapFunc = S.map
+instance (co ~ LByteString, i ~ Word8, o ~ Word8) => CanMapFunc LByteString co i o where
+    mapFunc = L.map
+instance (co ~ Text, i ~ Char, o ~ Char) => CanMapFunc Text co i o where
+    mapFunc = T.map
+instance (co ~ LText, i ~ Char, o ~ Char) => CanMapFunc LText co i o where
+    mapFunc = TL.map
+instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
+    mapFunc = Map.map
+instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
+    mapFunc = Set.map
 
 class CanConcatMap ci co i o where
     concatMap :: (i -> o) -> ci -> co
@@ -225,11 +234,11 @@ instance (co ~ Text, i ~ Char, o ~ Text) => CanConcatMap Text co i o where
 instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMap LText co i o where
     concatMap = TL.concatMap
 
-class CanFilter f where
-    filter :: f
-instance (b ~ c, CanFilterFunc b a) => CanFilter ((a -> Prelude.Bool) -> b -> c) where
+class CanFilter f a where
+    filter :: (a -> Prelude.Bool) -> f
+instance (b ~ c, CanFilterFunc b a) => CanFilter (b -> c) a where
     filter = filterFunc
-instance (Prelude.Monad m, r ~ r') => CanFilter ((i -> Prelude.Bool) -> Pipe l i i r m r') where
+instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
     filter = CL.filter
 
 class CanFilterFunc c i | c -> i where
