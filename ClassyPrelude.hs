@@ -158,6 +158,7 @@ import ClassyPrelude.Text
 import ClassyPrelude.LText
 import ClassyPrelude.Map
 import ClassyPrelude.Set
+import ClassyPrelude.FilePath ()
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
@@ -201,9 +202,6 @@ instance (Prelude.Monad m, r ~ r') => CanFilter (Pipe l i i r m r') i where
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe
     unpack = Data.Maybe.maybeToList
-instance CanPack F.FilePath Prelude.Char where
-    pack = F.decodeString
-    unpack = F.encodeString
 
 instance (i ~ i', Prelude.Monad m, m ~ m', u ~ r, o' ~ ()) => CanMapM_ (Pipe l i o u m r) i' o' m' where
     mapM_ = CL.mapM_
@@ -218,9 +216,6 @@ instance (u ~ r, MonadResource m) => CanWriteFile (Pipe l ByteString o u m r) wh
 
 instance CanWriteFileFunc X.Document where
     writeFileFunc fp = liftIO . X.writeFile X.def fp
-
-instance CanStripPrefix F.FilePath where
-    stripPrefix = F.stripPrefix
 
 instance (Prelude.Monad m, accum ~ accum') => CanFold accum a (Pipe l a o u m accum') where
     fold = CL.fold
