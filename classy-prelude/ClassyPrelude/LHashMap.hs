@@ -15,6 +15,7 @@ import Data.Hashable (Hashable)
 type LHashMap = Map.HashMap
 type Map = LHashMap
 
+{-
 instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
     mapFunc = Map.map
 instance Hashable k => CanFilterFunc (Map k v) (k, v) where
@@ -36,3 +37,4 @@ instance (Prelude.Eq k, Hashable k) => CanInsertVal (Map k v) k v where
     insertVal = Map.insert
 instance (Prelude.Eq k, Hashable k) => CanDelete (Map k v) k where
     delete = Map.delete
+    -}
