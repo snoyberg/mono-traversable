@@ -63,6 +63,7 @@ module ClassyPrelude
     , Set
     , HashSet
     , Vector
+    , Hashable
       -- ** Numbers
     , Word8
     , Word64
@@ -159,6 +160,7 @@ import ClassyPrelude.Vector
 import ClassyPrelude.HashMap
 import ClassyPrelude.LHashMap
 import ClassyPrelude.HashSet
+import Data.Hashable (Hashable)
 
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
