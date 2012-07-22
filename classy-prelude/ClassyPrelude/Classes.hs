@@ -101,6 +101,12 @@ class CanAny c i | c -> i where
 class CanSplitAt c i | c -> i where
     splitAt :: i -> c -> (c, c)
 
+take :: CanSplitAt c i => i -> c -> c
+take i c  = Prelude.fst (splitAt i c)
+drop :: CanSplitAt c i => i -> c -> c
+drop i c  = Prelude.snd (splitAt i c)
+
+
 class CanFold accum a f where
     -- | Strict left fold.
     fold :: (accum -> a -> accum) -> accum -> f

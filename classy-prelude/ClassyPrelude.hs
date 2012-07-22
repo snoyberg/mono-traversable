@@ -127,7 +127,7 @@ module ClassyPrelude
     , takeWhile
     , any
     , all
-    , splitAt
+    , splitAt, take, drop
     , fold
       -- ** Map-like
     , lookup
