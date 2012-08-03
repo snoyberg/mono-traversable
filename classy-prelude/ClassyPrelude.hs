@@ -59,7 +59,6 @@ module ClassyPrelude
       -- ** Containers
     , Map
     , HashMap
-    , LHashMap
     , Set
     , HashSet
     , Vector
@@ -158,7 +157,6 @@ import ClassyPrelude.Set
 import ClassyPrelude.FilePath ()
 import ClassyPrelude.Vector
 import ClassyPrelude.HashMap
-import ClassyPrelude.LHashMap
 import ClassyPrelude.HashSet
 import Data.Hashable (Hashable)
 
