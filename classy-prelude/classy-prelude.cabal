@@ -12,7 +12,8 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     ClassyPrelude
+  exposed-modules:     BasicPrelude
+                       ClassyPrelude
                        ClassyPrelude.Classes
   other-modules:       ClassyPrelude.List
                        ClassyPrelude.ByteString
