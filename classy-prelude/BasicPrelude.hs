@@ -9,13 +9,13 @@ module BasicPrelude
     , (Prelude./)
     , (Prelude.&&)
     , (Prelude.||)
-    , (Prelude..)
+    , (Control.Category..)
       -- ** Functions
     , Prelude.not
     , Prelude.otherwise
     , Prelude.fst
     , Prelude.snd
-    , Prelude.id
+    , Control.Category.id
     , Prelude.maybe
     , Prelude.either
     , Prelude.flip
@@ -107,7 +107,6 @@ module BasicPrelude
 import qualified Prelude
 import Prelude (Char, (.))
 
-import ClassyPrelude.Classes
 import ClassyPrelude.List ()
 import ClassyPrelude.ByteString
 import ClassyPrelude.LByteString
@@ -124,6 +123,7 @@ import Data.Hashable (Hashable)
 import Data.Monoid (Monoid (..))
 import qualified Control.Arrow
 import qualified Control.Applicative
+import qualified Control.Category
 import qualified Control.Monad
 import qualified Control.Exception
 

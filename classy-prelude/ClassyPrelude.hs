@@ -45,7 +45,6 @@ module ClassyPrelude
 
 import qualified Prelude
 import qualified Data.Maybe
-import Prelude (Char, (.))
 
 import BasicPrelude
 import ClassyPrelude.Classes
