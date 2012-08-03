@@ -15,10 +15,10 @@ import Data.Hashable (Hashable)
 
 type Map = HashMap
 
-instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
-    mapFunc = Map.map
-instance Hashable k => CanFilterFunc (Map k v) (k, v) where
-    filterFunc = Map.filterWithKey . Prelude.curry
+instance (v1 ~ v1', co ~ Map k v2) => CanMap (Map k v1) co v1' v2 where
+    map = Map.map
+instance Hashable k => CanFilter (Map k v) (k, v) where
+    filter = Map.filterWithKey . Prelude.curry
 instance CanLength (Map k v) Prelude.Int where
     length = Map.size
 instance (Prelude.Eq k, Hashable k, v' ~ v) => CanSingleton (v' -> Map k v) k where

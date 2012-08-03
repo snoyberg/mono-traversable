@@ -12,10 +12,10 @@ import ClassyPrelude.Classes
 import Data.Map (Map)
 import qualified Data.Map as Map
 
-instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
-    mapFunc = Map.map
-instance Prelude.Ord k => CanFilterFunc (Map k v) (k, v) where
-    filterFunc = Map.filterWithKey . Prelude.curry
+instance (v1 ~ v1', co ~ Map k v2) => CanMap (Map k v1) co v1' v2 where
+    map = Map.map
+instance Prelude.Ord k => CanFilter (Map k v) (k, v) where
+    filter = Map.filterWithKey . Prelude.curry
 instance CanLength (Map k v) Prelude.Int where
     length = Map.size
 instance (v' ~ v) => CanSingleton (v' -> Map k v) k where

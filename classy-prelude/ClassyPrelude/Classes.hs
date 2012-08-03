@@ -5,32 +5,21 @@
 module ClassyPrelude.Classes where
 
 import qualified Prelude
+import Prelude (Monad)
 import qualified Filesystem.Path.CurrentOS as F
 import Control.Monad.IO.Class (MonadIO)
 
-class CanMap f i o where
-    map :: (i -> o) -> f
-class CanMapFunc ci co i o where
-    mapFunc :: (i -> o) -> ci -> co
-instance CanMapFunc ci co i o => CanMap (ci -> co) i o where
-    map = mapFunc
+class CanMap ci co i o where
+    map :: (i -> o) -> ci -> co
 
-class CanConcatMap f i o where
-    concatMap :: (i -> o) -> f
-class CanConcatMapFunc ci co i o where
-    concatMapFunc :: (i -> o) -> ci -> co
-instance CanConcatMapFunc ci co i o => CanConcatMap (ci -> co) i o where
-    concatMap = concatMapFunc
+class CanConcatMap ci co i o where
+    concatMap :: (i -> o) -> ci -> co
 
-class CanFilter f a where
-    filter :: (a -> Prelude.Bool) -> f
-class CanFilterFunc c i | c -> i where
-    filterFunc :: (i -> Prelude.Bool) -> c -> c
-instance (b ~ c, CanFilterFunc b a) => CanFilter (b -> c) a where
-    filter = filterFunc
+class CanFilter c i | c -> i where
+    filter :: (i -> Prelude.Bool) -> c -> c
 
-class CanLength c i | c -> i where
-    length :: c -> i
+class CanLength c len | c -> len where
+    length :: c -> len
 
 class CanSingleton c i | c -> i where
     singleton :: i -> c
@@ -42,19 +31,11 @@ class CanPack c i | c -> i where
     pack :: [i] -> c
     unpack :: c -> [i]
 
-class CanMapM f i o m where
-    mapM :: (i -> m o) -> f
-class CanMapMFunc ci co i o m where
-    mapMFunc :: (i -> m o) -> ci -> m co
-instance CanMapMFunc ci co i o m => CanMapM (ci -> m co) i o m where
-    mapM = mapMFunc
+class CanMapM ci co i o where
+    mapM :: Monad m => (i -> m o) -> ci -> m co
 
-class CanMapM_ f i o m where
-    mapM_ :: (i -> m o) -> f
-class CanMapM_Func ci i o m where
-    mapM_Func :: (i -> m o) -> ci -> m ()
-instance (x ~ (), CanMapM_Func ci i o m) => CanMapM_ (ci -> m x) i o m where
-    mapM_ = mapM_Func
+class CanMapM_ ci i where
+    mapM_ :: Monad m => (i -> m o) -> ci -> m ()
 
 class CanLookup c k v | c -> k v where
     lookup :: k -> c -> Prelude.Maybe v
@@ -106,11 +87,6 @@ take i c  = Prelude.fst (splitAt i c)
 drop :: CanSplitAt c i => i -> c -> c
 drop i c  = Prelude.snd (splitAt i c)
 
-
-class CanFold accum a f where
+class CanFold c i accum | c -> i where
     -- | Strict left fold.
-    fold :: (accum -> a -> accum) -> accum -> f
-class CanFoldFunc c accum a | c -> a where
-    foldFunc :: (accum -> a -> accum) -> accum -> c -> accum
-instance (accum ~ accum', CanFoldFunc c accum a) => CanFold accum a (c -> accum') where
-    fold = foldFunc
+    fold :: (accum -> i -> accum) -> accum -> c -> accum
