@@ -12,8 +12,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     BasicPrelude
-                       ClassyPrelude
+  exposed-modules:     ClassyPrelude
                        ClassyPrelude.Classes
   other-modules:       ClassyPrelude.List
                        ClassyPrelude.ByteString
@@ -27,6 +26,7 @@ library
                        ClassyPrelude.HashMap
                        ClassyPrelude.HashSet
   build-depends:       base                          >= 4          && < 5
+                     , basic-prelude                 >= 0.1        && < 0.2
                      , system-filepath               >= 0.4        && < 0.5
                      , transformers
                      , containers
