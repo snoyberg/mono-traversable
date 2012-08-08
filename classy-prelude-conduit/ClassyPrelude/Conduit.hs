@@ -18,6 +18,7 @@ import ClassyPrelude
 import ClassyPrelude.Classes
 
 import Data.Conduit
+import qualified Data.Conduit.List as CL
 import qualified Data.Conduit.Binary as CB
 
 import qualified Text.XML as X
@@ -32,3 +33,16 @@ instance MonadIO m => CanReadFile (m X.Document) where
 
 instance CanWriteFileFunc X.Document where
     writeFileFunc fp = liftIO . X.writeFile X.def fp
+
+instance (Monad m, i ~ i', o ~ o') => CanMap (Pipe l i o r m r) i' o' where
+    map = CL.map
+instance (Monad m, i ~ i', [o] ~ o') => CanConcatMap (Pipe l i o r m r) i' o' where
+    concatMap = CL.concatMap
+instance (Monad m, i ~ i') => CanFilter (Pipe l i i r m r) i' where
+    filter = CL.filter
+instance (Monad m, i ~ i', o ~ o', m ~ m') => CanMapM (Pipe l i o r m r) m' i' o' where
+    mapM = CL.mapM
+instance (Monad m, i ~ i', m ~ m') => CanMapM_ (Pipe l i o r m r) m' i' where
+    mapM_ f = awaitForever $ lift . f
+instance (Monad m, i ~ i', r ~ r') => CanFold (Pipe l i o u m r) i' r' where
+    fold = CL.fold

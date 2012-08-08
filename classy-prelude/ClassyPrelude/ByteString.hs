@@ -15,12 +15,12 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Filesystem.Path.CurrentOS as F
 import Data.Word (Word8)
 
-instance (co ~ ByteString, i ~ Word8, o ~ Word8) => CanMap ByteString co i o where
-    map = S.map
-instance (co ~ ByteString, i ~ Word8, o ~ ByteString) => CanConcatMap ByteString co i o where
-    concatMap = S.concatMap
-instance CanFilter ByteString Word8 where
-    filter = S.filter
+instance (co ~ ByteString, i ~ Word8, o ~ Word8) => CanMapFunc ByteString co i o where
+    mapFunc = S.map
+instance (co ~ ByteString, i ~ Word8, o ~ ByteString) => CanConcatMapFunc ByteString co i o where
+    concatMapFunc = S.concatMap
+instance CanFilterFunc ByteString Word8 where
+    filterFunc = S.filter
 instance CanLength ByteString Prelude.Int where
     length = S.length
 instance CanSingleton ByteString Word8 where

@@ -9,12 +9,12 @@ import Prelude ((.))
 import ClassyPrelude.Classes
 import qualified Data.List
 
-instance (a ~ a', b ~ b') => CanMap [a] [b] a' b' where
-    map = Prelude.map
-instance (a ~ a', b ~ b') => CanConcatMap [a] [b] a' [b'] where
-    concatMap = Prelude.concatMap
-instance CanFilter [a] a where
-    filter = Prelude.filter
+instance (a ~ a', b ~ b') => CanMapFunc [a] [b] a' b' where
+    mapFunc = Prelude.map
+instance (a ~ a', b ~ b') => CanConcatMapFunc [a] [b] a' [b'] where
+    concatMapFunc = Prelude.concatMap
+instance CanFilterFunc [a] a where
+    filterFunc = Prelude.filter
 instance CanLength [a] Prelude.Int where
     length = Prelude.length
 instance CanSingleton [a] a where
@@ -24,10 +24,10 @@ instance CanNull [a] where
 instance CanPack [a] a where
     pack = Prelude.id
     unpack = Prelude.id
-instance (a ~ a', b ~ [b']) => CanMapM [a] b a' b' where
-    mapM = Prelude.mapM
-instance a ~ a' => CanMapM_ [a] a' where
-    mapM_ = Prelude.mapM_
+instance (a ~ a', b ~ [b']) => CanMapMFunc [a] b a' b' where
+    mapMFunc = Prelude.mapM
+instance a ~ a' => CanMapM_Func [a] a' where
+    mapM_Func = Prelude.mapM_
 instance Prelude.Eq k => CanLookup [(k, v)] k v where
     lookup = Prelude.lookup
 instance CanEmpty [a] where
@@ -50,5 +50,5 @@ instance CanAny [a] a where
     all = Prelude.all
 instance CanSplitAt [c] Prelude.Int where
     splitAt = Prelude.splitAt
-instance CanFold [a] a accum where
-    fold = Data.List.foldl'
+instance CanFoldFunc [a] a accum where
+    foldFunc = Data.List.foldl'

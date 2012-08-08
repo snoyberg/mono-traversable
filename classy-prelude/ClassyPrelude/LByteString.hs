@@ -17,12 +17,12 @@ import Data.Int (Int64)
 
 type LByteString = L.ByteString
 
-instance (co ~ LByteString, i ~ Word8, o ~ Word8) => CanMap LByteString co i o where
-    map = L.map
-instance (co ~ LByteString, i ~ Word8, o ~ LByteString) => CanConcatMap LByteString co i o where
-    concatMap = L.concatMap
-instance CanFilter LByteString Word8 where
-    filter = L.filter
+instance (co ~ LByteString, i ~ Word8, o ~ Word8) => CanMapFunc LByteString co i o where
+    mapFunc = L.map
+instance (co ~ LByteString, i ~ Word8, o ~ LByteString) => CanConcatMapFunc LByteString co i o where
+    concatMapFunc = L.concatMap
+instance CanFilterFunc LByteString Word8 where
+    filterFunc = L.filter
 instance CanLength LByteString Int64 where
     length = L.length
 instance CanSingleton LByteString Word8 where

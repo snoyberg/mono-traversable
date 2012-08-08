@@ -49,6 +49,19 @@ import qualified Data.Maybe
 import BasicPrelude
 import ClassyPrelude.Classes
 
+import ClassyPrelude.ByteString ()
+import ClassyPrelude.Classes ()
+import ClassyPrelude.FilePath ()
+import ClassyPrelude.HashMap ()
+import ClassyPrelude.HashSet ()
+import ClassyPrelude.LByteString ()
+import ClassyPrelude.LText ()
+import ClassyPrelude.List ()
+import ClassyPrelude.Map ()
+import ClassyPrelude.Set ()
+import ClassyPrelude.Text ()
+import ClassyPrelude.Vector ()
+
 show :: (Prelude.Show a, CanPack c Char) => a -> c
 show = pack . Prelude.show
 

@@ -15,8 +15,8 @@ import Data.Hashable (Hashable)
 
 type Set = HashSet
 
-instance (Eq b, Hashable b, a ~ a', co ~ Set b) => CanMap (Set a) co a' b where
-    map = Set.map
+instance (Eq b, Hashable b, a ~ a', co ~ Set b) => CanMapFunc (Set a) co a' b where
+    mapFunc = Set.map
 instance CanLength (Set x) Prelude.Int where
     length = Set.size
 instance Hashable x => CanSingleton (Set x) x where

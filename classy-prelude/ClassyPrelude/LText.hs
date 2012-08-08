@@ -14,12 +14,12 @@ import Data.Int (Int64)
 
 type LText = TL.Text
 
-instance (co ~ LText, i ~ Char, o ~ Char) => CanMap LText co i o where
-    map = TL.map
-instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMap LText co i o where
-    concatMap = TL.concatMap
-instance CanFilter LText Char where
-    filter = TL.filter
+instance (co ~ LText, i ~ Char, o ~ Char) => CanMapFunc LText co i o where
+    mapFunc = TL.map
+instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMapFunc LText co i o where
+    concatMapFunc = TL.concatMap
+instance CanFilterFunc LText Char where
+    filterFunc = TL.filter
 instance CanSingleton LText Prelude.Char where
     singleton = TL.singleton
 instance CanNull LText where
