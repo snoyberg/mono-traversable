@@ -88,6 +88,7 @@ instance (MonadIO m, b ~ (), CanWriteFileFunc a) => CanWriteFile (a -> m b) wher
 
 class CanStripPrefix a where
     stripPrefix :: a -> a -> Prelude.Maybe a
+    isPrefixOf :: a -> a -> Prelude.Bool
 
 class CanBreak c i | c -> i where
     break :: (i -> Prelude.Bool) -> c -> (c, c)
@@ -115,3 +116,22 @@ class CanFoldFunc c i accum | c -> i where
     foldFunc :: (accum -> i -> accum) -> accum -> c -> accum
 instance CanFoldFunc c i accum => CanFold (c -> accum) i accum where
     fold = foldFunc
+
+class CanWords t where
+    words :: t -> [t]
+    unwords :: [t] -> t
+    lines :: t -> [t]
+    unlines :: [t] -> t
+
+class CanSplit c i | c -> i where
+    split :: (i -> Prelude.Bool) -> c -> [c]
+
+class CanStripSuffix a where
+    stripSuffix :: a -> a -> Prelude.Maybe a
+    isSuffixOf :: a -> a -> Prelude.Bool
+
+class CanIsInfixOf a where
+    isInfixOf :: a -> a -> Prelude.Bool
+
+class CanReverse a where
+    reverse :: a -> a

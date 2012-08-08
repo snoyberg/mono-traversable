@@ -31,6 +31,7 @@ instance CanEmpty LText where
     empty = TL.empty
 instance CanStripPrefix LText where
     stripPrefix = TL.stripPrefix
+    isPrefixOf = TL.isPrefixOf
 instance CanBreak LText Prelude.Char where
     break = TL.break
     span = TL.span
@@ -41,3 +42,22 @@ instance CanAny LText Prelude.Char where
     all = TL.all
 instance CanSplitAt LText Int64 where
     splitAt = TL.splitAt
+
+instance CanWords LText where
+    words = TL.words
+    unwords = TL.unwords
+    lines = TL.lines
+    unlines = TL.unlines
+
+instance CanSplit LText Char where
+    split = TL.split
+
+instance CanStripSuffix LText where
+    stripSuffix = TL.stripSuffix
+    isSuffixOf = TL.isSuffixOf
+
+instance CanIsInfixOf LText where
+    isInfixOf = TL.isInfixOf
+
+instance CanReverse LText where
+    reverse = TL.reverse

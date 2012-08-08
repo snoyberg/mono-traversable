@@ -40,6 +40,7 @@ instance Prelude.Eq x => CanMember [x] x where
     member x = Prelude.any (Prelude.== x)
 instance Prelude.Eq a => CanStripPrefix [a] where
     stripPrefix = Data.List.stripPrefix
+    isPrefixOf = Data.List.isPrefixOf
 instance CanBreak [a] a where
     break = Prelude.break
     span = Prelude.span
@@ -52,3 +53,15 @@ instance CanSplitAt [c] Prelude.Int where
     splitAt = Prelude.splitAt
 instance CanFoldFunc [a] a accum where
     foldFunc = Data.List.foldl'
+
+instance (c ~ Prelude.Char) => CanWords [c] where
+    words = Prelude.words
+    unwords = Prelude.unwords
+    lines = Prelude.lines
+    unlines = Prelude.unlines
+
+instance Prelude.Eq a => CanIsInfixOf [a] where
+    isInfixOf = Data.List.isInfixOf
+
+instance CanReverse [a] where
+    reverse = Prelude.reverse

@@ -48,3 +48,6 @@ instance CanAny LByteString Word8 where
     all = L.all
 instance CanSplitAt LByteString Int64 where
     splitAt = L.splitAt
+
+instance CanReverse LByteString where
+    reverse = L.reverse

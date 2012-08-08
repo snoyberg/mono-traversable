@@ -22,6 +22,10 @@ module ClassyPrelude
     , mapM_
     , empty
     , stripPrefix
+    , isPrefixOf
+    , stripSuffix
+    , isSuffixOf
+    , isInfixOf
     , break
     , span
     , dropWhile
@@ -30,6 +34,13 @@ module ClassyPrelude
     , all
     , splitAt, take, drop
     , fold
+    , words
+    , unwords
+    , lines
+    , unlines
+    , split
+    , reverse
+    , readMay
       -- ** Map-like
     , lookup
     , insert
@@ -75,3 +86,9 @@ toList = unpack
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe
     unpack = Data.Maybe.maybeToList
+
+readMay :: (Prelude.Read b, CanPack a Char) => a -> Maybe b
+readMay a =
+    case [x | (x, t) <- Prelude.reads (unpack a), null t] of
+        [x] -> Just x
+        _ -> Nothing

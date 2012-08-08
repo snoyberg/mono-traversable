@@ -47,3 +47,6 @@ instance CanSplitAt (Vector a) Prelude.Int where
     splitAt = V.splitAt
 instance CanFoldFunc (Vector a) a accum where
     foldFunc = V.foldl'
+
+instance CanReverse (Vector a) where
+    reverse = V.reverse

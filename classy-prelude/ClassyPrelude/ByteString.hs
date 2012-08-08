@@ -46,3 +46,6 @@ instance CanAny ByteString Word8 where
     all = S.all
 instance CanSplitAt ByteString Prelude.Int where
     splitAt = S.splitAt
+
+instance CanReverse ByteString where
+    reverse = S.reverse

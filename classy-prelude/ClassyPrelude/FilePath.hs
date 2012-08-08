@@ -14,3 +14,7 @@ instance CanPack F.FilePath Prelude.Char where
     unpack = F.encodeString
 instance CanStripPrefix F.FilePath where
     stripPrefix = F.stripPrefix
+    isPrefixOf a b =
+        case stripPrefix a b of
+            Prelude.Nothing -> Prelude.False
+            Prelude.Just{} -> Prelude.True
