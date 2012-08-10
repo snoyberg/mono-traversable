@@ -8,7 +8,7 @@ import Test.Hspec.QuickCheck
 import ClassyPrelude
 import ClassyPrelude.Classes
 import Test.QuickCheck.Arbitrary
-import Prelude (asTypeOf, undefined)
+import Prelude (asTypeOf, undefined, fromIntegral)
 import qualified Prelude
 
 dictionaryProps
@@ -82,6 +82,22 @@ filterProps dummy f = do
     prop "filter f c == pack (filter f (unpack c))" $ \c ->
         filter f (c `asTypeOf` dummy) == pack (filter f (unpack c))
 
+lengthProps :: ( Show a
+               , Eq a
+               , Arbitrary a
+               , CanPack a i
+               , CanLength a len
+               , Prelude.Num len
+               , Eq len
+               , CanNull a
+               )
+            => a -> Spec
+lengthProps dummy = do
+    prop "length c == fromIntegral (length (unpack c))" $ \c ->
+        length (c `asTypeOf` dummy) == fromIntegral (length (unpack c))
+    prop "null c == (length c == 0)" $ \c ->
+        null (c `asTypeOf` dummy) == (length c == 0)
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -113,6 +129,17 @@ main = hspec $ do
         describe "Data.Text.Lazy" $ filterProps (undefined :: LText) (< 'A')
         describe "Data.Map" $ filterProps (undefined :: Map Int Char) (\(i, _) -> i < 20)
         describe "Data.HashMap" $ filterProps (undefined :: HashMap Int Char) (\(i, _) -> i < 20)
+    describe "length" $ do
+        describe "list" $ lengthProps (undefined :: [Int])
+        describe "Data.Vector" $ lengthProps (undefined :: Vector Int)
+        describe "Data.ByteString" $ lengthProps (undefined :: ByteString)
+        describe "Data.ByteString.Lazy" $ lengthProps (undefined :: LByteString)
+        describe "Data.Text" $ lengthProps (undefined :: Text)
+        describe "Data.Text.Lazy" $ lengthProps (undefined :: LText)
+        describe "Data.Map" $ lengthProps (undefined :: Map Int Char)
+        describe "Data.HashMap" $ lengthProps (undefined :: HashMap Int Char)
+        describe "Data.Set" $ lengthProps (undefined :: Set Int)
+        describe "Data.HashSet" $ lengthProps (undefined :: HashSet Int)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

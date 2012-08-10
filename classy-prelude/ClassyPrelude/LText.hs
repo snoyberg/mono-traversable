@@ -61,3 +61,6 @@ instance CanIsInfixOf LText where
 
 instance CanReverse LText where
     reverse = TL.reverse
+
+instance CanLength LText Int64 where
+    length = TL.length
