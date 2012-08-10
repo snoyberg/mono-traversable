@@ -14,7 +14,7 @@ import qualified Data.Map as Map
 
 instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
     mapFunc = Map.map
-instance Prelude.Ord k => CanFilterFunc (Map k v) (k, v) where
+instance Prelude.Ord k => CanFilterFunc (Map k v) (Map k v) (k, v) where
     filterFunc = Map.filterWithKey . Prelude.curry
 instance CanLength (Map k v) Prelude.Int where
     length = Map.size

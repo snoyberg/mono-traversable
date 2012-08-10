@@ -21,7 +21,7 @@ instance CanMapFunc LByteString LByteString Word8 Word8 where
     mapFunc = L.map
 instance CanConcatMapFunc LByteString LByteString Word8 LByteString where
     concatMapFunc = L.concatMap
-instance CanFilterFunc LByteString Word8 where
+instance CanFilterFunc LByteString LByteString Word8 where
     filterFunc = L.filter
 instance CanLength LByteString Int64 where
     length = L.length

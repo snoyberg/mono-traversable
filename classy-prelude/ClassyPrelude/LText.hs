@@ -18,7 +18,7 @@ instance CanMapFunc LText LText Char Char where
     mapFunc = TL.map
 instance CanConcatMapFunc LText LText Char LText where
     concatMapFunc = TL.concatMap
-instance CanFilterFunc LText Char where
+instance CanFilterFunc LText LText Char where
     filterFunc = TL.filter
 instance CanSingleton LText Prelude.Char where
     singleton = TL.singleton

@@ -16,7 +16,7 @@ instance CanMapFunc (Vector a) (Vector b) a b where
     mapFunc = V.map
 instance CanConcatMapFunc (Vector a) (Vector b) a (Vector b) where
     concatMapFunc = V.concatMap
-instance CanFilterFunc (Vector a) a where
+instance CanFilterFunc (Vector a) (Vector a) a where
     filterFunc = V.filter
 instance CanLength (Vector a) Prelude.Int where
     length = V.length

@@ -69,6 +69,19 @@ concatMapProps dummy f = do
     prop "concatMap f c == pack (concatMap (unpack . f) (unpack c))" $ \c ->
         concatMap f (c `asTypeOf` dummy) == pack (concatMap (unpack . f) (unpack c))
 
+filterProps :: ( CanPack a i
+               , Show a
+               , Arbitrary a
+               , Eq a
+               , CanFilterFunc a a i
+               )
+            => a
+            -> (i -> Bool)
+            -> Spec
+filterProps dummy f = do
+    prop "filter f c == pack (filter f (unpack c))" $ \c ->
+        filter f (c `asTypeOf` dummy) == pack (filter f (unpack c))
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -91,6 +104,15 @@ main = hspec $ do
         describe "Data.ByteString.Lazy" $ concatMapProps (undefined :: LByteString) (\i -> fromList [i + 1, i + 2])
         describe "Data.Text" $ concatMapProps (undefined :: Text) (\c -> pack [succ c, succ $ succ c])
         describe "Data.Text.Lazy" $ concatMapProps (undefined :: LText) (\c -> pack [succ c, succ $ succ c])
+    describe "filter" $ do
+        describe "list" $ filterProps (undefined :: [Int]) (< 20)
+        describe "Data.Vector" $ filterProps (undefined :: Vector Int) (< 20)
+        describe "Data.ByteString" $ filterProps (undefined :: ByteString) (< 20)
+        describe "Data.ByteString.Lazy" $ filterProps (undefined :: LByteString) (< 20)
+        describe "Data.Text" $ filterProps (undefined :: Text) (< 'A')
+        describe "Data.Text.Lazy" $ filterProps (undefined :: LText) (< 'A')
+        describe "Data.Map" $ filterProps (undefined :: Map Int Char) (\(i, _) -> i < 20)
+        describe "Data.HashMap" $ filterProps (undefined :: HashMap Int Char) (\(i, _) -> i < 20)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

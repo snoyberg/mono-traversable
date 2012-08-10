@@ -16,7 +16,7 @@ instance CanMapFunc Text Text Char Char where
     mapFunc = T.map
 instance CanConcatMapFunc Text Text Char Text where
     concatMapFunc = T.concatMap
-instance CanFilterFunc Text Char where
+instance CanFilterFunc Text Text Char where
     filterFunc = T.filter
 instance CanLength Text Prelude.Int where
     length = T.length

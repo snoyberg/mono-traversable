@@ -13,7 +13,7 @@ instance CanMapFunc [a] [b] a b where
     mapFunc = Prelude.map
 instance CanConcatMapFunc [a] [b] a [b] where
     concatMapFunc = Prelude.concatMap
-instance CanFilterFunc [a] a where
+instance CanFilterFunc [a] [a] a where
     filterFunc = Prelude.filter
 instance CanLength [a] Prelude.Int where
     length = Prelude.length

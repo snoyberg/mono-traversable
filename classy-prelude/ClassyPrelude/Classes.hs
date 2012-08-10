@@ -25,9 +25,9 @@ instance CanConcatMapFunc ci co i o => CanConcatMap (ci -> co) i o where
 
 class CanFilter f i where
     filter :: (i -> Prelude.Bool) -> f
-class CanFilterFunc c i | c -> i where
-    filterFunc :: (i -> Prelude.Bool) -> c -> c
-instance CanFilterFunc c i => CanFilter (c -> c) i where
+class CanFilterFunc ci co i | ci -> i co where
+    filterFunc :: (i -> Prelude.Bool) -> ci -> co
+instance (CanFilterFunc ci co i) => CanFilter (ci -> co) i where
     filter = filterFunc
 
 class CanLength c len | c -> len where

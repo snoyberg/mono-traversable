@@ -19,7 +19,7 @@ instance CanMapFunc ByteString ByteString Word8 Word8 where
     mapFunc = S.map
 instance CanConcatMapFunc ByteString ByteString Word8 ByteString where
     concatMapFunc = S.concatMap
-instance CanFilterFunc ByteString Word8 where
+instance CanFilterFunc ByteString ByteString Word8 where
     filterFunc = S.filter
 instance CanLength ByteString Prelude.Int where
     length = S.length
