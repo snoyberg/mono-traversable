@@ -36,3 +36,17 @@ library
                      , unordered-containers
                      , hashable
   ghc-options:         -Wall -fno-warn-orphans
+
+test-suite test
+    hs-source-dirs: test
+    main-is: main.hs
+    type: exitcode-stdio-1.0
+    build-depends:   classy-prelude
+                   , base
+                   , hspec == 1.3.*
+                   , QuickCheck
+    ghc-options:     -Wall
+
+source-repository head
+  type:     git
+  location: git://github.com/snoyberg/classy-prelude.git
