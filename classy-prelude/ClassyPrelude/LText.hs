@@ -14,9 +14,9 @@ import Data.Int (Int64)
 
 type LText = TL.Text
 
-instance (co ~ LText, i ~ Char, o ~ Char) => CanMapFunc LText co i o where
+instance CanMapFunc LText LText Char Char where
     mapFunc = TL.map
-instance (co ~ LText, i ~ Char, o ~ LText) => CanConcatMapFunc LText co i o where
+instance CanConcatMapFunc LText LText Char LText where
     concatMapFunc = TL.concatMap
 instance CanFilterFunc LText Char where
     filterFunc = TL.filter

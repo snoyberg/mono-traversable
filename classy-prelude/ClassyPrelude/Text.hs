@@ -12,9 +12,9 @@ import ClassyPrelude.Classes
 import Data.Text (Text)
 import qualified Data.Text as T
 
-instance (co ~ Text, i ~ Char, o ~ Char) => CanMapFunc Text co i o where
+instance CanMapFunc Text Text Char Char where
     mapFunc = T.map
-instance (co ~ Text, i ~ Char, o ~ Text) => CanConcatMapFunc Text co i o where
+instance CanConcatMapFunc Text Text Char Text where
     concatMapFunc = T.concatMap
 instance CanFilterFunc Text Char where
     filterFunc = T.filter

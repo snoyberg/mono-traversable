@@ -11,14 +11,14 @@ import Control.Monad.IO.Class (MonadIO)
 
 class CanMap f i o where
     map :: (i -> o) -> f
-class CanMapFunc ci co i o where
+class CanMapFunc ci co i o | ci o -> co, ci -> i where
     mapFunc :: (i -> o) -> ci -> co
 instance CanMapFunc ci co i o => CanMap (ci -> co) i o where
     map = mapFunc
 
 class CanConcatMap f i o where
     concatMap :: (i -> o) -> f
-class CanConcatMapFunc ci co i o where
+class CanConcatMapFunc ci co i o | ci o -> co, ci -> i, ci co -> o where
     concatMapFunc :: (i -> o) -> ci -> co
 instance CanConcatMapFunc ci co i o => CanConcatMap (ci -> co) i o where
     concatMap = concatMapFunc

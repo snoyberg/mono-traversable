@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -8,6 +9,7 @@ import ClassyPrelude
 import ClassyPrelude.Classes
 import Test.QuickCheck.Arbitrary
 import Prelude (asTypeOf, undefined)
+import qualified Prelude
 
 dictionaryProps
     :: ( CanInsertVal a Int Char
@@ -31,14 +33,80 @@ dictionaryProps dummy = do
     prop "lookup k (delete k c) == Nothing" $ \k c ->
         lookup k (delete k c`asTypeOf` dummy) == Nothing
 
+mapProps :: ( CanPack a i
+            , CanPack b j
+            , Eq a
+            , Show a
+            , Arbitrary a
+            , Eq b
+            , Show b
+            , Arbitrary b
+            , CanMapFunc a b i j
+            )
+         => a
+         -> (i -> j)
+         -> Spec
+mapProps dummy f = do
+    prop "map f c == pack (map f (unpack c))" $ \c ->
+        map f (c `asTypeOf` dummy) == pack (map f (unpack c))
+
+concatMapProps :: ( CanPack a i
+            , CanPack b j
+            , CanPack js j
+            , Eq a
+            , Show a
+            , Arbitrary a
+            , Eq b
+            , Show b
+            , Arbitrary b
+            , CanMapFunc a b i j
+            , CanConcatMapFunc a b i js
+            )
+         => a
+         -> (i -> js)
+         -> Spec
+concatMapProps dummy f = do
+    prop "concatMap f c == pack (concatMap (unpack . f) (unpack c))" $ \c ->
+        concatMap f (c `asTypeOf` dummy) == pack (concatMap (unpack . f) (unpack c))
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
         describe "Data.Map" $ dictionaryProps (undefined :: Map Int Char)
         describe "Data.HashMap" $ dictionaryProps (undefined :: HashMap Int Char)
         describe "assoc list" $ dictionaryProps (undefined :: [(Int, Char)])
+    describe "map" $ do
+        describe "list" $ mapProps (undefined :: [Int]) (+ 1)
+        describe "Data.Vector" $ mapProps (undefined :: Vector Int) (+ 1)
+        describe "Data.Set" $ mapProps (undefined :: Set Int) (+ 1)
+        describe "Data.HashSet" $ mapProps (undefined :: HashSet Int) (+ 1)
+        describe "Data.ByteString" $ mapProps (undefined :: ByteString) (+ 1)
+        describe "Data.ByteString.Lazy" $ mapProps (undefined :: LByteString) (+ 1)
+        describe "Data.Text" $ mapProps (undefined :: Text) succ
+        describe "Data.Text.Lazy" $ mapProps (undefined :: LText) succ
+    describe "concatMap" $ do
+        describe "list" $ concatMapProps (undefined :: [Int]) (\i -> [i + 1, i + 2])
+        describe "Data.Vector" $ concatMapProps (undefined :: Vector Int) (\i -> fromList [i + 1, i + 2])
+        describe "Data.ByteString" $ concatMapProps (undefined :: ByteString) (\i -> fromList [i + 1, i + 2])
+        describe "Data.ByteString.Lazy" $ concatMapProps (undefined :: LByteString) (\i -> fromList [i + 1, i + 2])
+        describe "Data.Text" $ concatMapProps (undefined :: Text) (\c -> pack [succ c, succ $ succ c])
+        describe "Data.Text.Lazy" $ concatMapProps (undefined :: LText) (\c -> pack [succ c, succ $ succ c])
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary (HashMap Int Char) where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary (Vector Int) where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary (Set Int) where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary (HashSet Int) where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary ByteString where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary LByteString where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary Text where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary LText where
     arbitrary = fromList <$> arbitrary

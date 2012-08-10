@@ -17,9 +17,9 @@ import Data.Int (Int64)
 
 type LByteString = L.ByteString
 
-instance (co ~ LByteString, i ~ Word8, o ~ Word8) => CanMapFunc LByteString co i o where
+instance CanMapFunc LByteString LByteString Word8 Word8 where
     mapFunc = L.map
-instance (co ~ LByteString, i ~ Word8, o ~ LByteString) => CanConcatMapFunc LByteString co i o where
+instance CanConcatMapFunc LByteString LByteString Word8 LByteString where
     concatMapFunc = L.concatMap
 instance CanFilterFunc LByteString Word8 where
     filterFunc = L.filter

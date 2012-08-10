@@ -15,7 +15,7 @@ import Data.Hashable (Hashable)
 
 type Map = HashMap
 
-instance (v1 ~ v1', co ~ Map k v2) => CanMapFunc (Map k v1) co v1' v2 where
+instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
     mapFunc = Map.map
 instance Hashable k => CanFilterFunc (Map k v) (k, v) where
     filterFunc = Map.filterWithKey . Prelude.curry

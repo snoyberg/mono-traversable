@@ -12,7 +12,7 @@ import ClassyPrelude.Classes
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-instance (Prelude.Ord a, Prelude.Ord b, a ~ a', co ~ Set b) => CanMapFunc (Set a) co a' b where
+instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
     mapFunc = Set.map
 instance CanLength (Set x) Prelude.Int where
     length = Set.size

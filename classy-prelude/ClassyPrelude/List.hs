@@ -9,9 +9,9 @@ import Prelude ((.))
 import ClassyPrelude.Classes
 import qualified Data.List
 
-instance (a ~ a', b ~ b') => CanMapFunc [a] [b] a' b' where
+instance CanMapFunc [a] [b] a b where
     mapFunc = Prelude.map
-instance (a ~ a', b ~ b') => CanConcatMapFunc [a] [b] a' [b'] where
+instance CanConcatMapFunc [a] [b] a [b] where
     concatMapFunc = Prelude.concatMap
 instance CanFilterFunc [a] a where
     filterFunc = Prelude.filter

@@ -12,9 +12,9 @@ import ClassyPrelude.Classes
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 
-instance (i ~ a, co ~ Vector b) => CanMapFunc (Vector a) co i b where
+instance CanMapFunc (Vector a) (Vector b) a b where
     mapFunc = V.map
-instance (i ~ a, co ~ Vector b) => CanConcatMapFunc (Vector a) co i (Vector b) where
+instance CanConcatMapFunc (Vector a) (Vector b) a (Vector b) where
     concatMapFunc = V.concatMap
 instance CanFilterFunc (Vector a) a where
     filterFunc = V.filter

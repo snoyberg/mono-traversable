@@ -12,7 +12,7 @@ import ClassyPrelude.Classes
 import Data.Map (Map)
 import qualified Data.Map as Map
 
-instance (v1 ~ v1', co ~ Map k v2) => CanMapFunc (Map k v1) co v1' v2 where
+instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
     mapFunc = Map.map
 instance Prelude.Ord k => CanFilterFunc (Map k v) (k, v) where
     filterFunc = Map.filterWithKey . Prelude.curry
