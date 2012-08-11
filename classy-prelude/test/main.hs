@@ -17,7 +17,7 @@ dictionaryProps
        , Show a
        , Eq a
        , Arbitrary a
-       , CanEmpty a
+       , Monoid a
        , CanLookup a Int Char
        )
     => a -> Spec
@@ -36,19 +36,25 @@ dictionaryProps dummy = do
 mapProps :: ( CanPack a i
             , CanPack b j
             , Eq a
+            , Eq c
             , Show a
             , Arbitrary a
             , Eq b
             , Show b
             , Arbitrary b
             , CanMapFunc a b i j
+            , CanMapFunc a c i k
+            , CanMapFunc b c j k
             )
          => a
          -> (i -> j)
+         -> (j -> k)
          -> Spec
-mapProps dummy f = do
+mapProps dummy f g = do
     prop "map f c == pack (map f (unpack c))" $ \c ->
         map f (c `asTypeOf` dummy) == pack (map f (unpack c))
+    prop "map (f . g) c == map f (map g c)" $ \c ->
+        map (g . f) (c `asTypeOf` dummy) == map g (map f c)
 
 concatMapProps :: ( CanPack a i
             , CanPack b j
@@ -90,6 +96,8 @@ lengthProps :: ( Show a
                , Prelude.Num len
                , Eq len
                , CanNull a
+               , Ord len
+               , Monoid a
                )
             => a -> Spec
 lengthProps dummy = do
@@ -97,6 +105,13 @@ lengthProps dummy = do
         length (c `asTypeOf` dummy) == fromIntegral (length (unpack c))
     prop "null c == (length c == 0)" $ \c ->
         null (c `asTypeOf` dummy) == (length c == 0)
+    prop "length (x ++ y) <= length x + length y" $ \x y ->
+        length (x ++ y `asTypeOf` dummy) <= length x + length y
+    prop "length (x ++ y) >= max (length x) (length y)" $ \x y ->
+        length (x ++ y `asTypeOf` dummy) >= max (length x) (length y)
+    prop "length (x ++ empty) == length x" $ \x ->
+        length (x ++ empty `asTypeOf` dummy) == length x
+    prop "null empty" $ null (empty `asTypeOf` dummy)
 
 main :: IO ()
 main = hspec $ do
@@ -105,14 +120,14 @@ main = hspec $ do
         describe "Data.HashMap" $ dictionaryProps (undefined :: HashMap Int Char)
         describe "assoc list" $ dictionaryProps (undefined :: [(Int, Char)])
     describe "map" $ do
-        describe "list" $ mapProps (undefined :: [Int]) (+ 1)
-        describe "Data.Vector" $ mapProps (undefined :: Vector Int) (+ 1)
-        describe "Data.Set" $ mapProps (undefined :: Set Int) (+ 1)
-        describe "Data.HashSet" $ mapProps (undefined :: HashSet Int) (+ 1)
-        describe "Data.ByteString" $ mapProps (undefined :: ByteString) (+ 1)
-        describe "Data.ByteString.Lazy" $ mapProps (undefined :: LByteString) (+ 1)
-        describe "Data.Text" $ mapProps (undefined :: Text) succ
-        describe "Data.Text.Lazy" $ mapProps (undefined :: LText) succ
+        describe "list" $ mapProps (undefined :: [Int]) (+ 1) (+ 2)
+        describe "Data.Vector" $ mapProps (undefined :: Vector Int) (+ 1) (+ 2)
+        describe "Data.Set" $ mapProps (undefined :: Set Int) (+ 1) (+ 2)
+        describe "Data.HashSet" $ mapProps (undefined :: HashSet Int) (+ 1) (+ 2)
+        describe "Data.ByteString" $ mapProps (undefined :: ByteString) (+ 1) (+ 2)
+        describe "Data.ByteString.Lazy" $ mapProps (undefined :: LByteString) (+ 1) (+ 2)
+        describe "Data.Text" $ mapProps (undefined :: Text) succ succ
+        describe "Data.Text.Lazy" $ mapProps (undefined :: LText) succ succ
     describe "concatMap" $ do
         describe "list" $ concatMapProps (undefined :: [Int]) (\i -> [i + 1, i + 2])
         describe "Data.Vector" $ concatMapProps (undefined :: Vector Int) (\i -> fromList [i + 1, i + 2])

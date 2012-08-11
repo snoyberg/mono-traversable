@@ -31,8 +31,6 @@ instance (a ~ a', b' ~ Vector b) => CanMapMFunc (Vector a) b' a' b where
     mapMFunc = V.mapM
 instance a ~ a' => CanMapM_Func (Vector a) a' where
     mapM_Func = V.mapM_
-instance CanEmpty (Vector a) where
-    empty = V.empty
 instance Prelude.Eq x => CanMember (Vector x) x where
     member x = V.any (Prelude.== x)
 instance CanBreak (Vector a) a where

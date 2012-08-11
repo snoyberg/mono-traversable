@@ -23,8 +23,6 @@ instance CanNull (Set x) where
 instance Prelude.Ord x => CanPack (Set x) x where
     pack = Set.fromList
     unpack = Set.toList
-instance CanEmpty (Set x) where
-    empty = Set.empty
 instance (Prelude.Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
     insert = Set.insert
 instance Prelude.Ord x => CanMember (Set x) x where

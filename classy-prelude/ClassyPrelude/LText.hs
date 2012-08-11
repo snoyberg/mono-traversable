@@ -27,8 +27,6 @@ instance CanNull LText where
 instance CanPack LText Prelude.Char where
     pack = TL.pack
     unpack = TL.unpack
-instance CanEmpty LText where
-    empty = TL.empty
 instance CanStripPrefix LText where
     stripPrefix = TL.stripPrefix
     isPrefixOf = TL.isPrefixOf

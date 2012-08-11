@@ -82,6 +82,9 @@ fromList = pack
 toList :: CanPack c i => c -> [i]
 toList = unpack
 
+empty :: Monoid m => m
+empty = mempty
+
 -- Misc instances
 instance CanPack (Prelude.Maybe a) a where
     pack = Data.Maybe.listToMaybe

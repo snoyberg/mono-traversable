@@ -27,8 +27,6 @@ instance Prelude.Ord k => CanPack (Map k v) (k, v) where
     unpack = Map.toList
 instance Prelude.Ord k => CanLookup (Map k v) k v where
     lookup = Map.lookup
-instance CanEmpty (Map k v) where
-    empty = Map.empty
 instance Prelude.Ord k => CanInsertVal (Map k v) k v where
     insertVal = Map.insert
 instance Prelude.Ord k => CanDelete (Map k v) k where

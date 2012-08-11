@@ -30,8 +30,6 @@ instance CanNull ByteString where
 instance CanPack ByteString Word8 where
     pack = S.pack
     unpack = S.unpack
-instance CanEmpty ByteString where
-    empty = S.empty
 instance MonadIO m => CanReadFile (m ByteString) where
     readFile = liftIO . S.readFile . F.encodeString
 instance CanWriteFileFunc ByteString where

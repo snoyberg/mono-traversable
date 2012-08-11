@@ -60,9 +60,6 @@ instance (Monad m, CanMapM_Func ci i) => CanMapM_ (ci -> m ()) m i where
 class CanLookup c k v | c -> k v where
     lookup :: k -> c -> Prelude.Maybe v
 
-class CanEmpty c where
-    empty :: c
-
 class CanInsert f where
     insert :: f
 class CanInsertVal c k v | c -> k v where

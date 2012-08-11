@@ -30,8 +30,6 @@ instance a ~ a' => CanMapM_Func [a] a' where
     mapM_Func = Prelude.mapM_
 instance Prelude.Eq k => CanLookup [(k, v)] k v where
     lookup = Prelude.lookup
-instance CanEmpty [a] where
-    empty = []
 instance Prelude.Eq k => CanInsertVal [(k, v)] k v where
     insertVal k v c = (k, v) : delete k c
 instance Prelude.Eq k => CanDelete [(k, v)] k where

@@ -26,8 +26,6 @@ instance CanNull (Set x) where
 instance (Hashable x, Eq x) => CanPack (Set x) x where
     pack = Set.fromList
     unpack = Set.toList
-instance CanEmpty (Set x) where
-    empty = Set.empty
 instance (Eq x, Hashable x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
     insert = Set.insert
 instance (Eq x, Hashable x) => CanMember (Set x) x where

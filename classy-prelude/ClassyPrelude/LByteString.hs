@@ -32,8 +32,6 @@ instance CanNull LByteString where
 instance CanPack LByteString Word8 where
     pack = L.pack
     unpack = L.unpack
-instance CanEmpty LByteString where
-    empty = L.empty
 instance MonadIO m => CanReadFile (m LByteString) where
     readFile = liftIO . L.readFile . F.encodeString
 instance CanWriteFileFunc LByteString where
