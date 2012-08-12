@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.Classes where
 
@@ -11,14 +12,14 @@ import Control.Monad.IO.Class (MonadIO)
 
 class CanMap f i o where
     map :: (i -> o) -> f
-class CanMapFunc ci co i o | ci o -> co, ci -> i where
+class CanMapFunc ci co i o | ci -> i, co -> o, ci o -> co, co i -> ci where
     mapFunc :: (i -> o) -> ci -> co
 instance CanMapFunc ci co i o => CanMap (ci -> co) i o where
     map = mapFunc
 
 class CanConcatMap f i o where
     concatMap :: (i -> o) -> f
-class CanConcatMapFunc ci co i o | ci o -> co, ci -> i, ci co -> o where
+class CanConcatMapFunc ci co i o | ci -> i, co -> o, ci o -> co, co i -> ci where
     concatMapFunc :: (i -> o) -> ci -> co
 instance CanConcatMapFunc ci co i o => CanConcatMap (ci -> co) i o where
     concatMap = concatMapFunc
@@ -45,16 +46,16 @@ class CanPack c i | c -> i where
 
 class Monad m => CanMapM f m i o where
     mapM :: (i -> m o) -> f
-class CanMapMFunc ci co i o where
-    mapMFunc :: Monad m => (i -> m o) -> ci -> m co
-instance (Monad m, CanMapMFunc ci co i o) => CanMapM (ci -> m co) m i o where
+class Monad m => CanMapMFunc ci mco m i o | ci -> i, mco -> m o, ci o m -> mco, mco i -> ci where
+    mapMFunc :: (i -> m o) -> ci -> mco
+instance CanMapMFunc ci mco m i o => CanMapM (ci -> mco) m i o where
     mapM = mapMFunc
 
 class Monad m => CanMapM_ f m i where
     mapM_ :: (i -> m o) -> f
-class CanMapM_Func ci i where
+class CanMapM_Func ci i | ci -> i where
     mapM_Func :: Monad m => (i -> m o) -> ci -> m ()
-instance (Monad m, CanMapM_Func ci i) => CanMapM_ (ci -> m ()) m i where
+instance (Monad m, CanMapM_Func ci i, r ~ m ()) => CanMapM_ (ci -> r) m i where
     mapM_ = mapM_Func
 
 class CanLookup c k v | c -> k v where

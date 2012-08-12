@@ -24,9 +24,9 @@ instance CanNull [a] where
 instance CanPack [a] a where
     pack = Prelude.id
     unpack = Prelude.id
-instance (a ~ a', b ~ [b']) => CanMapMFunc [a] b a' b' where
+instance Prelude.Monad m => CanMapMFunc [i] (m [o]) m i o where
     mapMFunc = Prelude.mapM
-instance a ~ a' => CanMapM_Func [a] a' where
+instance CanMapM_Func [a] a where
     mapM_Func = Prelude.mapM_
 instance Prelude.Eq k => CanLookup [(k, v)] k v where
     lookup = Prelude.lookup

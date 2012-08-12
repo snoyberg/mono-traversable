@@ -10,6 +10,7 @@ import ClassyPrelude.Classes
 import Test.QuickCheck.Arbitrary
 import Prelude (asTypeOf, undefined, fromIntegral)
 import qualified Prelude
+import Control.Monad.Trans.Writer (tell, Writer, runWriter)
 
 dictionaryProps
     :: ( CanInsertVal a Int Char
@@ -113,6 +114,37 @@ lengthProps dummy = do
         length (x ++ empty `asTypeOf` dummy) == length x
     prop "null empty" $ null (empty `asTypeOf` dummy)
 
+{-
+mapMProps :: ( Show a
+             , Arbitrary a
+             , CanPack a i
+             , Eq i
+             , CanMapMFunc a co i i
+             , CanPack co i
+             , Eq co
+             )
+           => a -> Spec
+-}
+mapMProps dummy = do
+    let f :: Int -> Writer [Int] Int
+        f x = tell [x] >> return x
+    prop "mapM_ f c == mapM_ f (toList c)" $ \c ->
+        runWriter (mapM f (c `asTypeOf` dummy)) ==
+            let (x, y) = runWriter (mapM f (toList c))
+             in (pack x, y)
+
+mapM_Props :: ( Show a
+              , Arbitrary a
+              , CanPack a i
+              , Eq i
+              , CanMapM_Func a i
+              )
+           => a -> Spec
+mapM_Props dummy = do
+    let f x = tell [x]
+    prop "mapM_ f c == mapM_ f (toList c)" $ \c ->
+        runWriter (mapM_ f (c `asTypeOf` dummy)) == runWriter (mapM_ f (toList c))
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -155,6 +187,12 @@ main = hspec $ do
         describe "Data.HashMap" $ lengthProps (undefined :: HashMap Int Char)
         describe "Data.Set" $ lengthProps (undefined :: Set Int)
         describe "Data.HashSet" $ lengthProps (undefined :: HashSet Int)
+    describe "mapM" $ do
+        describe "list" $ mapMProps (undefined :: [Int])
+        describe "Data.Vector" $ mapMProps (undefined :: Vector Int)
+    describe "mapM_" $ do
+        describe "list" $ mapM_Props (undefined :: [Int])
+        describe "Data.Vector" $ mapM_Props (undefined :: Vector Int)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary
