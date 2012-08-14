@@ -27,3 +27,6 @@ instance (Prelude.Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) wher
     insert = Set.insert
 instance Prelude.Ord x => CanMember (Set x) x where
     member = Set.member
+
+instance CanFoldFunc (Set a) a accum where
+    foldFunc = Set.foldl'

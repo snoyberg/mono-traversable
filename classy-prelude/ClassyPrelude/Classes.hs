@@ -112,7 +112,7 @@ class CanFold f i accum where
 class CanFoldFunc c i accum | c -> i where
     -- | Strict left fold.
     foldFunc :: (accum -> i -> accum) -> accum -> c -> accum
-instance CanFoldFunc c i accum => CanFold (c -> accum) i accum where
+instance (CanFoldFunc c i accum, accum ~ result) => CanFold (c -> result) i accum where
     fold = foldFunc
 
 class CanWords t where

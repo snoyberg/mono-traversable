@@ -30,3 +30,6 @@ instance (Eq x, Hashable x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) w
     insert = Set.insert
 instance (Eq x, Hashable x) => CanMember (Set x) x where
     member = Set.member
+
+instance CanFoldFunc (Set a) a accum where
+    foldFunc = Set.foldl'

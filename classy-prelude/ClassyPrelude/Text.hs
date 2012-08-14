@@ -59,3 +59,6 @@ instance CanIsInfixOf Text where
 
 instance CanReverse Text where
     reverse = T.reverse
+
+instance CanFoldFunc Text Char accum where
+    foldFunc = T.foldl'

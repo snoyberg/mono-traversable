@@ -145,6 +145,10 @@ mapM_Props dummy = do
     prop "mapM_ f c == mapM_ f (toList c)" $ \c ->
         runWriter (mapM_ f (c `asTypeOf` dummy)) == runWriter (mapM_ f (toList c))
 
+foldProps dummy f accum =
+    prop "fold f accum c == fold f accum (toList c)" $ \c ->
+        fold f accum (c `asTypeOf` dummy) == fold f accum (toList c)
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -193,6 +197,16 @@ main = hspec $ do
     describe "mapM_" $ do
         describe "list" $ mapM_Props (undefined :: [Int])
         describe "Data.Vector" $ mapM_Props (undefined :: Vector Int)
+    describe "fold" $ do
+        let f = flip (:)
+        describe "list" $ foldProps (undefined :: [Int]) f []
+        describe "Data.Vector" $ foldProps (undefined :: Vector Int) f []
+        describe "Data.ByteString" $ foldProps (undefined :: ByteString) f []
+        describe "Data.ByteString.Lazy" $ foldProps (undefined :: LByteString) f []
+        describe "Data.Text" $ foldProps (undefined :: Text) f []
+        describe "Data.Text.Lazy" $ foldProps (undefined :: LText) f []
+        describe "Data.Set" $ foldProps (undefined :: Set Int) f []
+        describe "Data.HashSet" $ foldProps (undefined :: HashSet Int) f []
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

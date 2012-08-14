@@ -47,3 +47,6 @@ instance CanSplitAt ByteString Prelude.Int where
 
 instance CanReverse ByteString where
     reverse = S.reverse
+
+instance CanFoldFunc ByteString Word8 accum where
+    foldFunc = S.foldl'

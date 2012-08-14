@@ -62,3 +62,6 @@ instance CanReverse LText where
 
 instance CanLength LText Int64 where
     length = TL.length
+
+instance CanFoldFunc LText Char accum where
+    foldFunc = TL.foldl'

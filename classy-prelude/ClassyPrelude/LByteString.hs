@@ -49,3 +49,6 @@ instance CanSplitAt LByteString Int64 where
 
 instance CanReverse LByteString where
     reverse = L.reverse
+
+instance CanFoldFunc LByteString Word8 accum where
+    foldFunc = L.foldl'
