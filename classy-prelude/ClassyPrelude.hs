@@ -16,6 +16,7 @@ module ClassyPrelude
     , null
     , pack
     , unpack
+    , repack
     , fromList
     , toList
     , mapM
@@ -95,3 +96,9 @@ readMay a =
     case [x | (x, t) <- Prelude.reads (unpack a), null t] of
         [x] -> Just x
         _ -> Nothing
+
+-- | Repack from one type to another, dropping to a list in the middle.
+--
+-- @repack = pack . unpack@.
+repack :: (CanPack a i, CanPack b i) => a -> b
+repack = pack . unpack
