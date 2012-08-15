@@ -4,8 +4,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude
-    ( -- * BasicPrelude
-      module BasicPrelude
+    ( -- * CorePrelude
+      module CorePrelude
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -21,7 +21,6 @@ module ClassyPrelude
     , toList
     , mapM
     , mapM_
-    , empty
     , stripPrefix
     , isPrefixOf
     , stripSuffix
@@ -58,7 +57,7 @@ module ClassyPrelude
 import qualified Prelude
 import qualified Data.Maybe
 
-import BasicPrelude
+import CorePrelude
 import ClassyPrelude.Classes
 
 import ClassyPrelude.ByteString ()
@@ -82,9 +81,6 @@ fromList = pack
 
 toList :: CanPack c i => c -> [i]
 toList = unpack
-
-empty :: Monoid m => m
-empty = mempty
 
 -- Misc instances
 instance CanPack (Prelude.Maybe a) a where

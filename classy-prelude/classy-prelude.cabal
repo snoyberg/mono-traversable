@@ -26,7 +26,7 @@ library
                        ClassyPrelude.HashMap
                        ClassyPrelude.HashSet
   build-depends:       base                          >= 4          && < 5
-                     , basic-prelude                 >= 0.1        && < 0.2
+                     , basic-prelude                 >= 0.2        && < 0.3
                      , system-filepath               >= 0.4        && < 0.5
                      , transformers
                      , containers
