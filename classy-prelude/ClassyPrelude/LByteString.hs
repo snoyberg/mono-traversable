@@ -52,3 +52,6 @@ instance CanReverse LByteString where
 
 instance CanFoldFunc LByteString Word8 accum where
     foldFunc = L.foldl'
+
+instance CanReplicate LByteString Word8 Int64 where
+    replicate = L.replicate

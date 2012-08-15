@@ -133,3 +133,6 @@ class CanIsInfixOf a where
 
 class CanReverse a where
     reverse :: a -> a
+
+class CanReplicate a i len | a -> i len where
+    replicate :: len -> i -> a

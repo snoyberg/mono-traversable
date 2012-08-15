@@ -149,6 +149,22 @@ foldProps dummy f accum =
     prop "fold f accum c == fold f accum (toList c)" $ \c ->
         fold f accum (c `asTypeOf` dummy) == fold f accum (toList c)
 
+replicateProps :: ( Show a
+                  , Eq a
+                  , CanReplicate a i len
+                  , Integral len
+                  , Show len
+                  , Arbitrary len
+                  , Show i
+                  , Arbitrary i
+                  )
+               => a -> ([i] -> a) -> Spec
+replicateProps dummy pack' =
+    prop "replicate i a == pack (replicate i a)" $ \{- takes too long i-} a ->
+        (replicate i a `asTypeOf` dummy) == pack' (replicate (fromIntegral i) a)
+  where
+    i = 3
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -207,6 +223,13 @@ main = hspec $ do
         describe "Data.Text.Lazy" $ foldProps (undefined :: LText) f []
         describe "Data.Set" $ foldProps (undefined :: Set Int) f []
         describe "Data.HashSet" $ foldProps (undefined :: HashSet Int) f []
+    describe "replicate" $ do
+        describe "list" $ replicateProps (undefined :: [Int]) pack
+        describe "Data.Vector" $ replicateProps (undefined :: Vector Int) pack
+        describe "Data.ByteString" $ replicateProps (undefined :: ByteString) pack
+        describe "Data.ByteString.Lazy" $ replicateProps (undefined :: LByteString) pack
+        describe "Data.Text" $ replicateProps (undefined :: Text) concat
+        describe "Data.Text.Lazy" $ replicateProps (undefined :: LText) concat
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

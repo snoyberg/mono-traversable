@@ -63,3 +63,6 @@ instance Prelude.Eq a => CanIsInfixOf [a] where
 
 instance CanReverse [a] where
     reverse = Prelude.reverse
+
+instance CanReplicate [i] i Prelude.Int where
+    replicate = Prelude.replicate

@@ -62,3 +62,6 @@ instance CanReverse Text where
 
 instance CanFoldFunc Text Char accum where
     foldFunc = T.foldl'
+
+instance CanReplicate Text Text Prelude.Int where
+    replicate = T.replicate

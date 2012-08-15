@@ -48,3 +48,6 @@ instance CanFoldFunc (Vector a) a accum where
 
 instance CanReverse (Vector a) where
     reverse = V.reverse
+
+instance CanReplicate (Vector a) a Prelude.Int where
+    replicate = V.replicate

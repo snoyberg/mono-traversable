@@ -50,3 +50,6 @@ instance CanReverse ByteString where
 
 instance CanFoldFunc ByteString Word8 accum where
     foldFunc = S.foldl'
+
+instance CanReplicate ByteString Word8 Prelude.Int where
+    replicate = S.replicate

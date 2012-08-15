@@ -65,3 +65,6 @@ instance CanLength LText Int64 where
 
 instance CanFoldFunc LText Char accum where
     foldFunc = TL.foldl'
+
+instance CanReplicate LText LText Int64 where
+    replicate = TL.replicate
