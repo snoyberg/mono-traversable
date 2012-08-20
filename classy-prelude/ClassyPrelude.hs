@@ -41,6 +41,7 @@ module ClassyPrelude
     , split
     , reverse
     , readMay
+    , replicate
       -- ** Map-like
     , lookup
     , insert
