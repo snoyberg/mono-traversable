@@ -29,7 +29,7 @@ library
                      , basic-prelude                 >= 0.2        && < 0.3
                      , system-filepath               >= 0.4        && < 0.5
                      , transformers
-                     , containers
+                     , containers                    >= 0.4.2
                      , text
                      , bytestring
                      , vector
