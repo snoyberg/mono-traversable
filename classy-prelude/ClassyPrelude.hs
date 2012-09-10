@@ -6,6 +6,12 @@
 module ClassyPrelude
     ( -- * CorePrelude
       module CorePrelude
+      -- * Standard
+      -- ** Monoid
+    , concat
+    , empty
+    , append
+    , (++)
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -99,3 +105,20 @@ readMay a =
 -- @repack = pack . unpack@.
 repack :: (CanPack a i, CanPack b i) => a -> b
 repack = pack . unpack
+
+concat :: Monoid m => [m] -> m
+concat = mconcat
+{-# INLINE concat #-}
+
+append :: Monoid m => m -> m -> m
+append = mappend
+{-# INLINE append #-}
+
+empty :: Monoid m => m
+empty = mempty
+{-# INLINE empty #-}
+
+infixr 5  ++
+(++) :: Monoid m => m -> m -> m
+(++) = mappend
+{-# INLINE (++) #-}
