@@ -11,6 +11,7 @@ import Prelude ((.), Char)
 import ClassyPrelude.Classes
 import qualified Data.Text.Lazy as TL
 import Data.Int (Int64)
+import qualified Data.Text
 
 type LText = TL.Text
 
@@ -68,3 +69,7 @@ instance CanFoldFunc LText Char accum where
 
 instance CanReplicate LText LText Int64 where
     replicate = TL.replicate
+
+instance CanToChunks LText Data.Text.Text where
+    toChunks = TL.toChunks
+    fromChunks = TL.fromChunks

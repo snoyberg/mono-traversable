@@ -59,6 +59,20 @@ module ClassyPrelude
       -- ** Files
     , readFile
     , writeFile
+      -- ** Chunking
+    , toChunks
+    , fromChunks
+      -- ** Force types
+    , asByteString
+    , asLByteString
+    , asHashMap
+    , asHashSet
+    , asText
+    , asLText
+    , asList
+    , asMap
+    , asSet
+    , asVector
     ) where
 
 import qualified Prelude
@@ -122,3 +136,33 @@ infixr 5  ++
 (++) :: Monoid m => m -> m -> m
 (++) = mappend
 {-# INLINE (++) #-}
+
+asByteString :: ByteString -> ByteString
+asByteString = id
+
+asLByteString :: LByteString -> LByteString
+asLByteString = id
+
+asHashMap :: HashMap k v -> HashMap k v
+asHashMap = id
+
+asHashSet :: HashSet a -> HashSet a
+asHashSet = id
+
+asText :: Text -> Text
+asText = id
+
+asLText :: LText -> LText
+asLText = id
+
+asList :: [a] -> [a]
+asList = id
+
+asMap :: Map k v -> Map k v
+asMap = id
+
+asSet :: Set a -> Set a
+asSet = id
+
+asVector :: Vector a -> Vector a
+asVector = id

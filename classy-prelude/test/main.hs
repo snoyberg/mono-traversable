@@ -165,6 +165,18 @@ replicateProps dummy pack' =
   where
     i = 3
 
+chunkProps :: ( Eq a
+              , Show a
+              , Arbitrary a
+              , CanToChunks a i
+              , Monoid i
+              ) => a -> Spec
+chunkProps dummy = do
+    prop "fromChunks . toChunks == id" $ \a ->
+        fromChunks (toChunks (a `asTypeOf` dummy)) == a
+    prop "fromChunks . return . concat . toChunks == id" $ \a ->
+        fromChunks [concat $ toChunks (a `asTypeOf` dummy)] == a
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -230,6 +242,9 @@ main = hspec $ do
         describe "Data.ByteString.Lazy" $ replicateProps (undefined :: LByteString) pack
         describe "Data.Text" $ replicateProps (undefined :: Text) concat
         describe "Data.Text.Lazy" $ replicateProps (undefined :: LText) concat
+    describe "chunks" $ do
+        describe "ByteString" $ chunkProps (asLByteString undefined)
+        describe "Text" $ chunkProps (asLText undefined)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

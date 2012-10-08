@@ -136,3 +136,7 @@ class CanReverse a where
 
 class CanReplicate a i len | a -> i len where
     replicate :: len -> i -> a
+
+class CanToChunks c i | c -> i, i -> c where
+    toChunks :: c -> [i]
+    fromChunks :: [i] -> c

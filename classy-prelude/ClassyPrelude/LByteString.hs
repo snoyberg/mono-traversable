@@ -14,6 +14,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Filesystem.Path.CurrentOS as F
 import Data.Word (Word8)
 import Data.Int (Int64)
+import qualified Data.ByteString
 
 type LByteString = L.ByteString
 
@@ -55,3 +56,7 @@ instance CanFoldFunc LByteString Word8 accum where
 
 instance CanReplicate LByteString Word8 Int64 where
     replicate = L.replicate
+
+instance CanToChunks LByteString Data.ByteString.ByteString where
+    toChunks = L.toChunks
+    fromChunks = L.fromChunks
