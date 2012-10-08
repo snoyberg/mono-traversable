@@ -20,6 +20,7 @@ dictionaryProps
        , Arbitrary a
        , Monoid a
        , CanLookup a Int Char
+       , CanPack a (Int, Char)
        )
     => a -> Spec
 dictionaryProps dummy = do
@@ -28,7 +29,7 @@ dictionaryProps dummy = do
     prop "insert x y (delete x c) == insert x y c" $ \x y c ->
         insert x y (delete x (c `asTypeOf` dummy)) == insert x y c
     prop "delete x (insert x y c) == delete x c" $ \x y c ->
-        delete x (insert x y (c `asTypeOf` dummy)) == delete x c
+        pack (unpack $ delete x (insert x y (c `asTypeOf` dummy))) == (pack (unpack ((delete x c) `asTypeOf` dummy) :: [(Int, Char)]) `asTypeOf` dummy)
     prop "lookup k (insert k v empty) == Just v" $ \k v ->
         lookup k (insert k v empty `asTypeOf` dummy) == Just v
     prop "lookup k (delete k c) == Nothing" $ \k c ->
@@ -87,7 +88,7 @@ filterProps :: ( CanPack a i
             -> Spec
 filterProps dummy f = do
     prop "filter f c == pack (filter f (unpack c))" $ \c ->
-        filter f (c `asTypeOf` dummy) == pack (filter f (unpack c))
+        (repack (filter f (c `asTypeOf` dummy)) `asTypeOf` dummy) == pack (filter f (unpack c))
 
 lengthProps :: ( Show a
                , Eq a
