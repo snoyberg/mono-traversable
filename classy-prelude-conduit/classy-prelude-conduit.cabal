@@ -1,5 +1,5 @@
 name:                classy-prelude-conduit
-version:             0.3.1
+version:             0.3.2
 synopsis:            conduit instances for classy-prelude
 description:         conduit instances for classy-prelude
 homepage:            https://github.com/snoyberg/classy-prelude
@@ -16,5 +16,5 @@ library
   build-depends:       base                          >= 4          && < 5
                      , conduit                       >= 0.5        && < 0.6
                      , xml-conduit                   >= 1.0        && < 1.1
-                     , classy-prelude                >= 0.3.1      && < 0.4
+                     , classy-prelude                >= 0.3.2      && < 0.4
   ghc-options:         -Wall -fno-warn-orphans
