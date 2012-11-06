@@ -13,9 +13,7 @@ module ClassyPrelude
     , append
     , (++)
       -- ** Monad
-    , when
-    , unless
-    , void
+    , module Control.Monad
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -86,7 +84,7 @@ module ClassyPrelude
 
 import qualified Prelude
 import qualified Data.Maybe
-import Control.Monad (when, unless, void)
+import Control.Monad (when, unless, void, liftM, ap, forever)
 
 import CorePrelude
 import ClassyPrelude.Classes
