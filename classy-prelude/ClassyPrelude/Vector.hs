@@ -51,3 +51,6 @@ instance CanReverse (Vector a) where
 
 instance CanReplicate (Vector a) a Prelude.Int where
     replicate = V.replicate
+
+instance CanReplicateM (Vector a) a Prelude.Int where
+    replicateM = V.replicateM

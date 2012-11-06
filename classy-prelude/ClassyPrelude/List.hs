@@ -8,6 +8,7 @@ import qualified Prelude
 import Prelude ((.))
 import ClassyPrelude.Classes
 import qualified Data.List
+import qualified Control.Monad
 
 instance CanMapFunc [a] [b] a b where
     mapFunc = Prelude.map
@@ -66,3 +67,6 @@ instance CanReverse [a] where
 
 instance CanReplicate [i] i Prelude.Int where
     replicate = Prelude.replicate
+
+instance CanReplicateM [a] a Prelude.Int where
+    replicateM = Control.Monad.replicateM

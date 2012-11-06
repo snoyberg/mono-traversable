@@ -12,6 +12,7 @@ import Prelude (asTypeOf, undefined, fromIntegral)
 import qualified Prelude
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
 import Data.Maybe (isJust)
+import Data.Functor.Identity (runIdentity)
 
 dictionaryProps
     :: ( CanInsertVal a Int Char
@@ -191,6 +192,20 @@ stripSuffixProps dummy = do
     prop "isJust (stripSuffix x y) == isSuffixOf x y" $ \x y ->
         isJust (stripSuffix x y) == isSuffixOf x (y `asTypeOf` dummy)
 
+replicateMProps :: ( Eq c
+                   , Show len
+                   , Arbitrary len
+                   , CanReplicateM c i len
+                   , CanReplicate c i len
+                   , Show i
+                   , Arbitrary i
+                   , Integral len
+                   ) => c -> Spec
+replicateMProps dummy = do
+    prop "runIdentity (replicateM i (return x)) == replicate i x" $ \i' x ->
+        let i = i' `mod` 20
+         in runIdentity (replicateM i (return x)) == (replicate i x `asTypeOf` dummy)
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -264,6 +279,9 @@ main = hspec $ do
         describe "LText" $ stripSuffixProps (undefined :: LText)
         describe "ByteString" $ stripSuffixProps (undefined :: ByteString)
         describe "LByteString" $ stripSuffixProps (undefined :: LByteString)
+    describe "replicateM" $ do
+        describe "list" $ replicateMProps (undefined :: [Int])
+        describe "Vector" $ replicateMProps (undefined :: Vector Int)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

@@ -30,6 +30,7 @@ module ClassyPrelude
     , toList
     , mapM
     , mapM_
+    , replicateM
     , stripPrefix
     , isPrefixOf
     , stripSuffix

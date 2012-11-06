@@ -58,6 +58,9 @@ class CanMapM_Func ci i | ci -> i where
 instance (Monad m, CanMapM_Func ci i, r ~ m ()) => CanMapM_ (ci -> r) m i where
     mapM_ = mapM_Func
 
+class CanReplicateM c i len | c -> i len where
+    replicateM :: Monad m => len -> m i -> m c
+
 class CanLookup c k v | c -> k v where
     lookup :: k -> c -> Prelude.Maybe v
 
