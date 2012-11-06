@@ -11,6 +11,7 @@ import Test.QuickCheck.Arbitrary
 import Prelude (asTypeOf, undefined, fromIntegral)
 import qualified Prelude
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
+import Data.Maybe (isJust)
 
 dictionaryProps
     :: ( CanInsertVal a Int Char
@@ -178,6 +179,18 @@ chunkProps dummy = do
     prop "fromChunks . return . concat . toChunks == id" $ \a ->
         fromChunks [concat $ toChunks (a `asTypeOf` dummy)] == a
 
+stripSuffixProps :: ( Eq a
+                    , Monoid a
+                    , CanStripSuffix a
+                    , Show a
+                    , Arbitrary a
+                    ) => a -> Spec
+stripSuffixProps dummy = do
+    prop "stripSuffix y (x ++ y) == Just x" $ \x y ->
+        stripSuffix y (x ++ y) == Just (x `asTypeOf` dummy)
+    prop "isJust (stripSuffix x y) == isSuffixOf x y" $ \x y ->
+        isJust (stripSuffix x y) == isSuffixOf x (y `asTypeOf` dummy)
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -246,6 +259,11 @@ main = hspec $ do
     describe "chunks" $ do
         describe "ByteString" $ chunkProps (asLByteString undefined)
         describe "Text" $ chunkProps (asLText undefined)
+    describe "stripSuffix" $ do
+        describe "Text" $ stripSuffixProps (undefined :: Text)
+        describe "LText" $ stripSuffixProps (undefined :: LText)
+        describe "ByteString" $ stripSuffixProps (undefined :: ByteString)
+        describe "LByteString" $ stripSuffixProps (undefined :: LByteString)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

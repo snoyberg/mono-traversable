@@ -60,3 +60,9 @@ instance CanReplicate LByteString Word8 Int64 where
 instance CanToChunks LByteString Data.ByteString.ByteString where
     toChunks = L.toChunks
     fromChunks = L.fromChunks
+
+instance CanStripSuffix LByteString where
+    stripSuffix x y
+        | x `L.isSuffixOf` y = Prelude.Just (L.take (L.length y Prelude.- L.length x) y)
+        | Prelude.otherwise = Prelude.Nothing
+    isSuffixOf = L.isSuffixOf

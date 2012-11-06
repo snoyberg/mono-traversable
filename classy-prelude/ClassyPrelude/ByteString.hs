@@ -53,3 +53,9 @@ instance CanFoldFunc ByteString Word8 accum where
 
 instance CanReplicate ByteString Word8 Prelude.Int where
     replicate = S.replicate
+
+instance CanStripSuffix ByteString where
+    stripSuffix x y
+        | x `S.isSuffixOf` y = Prelude.Just (S.take (S.length y Prelude.- S.length x) y)
+        | Prelude.otherwise = Prelude.Nothing
+    isSuffixOf = S.isSuffixOf
