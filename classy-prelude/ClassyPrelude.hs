@@ -15,6 +15,7 @@ module ClassyPrelude
       -- ** Monad
     , when
     , unless
+    , void
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -30,6 +31,8 @@ module ClassyPrelude
     , toList
     , mapM
     , mapM_
+    , forM
+    , forM_
     , replicateM
     , stripPrefix
     , isPrefixOf
@@ -83,7 +86,7 @@ module ClassyPrelude
 
 import qualified Prelude
 import qualified Data.Maybe
-import Control.Monad (when, unless)
+import Control.Monad (when, unless, void)
 
 import CorePrelude
 import ClassyPrelude.Classes
@@ -173,3 +176,9 @@ asSet = id
 
 asVector :: Vector a -> Vector a
 asVector = id
+
+forM :: CanMapMFunc ci mco m i o => ci -> (i -> m o) -> mco
+forM = flip mapM
+
+forM_ :: (Monad m, CanMapM_Func ci i) => ci -> (i -> m o) -> m ()
+forM_ = flip mapM_
