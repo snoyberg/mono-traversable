@@ -18,6 +18,8 @@ instance CanConcatMapFunc (Vector a) (Vector b) a (Vector b) where
     concatMapFunc = V.concatMap
 instance CanFilterFunc (Vector a) (Vector a) a where
     filterFunc = V.filter
+instance CanFilterMFunc (Vector a) a where
+    filterMFunc = V.filterM
 instance CanLength (Vector a) Prelude.Int where
     length = V.length
 instance CanSingleton (Vector a) a where

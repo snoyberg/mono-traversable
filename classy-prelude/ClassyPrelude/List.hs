@@ -16,6 +16,8 @@ instance CanConcatMapFunc [a] [b] a [b] where
     concatMapFunc = Prelude.concatMap
 instance CanFilterFunc [a] [a] a where
     filterFunc = Prelude.filter
+instance CanFilterMFunc [a] a where
+    filterMFunc = Control.Monad.filterM
 instance CanLength [a] Prelude.Int where
     length = Prelude.length
 instance CanSingleton [a] a where

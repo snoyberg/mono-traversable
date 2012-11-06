@@ -43,6 +43,10 @@ instance (Monad m, i ~ i', [o] ~ o') => CanConcatMap (Pipe l i o r m r) i' o' wh
     concatMap = CL.concatMap
 instance (Monad m, i ~ i', i ~ i'', r ~ r') => CanFilter (Pipe l i i' r m r') i'' where
     filter = CL.filter
+instance (Monad m, i ~ i', i ~ i'') => CanFilterM (Pipe l i i' r m r) m i'' where
+    filterM f = awaitForever $ \i -> do
+        b <- lift $ f i
+        when b (yield i)
 instance (Monad m, i ~ i', o ~ o', m ~ m', r ~ r') => CanMapM (Pipe l i o r m r') m' i' o' where
     mapM = CL.mapM
 instance (Monad m, i ~ i', m ~ m', r ~ r') => CanMapM_ (Pipe l i o r m r') m' i' where

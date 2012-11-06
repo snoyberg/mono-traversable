@@ -31,6 +31,13 @@ class CanFilterFunc ci co i | ci -> i co where
 instance (CanFilterFunc ci co i, ci ~ co) => CanFilter (ci -> co) i where
     filter = filterFunc
 
+class CanFilterM f m i where
+    filterM :: (i -> m Prelude.Bool) -> f
+class CanFilterMFunc c i | c -> i where
+    filterMFunc :: Monad m => (i -> m Prelude.Bool) -> c -> m c
+instance (CanFilterMFunc ci i, m ci ~ mco, Monad m) => CanFilterM (ci -> mco) m i where
+    filterM = filterMFunc
+
 class CanLength c len | c -> len where
     length :: c -> len
 

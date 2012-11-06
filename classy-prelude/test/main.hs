@@ -92,6 +92,21 @@ filterProps dummy f = do
     prop "filter f c == pack (filter f (unpack c))" $ \c ->
         (repack (filter f (c `asTypeOf` dummy)) `asTypeOf` dummy) == pack (filter f (unpack c))
 
+filterMProps :: ( CanPack a i
+                , Show a
+                , Arbitrary a
+                , Eq a
+                , CanFilterMFunc a i
+                )
+             => a
+             -> (i -> Bool)
+             -> Spec
+filterMProps dummy f' = do
+    prop "filterM f c == fmap pack (filterM f (unpack c))" $ \c ->
+        runIdentity (fmap repack (filterM f (c `asTypeOf` dummy))) `asTypeOf` dummy == runIdentity (fmap pack (filterM f (unpack c)))
+  where
+    f = return . f'
+
 lengthProps :: ( Show a
                , Eq a
                , Arbitrary a
@@ -247,6 +262,9 @@ main = hspec $ do
         describe "Data.Text.Lazy" $ filterProps (undefined :: LText) (< 'A')
         describe "Data.Map" $ filterProps (undefined :: Map Int Char) (\(i, _) -> i < 20)
         describe "Data.HashMap" $ filterProps (undefined :: HashMap Int Char) (\(i, _) -> i < 20)
+    describe "filterM" $ do
+        describe "list" $ filterMProps (undefined :: [Int]) (< 20)
+        describe "Data.Vector" $ filterMProps (undefined :: Vector Int) (< 20)
     describe "length" $ do
         describe "list" $ lengthProps (undefined :: [Int])
         describe "Data.Vector" $ lengthProps (undefined :: Vector Int)
