@@ -48,7 +48,11 @@ instance CanSplitAt LText Int64 where
 instance CanWords LText where
     words = TL.words
     unwords = TL.unwords
-    lines = TL.lines
+
+instance CanLinesFunc LText where
+    linesFunc = TL.lines
+
+instance CanUnlines LText where
     unlines = TL.unlines
 
 instance CanSplit LText Char where

@@ -121,7 +121,15 @@ instance (CanFoldFunc c i accum, accum ~ result) => CanFold (c -> result) i accu
 class CanWords t where
     words :: t -> [t]
     unwords :: [t] -> t
-    lines :: t -> [t]
+
+class CanLines f where
+    lines :: f
+class CanLinesFunc t where
+    linesFunc :: t -> [t]
+instance (CanLinesFunc t, out ~ [t]) => CanLines (t -> out) where
+    lines = linesFunc
+
+class CanUnlines t where
     unlines :: [t] -> t
 
 class CanSplit c i | c -> i where

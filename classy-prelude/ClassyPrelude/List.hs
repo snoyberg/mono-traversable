@@ -56,7 +56,11 @@ instance CanFoldFunc [a] a accum where
 instance (c ~ Prelude.Char) => CanWords [c] where
     words = Prelude.words
     unwords = Prelude.unwords
-    lines = Prelude.lines
+
+instance (c ~ Prelude.Char) => CanLinesFunc [c] where
+    linesFunc = Prelude.lines
+
+instance (c ~ Prelude.Char) => CanUnlines [c] where
     unlines = Prelude.unlines
 
 instance Prelude.Eq a => CanIsInfixOf [a] where

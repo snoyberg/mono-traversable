@@ -47,7 +47,11 @@ instance CanSplitAt Text Prelude.Int where
 instance CanWords Text where
     words = T.words
     unwords = T.unwords
-    lines = T.lines
+
+instance CanLinesFunc Text where
+    linesFunc = T.lines
+
+instance CanUnlines Text where
     unlines = T.unlines
 
 instance CanSplit Text Char where

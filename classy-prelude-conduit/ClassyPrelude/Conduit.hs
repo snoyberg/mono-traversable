@@ -54,3 +54,6 @@ instance (MonadThrow m, i ~ Text, o ~ ByteString) => CanEncodeUtf8 (Pipe l i o r
     encodeUtf8 = CT.encode CT.utf8
 instance (MonadThrow m, i ~ ByteString, o ~ Text) => CanDecodeUtf8 (Pipe l i o r m r) where
     decodeUtf8 = CT.decode CT.utf8
+
+instance (Monad m, i ~ Text, o ~ Text) => CanLines (Pipe l i o r m r) where
+    lines = CT.lines
