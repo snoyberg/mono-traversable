@@ -28,7 +28,7 @@ class CanFilter f i where
     filter :: (i -> Prelude.Bool) -> f
 class CanFilterFunc ci co i | ci -> i co where
     filterFunc :: (i -> Prelude.Bool) -> ci -> co
-instance (CanFilterFunc ci co i) => CanFilter (ci -> co) i where
+instance (CanFilterFunc ci co i, ci ~ co) => CanFilter (ci -> co) i where
     filter = filterFunc
 
 class CanLength c len | c -> len where
