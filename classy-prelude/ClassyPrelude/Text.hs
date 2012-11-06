@@ -11,6 +11,9 @@ import Prelude ((.), Char)
 import ClassyPrelude.Classes
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding
+import qualified Data.Text.Encoding.Error
+import Data.ByteString (ByteString)
 
 instance CanMapFunc Text Text Char Char where
     mapFunc = T.map
@@ -65,3 +68,8 @@ instance CanFoldFunc Text Char accum where
 
 instance CanReplicate Text Text Prelude.Int where
     replicate = T.replicate
+
+instance CanEncodeUtf8Func Text ByteString where
+    encodeUtf8Func = Data.Text.Encoding.encodeUtf8
+instance CanDecodeUtf8Func ByteString Text where
+    decodeUtf8Func = Data.Text.Encoding.decodeUtf8With Data.Text.Encoding.Error.lenientDecode

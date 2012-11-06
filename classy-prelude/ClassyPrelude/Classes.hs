@@ -143,3 +143,20 @@ class CanReplicate a i len | a -> i len where
 class CanToChunks c i | c -> i, i -> c where
     toChunks :: c -> [i]
     fromChunks :: [i] -> c
+
+class CanEncodeUtf8 f where
+    encodeUtf8 :: f
+class CanEncodeUtf8Func ci co | co -> ci, ci -> co where
+    encodeUtf8Func :: ci -> co
+instance CanEncodeUtf8Func ci co => CanEncodeUtf8 (ci -> co) where
+    encodeUtf8 = encodeUtf8Func
+
+class CanDecodeUtf8 f where
+    decodeUtf8 :: f
+-- | Note: implementations should ensure that @decodeUtf8Func@ is a total
+-- function. As such, the standard @decodeUtf8@ provided by the text package
+-- should not be used, but instead @decodeUtf8With lenientDecode@.
+class CanDecodeUtf8Func ci co | co -> ci, ci -> co where
+    decodeUtf8Func :: ci -> co
+instance CanDecodeUtf8Func ci co => CanDecodeUtf8 (ci -> co) where
+    decodeUtf8 = decodeUtf8Func

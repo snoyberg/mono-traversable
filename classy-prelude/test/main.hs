@@ -206,6 +206,16 @@ replicateMProps dummy = do
         let i = i' `mod` 20
          in runIdentity (replicateM i (return x)) == (replicate i x `asTypeOf` dummy)
 
+utf8Props :: ( Eq t
+             , Show t
+             , Arbitrary t
+             , CanEncodeUtf8Func t b
+             , CanDecodeUtf8Func b t
+             ) => t -> Spec
+utf8Props dummy = do
+    prop "decodeUtf8 . encodeUtf8 == id" $ \t ->
+        decodeUtf8 (encodeUtf8 t) == (t `asTypeOf` dummy)
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -282,6 +292,9 @@ main = hspec $ do
     describe "replicateM" $ do
         describe "list" $ replicateMProps (undefined :: [Int])
         describe "Vector" $ replicateMProps (undefined :: Vector Int)
+    describe "encode/decode UTF8" $ do
+        describe "Text" $ utf8Props (undefined :: Text)
+        describe "LText" $ utf8Props (undefined :: LText)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

@@ -6,6 +6,7 @@ module ClassyPrelude.Conduit
     ( -- * Re-export
       module ClassyPrelude
     , module Data.Conduit
+    , module Data.Conduit.List
       -- * XML
     , X.Document (..)
     , X.Name (..)
@@ -18,8 +19,10 @@ import ClassyPrelude
 import ClassyPrelude.Classes
 
 import Data.Conduit
+import Data.Conduit.List (consume, sinkNull)
 import qualified Data.Conduit.List as CL
 import qualified Data.Conduit.Binary as CB
+import qualified Data.Conduit.Text as CT
 
 import qualified Text.XML as X
 
@@ -46,3 +49,8 @@ instance (Monad m, i ~ i', m ~ m', r ~ r') => CanMapM_ (Pipe l i o r m r') m' i'
     mapM_ f = awaitForever $ lift . f
 instance (Monad m, i ~ i', r ~ r') => CanFold (Pipe l i o u m r) i' r' where
     fold = CL.fold
+
+instance (MonadThrow m, i ~ Text, o ~ ByteString) => CanEncodeUtf8 (Pipe l i o r m r) where
+    encodeUtf8 = CT.encode CT.utf8
+instance (MonadThrow m, i ~ ByteString, o ~ Text) => CanDecodeUtf8 (Pipe l i o r m r) where
+    decodeUtf8 = CT.decode CT.utf8

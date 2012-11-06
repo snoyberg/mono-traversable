@@ -12,6 +12,9 @@ import ClassyPrelude.Classes
 import qualified Data.Text.Lazy as TL
 import Data.Int (Int64)
 import qualified Data.Text
+import qualified Data.Text.Lazy.Encoding
+import qualified Data.Text.Encoding.Error
+import Data.ByteString.Lazy (ByteString)
 
 type LText = TL.Text
 
@@ -73,3 +76,8 @@ instance CanReplicate LText LText Int64 where
 instance CanToChunks LText Data.Text.Text where
     toChunks = TL.toChunks
     fromChunks = TL.fromChunks
+
+instance CanEncodeUtf8Func LText ByteString where
+    encodeUtf8Func = Data.Text.Lazy.Encoding.encodeUtf8
+instance CanDecodeUtf8Func ByteString LText where
+    decodeUtf8Func = Data.Text.Lazy.Encoding.decodeUtf8With Data.Text.Encoding.Error.lenientDecode

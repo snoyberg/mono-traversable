@@ -52,6 +52,8 @@ module ClassyPrelude
     , reverse
     , readMay
     , replicate
+    , encodeUtf8
+    , decodeUtf8
       -- ** Map-like
     , lookup
     , insert
