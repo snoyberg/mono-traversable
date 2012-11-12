@@ -61,6 +61,7 @@ module ClassyPrelude
     , delete
       -- ** Set-like
     , member
+    , elem
       -- ** Text-like
     , show
       -- ** Files
@@ -180,3 +181,6 @@ forM = flip mapM
 
 forM_ :: (Monad m, CanMapM_Func ci i) => ci -> (i -> m o) -> m ()
 forM_ = flip mapM_
+
+elem :: CanMember c k => k -> c -> Bool
+elem = member
