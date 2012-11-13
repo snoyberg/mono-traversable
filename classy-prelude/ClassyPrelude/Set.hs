@@ -30,3 +30,6 @@ instance Prelude.Ord x => CanMember (Set x) x where
 
 instance CanFoldFunc (Set a) a accum where
     foldFunc = Set.foldl'
+
+instance Prelude.Ord a => CanMapM_Func (Set a) a where
+    mapM_Func f = Prelude.mapM_ f . unpack

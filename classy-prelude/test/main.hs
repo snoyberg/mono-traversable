@@ -146,7 +146,7 @@ mapMProps :: ( Show a
 mapMProps dummy = do
     let f :: Int -> Writer [Int] Int
         f x = tell [x] >> return x
-    prop "mapM_ f c == mapM_ f (toList c)" $ \c ->
+    prop "mapM f c == mapM f (toList c)" $ \c ->
         runWriter (mapM f (c `asTypeOf` dummy)) ==
             let (x, y) = runWriter (mapM f (toList c))
              in (pack x, y)
@@ -282,6 +282,8 @@ main = hspec $ do
     describe "mapM_" $ do
         describe "list" $ mapM_Props (undefined :: [Int])
         describe "Data.Vector" $ mapM_Props (undefined :: Vector Int)
+        describe "Set" $ mapM_Props (undefined :: Set Int)
+        describe "HashSet" $ mapM_Props (undefined :: HashSet Int)
     describe "fold" $ do
         let f = flip (:)
         describe "list" $ foldProps (undefined :: [Int]) f []

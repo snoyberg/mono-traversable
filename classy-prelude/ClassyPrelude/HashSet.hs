@@ -33,3 +33,6 @@ instance (Eq x, Hashable x) => CanMember (Set x) x where
 
 instance CanFoldFunc (Set a) a accum where
     foldFunc = Set.foldl'
+
+instance (Eq a, Hashable a) => CanMapM_Func (HashSet a) a where
+    mapM_Func f = Prelude.mapM_ f . unpack
