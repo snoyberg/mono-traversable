@@ -19,15 +19,25 @@ library
                      , conduit                       >= 0.5.4.1    && < 0.6
                      , xml-conduit                   >= 1.0        && < 1.1
                      , classy-prelude                >= 0.4.1      && < 0.5
+                     , transformers
+                     , monad-control
+                     , resourcet
+                     , void
+                     , bytestring
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite spec
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
+  other-modules:  Data.Conduit.ClassySpec
+                  Data.Conduit.ContainerSpec
   hs-source-dirs: test
   build-depends:  base
                 , hspec
                 , classy-prelude-conduit
+                , bytestring
+                , transformers
+                , QuickCheck
 
 source-repository head
   type:     git
