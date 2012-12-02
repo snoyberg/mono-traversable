@@ -12,9 +12,6 @@
 module Data.Conduit.Classy
     ( module Data.Conduit.Classy
     , C.ResumableSource
-    , (C.$$+)
-    , (C.$$++)
-    , (C.$$+-)
     , C.runResourceT
     , C.Flush (..)
     , C.ResourceT
@@ -293,6 +290,9 @@ infixr 0 $$
 infixl 1 $=
 infixr 2 =$
 infixr 2 =$=
+infixr 0 $$+
+infixr 0 $$++
+infixr 0 $$+-
 
 ($$) :: Monad m => Source m a -> Sink a m b -> m b
 SourceM src $$ Sink sink = src C.$$ sink
@@ -309,3 +309,15 @@ ConduitM l =$= ConduitM r = ConduitM $ l C.=$= r
 (=$) :: Monad m => Conduit a m b -> Sink b m c -> Sink a m c
 ConduitM l =$ Sink r = Sink $ l C.=$ r
 {-# INLINE (=$) #-}
+
+($$+) :: Monad m => Source m a -> Sink a m b -> m (C.ResumableSource m a, b)
+SourceM src $$+ Sink sink = src C.$$+ sink
+{-# INLINE ($$+) #-}
+
+($$++) :: Monad m => C.ResumableSource m a -> Sink a m b -> m (C.ResumableSource m a, b)
+rsrc $$++ Sink sink = rsrc C.$$++ sink
+{-# INLINE ($$++) #-}
+
+($$+-) :: Monad m => C.ResumableSource m a -> Sink a m b -> m b
+rsrc $$+- Sink sink = rsrc C.$$+- sink
+{-# INLINE ($$+-) #-}
