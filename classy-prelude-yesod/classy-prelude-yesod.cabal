@@ -1,0 +1,22 @@
+name:                classy-prelude-yesod
+version:             0.1.0.0
+synopsis:            Provide a classy prelude including common Yesod functionality.
+description:         This is an extension of classy-prelude-conduit, adding in commonly used functions and data types from Yesod.
+homepage:            https://github.com/snoyberg/classy-prelude
+license:             MIT
+license-file:        LICENSE
+author:              Michael Snoyman
+maintainer:          michael@snoyman.com
+category:            Control
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  exposed-modules:     ClassyPrelude.Yesod
+  build-depends:       base >= 4 && < 5
+                     , classy-prelude-conduit >= 0.4.3
+                     , yesod
+                     , yesod-newsfeed
+                     , yesod-static
+                     , http-types
+                     , http-conduit
