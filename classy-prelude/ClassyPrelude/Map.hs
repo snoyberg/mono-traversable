@@ -29,5 +29,5 @@ instance Prelude.Ord k => CanLookup (Map k v) k v where
     lookup = Map.lookup
 instance Prelude.Ord k => CanInsertVal (Map k v) k v where
     insertVal = Map.insert
-instance Prelude.Ord k => CanDelete (Map k v) k where
-    delete = Map.delete
+instance Prelude.Ord k => CanDeleteVal (Map k v) k where
+    deleteVal = Map.delete

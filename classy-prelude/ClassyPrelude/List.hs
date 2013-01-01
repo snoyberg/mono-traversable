@@ -35,8 +35,8 @@ instance Prelude.Eq k => CanLookup [(k, v)] k v where
     lookup = Prelude.lookup
 instance Prelude.Eq k => CanInsertVal [(k, v)] k v where
     insertVal k v c = (k, v) : delete k c
-instance Prelude.Eq k => CanDelete [(k, v)] k where
-    delete k = filter ((Prelude./= k) . Prelude.fst)
+instance Prelude.Eq k => CanDeleteVal [(k, v)] k where
+    deleteVal k = filter ((Prelude./= k) . Prelude.fst)
 instance Prelude.Eq x => CanMember [x] x where
     member x = Prelude.any (Prelude.== x)
 instance Prelude.Eq a => CanStripPrefix [a] where

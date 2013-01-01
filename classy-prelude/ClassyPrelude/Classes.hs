@@ -78,8 +78,12 @@ class CanInsertVal c k v | c -> k v where
 instance (CanInsertVal c' k v, c ~ c') => CanInsert (k -> v -> c -> c') where
     insert = insertVal
 
-class CanDelete c k | c -> k where
-    delete :: k -> c -> c
+class CanDelete f where
+    delete :: f
+class CanDeleteVal c k | c -> k where
+    deleteVal :: k -> c -> c
+instance (CanDeleteVal c' k, c ~ c') => CanDelete (k -> c -> c') where
+    delete = deleteVal
 
 class CanMember c k | c -> k where
     member :: k -> c -> Prelude.Bool

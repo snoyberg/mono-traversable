@@ -32,5 +32,5 @@ instance (Prelude.Eq k, Hashable k) => CanLookup (Map k v) k v where
     lookup = Map.lookup
 instance (Prelude.Eq k, Hashable k) => CanInsertVal (Map k v) k v where
     insertVal = Map.insert
-instance (Prelude.Eq k, Hashable k) => CanDelete (Map k v) k where
-    delete = Map.delete
+instance (Prelude.Eq k, Hashable k) => CanDeleteVal (Map k v) k where
+    deleteVal = Map.delete
