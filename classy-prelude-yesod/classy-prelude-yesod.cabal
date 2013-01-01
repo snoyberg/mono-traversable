@@ -14,9 +14,11 @@ cabal-version:       >=1.8
 library
   exposed-modules:     ClassyPrelude.Yesod
   build-depends:       base >= 4 && < 5
+                     , classy-prelude >= 0.4.3
                      , classy-prelude-conduit >= 0.4.3
                      , yesod
                      , yesod-newsfeed
                      , yesod-static
                      , http-types
                      , http-conduit
+                     , persistent >= 1.1
