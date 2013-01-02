@@ -16,7 +16,7 @@ import Data.Functor.Identity (runIdentity)
 
 dictionaryProps
     :: ( CanInsertVal a Int Char
-       , CanDelete a Int
+       , CanDeleteVal a Int
        , Show a
        , Eq a
        , Arbitrary a
