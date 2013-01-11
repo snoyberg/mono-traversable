@@ -16,6 +16,7 @@ import qualified Data.Text.Encoding.Error
 import Data.ByteString (ByteString)
 import qualified Data.Text.IO as T
 import Control.Monad.IO.Class (MonadIO, liftIO)
+import qualified Filesystem.Path.CurrentOS as F
 
 instance CanMapFunc Text Text Char Char where
     mapFunc = T.map
@@ -82,3 +83,9 @@ instance CanDecodeUtf8Func ByteString Text where
 
 instance MonadIO m => CanGetLine (m Text) where
     getLine = liftIO T.getLine
+
+instance MonadIO m => CanReadFile (m Text) where
+    readFile = liftIO . T.readFile . F.encodeString
+
+instance CanWriteFileFunc Text where
+    writeFileFunc fp = liftIO . T.writeFile (F.encodeString fp)
