@@ -64,9 +64,10 @@ module ClassyPrelude
     , elem
       -- ** Text-like
     , show
-      -- ** Files
+      -- ** IO
     , readFile
     , writeFile
+    , getLine
       -- ** Chunking
     , toChunks
     , fromChunks
