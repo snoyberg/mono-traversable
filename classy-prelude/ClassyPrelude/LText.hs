@@ -15,6 +15,8 @@ import qualified Data.Text
 import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Encoding.Error
 import Data.ByteString.Lazy (ByteString)
+import qualified Data.Text.Lazy.IO as TL
+import Control.Monad.IO.Class (MonadIO, liftIO)
 
 type LText = TL.Text
 
@@ -85,3 +87,6 @@ instance CanEncodeUtf8Func LText ByteString where
     encodeUtf8Func = Data.Text.Lazy.Encoding.encodeUtf8
 instance CanDecodeUtf8Func ByteString LText where
     decodeUtf8Func = Data.Text.Lazy.Encoding.decodeUtf8With Data.Text.Encoding.Error.lenientDecode
+
+instance MonadIO m => CanGetLine (m LText) where
+    getLine = liftIO TL.getLine
