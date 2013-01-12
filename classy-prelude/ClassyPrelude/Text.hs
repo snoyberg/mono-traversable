@@ -89,3 +89,12 @@ instance MonadIO m => CanReadFile (m Text) where
 
 instance CanWriteFileFunc Text where
     writeFileFunc fp = liftIO . T.writeFile (F.encodeString fp)
+
+instance CanToLower Text where
+    toLower = T.toLower
+
+instance CanToUpper Text where
+    toUpper = T.toUpper
+
+instance CanToCaseFold Text where
+    toCaseFold = T.toCaseFold

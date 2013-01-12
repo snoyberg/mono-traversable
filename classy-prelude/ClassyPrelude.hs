@@ -64,6 +64,9 @@ module ClassyPrelude
     , elem
       -- ** Text-like
     , show
+    , toLower
+    , toUpper
+    , toCaseFold
       -- ** IO
     , readFile
     , writeFile
