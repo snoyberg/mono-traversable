@@ -89,7 +89,7 @@ module ClassyPrelude
 
 import qualified Prelude
 import qualified Data.Maybe
-import Control.Monad (when, unless, void, liftM, ap, forever, join)
+import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 
 import CorePrelude
 import ClassyPrelude.Classes
