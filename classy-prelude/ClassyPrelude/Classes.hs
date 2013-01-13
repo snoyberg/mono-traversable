@@ -179,3 +179,7 @@ class CanDecodeUtf8Func ci co | co -> ci, ci -> co where
     decodeUtf8Func :: ci -> co
 instance CanDecodeUtf8Func ci co => CanDecodeUtf8 (ci -> co) where
     decodeUtf8 = decodeUtf8Func
+
+class CanToStrict a b where
+    toStrict :: a -> b
+    fromStrict :: b -> a

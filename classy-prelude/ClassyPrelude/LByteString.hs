@@ -66,3 +66,7 @@ instance CanStripSuffix LByteString where
         | x `L.isSuffixOf` y = Prelude.Just (L.take (L.length y Prelude.- L.length x) y)
         | Prelude.otherwise = Prelude.Nothing
     isSuffixOf = L.isSuffixOf
+
+instance CanToStrict LByteString Data.ByteString.ByteString where
+    toStrict = L.toStrict
+    fromStrict = L.fromStrict

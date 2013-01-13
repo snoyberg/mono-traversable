@@ -85,3 +85,7 @@ instance CanEncodeUtf8Func LText ByteString where
     encodeUtf8Func = Data.Text.Lazy.Encoding.encodeUtf8
 instance CanDecodeUtf8Func ByteString LText where
     decodeUtf8Func = Data.Text.Lazy.Encoding.decodeUtf8With Data.Text.Encoding.Error.lenientDecode
+
+instance CanToStrict LText Data.Text.Text where
+    toStrict = TL.toStrict
+    fromStrict = TL.fromStrict
