@@ -59,3 +59,6 @@ instance CanStripSuffix ByteString where
         | x `S.isSuffixOf` y = Prelude.Just (S.take (S.length y Prelude.- S.length x) y)
         | Prelude.otherwise = Prelude.Nothing
     isSuffixOf = S.isSuffixOf
+
+instance MonadIO m => CanGetLine (m ByteString) where
+    getLine = liftIO S.getLine

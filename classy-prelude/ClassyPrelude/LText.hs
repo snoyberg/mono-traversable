@@ -15,6 +15,9 @@ import qualified Data.Text
 import qualified Data.Text.Lazy.Encoding
 import qualified Data.Text.Encoding.Error
 import Data.ByteString.Lazy (ByteString)
+import qualified Data.Text.Lazy.IO as TL
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import qualified Filesystem.Path.CurrentOS as F
 
 type LText = TL.Text
 
@@ -89,3 +92,21 @@ instance CanDecodeUtf8Func ByteString LText where
 instance CanToStrict LText Data.Text.Text where
     toStrict = TL.toStrict
     fromStrict = TL.fromStrict
+
+instance MonadIO m => CanGetLine (m LText) where
+    getLine = liftIO TL.getLine
+
+instance MonadIO m => CanReadFile (m LText) where
+    readFile = liftIO . TL.readFile . F.encodeString
+
+instance CanWriteFileFunc LText where
+    writeFileFunc fp = liftIO . TL.writeFile (F.encodeString fp)
+
+instance CanToLower LText where
+    toLower = TL.toLower
+
+instance CanToUpper LText where
+    toUpper = TL.toUpper
+
+instance CanToCaseFold LText where
+    toCaseFold = TL.toCaseFold

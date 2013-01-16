@@ -183,3 +183,15 @@ instance CanDecodeUtf8Func ci co => CanDecodeUtf8 (ci -> co) where
 class CanToStrict a b where
     toStrict :: a -> b
     fromStrict :: b -> a
+
+class CanGetLine a where
+    getLine :: a
+
+class CanToLower a where
+    toLower :: a -> a
+
+class CanToUpper a where
+    toUpper :: a -> a
+
+class CanToCaseFold a where
+    toCaseFold :: a -> a
