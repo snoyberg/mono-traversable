@@ -9,12 +9,12 @@ module ClassyPrelude.LByteString
 import qualified Prelude
 import Prelude ((.))
 import ClassyPrelude.Classes
-import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Filesystem.Path.CurrentOS as F
 import Data.Word (Word8)
 import Data.Int (Int64)
+import qualified Data.ByteString
 
 type LByteString = L.ByteString
 
@@ -57,7 +57,7 @@ instance CanFoldFunc LByteString Word8 accum where
 instance CanReplicate LByteString Word8 Int64 where
     replicate = L.replicate
 
-instance CanToChunks LByteString B.ByteString where
+instance CanToChunks LByteString Data.ByteString.ByteString where
     toChunks = L.toChunks
     fromChunks = L.fromChunks
 
@@ -67,6 +67,6 @@ instance CanStripSuffix LByteString where
         | Prelude.otherwise = Prelude.Nothing
     isSuffixOf = L.isSuffixOf
 
-instance CanToStrict LByteString B.ByteString where
-    toStrict = B.concat . toChunks
+instance CanToStrict LByteString Data.ByteString.ByteString where
+    toStrict = Data.ByteString.concat . toChunks
     fromStrict = fromChunks . Prelude.return
