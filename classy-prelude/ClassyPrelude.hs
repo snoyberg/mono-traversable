@@ -64,9 +64,13 @@ module ClassyPrelude
     , elem
       -- ** Text-like
     , show
-      -- ** Files
+    , toLower
+    , toUpper
+    , toCaseFold
+      -- ** IO
     , readFile
     , writeFile
+    , getLine
       -- ** Chunking
     , toChunks
     , fromChunks
@@ -85,7 +89,7 @@ module ClassyPrelude
 
 import qualified Prelude
 import qualified Data.Maybe
-import Control.Monad (when, unless, void, liftM, ap, forever)
+import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 
 import CorePrelude
 import ClassyPrelude.Classes
