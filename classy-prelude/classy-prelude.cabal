@@ -31,7 +31,7 @@ library
                      , transformers
                      , containers                    >= 0.4.2
                      , text
-                     , bytestring                    >= 0.10
+                     , bytestring
                      , vector
                      , unordered-containers
                      , hashable
