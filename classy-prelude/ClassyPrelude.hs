@@ -74,6 +74,7 @@ module ClassyPrelude
     , readFile
     , writeFile
     , getLine
+    , print
       -- ** Chunking
     , toChunks
     , fromChunks
@@ -96,7 +97,7 @@ import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, se
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
 
-import CorePrelude
+import CorePrelude hiding (print)
 import ClassyPrelude.Classes
 
 import ClassyPrelude.ByteString ()
@@ -193,3 +194,6 @@ forM_ = flip mapM_
 
 elem :: CanMember c k => k -> c -> Bool
 elem = member
+
+print :: (Show a, MonadIO m) => a -> m ()
+print = liftIO . Prelude.print
