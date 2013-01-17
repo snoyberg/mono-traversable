@@ -14,6 +14,9 @@ module ClassyPrelude
     , (++)
       -- ** Monad
     , module Control.Monad
+      -- ** Mutable references
+    , module Control.Concurrent.MVar.Lifted
+    , module Data.IORef.Lifted
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -90,6 +93,8 @@ module ClassyPrelude
 import qualified Prelude
 import qualified Data.Maybe
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
+import Control.Concurrent.MVar.Lifted
+import Data.IORef.Lifted
 
 import CorePrelude
 import ClassyPrelude.Classes
