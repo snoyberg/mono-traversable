@@ -96,12 +96,6 @@ instance CanToStrict LText Data.Text.Text where
 instance MonadIO m => CanGetLine (m LText) where
     getLine = liftIO TL.getLine
 
-instance MonadIO m => CanReadFile (m LText) where
-    readFile = liftIO . TL.readFile . F.encodeString
-
-instance CanWriteFileFunc LText where
-    writeFileFunc fp = liftIO . TL.writeFile (F.encodeString fp)
-
 instance CanToLower LText where
     toLower = TL.toLower
 

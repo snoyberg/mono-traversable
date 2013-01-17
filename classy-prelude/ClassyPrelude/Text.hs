@@ -84,12 +84,6 @@ instance CanDecodeUtf8Func ByteString Text where
 instance MonadIO m => CanGetLine (m Text) where
     getLine = liftIO T.getLine
 
-instance MonadIO m => CanReadFile (m Text) where
-    readFile = liftIO . T.readFile . F.encodeString
-
-instance CanWriteFileFunc Text where
-    writeFileFunc fp = liftIO . T.writeFile (F.encodeString fp)
-
 instance CanToLower Text where
     toLower = T.toLower
 
