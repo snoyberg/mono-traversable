@@ -51,6 +51,9 @@ class CanPack c i | c -> i where
     pack :: [i] -> c
     unpack :: c -> [i]
 
+class CanIntersperse c i | c -> i where
+    intersperse :: i -> c -> c
+
 class Monad m => CanMapM f m i o where
     mapM :: (i -> m o) -> f
 class Monad m => CanMapMFunc ci mco m i o | ci -> i, mco -> m o, ci o m -> mco, mco i -> ci where
