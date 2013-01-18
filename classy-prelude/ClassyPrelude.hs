@@ -22,6 +22,7 @@ module ClassyPrelude
     , map
     , concatMap
     , filter
+    , find
     , length
     , singleton
     , null
