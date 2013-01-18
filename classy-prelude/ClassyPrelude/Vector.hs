@@ -7,7 +7,7 @@ module ClassyPrelude.Vector
     ) where
 
 import qualified Prelude
-import Prelude ((.))
+import Prelude ((.), ($), otherwise)
 import ClassyPrelude.Classes
 import Data.Vector (Vector)
 import qualified Data.Vector as V
@@ -56,3 +56,14 @@ instance CanReplicate (Vector a) a Prelude.Int where
 
 instance CanReplicateM (Vector a) a Prelude.Int where
     replicateM = V.replicateM
+
+instance (Prelude.Eq a) => CanNub (Vector a) where
+    nub v = nub' v V.empty
+      where
+        nub' v results 
+          | null v = V.empty
+          | V.elem head results = nub' tail results
+          | otherwise = V.cons head $ nub' tail $ V.cons head results
+          where
+            head = V.head v
+            tail = V.unsafeTail v

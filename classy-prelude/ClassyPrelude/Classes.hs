@@ -195,3 +195,6 @@ class CanToUpper a where
 
 class CanToCaseFold a where
     toCaseFold :: a -> a
+
+class CanNub c where
+    nub :: c -> c
