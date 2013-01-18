@@ -58,6 +58,8 @@ module ClassyPrelude
     , replicate
     , encodeUtf8
     , decodeUtf8
+    , subsequences
+    , permutations
       -- ** Map-like
     , lookup
     , insert
