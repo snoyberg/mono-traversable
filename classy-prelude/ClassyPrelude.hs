@@ -56,6 +56,7 @@ module ClassyPrelude
     , reverse
     , readMay
     , replicate
+    , intercalate
     , intersperse
     , encodeUtf8
     , decodeUtf8
@@ -156,6 +157,10 @@ infixr 5  ++
 (++) :: Monoid m => m -> m -> m
 (++) = mappend
 {-# INLINE (++) #-}
+
+-- | A generalization of intercalate, which allows it to be used on any packable data structure, including 'Vector', 'Text', 'ByteString' and, of course, the 'List' itself. The implementation utilizes an intermediate list, which in case of the 'List' input should result in no overhead.
+intercalate :: (Monoid i, CanPack c i) => i -> c -> i
+intercalate xs xss = mconcat (intersperse xs (unpack xss))
 
 asByteString :: ByteString -> ByteString
 asByteString = id
