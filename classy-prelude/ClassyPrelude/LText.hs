@@ -104,3 +104,6 @@ instance CanToUpper LText where
 
 instance CanToCaseFold LText where
     toCaseFold = TL.toCaseFold
+
+instance CanFind LText Prelude.Char where
+    find = TL.find

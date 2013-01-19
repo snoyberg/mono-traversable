@@ -76,3 +76,7 @@ instance CanReplicate [i] i Prelude.Int where
 
 instance CanReplicateM [a] a Prelude.Int where
     replicateM = Control.Monad.replicateM
+
+instance CanFind [a] a where
+    find = Data.List.find
+    
