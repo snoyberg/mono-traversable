@@ -27,6 +27,8 @@ instance CanNull [a] where
 instance CanPack [a] a where
     pack = Prelude.id
     unpack = Prelude.id
+    subsequences = Data.List.subsequences
+    permutations = Data.List.permutations
 instance Prelude.Monad m => CanMapMFunc [i] (m [o]) m i o where
     mapMFunc = Prelude.mapM
 instance CanMapM_Func [a] a where
