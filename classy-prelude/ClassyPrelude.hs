@@ -8,10 +8,11 @@ module ClassyPrelude
       module CorePrelude
       -- * Standard
       -- ** Monoid
-    , concat
     , empty
     , append
     , (++)
+      -- ** Foldable
+    , concat
       -- ** Monad
     , module Control.Monad
       -- ** Mutable references
@@ -99,6 +100,8 @@ import qualified Data.Maybe
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as Foldable
 
 import CorePrelude hiding (print)
 import ClassyPrelude.Classes
@@ -142,8 +145,9 @@ readMay a =
 repack :: (CanPack a i, CanPack b i) => a -> b
 repack = pack . unpack
 
-concat :: Monoid m => [m] -> m
-concat = mconcat
+-- | A generalization of concatenation to any foldable data structure over monoid.
+concat :: (Monoid m, Foldable f) => f m -> m
+concat = Foldable.fold
 {-# INLINE concat #-}
 
 append :: Monoid m => m -> m -> m
