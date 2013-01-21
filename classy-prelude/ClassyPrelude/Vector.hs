@@ -63,3 +63,7 @@ instance CanReplicate (Vector a) a Prelude.Int where
 
 instance CanReplicateM (Vector a) a Prelude.Int where
     replicateM = V.replicateM
+
+instance CanFind (Vector a) a where
+    find = V.find
+    

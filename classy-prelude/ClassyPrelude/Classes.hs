@@ -6,7 +6,8 @@
 module ClassyPrelude.Classes where
 
 import qualified Prelude
-import Prelude (Monad)
+import Prelude (Monad, (.), ($))
+import qualified Data.List
 import qualified Filesystem.Path.CurrentOS as F
 import Control.Monad.IO.Class (MonadIO)
 
@@ -50,6 +51,10 @@ class CanNull c where
 class CanPack c i | c -> i where
     pack :: [i] -> c
     unpack :: c -> [i]
+    subsequences :: c -> [c]
+    subsequences = Data.List.map pack . Data.List.subsequences . unpack
+    permutations :: c -> [c]
+    permutations = Data.List.map pack . Data.List.permutations . unpack
 
 class CanIntersperse c i | c -> i where
     intersperse :: i -> c -> c
@@ -198,3 +203,6 @@ class CanToUpper a where
 
 class CanToCaseFold a where
     toCaseFold :: a -> a
+
+class CanFind c i where
+    find :: (i -> Prelude.Bool) -> c -> Prelude.Maybe i

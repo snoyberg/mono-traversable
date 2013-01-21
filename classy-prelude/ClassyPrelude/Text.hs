@@ -94,3 +94,6 @@ instance CanToUpper Text where
 
 instance CanToCaseFold Text where
     toCaseFold = T.toCaseFold
+
+instance CanFind Text Prelude.Char where
+    find = T.find

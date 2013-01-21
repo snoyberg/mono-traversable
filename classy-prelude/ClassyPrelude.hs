@@ -22,6 +22,7 @@ module ClassyPrelude
     , map
     , concatMap
     , filter
+    , find
     , length
     , singleton
     , null
@@ -60,6 +61,8 @@ module ClassyPrelude
     , intersperse
     , encodeUtf8
     , decodeUtf8
+    , subsequences
+    , permutations
       -- ** Map-like
     , lookup
     , insert

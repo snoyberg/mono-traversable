@@ -11,6 +11,7 @@ import Prelude ((.), Char)
 import ClassyPrelude.Classes
 import Data.Set (Set)
 import qualified Data.Set as Set
+import qualified Data.Foldable as Foldable
 
 instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
     mapFunc = Set.map
@@ -33,3 +34,6 @@ instance CanFoldFunc (Set a) a accum where
 
 instance Prelude.Ord a => CanMapM_Func (Set a) a where
     mapM_Func f = Prelude.mapM_ f . unpack
+
+instance CanFind (Set a) a where
+    find = Foldable.find

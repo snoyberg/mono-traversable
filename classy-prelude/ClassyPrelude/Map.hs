@@ -11,6 +11,7 @@ import Prelude ((.), Char)
 import ClassyPrelude.Classes
 import Data.Map (Map)
 import qualified Data.Map as Map
+import qualified Data.Foldable as Foldable
 
 instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
     mapFunc = Map.map
@@ -31,3 +32,5 @@ instance Prelude.Ord k => CanInsertVal (Map k v) k v where
     insertVal = Map.insert
 instance Prelude.Ord k => CanDeleteVal (Map k v) k where
     deleteVal = Map.delete
+instance CanFind (Map k v) v where
+    find = Foldable.find
