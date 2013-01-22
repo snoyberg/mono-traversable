@@ -70,3 +70,6 @@ instance CanStripSuffix LByteString where
 instance CanToStrict LByteString Data.ByteString.ByteString where
     toStrict = Data.ByteString.concat . toChunks
     fromStrict = fromChunks . Prelude.return
+
+instance CanPartition LByteString Word8 where
+    partition = L.partition

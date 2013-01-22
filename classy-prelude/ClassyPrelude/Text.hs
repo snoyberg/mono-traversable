@@ -95,3 +95,6 @@ instance CanToCaseFold Text where
 
 instance CanFind Text Prelude.Char where
     find = T.find
+
+instance CanPartition Text Prelude.Char where
+    partition = T.partition

@@ -107,3 +107,6 @@ instance CanToCaseFold LText where
 
 instance CanFind LText Prelude.Char where
     find = TL.find
+
+instance CanPartition LText Prelude.Char where
+    partition = TL.partition

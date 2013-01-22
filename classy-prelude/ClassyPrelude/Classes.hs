@@ -206,3 +206,5 @@ class CanFind c i | c -> i where
 class CanConcat c i | c -> i where
     concat :: c -> i
     
+class CanPartition c i | c -> i where
+    partition :: (i -> Prelude.Bool) -> c -> (c, c)
