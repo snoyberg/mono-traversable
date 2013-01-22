@@ -101,8 +101,6 @@ import qualified Data.Maybe
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
-import Data.Foldable (Foldable)
-import qualified Data.Foldable as Foldable
 
 import CorePrelude hiding (print)
 import ClassyPrelude.Classes
@@ -159,8 +157,8 @@ infixr 5  ++
 (++) = mappend
 {-# INLINE (++) #-}
 
-intercalate :: (Monoid i, Foldable c, CanIntersperse (c i) i) => i -> c i -> i
-intercalate xs xss = Foldable.fold (intersperse xs xss)
+intercalate :: (CanConcat c i, CanIntersperse c i) => i -> c -> i
+intercalate xs xss = concat (intersperse xs xss)
 
 asByteString :: ByteString -> ByteString
 asByteString = id
