@@ -77,6 +77,5 @@ instance CanReplicate [i] i Prelude.Int where
 instance CanReplicateM [a] a Prelude.Int where
     replicateM = Control.Monad.replicateM
 
-instance (Prelude.Eq a) => CanNub [a] where
-    nub = Data.List.nub
-    
+instance CanNubBy [a] a where
+    nubBy = Data.List.nubBy

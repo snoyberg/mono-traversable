@@ -196,5 +196,5 @@ class CanToUpper a where
 class CanToCaseFold a where
     toCaseFold :: a -> a
 
-class CanNub c where
-    nub :: c -> c
+class CanNubBy c i | c -> i where
+    nubBy :: (i -> i -> Prelude.Bool) -> c -> c

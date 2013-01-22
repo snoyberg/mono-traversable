@@ -59,6 +59,7 @@ module ClassyPrelude
     , encodeUtf8
     , decodeUtf8
     , nub
+    , nubBy
       -- ** Map-like
     , lookup
     , insert
@@ -198,3 +199,6 @@ elem = member
 
 print :: (Show a, MonadIO m) => a -> m ()
 print = liftIO . Prelude.print
+
+nub :: (Eq i, CanNubBy c i) => c -> c
+nub = nubBy (==)
