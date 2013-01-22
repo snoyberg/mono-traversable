@@ -8,7 +8,6 @@ module ClassyPrelude
       module CorePrelude
       -- * Standard
       -- ** Monoid
-    , concat
     , empty
     , append
     , (++)
@@ -20,6 +19,7 @@ module ClassyPrelude
       -- * Non-standard
       -- ** List-like classes
     , map
+    , concat
     , concatMap
     , filter
     , find
@@ -99,6 +99,8 @@ import qualified Data.Maybe
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as Foldable
 
 import CorePrelude hiding (print)
 import ClassyPrelude.Classes
@@ -141,10 +143,6 @@ readMay a =
 -- @repack = pack . unpack@.
 repack :: (CanPack a i, CanPack b i) => a -> b
 repack = pack . unpack
-
-concat :: Monoid m => [m] -> m
-concat = mconcat
-{-# INLINE concat #-}
 
 append :: Monoid m => m -> m -> m
 append = mappend

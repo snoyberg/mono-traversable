@@ -12,6 +12,11 @@ import ClassyPrelude.Classes
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 
+import Data.Monoid (Monoid)
+import qualified Data.Monoid as Monoid
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as Foldable
+
 instance CanMapFunc (Vector a) (Vector b) a b where
     mapFunc = V.map
 instance CanConcatMapFunc (Vector a) (Vector b) a (Vector b) where
@@ -60,3 +65,5 @@ instance CanReplicateM (Vector a) a Prelude.Int where
 instance CanFind (Vector a) a where
     find = V.find
     
+instance (Monoid m) => CanConcat (Vector m) m where
+    concat = Foldable.fold
