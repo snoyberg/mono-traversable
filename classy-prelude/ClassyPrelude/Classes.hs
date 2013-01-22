@@ -17,7 +17,6 @@ class CanMapFunc ci co i o | ci -> i, co -> o, ci o -> co, co i -> ci where
     mapFunc :: (i -> o) -> ci -> co
 instance CanMapFunc ci co i o => CanMap (ci -> co) i o where
     map = mapFunc
-
 class CanConcatMap f i o where
     concatMap :: (i -> o) -> f
 class CanConcatMapFunc ci co i o | ci -> i, co -> o, ci o -> co, co i -> ci where
@@ -203,3 +202,7 @@ class CanToCaseFold a where
 
 class CanFind c i where
     find :: (i -> Prelude.Bool) -> c -> Prelude.Maybe i
+
+class CanConcat c i | c -> i where
+    concat :: c -> i
+    

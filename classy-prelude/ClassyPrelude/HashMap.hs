@@ -12,6 +12,10 @@ import ClassyPrelude.Classes
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as Map
 import Data.Hashable (Hashable)
+
+import Data.Monoid (Monoid)
+import qualified Data.Monoid as Monoid
+import Data.Foldable (Foldable)
 import qualified Data.Foldable as Foldable
 
 type Map = HashMap
@@ -37,3 +41,5 @@ instance (Prelude.Eq k, Hashable k) => CanDeleteVal (Map k v) k where
     deleteVal = Map.delete
 instance CanFind (Map k v) v where
     find = Foldable.find
+instance (Monoid v) => CanConcat (Map k v) v where
+    concat = Foldable.fold

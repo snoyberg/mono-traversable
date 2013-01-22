@@ -11,8 +11,6 @@ module ClassyPrelude
     , empty
     , append
     , (++)
-      -- ** Foldable
-    , concat
       -- ** Monad
     , module Control.Monad
       -- ** Mutable references
@@ -21,6 +19,7 @@ module ClassyPrelude
       -- * Non-standard
       -- ** List-like classes
     , map
+    , concat
     , concatMap
     , filter
     , find
@@ -144,11 +143,6 @@ readMay a =
 -- @repack = pack . unpack@.
 repack :: (CanPack a i, CanPack b i) => a -> b
 repack = pack . unpack
-
--- | A generalization of concatenation to any foldable data structure over monoid.
-concat :: (Monoid m, Foldable f) => f m -> m
-concat = Foldable.fold
-{-# INLINE concat #-}
 
 append :: Monoid m => m -> m -> m
 append = mappend
