@@ -201,5 +201,5 @@ class CanToUpper a where
 class CanToCaseFold a where
     toCaseFold :: a -> a
 
-class CanFind c i where
+class CanFind c i | c -> i where
     find :: (i -> Prelude.Bool) -> c -> Prelude.Maybe i
