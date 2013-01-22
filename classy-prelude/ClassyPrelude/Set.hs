@@ -11,6 +11,10 @@ import Prelude ((.), Char)
 import ClassyPrelude.Classes
 import Data.Set (Set)
 import qualified Data.Set as Set
+
+import Data.Monoid (Monoid)
+import qualified Data.Monoid as Monoid
+import Data.Foldable (Foldable)
 import qualified Data.Foldable as Foldable
 
 instance (Prelude.Ord a, Prelude.Ord b) => CanMapFunc (Set a) (Set b) a b where
@@ -37,3 +41,6 @@ instance Prelude.Ord a => CanMapM_Func (Set a) a where
 
 instance CanFind (Set a) a where
     find = Foldable.find
+
+instance (Monoid m) => CanConcat (Set m) m where
+    concat = Foldable.fold

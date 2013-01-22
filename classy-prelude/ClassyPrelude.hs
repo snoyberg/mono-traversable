@@ -8,7 +8,6 @@ module ClassyPrelude
       module CorePrelude
       -- * Standard
       -- ** Monoid
-    , concat
     , empty
     , append
     , (++)
@@ -20,6 +19,7 @@ module ClassyPrelude
       -- * Non-standard
       -- ** List-like classes
     , map
+    , concat
     , concatMap
     , filter
     , find
@@ -145,10 +145,6 @@ readMay a =
 -- @repack = pack . unpack@.
 repack :: (CanPack a i, CanPack b i) => a -> b
 repack = pack . unpack
-
-concat :: Monoid m => [m] -> m
-concat = mconcat
-{-# INLINE concat #-}
 
 append :: Monoid m => m -> m -> m
 append = mappend
