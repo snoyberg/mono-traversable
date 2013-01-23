@@ -5,13 +5,14 @@
 module ClassyPrelude.List () where
 
 import qualified Prelude
-import Prelude ((.))
+import Prelude ((.), otherwise)
 import ClassyPrelude.Classes
 import qualified Data.List
 import qualified Control.Monad
 
 import Data.Monoid (Monoid)
 import qualified Data.Monoid as Monoid
+import qualified Data.Set as Set
 
 instance CanMapFunc [a] [b] a b where
     mapFunc = Prelude.map
@@ -95,3 +96,11 @@ instance CanPartition [a] a where
 
 instance CanNubBy [a] a where
     nubBy = Data.List.nubBy
+
+    nub =
+        go Set.empty
+      where
+        go _ [] = []
+        go set (x:xs)
+            | x `Set.member` set = go set xs
+            | otherwise = x : go (Set.insert x set) xs
