@@ -32,6 +32,8 @@ instance CanPack [a] a where
     unpack = Prelude.id
     subsequences = Data.List.subsequences
     permutations = Data.List.permutations
+instance CanIntersperse [a] a where
+    intersperse = Data.List.intersperse
 instance Prelude.Monad m => CanMapMFunc [i] (m [o]) m i o where
     mapMFunc = Prelude.mapM
 instance CanMapM_Func [a] a where

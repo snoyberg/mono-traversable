@@ -33,6 +33,8 @@ instance CanNull Text where
 instance CanPack Text Prelude.Char where
     pack = T.pack
     unpack = T.unpack
+instance CanIntersperse Text Prelude.Char where
+    intersperse = T.intersperse
 instance CanStripPrefix Text where
     stripPrefix = T.stripPrefix
     isPrefixOf = T.isPrefixOf

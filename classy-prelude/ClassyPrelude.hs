@@ -57,6 +57,8 @@ module ClassyPrelude
     , reverse
     , readMay
     , replicate
+    , intercalate
+    , intersperse
     , encodeUtf8
     , decodeUtf8
     , subsequences
@@ -100,8 +102,6 @@ import qualified Data.Maybe
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
-import Data.Foldable (Foldable)
-import qualified Data.Foldable as Foldable
 
 import CorePrelude hiding (print)
 import ClassyPrelude.Classes
@@ -157,6 +157,9 @@ infixr 5  ++
 (++) :: Monoid m => m -> m -> m
 (++) = mappend
 {-# INLINE (++) #-}
+
+intercalate :: (CanConcat c i, CanIntersperse c i) => i -> c -> i
+intercalate xs xss = concat (intersperse xs xss)
 
 asByteString :: ByteString -> ByteString
 asByteString = id

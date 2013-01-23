@@ -34,6 +34,8 @@ instance CanNull LText where
 instance CanPack LText Prelude.Char where
     pack = TL.pack
     unpack = TL.unpack
+instance CanIntersperse LText Prelude.Char where
+    intersperse = TL.intersperse
 instance CanStripPrefix LText where
     stripPrefix = TL.stripPrefix
     isPrefixOf = TL.isPrefixOf

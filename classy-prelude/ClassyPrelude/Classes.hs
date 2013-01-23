@@ -55,6 +55,9 @@ class CanPack c i | c -> i where
     permutations :: c -> [c]
     permutations = Data.List.map pack . Data.List.permutations . unpack
 
+class CanIntersperse c i | c -> i where
+    intersperse :: i -> c -> c
+
 class Monad m => CanMapM f m i o where
     mapM :: (i -> m o) -> f
 class Monad m => CanMapMFunc ci mco m i o | ci -> i, mco -> m o, ci o m -> mco, mco i -> ci where
@@ -205,6 +208,6 @@ class CanFind c i | c -> i where
 
 class CanConcat c i | c -> i where
     concat :: c -> i
-    
+
 class CanPartition c i | c -> i where
     partition :: (i -> Prelude.Bool) -> c -> (c, c)
