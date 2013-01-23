@@ -64,6 +64,8 @@ module ClassyPrelude
     , subsequences
     , permutations
     , partition
+    , nub
+    , nubBy
       -- ** Map-like
     , lookup
     , insert

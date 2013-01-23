@@ -211,3 +211,9 @@ class CanConcat c i | c -> i where
 
 class CanPartition c i | c -> i where
     partition :: (i -> Prelude.Bool) -> c -> (c, c)
+
+class CanNubBy c i | c -> i where
+    nubBy :: (i -> i -> Prelude.Bool) -> c -> c
+
+    nub :: (Prelude.Ord i, CanNubBy c i) => c -> c
+    nub = nubBy (Prelude.==)

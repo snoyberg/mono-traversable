@@ -86,9 +86,12 @@ instance CanReplicateM [a] a Prelude.Int where
 
 instance CanFind [a] a where
     find = Data.List.find
-    
+
 instance (Monoid m) => CanConcat [m] m where
     concat = Monoid.mconcat
 
 instance CanPartition [a] a where
     partition = Data.List.partition
+
+instance CanNubBy [a] a where
+    nubBy = Data.List.nubBy
