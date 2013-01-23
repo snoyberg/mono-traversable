@@ -67,3 +67,6 @@ instance CanFind (Vector a) a where
     
 instance (Monoid m) => CanConcat (Vector m) m where
     concat = Foldable.fold
+
+instance CanPartition (Vector a) a where
+    partition = V.partition

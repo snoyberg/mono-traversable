@@ -40,3 +40,5 @@ instance CanFind (Map k v) v where
     find = Foldable.find
 instance (Monoid v) => CanConcat (Map k v) v where
     concat = Foldable.fold
+instance Prelude.Ord k => CanPartition (Map k v) v where
+    partition = Map.partition

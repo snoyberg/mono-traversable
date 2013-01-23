@@ -61,6 +61,7 @@ module ClassyPrelude
     , decodeUtf8
     , subsequences
     , permutations
+    , partition
       -- ** Map-like
     , lookup
     , insert

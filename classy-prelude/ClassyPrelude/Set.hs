@@ -44,3 +44,6 @@ instance CanFind (Set a) a where
 
 instance (Monoid m) => CanConcat (Set m) m where
     concat = Foldable.fold
+
+instance (Prelude.Ord a) => CanPartition (Set a) a where
+    partition = Set.partition

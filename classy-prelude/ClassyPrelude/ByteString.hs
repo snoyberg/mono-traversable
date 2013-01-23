@@ -62,3 +62,6 @@ instance CanStripSuffix ByteString where
 
 instance MonadIO m => CanGetLine (m ByteString) where
     getLine = liftIO S.getLine
+
+instance CanPartition ByteString Word8 where
+    partition = S.partition

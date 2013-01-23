@@ -87,3 +87,6 @@ instance CanFind [a] a where
     
 instance (Monoid m) => CanConcat [m] m where
     concat = Monoid.mconcat
+
+instance CanPartition [a] a where
+    partition = Data.List.partition

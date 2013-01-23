@@ -43,3 +43,5 @@ instance CanFind (Map k v) v where
     find = Foldable.find
 instance (Monoid v) => CanConcat (Map k v) v where
     concat = Foldable.fold
+instance Hashable k => CanPartition (Map k v) v where
+    partition p m = (Map.filter p m, Map.filter (Prelude.not . p) m)
