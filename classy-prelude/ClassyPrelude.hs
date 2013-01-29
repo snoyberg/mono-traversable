@@ -78,6 +78,8 @@ module ClassyPrelude
     , toLower
     , toUpper
     , toCaseFold
+    , toStrict
+    , fromStrict
       -- ** IO
     , readFile
     , writeFile
