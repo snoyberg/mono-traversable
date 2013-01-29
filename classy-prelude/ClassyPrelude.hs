@@ -72,6 +72,7 @@ module ClassyPrelude
     , delete
       -- ** Set-like
     , member
+    , notMember
     , elem
       -- ** Text-like
     , show
