@@ -94,6 +94,8 @@ instance (CanDeleteVal c' k, c ~ c') => CanDelete (k -> c -> c') where
 
 class CanMember c k | c -> k where
     member :: k -> c -> Prelude.Bool
+    notMember :: k -> c -> Prelude.Bool
+    notMember k = Prelude.not . member k
 
 class CanReadFile a where
     readFile :: F.FilePath -> a
