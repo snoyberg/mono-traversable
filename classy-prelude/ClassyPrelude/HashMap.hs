@@ -53,3 +53,12 @@ instance (Monoid v) => CanConcat (Map k v) v where
     
 instance Hashable k => CanPartition (Map k v) v where
     partition p m = (Map.filter p m, Map.filter (Prelude.not . p) m)
+
+instance (Hashable k, Eq k) => CanUnion (Map k a) where
+    union = Map.union
+
+instance (Hashable k, Eq k) => CanDifference (Map k a) where
+    difference = Map.difference
+
+instance (Hashable k, Eq k) => CanIntersection (Map k a) where
+    intersection = Map.intersection

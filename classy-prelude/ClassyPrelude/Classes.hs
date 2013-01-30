@@ -241,3 +241,12 @@ class CanNubBy c i | c -> i where
 
     nub :: (Ord i, CanNubBy c i) => c -> c
     nub = nubBy (Prelude.==)
+
+class CanUnion c where
+    union :: c -> c -> c
+
+class CanDifference c where
+    difference :: c -> c -> c
+
+class CanIntersection c where
+    intersection :: c -> c -> c

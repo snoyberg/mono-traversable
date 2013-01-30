@@ -50,3 +50,12 @@ instance (Monoid m) => CanConcat (Set m) m where
 
 instance (Ord a) => CanPartition (Set a) a where
     partition = Set.partition
+
+instance (Ord a) => CanUnion (Set a) where
+    union = Set.union
+
+instance (Ord a) => CanDifference (Set a) where
+    difference = Set.difference
+
+instance (Ord a) => CanIntersection (Set a) where
+    intersection = Set.intersection

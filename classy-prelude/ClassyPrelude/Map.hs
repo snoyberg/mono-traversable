@@ -50,3 +50,12 @@ instance (Monoid v) => CanConcat (Map k v) v where
 
 instance Ord k => CanPartition (Map k v) v where
     partition = Map.partition
+
+instance (Ord k) => CanUnion (Map k a) where
+    union = Map.union
+
+instance (Ord k) => CanDifference (Map k a) where
+    difference = Map.difference
+
+instance (Ord k) => CanIntersection (Map k a) where
+    intersection = Map.intersection
