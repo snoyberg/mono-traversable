@@ -91,6 +91,7 @@ module ClassyPrelude
     , toChunks
     , fromChunks
       -- ** Force types
+      -- | Helper functions for situations type inferer gets confused.
     , asByteString
     , asLByteString
     , asHashMap
@@ -202,9 +203,11 @@ forM = flip mapM
 forM_ :: (Monad m, CanMapM_Func ci i) => ci -> (i -> m o) -> m ()
 forM_ = flip mapM_
 
+-- | An alias for 'member'
 elem :: CanMember c k => k -> c -> Bool
 elem = member
 
+-- | An alias for 'notMember'
 notElem :: CanMember c k => k -> c -> Bool
 notElem = notMember
 
