@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.Classes where
 
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool)
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Ordering)
 import Control.Monad.IO.Class (MonadIO)
 import Filesystem.Path.CurrentOS (FilePath)
 import qualified Prelude
@@ -250,3 +250,6 @@ class CanDifference c where
 
 class CanIntersection c where
     intersection :: c -> c -> c
+
+class CanSortBy c a | c -> a where
+    sortBy :: (a -> a -> Ordering) -> c -> c

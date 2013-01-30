@@ -66,6 +66,9 @@ module ClassyPrelude
     , partition
     , nub
     , nubBy
+    , sort
+    , sortBy
+    , sortWith
       -- ** Map-like
     , lookup
     , insert
@@ -97,7 +100,7 @@ module ClassyPrelude
     , toChunks
     , fromChunks
       -- ** Force types
-      -- | Helper functions for situations type inferer gets confused.
+      -- | Helper functions for situations where type inferer gets confused.
     , asByteString
     , asLByteString
     , asHashMap
@@ -244,3 +247,12 @@ take i c  = Prelude.fst (splitAt i c)
 
 drop :: CanSplitAt c i => i -> c -> c
 drop i c  = Prelude.snd (splitAt i c)
+
+sort :: (CanSortBy c a, Ord a) => c -> c
+sort = sortBy compare
+
+-- | Sort elements using the user supplied function to project something out of
+-- each element.
+-- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:sortWith>.
+sortWith :: (CanSortBy c a, Ord b) => (a -> b) -> c -> c
+sortWith f = sortBy $ comparing f
