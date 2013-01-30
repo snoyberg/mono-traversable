@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DefaultSignatures #-}
 module ClassyPrelude.Classes where
 
 import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool)
