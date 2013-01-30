@@ -16,9 +16,6 @@ import qualified Data.Traversable as Traversable
 instance CanMapFunc (Maybe a) (Maybe b) a b where
   mapFunc = Monad.fmap
 
-instance CanConcatMapFunc (Maybe a) [b] a [b] where
-  concatMapFunc = Foldable.concatMap
-
 instance CanConcatMapFunc (Maybe a) (Maybe b) a (Maybe b) where
   concatMapFunc = (Monad.=<<)
 
