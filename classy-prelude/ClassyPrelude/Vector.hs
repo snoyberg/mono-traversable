@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -6,74 +5,87 @@ module ClassyPrelude.Vector
     ( Vector
     ) where
 
-import qualified Prelude
-import Prelude ((.), ($))
 import ClassyPrelude.Classes
-import Data.Vector (Vector)
-import qualified Data.Vector as V
-
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
 import Data.Monoid (Monoid)
-import qualified Data.Monoid as Monoid
-import Data.Foldable (Foldable)
+import Data.Vector (Vector)
+import qualified Prelude
 import qualified Data.Foldable as Foldable
+import qualified Data.Vector as Vector
+
 
 instance CanMapFunc (Vector a) (Vector b) a b where
-    mapFunc = V.map
+    mapFunc = Vector.map
+
 instance CanConcatMapFunc (Vector a) (Vector b) a (Vector b) where
-    concatMapFunc = V.concatMap
+    concatMapFunc = Vector.concatMap
+
 instance CanFilterFunc (Vector a) (Vector a) a where
-    filterFunc = V.filter
+    filterFunc = Vector.filter
+
 instance CanFilterMFunc (Vector a) a where
-    filterMFunc = V.filterM
-instance CanLength (Vector a) Prelude.Int where
-    length = V.length
+    filterMFunc = Vector.filterM
+
+instance CanLength (Vector a) Int where
+    length = Vector.length
+
 instance CanSingleton (Vector a) a where
-    singleton = V.singleton
+    singleton = Vector.singleton
+
 instance CanNull (Vector a) where
-    null = V.null
+    null = Vector.null
+
 instance CanPack (Vector a) a where
-    pack = V.fromList
-    unpack = V.toList
+    pack = Vector.fromList
+    unpack = Vector.toList
+
 instance CanIntersperse (Vector a) a where
     -- | Implementation is a rip off from <http://hackage.haskell.org/packages/archive/base/latest/doc/html/src/Data-List.html#intersperse>.
-    intersperse _ xs | null xs = V.empty
-    intersperse sep xs = V.cons (V.head xs) $ prependToAll sep $ V.unsafeTail xs
+    intersperse _ xs | null xs = Vector.empty
+    intersperse sep xs = Vector.cons (Vector.head xs) $ prependToAll sep $ Vector.unsafeTail xs
       where
-        prependToAll _ xs | null xs = V.empty
-        prependToAll sep xs = V.cons sep $ V.cons (V.head xs) $ prependToAll sep $ V.unsafeTail xs
-instance Prelude.Monad m => CanMapMFunc (Vector i) (m (Vector o)) m i o where
-    mapMFunc = V.mapM
+        prependToAll _ xs | null xs = Vector.empty
+        prependToAll sep xs = Vector.cons sep $ Vector.cons (Vector.head xs) $ prependToAll sep $ Vector.unsafeTail xs
+
+instance Monad m => CanMapMFunc (Vector i) (m (Vector o)) m i o where
+    mapMFunc = Vector.mapM
+
 instance CanMapM_Func (Vector a) a where
-    mapM_Func = V.mapM_
-instance Prelude.Eq x => CanMember (Vector x) x where
-    member x = V.any (Prelude.== x)
+    mapM_Func = Vector.mapM_
+
+instance Eq x => CanMember (Vector x) x where
+    member x = Vector.any (Prelude.== x)
+
 instance CanBreak (Vector a) a where
-    break = V.break
-    span = V.span
-    dropWhile = V.dropWhile
-    takeWhile = V.takeWhile
+    break = Vector.break
+    span = Vector.span
+    dropWhile = Vector.dropWhile
+    takeWhile = Vector.takeWhile
+
 instance CanAny (Vector a) a where
-    any = V.any
-    all = V.all
-instance CanSplitAt (Vector a) Prelude.Int where
-    splitAt = V.splitAt
+    any = Vector.any
+    all = Vector.all
+
+instance CanSplitAt (Vector a) Int where
+    splitAt = Vector.splitAt
+
 instance CanFoldFunc (Vector a) a accum where
-    foldFunc = V.foldl'
+    foldFunc = Vector.foldl'
 
 instance CanReverse (Vector a) where
-    reverse = V.reverse
+    reverse = Vector.reverse
 
-instance CanReplicate (Vector a) a Prelude.Int where
-    replicate = V.replicate
+instance CanReplicate (Vector a) a Int where
+    replicate = Vector.replicate
 
-instance CanReplicateM (Vector a) a Prelude.Int where
-    replicateM = V.replicateM
+instance CanReplicateM (Vector a) a Int where
+    replicateM = Vector.replicateM
 
 instance CanFind (Vector a) a where
-    find = V.find
+    find = Vector.find
     
 instance (Monoid m) => CanConcat (Vector m) m where
     concat = Foldable.fold
 
 instance CanPartition (Vector a) a where
-    partition = V.partition
+    partition = Vector.partition

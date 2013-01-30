@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -6,109 +5,121 @@ module ClassyPrelude.LText
     ( LText
     ) where
 
-import qualified Prelude
-import Prelude ((.), Char)
 import ClassyPrelude.Classes
-import qualified Data.Text.Lazy as TL
-import Data.Int (Int64)
-import qualified Data.Text
-import qualified Data.Text.Lazy.Encoding
-import qualified Data.Text.Encoding.Error
-import Data.ByteString.Lazy (ByteString)
-import qualified Data.Text.Lazy.IO as TL
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import qualified Filesystem.Path.CurrentOS as F
+import Data.Int (Int64)
+import Data.Text (Text)
+import qualified Prelude
+import qualified Data.ByteString.Lazy as LByteString
+import qualified Data.Text.Lazy as LText
+import qualified Data.Text.Lazy.IO as LText
+import qualified Data.Text.Lazy.Encoding as LText
+import qualified Data.Text.Encoding.Error as Text
 
-type LText = TL.Text
+
+type LText = LText.Text
+type LByteString = LByteString.ByteString
 
 instance CanMapFunc LText LText Char Char where
-    mapFunc = TL.map
+    mapFunc = LText.map
+
 instance CanConcatMapFunc LText LText Char LText where
-    concatMapFunc = TL.concatMap
+    concatMapFunc = LText.concatMap
+
 instance CanFilterFunc LText LText Char where
-    filterFunc = TL.filter
-instance CanSingleton LText Prelude.Char where
-    singleton = TL.singleton
+    filterFunc = LText.filter
+
+instance CanSingleton LText Char where
+    singleton = LText.singleton
+
 instance CanNull LText where
-    null = TL.null
-instance CanPack LText Prelude.Char where
-    pack = TL.pack
-    unpack = TL.unpack
-instance CanIntersperse LText Prelude.Char where
-    intersperse = TL.intersperse
+    null = LText.null
+
+instance CanPack LText Char where
+    pack = LText.pack
+    unpack = LText.unpack
+
+instance CanIntersperse LText Char where
+    intersperse = LText.intersperse
+
 instance CanStripPrefix LText where
-    stripPrefix = TL.stripPrefix
-    isPrefixOf = TL.isPrefixOf
-instance CanBreak LText Prelude.Char where
-    break = TL.break
-    span = TL.span
-    dropWhile = TL.dropWhile
-    takeWhile = TL.takeWhile
-instance CanAny LText Prelude.Char where
-    any = TL.any
-    all = TL.all
+    stripPrefix = LText.stripPrefix
+    isPrefixOf = LText.isPrefixOf
+
+instance CanBreak LText Char where
+    break = LText.break
+    span = LText.span
+    dropWhile = LText.dropWhile
+    takeWhile = LText.takeWhile
+
+instance CanAny LText Char where
+    any = LText.any
+    all = LText.all
+
 instance CanSplitAt LText Int64 where
-    splitAt = TL.splitAt
+    splitAt = LText.splitAt
 
 instance CanWords LText where
-    words = TL.words
-    unwords = TL.unwords
+    words = LText.words
+    unwords = LText.unwords
 
 instance CanLinesFunc LText where
-    linesFunc = TL.lines
+    linesFunc = LText.lines
 
 instance CanUnlines LText where
-    unlines = TL.unlines
+    unlines = LText.unlines
 
 instance CanSplit LText Char where
-    split = TL.split
+    split = LText.split
 
 instance CanStripSuffix LText where
-    stripSuffix = TL.stripSuffix
-    isSuffixOf = TL.isSuffixOf
+    stripSuffix = LText.stripSuffix
+    isSuffixOf = LText.isSuffixOf
 
 instance CanIsInfixOf LText where
-    isInfixOf = TL.isInfixOf
+    isInfixOf = LText.isInfixOf
 
 instance CanReverse LText where
-    reverse = TL.reverse
+    reverse = LText.reverse
 
 instance CanLength LText Int64 where
-    length = TL.length
+    length = LText.length
 
 instance CanFoldFunc LText Char accum where
-    foldFunc = TL.foldl'
+    foldFunc = LText.foldl'
 
 instance CanReplicate LText LText Int64 where
-    replicate = TL.replicate
+    replicate = LText.replicate
 
-instance CanToChunks LText Data.Text.Text where
-    toChunks = TL.toChunks
-    fromChunks = TL.fromChunks
+instance CanToChunks LText Text where
+    toChunks = LText.toChunks
+    fromChunks = LText.fromChunks
 
-instance CanEncodeUtf8Func LText ByteString where
-    encodeUtf8Func = Data.Text.Lazy.Encoding.encodeUtf8
-instance CanDecodeUtf8Func ByteString LText where
-    decodeUtf8Func = Data.Text.Lazy.Encoding.decodeUtf8With Data.Text.Encoding.Error.lenientDecode
+instance CanEncodeUtf8Func LText LByteString where
+    encodeUtf8Func = LText.encodeUtf8
 
-instance CanToStrict LText Data.Text.Text where
-    toStrict = TL.toStrict
-    fromStrict = TL.fromStrict
+instance CanDecodeUtf8Func LByteString LText where
+    decodeUtf8Func = LText.decodeUtf8With Text.lenientDecode
+
+instance CanToStrict LText Text where
+    toStrict = LText.toStrict
+    fromStrict = LText.fromStrict
 
 instance MonadIO m => CanGetLine (m LText) where
-    getLine = liftIO TL.getLine
+    getLine = liftIO LText.getLine
 
 instance CanToLower LText where
-    toLower = TL.toLower
+    toLower = LText.toLower
 
 instance CanToUpper LText where
-    toUpper = TL.toUpper
+    toUpper = LText.toUpper
 
 instance CanToCaseFold LText where
-    toCaseFold = TL.toCaseFold
+    toCaseFold = LText.toCaseFold
 
-instance CanFind LText Prelude.Char where
-    find = TL.find
+instance CanFind LText Char where
+    find = LText.find
 
-instance CanPartition LText Prelude.Char where
-    partition = TL.partition
+instance CanPartition LText Char where
+    partition = LText.partition

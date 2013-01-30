@@ -4,14 +4,13 @@
 module ClassyPrelude.Maybe () where
 
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe, Monad, Eq, Int, Bool)
-import Data.Monoid (Monoid)
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Eq, Int, Bool)
 import qualified Prelude
 import qualified Data.Maybe as Maybe
 import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
-import qualified Data.Monoid as Monoid
 import qualified Data.Traversable as Traversable
+
 
 instance CanMapFunc (Maybe a) (Maybe b) a b where
   mapFunc = Monad.fmap
