@@ -74,6 +74,7 @@ module ClassyPrelude
     , member
     , notMember
     , elem
+    , notElem
       -- ** Text-like
     , show
     , toLower
@@ -204,6 +205,9 @@ forM_ = flip mapM_
 
 elem :: CanMember c k => k -> c -> Bool
 elem = member
+
+notElem :: CanMember c k => k -> c -> Bool
+notElem = notMember
 
 print :: (Show a, MonadIO m) => a -> m ()
 print = liftIO . Prelude.print
