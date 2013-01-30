@@ -6,97 +6,109 @@ module ClassyPrelude.Text
     ( Text
     ) where
 
-import qualified Prelude
-import Prelude ((.), Char)
 import ClassyPrelude.Classes
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding
-import qualified Data.Text.Encoding.Error
-import Data.ByteString (ByteString)
-import qualified Data.Text.IO as T
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import qualified Filesystem.Path.CurrentOS as F
+import Data.ByteString (ByteString)
+import Data.Text (Text)
+import qualified Prelude
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
+import qualified Data.Text.Encoding.Error as Text
+import qualified Data.Text.IO as Text
+
 
 instance CanMapFunc Text Text Char Char where
-    mapFunc = T.map
+    mapFunc = Text.map
+
 instance CanConcatMapFunc Text Text Char Text where
-    concatMapFunc = T.concatMap
+    concatMapFunc = Text.concatMap
+
 instance CanFilterFunc Text Text Char where
-    filterFunc = T.filter
-instance CanLength Text Prelude.Int where
-    length = T.length
-instance CanSingleton Text Prelude.Char where
-    singleton = T.singleton
+    filterFunc = Text.filter
+
+instance CanLength Text Int where
+    length = Text.length
+
+instance CanSingleton Text Char where
+    singleton = Text.singleton
+
 instance CanNull Text where
-    null = T.null
-instance CanPack Text Prelude.Char where
-    pack = T.pack
-    unpack = T.unpack
-instance CanIntersperse Text Prelude.Char where
-    intersperse = T.intersperse
+    null = Text.null
+
+instance CanPack Text Char where
+    pack = Text.pack
+    unpack = Text.unpack
+
+instance CanIntersperse Text Char where
+    intersperse = Text.intersperse
+
 instance CanStripPrefix Text where
-    stripPrefix = T.stripPrefix
-    isPrefixOf = T.isPrefixOf
-instance CanBreak Text Prelude.Char where
-    break = T.break
-    span = T.span
-    dropWhile = T.dropWhile
-    takeWhile = T.takeWhile
-instance CanAny Text Prelude.Char where
-    any = T.any
-    all = T.all
-instance CanSplitAt Text Prelude.Int where
-    splitAt = T.splitAt
+    stripPrefix = Text.stripPrefix
+    isPrefixOf = Text.isPrefixOf
+
+instance CanBreak Text Char where
+    break = Text.break
+    span = Text.span
+    dropWhile = Text.dropWhile
+    takeWhile = Text.takeWhile
+
+instance CanAny Text Char where
+    any = Text.any
+    all = Text.all
+
+instance CanSplitAt Text Int where
+    splitAt = Text.splitAt
 
 instance CanWords Text where
-    words = T.words
-    unwords = T.unwords
+    words = Text.words
+    unwords = Text.unwords
 
 instance CanLinesFunc Text where
-    linesFunc = T.lines
+    linesFunc = Text.lines
 
 instance CanUnlines Text where
-    unlines = T.unlines
+    unlines = Text.unlines
 
 instance CanSplit Text Char where
-    split = T.split
+    split = Text.split
 
 instance CanStripSuffix Text where
-    stripSuffix = T.stripSuffix
-    isSuffixOf = T.isSuffixOf
+    stripSuffix = Text.stripSuffix
+    isSuffixOf = Text.isSuffixOf
 
 instance CanIsInfixOf Text where
-    isInfixOf = T.isInfixOf
+    isInfixOf = Text.isInfixOf
 
 instance CanReverse Text where
-    reverse = T.reverse
+    reverse = Text.reverse
 
 instance CanFoldFunc Text Char accum where
-    foldFunc = T.foldl'
+    foldFunc = Text.foldl'
 
-instance CanReplicate Text Text Prelude.Int where
-    replicate = T.replicate
+instance CanReplicate Text Text Int where
+    replicate = Text.replicate
 
 instance CanEncodeUtf8Func Text ByteString where
-    encodeUtf8Func = Data.Text.Encoding.encodeUtf8
+    encodeUtf8Func = Text.encodeUtf8
+    
 instance CanDecodeUtf8Func ByteString Text where
-    decodeUtf8Func = Data.Text.Encoding.decodeUtf8With Data.Text.Encoding.Error.lenientDecode
+    decodeUtf8Func = Text.decodeUtf8With Text.lenientDecode
 
 instance MonadIO m => CanGetLine (m Text) where
-    getLine = liftIO T.getLine
+    getLine = liftIO Text.getLine
 
 instance CanToLower Text where
-    toLower = T.toLower
+    toLower = Text.toLower
 
 instance CanToUpper Text where
-    toUpper = T.toUpper
+    toUpper = Text.toUpper
 
 instance CanToCaseFold Text where
-    toCaseFold = T.toCaseFold
+    toCaseFold = Text.toCaseFold
 
-instance CanFind Text Prelude.Char where
-    find = T.find
+instance CanFind Text Char where
+    find = Text.find
 
-instance CanPartition Text Prelude.Char where
-    partition = T.partition
+instance CanPartition Text Char where
+    partition = Text.partition

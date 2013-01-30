@@ -4,20 +4,24 @@
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.FilePath () where
 
-import qualified Prelude
-import Prelude ((.), Char)
 import ClassyPrelude.Classes
-import qualified Data.List
-import qualified Filesystem.Path.CurrentOS as F
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
+import Filesystem.Path.CurrentOS (FilePath)
+import qualified Prelude
+import qualified Data.List as List
+import qualified Filesystem.Path.CurrentOS as FilePath
 
-instance CanPack F.FilePath Prelude.Char where
-    pack = F.decodeString
-    unpack = F.encodeString
-instance CanIntersperse F.FilePath Prelude.Char where
-    intersperse c = pack . Data.List.intersperse c . unpack
-instance CanStripPrefix F.FilePath where
-    stripPrefix = F.stripPrefix
+
+instance CanPack FilePath Char where
+    pack = FilePath.decodeString
+    unpack = FilePath.encodeString
+
+instance CanIntersperse FilePath Char where
+    intersperse c = pack . List.intersperse c . unpack
+
+instance CanStripPrefix FilePath where
+    stripPrefix = FilePath.stripPrefix
     isPrefixOf a b =
         case stripPrefix a b of
-            Prelude.Nothing -> Prelude.False
-            Prelude.Just{} -> Prelude.True
+            Nothing -> False
+            Just {} -> True

@@ -127,7 +127,7 @@ import ClassyPrelude.Set ()
 import ClassyPrelude.Text ()
 import ClassyPrelude.Vector ()
 
-show :: (Prelude.Show a, CanPack c Char) => a -> c
+show :: (Show a, CanPack c Char) => a -> c
 show = pack . Prelude.show
 
 fromList :: CanPack c i => [i] -> c
@@ -136,7 +136,7 @@ fromList = pack
 toList :: CanPack c i => c -> [i]
 toList = unpack
 
-readMay :: (Prelude.Read b, CanPack a Char) => a -> Maybe b
+readMay :: (Read b, CanPack a Char) => a -> Maybe b
 readMay a =
     case [x | (x, t) <- Prelude.reads (unpack a), null t] of
         [x] -> Just x
@@ -213,3 +213,9 @@ notElem = notMember
 
 print :: (Show a, MonadIO m) => a -> m ()
 print = liftIO . Prelude.print
+
+take :: CanSplitAt c i => i -> c -> c
+take i c  = Prelude.fst (splitAt i c)
+
+drop :: CanSplitAt c i => i -> c -> c
+drop i c  = Prelude.snd (splitAt i c)

@@ -6,72 +6,86 @@ module ClassyPrelude.LByteString
     ( LByteString
     ) where
 
-import qualified Prelude
-import Prelude ((.))
 import ClassyPrelude.Classes
-import qualified Data.ByteString.Lazy as L
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import qualified Filesystem.Path.CurrentOS as F
+import Data.ByteString (ByteString)
 import Data.Word (Word8)
 import Data.Int (Int64)
-import qualified Data.ByteString
+import qualified Prelude
+import qualified Data.ByteString as ByteString
+import qualified Filesystem.Path.CurrentOS as FilePath
+import qualified Data.ByteString.Lazy as LByteString
 
-type LByteString = L.ByteString
+
+type LByteString = LByteString.ByteString
 
 instance CanMapFunc LByteString LByteString Word8 Word8 where
-    mapFunc = L.map
+    mapFunc = LByteString.map
+
 instance CanConcatMapFunc LByteString LByteString Word8 LByteString where
-    concatMapFunc = L.concatMap
+    concatMapFunc = LByteString.concatMap
+
 instance CanFilterFunc LByteString LByteString Word8 where
-    filterFunc = L.filter
+    filterFunc = LByteString.filter
+
 instance CanLength LByteString Int64 where
-    length = L.length
+    length = LByteString.length
+
 instance CanSingleton LByteString Word8 where
-    singleton = L.singleton
+    singleton = LByteString.singleton
+
 instance CanNull LByteString where
-    null = L.null
+    null = LByteString.null
+
 instance CanPack LByteString Word8 where
-    pack = L.pack
-    unpack = L.unpack
+    pack = LByteString.pack
+    unpack = LByteString.unpack
+
 instance CanIntersperse LByteString Word8 where
-    intersperse = L.intersperse
+    intersperse = LByteString.intersperse
+
 instance MonadIO m => CanReadFile (m LByteString) where
-    readFile = liftIO . L.readFile . F.encodeString
+    readFile = liftIO . LByteString.readFile . FilePath.encodeString
+
 instance CanWriteFileFunc LByteString where
-    writeFileFunc fp = liftIO . L.writeFile (F.encodeString fp)
+    writeFileFunc fp = liftIO . LByteString.writeFile (FilePath.encodeString fp)
+
 instance CanBreak LByteString Word8 where
-    break = L.break
-    span = L.span
-    dropWhile = L.dropWhile
-    takeWhile = L.takeWhile
+    break = LByteString.break
+    span = LByteString.span
+    dropWhile = LByteString.dropWhile
+    takeWhile = LByteString.takeWhile
+
 instance CanAny LByteString Word8 where
-    any = L.any
-    all = L.all
+    any = LByteString.any
+    all = LByteString.all
+
 instance CanSplitAt LByteString Int64 where
-    splitAt = L.splitAt
+    splitAt = LByteString.splitAt
 
 instance CanReverse LByteString where
-    reverse = L.reverse
+    reverse = LByteString.reverse
 
 instance CanFoldFunc LByteString Word8 accum where
-    foldFunc = L.foldl'
+    foldFunc = LByteString.foldl'
 
 instance CanReplicate LByteString Word8 Int64 where
-    replicate = L.replicate
+    replicate = LByteString.replicate
 
-instance CanToChunks LByteString Data.ByteString.ByteString where
-    toChunks = L.toChunks
-    fromChunks = L.fromChunks
+instance CanToChunks LByteString ByteString where
+    toChunks = LByteString.toChunks
+    fromChunks = LByteString.fromChunks
 
 instance CanStripSuffix LByteString where
     stripSuffix x y
-        | x `L.isSuffixOf` y = Prelude.Just (L.take (L.length y Prelude.- L.length x) y)
-        | Prelude.otherwise = Prelude.Nothing
-    isSuffixOf = L.isSuffixOf
+        | x `LByteString.isSuffixOf` y = Just (LByteString.take (LByteString.length y Prelude.- LByteString.length x) y)
+        | Prelude.otherwise = Nothing
+    isSuffixOf = LByteString.isSuffixOf
 
-instance CanToStrict LByteString Data.ByteString.ByteString where
-    toStrict = Data.ByteString.concat . toChunks
+instance CanToStrict LByteString ByteString where
+    toStrict = ByteString.concat . toChunks
     fromStrict = fromChunks . Prelude.return
 
 instance CanPartition LByteString Word8 where
-    partition = L.partition
+    partition = LByteString.partition

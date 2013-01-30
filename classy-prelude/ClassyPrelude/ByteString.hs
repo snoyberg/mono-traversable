@@ -6,64 +6,77 @@ module ClassyPrelude.ByteString
     ( ByteString
     ) where
 
-import qualified Prelude
-import Prelude ((.))
 import ClassyPrelude.Classes
-import qualified Data.ByteString as S
-import Data.ByteString (ByteString)
+import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import qualified Filesystem.Path.CurrentOS as F
+import Data.ByteString (ByteString)
 import Data.Word (Word8)
+import qualified Prelude
+import qualified Data.ByteString as ByteString
+import qualified Filesystem.Path.CurrentOS as FilePath
+
 
 instance CanMapFunc ByteString ByteString Word8 Word8 where
-    mapFunc = S.map
+    mapFunc = ByteString.map
+
 instance CanConcatMapFunc ByteString ByteString Word8 ByteString where
-    concatMapFunc = S.concatMap
+    concatMapFunc = ByteString.concatMap
+
 instance CanFilterFunc ByteString ByteString Word8 where
-    filterFunc = S.filter
-instance CanLength ByteString Prelude.Int where
-    length = S.length
+    filterFunc = ByteString.filter
+
+instance CanLength ByteString Int where
+    length = ByteString.length
+
 instance CanSingleton ByteString Word8 where
-    singleton = S.singleton
+    singleton = ByteString.singleton
+
 instance CanNull ByteString where
-    null = S.null
+    null = ByteString.null
+
 instance CanPack ByteString Word8 where
-    pack = S.pack
-    unpack = S.unpack
+    pack = ByteString.pack
+    unpack = ByteString.unpack
+
 instance CanIntersperse ByteString Word8 where
-    intersperse = S.intersperse
+    intersperse = ByteString.intersperse
+
 instance MonadIO m => CanReadFile (m ByteString) where
-    readFile = liftIO . S.readFile . F.encodeString
+    readFile = liftIO . ByteString.readFile . FilePath.encodeString
+
 instance CanWriteFileFunc ByteString where
-    writeFileFunc fp = liftIO . S.writeFile (F.encodeString fp)
+    writeFileFunc fp = liftIO . ByteString.writeFile (FilePath.encodeString fp)
+
 instance CanBreak ByteString Word8 where
-    break = S.break
-    span = S.span
-    dropWhile = S.dropWhile
-    takeWhile = S.takeWhile
+    break = ByteString.break
+    span = ByteString.span
+    dropWhile = ByteString.dropWhile
+    takeWhile = ByteString.takeWhile
+
 instance CanAny ByteString Word8 where
-    any = S.any
-    all = S.all
-instance CanSplitAt ByteString Prelude.Int where
-    splitAt = S.splitAt
+    any = ByteString.any
+    all = ByteString.all
+
+instance CanSplitAt ByteString Int where
+    splitAt = ByteString.splitAt
 
 instance CanReverse ByteString where
-    reverse = S.reverse
+    reverse = ByteString.reverse
 
 instance CanFoldFunc ByteString Word8 accum where
-    foldFunc = S.foldl'
+    foldFunc = ByteString.foldl'
 
-instance CanReplicate ByteString Word8 Prelude.Int where
-    replicate = S.replicate
+instance CanReplicate ByteString Word8 Int where
+    replicate = ByteString.replicate
 
 instance CanStripSuffix ByteString where
     stripSuffix x y
-        | x `S.isSuffixOf` y = Prelude.Just (S.take (S.length y Prelude.- S.length x) y)
-        | Prelude.otherwise = Prelude.Nothing
-    isSuffixOf = S.isSuffixOf
+        | x `ByteString.isSuffixOf` y = Just (ByteString.take (ByteString.length y Prelude.- ByteString.length x) y)
+        | Prelude.otherwise = Nothing
+    isSuffixOf = ByteString.isSuffixOf
 
 instance MonadIO m => CanGetLine (m ByteString) where
-    getLine = liftIO S.getLine
+    getLine = liftIO ByteString.getLine
 
 instance CanPartition ByteString Word8 where
-    partition = S.partition
+    partition = ByteString.partition
