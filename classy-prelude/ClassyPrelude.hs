@@ -74,6 +74,7 @@ module ClassyPrelude
     , member
     , notMember
     , elem
+    , notElem
       -- ** Text-like
     , show
     , toLower
@@ -90,6 +91,7 @@ module ClassyPrelude
     , toChunks
     , fromChunks
       -- ** Force types
+      -- | Helper functions for situations type inferer gets confused.
     , asByteString
     , asLByteString
     , asHashMap
@@ -98,12 +100,12 @@ module ClassyPrelude
     , asLText
     , asList
     , asMap
+    , asMaybe
     , asSet
     , asVector
     ) where
 
 import qualified Prelude
-import qualified Data.Maybe
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
@@ -120,6 +122,7 @@ import ClassyPrelude.LByteString ()
 import ClassyPrelude.LText ()
 import ClassyPrelude.List ()
 import ClassyPrelude.Map ()
+import ClassyPrelude.Maybe ()
 import ClassyPrelude.Set ()
 import ClassyPrelude.Text ()
 import ClassyPrelude.Vector ()
@@ -132,11 +135,6 @@ fromList = pack
 
 toList :: CanPack c i => c -> [i]
 toList = unpack
-
--- Misc instances
-instance CanPack (Prelude.Maybe a) a where
-    pack = Data.Maybe.listToMaybe
-    unpack = Data.Maybe.maybeToList
 
 readMay :: (Prelude.Read b, CanPack a Char) => a -> Maybe b
 readMay a =
@@ -190,6 +188,9 @@ asList = id
 asMap :: Map k v -> Map k v
 asMap = id
 
+asMaybe :: Maybe a -> Maybe a
+asMaybe = id
+
 asSet :: Set a -> Set a
 asSet = id
 
@@ -202,8 +203,13 @@ forM = flip mapM
 forM_ :: (Monad m, CanMapM_Func ci i) => ci -> (i -> m o) -> m ()
 forM_ = flip mapM_
 
+-- | An alias for 'member'
 elem :: CanMember c k => k -> c -> Bool
 elem = member
+
+-- | An alias for 'notMember'
+notElem :: CanMember c k => k -> c -> Bool
+notElem = notMember
 
 print :: (Show a, MonadIO m) => a -> m ()
 print = liftIO . Prelude.print
