@@ -122,3 +122,12 @@ instance CanNubBy [a] a where
         go set (x:xs)
             | x `Set.member` set = go set xs
             | otherwise = x : go (Set.insert x set) xs
+
+instance (Eq a) => CanUnion [a] where
+    union = List.union
+
+instance (Eq a) => CanDifference [a] where
+    difference = (List.\\)
+
+instance (Eq a) => CanIntersection [a] where
+    intersection = List.intersect

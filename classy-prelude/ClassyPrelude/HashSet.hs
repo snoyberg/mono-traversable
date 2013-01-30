@@ -42,3 +42,12 @@ instance CanFoldFunc (Set a) a accum where
 
 instance (Eq a, Hashable a) => CanMapM_Func (HashSet a) a where
     mapM_Func f = Prelude.mapM_ f . unpack
+
+instance (Eq a, Hashable a) => CanUnion (Set a) where
+    union = Set.union
+
+instance (Eq a, Hashable a) => CanDifference (Set a) where
+    difference = Set.difference
+
+instance (Eq a, Hashable a) => CanIntersection (Set a) where
+    intersection = Set.intersection

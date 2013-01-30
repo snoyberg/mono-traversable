@@ -75,6 +75,12 @@ module ClassyPrelude
     , notMember
     , elem
     , notElem
+    , union
+    , difference
+    , (\\)
+    , intersection
+    , intersect
+    , unions
       -- ** Text-like
     , show
     , toLower
@@ -109,6 +115,10 @@ import qualified Prelude
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
+import Data.Monoid (Monoid)
+import qualified Data.Monoid as Monoid
+import Data.Foldable (Foldable)
+import qualified Data.Foldable as Foldable
 
 import CorePrelude hiding (print)
 import ClassyPrelude.Classes
@@ -126,6 +136,7 @@ import ClassyPrelude.Maybe ()
 import ClassyPrelude.Set ()
 import ClassyPrelude.Text ()
 import ClassyPrelude.Vector ()
+
 
 show :: (Show a, CanPack c Char) => a -> c
 show = pack . Prelude.show
@@ -160,6 +171,20 @@ infixr 5  ++
 (++) :: Monoid m => m -> m -> m
 (++) = mappend
 {-# INLINE (++) #-}
+
+infixl 9 \\{-This comment teaches CPP correct behaviour -}
+-- | An alias for `difference`.
+(\\) :: CanDifference c => c -> c -> c
+(\\) = difference
+{-# INLINE (\\) #-}
+
+-- | An alias for `intersection`.
+intersect :: CanIntersection c => c -> c -> c
+intersect = intersection
+{-# INLINE intersect #-}
+
+unions :: (Foldable cc, Monoid c, CanUnion c) => cc c -> c
+unions = Foldable.foldl' union Monoid.mempty
 
 intercalate :: (CanConcat c i, CanIntersperse c i) => i -> c -> i
 intercalate xs xss = concat (intersperse xs xss)
