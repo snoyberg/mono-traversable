@@ -132,5 +132,5 @@ instance (Eq a) => CanDifference [a] where
 instance (Eq a) => CanIntersection [a] where
     intersection = List.intersect
 
-instance CanSortBy [a] a where
+instance (Ord a) => CanSortBy [] a where
     sortBy = List.sortBy

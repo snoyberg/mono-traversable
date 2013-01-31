@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DefaultSignatures #-}
 module ClassyPrelude.Classes where
 
 import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Ordering)
@@ -251,5 +252,8 @@ class CanDifference c where
 class CanIntersection c where
     intersection :: c -> c -> c
 
-class CanSortBy c a | c -> a where
-    sortBy :: (a -> a -> Ordering) -> c -> c
+class CanSortBy c a where
+    sortBy :: (a -> a -> Ordering) -> c a -> c a
+    sort :: c a -> c a
+    default sort :: (Ord a) => c a -> c a
+    sort = sortBy Prelude.compare
