@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -5,10 +6,7 @@
 {-# LANGUAGE DefaultSignatures #-}
 module ClassyPrelude.Classes where
 
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Ordering)
-import Control.Monad.IO.Class (MonadIO)
-import Filesystem.Path.CurrentOS (FilePath)
-import qualified Prelude
+import CorePrelude
 import qualified Data.List as List
 
 
@@ -113,7 +111,7 @@ instance (CanDeleteVal c' k, c ~ c') => CanDelete (k -> c -> c') where
 class CanMember c k | c -> k where
     member :: k -> c -> Bool
     notMember :: k -> c -> Bool
-    notMember k = Prelude.not . member k
+    notMember k = not . member k
 
 class CanReadFile a where
     readFile :: FilePath -> a
@@ -241,7 +239,7 @@ class CanNubBy c i | c -> i where
     nubBy :: (i -> i -> Bool) -> c -> c
 
     nub :: (Ord i, CanNubBy c i) => c -> c
-    nub = nubBy (Prelude.==)
+    nub = nubBy (==)
 
 class CanUnion c where
     union :: c -> c -> c
@@ -256,4 +254,4 @@ class CanSortBy c a where
     sortBy :: (a -> a -> Ordering) -> c a -> c a
     sort :: c a -> c a
     default sort :: (Ord a) => c a -> c a
-    sort = sortBy Prelude.compare
+    sort = sortBy compare

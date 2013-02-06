@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -5,11 +6,8 @@ module ClassyPrelude.Vector
     ( Vector
     ) where
 
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Data.Monoid (Monoid)
-import Data.Vector (Vector)
-import qualified Prelude
 import qualified Data.Foldable as Foldable
 import qualified Data.Vector as Vector
 
@@ -54,7 +52,7 @@ instance CanMapM_Func (Vector a) a where
     mapM_Func = Vector.mapM_
 
 instance Eq x => CanMember (Vector x) x where
-    member x = Vector.any (Prelude.== x)
+    member x = Vector.any (== x)
 
 instance CanBreak (Vector a) a where
     break = Vector.break

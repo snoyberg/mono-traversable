@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -5,49 +6,45 @@ module ClassyPrelude.HashSet
     ( HashSet
     ) where
 
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Data.Hashable (Hashable)
-import Data.HashSet (HashSet)
-import qualified Prelude
-import qualified Data.HashSet as Set
+import qualified Data.HashSet as HashSet
+import qualified Control.Monad as Monad
 
 
-type Set = HashSet
-
-instance (Eq b, Hashable b) => CanMapFunc (Set a) (Set b) a b where
-    mapFunc = Set.map
+instance (Eq b, Hashable b) => CanMapFunc (HashSet a) (HashSet b) a b where
+    mapFunc = HashSet.map
     
-instance CanLength (Set x) Int where
-    length = Set.size
+instance CanLength (HashSet x) Int where
+    length = HashSet.size
 
-instance Hashable x => CanSingleton (Set x) x where
-    singleton = Set.singleton
+instance Hashable x => CanSingleton (HashSet x) x where
+    singleton = HashSet.singleton
 
-instance CanNull (Set x) where
-    null = Set.null
+instance CanNull (HashSet x) where
+    null = HashSet.null
 
-instance (Hashable x, Eq x) => CanPack (Set x) x where
-    pack = Set.fromList
-    unpack = Set.toList
+instance (Hashable x, Eq x) => CanPack (HashSet x) x where
+    pack = HashSet.fromList
+    unpack = HashSet.toList
 
-instance (Eq x, Hashable x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
-    insert = Set.insert
+instance (Eq x, Hashable x, HashSet x ~ s, x ~ x') => CanInsert (x' -> s -> HashSet x) where
+    insert = HashSet.insert
 
-instance (Eq x, Hashable x) => CanMember (Set x) x where
-    member = Set.member
+instance (Eq x, Hashable x) => CanMember (HashSet x) x where
+    member = HashSet.member
 
-instance CanFoldFunc (Set a) a accum where
-    foldFunc = Set.foldl'
+instance CanFoldFunc (HashSet a) a accum where
+    foldFunc = HashSet.foldl'
 
 instance (Eq a, Hashable a) => CanMapM_Func (HashSet a) a where
-    mapM_Func f = Prelude.mapM_ f . unpack
+    mapM_Func f = Monad.mapM_ f . unpack
 
-instance (Eq a, Hashable a) => CanUnion (Set a) where
-    union = Set.union
+instance (Eq a, Hashable a) => CanUnion (HashSet a) where
+    union = HashSet.union
 
-instance (Eq a, Hashable a) => CanDifference (Set a) where
-    difference = Set.difference
+instance (Eq a, Hashable a) => CanDifference (HashSet a) where
+    difference = HashSet.difference
 
-instance (Eq a, Hashable a) => CanIntersection (Set a) where
-    intersection = Set.intersection
+instance (Eq a, Hashable a) => CanIntersection (HashSet a) where
+    intersection = HashSet.intersection

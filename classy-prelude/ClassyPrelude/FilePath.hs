@@ -1,12 +1,11 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.FilePath () where
 
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Filesystem.Path.CurrentOS (FilePath)
-import qualified Prelude
 import qualified Data.List as List
 import qualified Filesystem.Path.CurrentOS as FilePath
 

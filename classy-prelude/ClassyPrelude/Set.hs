@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -5,11 +6,9 @@ module ClassyPrelude.Set
     ( Set
     ) where
 
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Data.Monoid (Monoid)
-import Data.Set (Set)
-import qualified Prelude
+import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
 import qualified Data.Set as Set
 
@@ -40,7 +39,7 @@ instance CanFoldFunc (Set a) a accum where
     foldFunc = Set.foldl'
 
 instance Ord a => CanMapM_Func (Set a) a where
-    mapM_Func f = Prelude.mapM_ f . unpack
+    mapM_Func f = Monad.mapM_ f . unpack
 
 instance CanFind (Set a) a where
     find = Foldable.find

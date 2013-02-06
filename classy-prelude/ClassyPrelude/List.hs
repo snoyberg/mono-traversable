@@ -1,12 +1,11 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.List () where
 
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Data.Monoid (Monoid)
-import qualified Prelude
 import qualified Data.List as List
 import qualified Control.Monad as Monad
 import qualified Data.Monoid as Monoid
@@ -14,29 +13,29 @@ import qualified Data.Set as Set
 
 
 instance CanMapFunc [a] [b] a b where
-    mapFunc = Prelude.map
+    mapFunc = List.map
 
 instance CanConcatMapFunc [a] [b] a [b] where
-    concatMapFunc = Prelude.concatMap
+    concatMapFunc = List.concatMap
 
 instance CanFilterFunc [a] [a] a where
-    filterFunc = Prelude.filter
+    filterFunc = List.filter
 
 instance CanFilterMFunc [a] a where
     filterMFunc = Monad.filterM
 
 instance CanLength [a] Int where
-    length = Prelude.length
+    length = List.length
 
 instance CanSingleton [a] a where
-    singleton = Prelude.return
+    singleton = return
 
 instance CanNull [a] where
-    null = Prelude.null
+    null = List.null
 
 instance CanPack [a] a where
-    pack = Prelude.id
-    unpack = Prelude.id
+    pack = id
+    unpack = id
     subsequences = List.subsequences
     permutations = List.permutations
 
@@ -44,61 +43,61 @@ instance CanIntersperse [a] a where
     intersperse = List.intersperse
 
 instance Monad m => CanMapMFunc [i] (m [o]) m i o where
-    mapMFunc = Prelude.mapM
+    mapMFunc = Monad.mapM
 
 instance CanMapM_Func [a] a where
-    mapM_Func = Prelude.mapM_
+    mapM_Func = Monad.mapM_
 
 instance Eq k => CanLookup [(k, v)] k v where
-    lookup = Prelude.lookup
+    lookup = List.lookup
 
 instance Eq k => CanInsertVal [(k, v)] k v where
     insertVal k v c = (k, v) : delete k c
 
 instance Eq k => CanDeleteVal [(k, v)] k where
-    deleteVal k = filter ((Prelude./= k) . Prelude.fst)
+    deleteVal k = filter ((/= k) . fst)
 
 instance Eq x => CanMember [x] x where
-    member x = Prelude.any (Prelude.== x)
+    member x = List.any (== x)
 
 instance Eq a => CanStripPrefix [a] where
     stripPrefix = List.stripPrefix
     isPrefixOf = List.isPrefixOf
 
 instance CanBreak [a] a where
-    break = Prelude.break
-    span = Prelude.span
-    dropWhile = Prelude.dropWhile
-    takeWhile = Prelude.takeWhile
+    break = List.break
+    span = List.span
+    dropWhile = List.dropWhile
+    takeWhile = List.takeWhile
 
 instance CanAny [a] a where
-    any = Prelude.any
-    all = Prelude.all
+    any = List.any
+    all = List.all
 
 instance CanSplitAt [c] Int where
-    splitAt = Prelude.splitAt
+    splitAt = List.splitAt
 
 instance CanFoldFunc [a] a accum where
     foldFunc = List.foldl'
 
 instance (c ~ Char) => CanWords [c] where
-    words = Prelude.words
-    unwords = Prelude.unwords
+    words = List.words
+    unwords = List.unwords
 
 instance (c ~ Char) => CanLinesFunc [c] where
-    linesFunc = Prelude.lines
+    linesFunc = List.lines
 
 instance (c ~ Char) => CanUnlines [c] where
-    unlines = Prelude.unlines
+    unlines = List.unlines
 
 instance Eq a => CanIsInfixOf [a] where
     isInfixOf = List.isInfixOf
 
 instance CanReverse [a] where
-    reverse = Prelude.reverse
+    reverse = List.reverse
 
 instance CanReplicate [i] i Int where
-    replicate = Prelude.replicate
+    replicate = List.replicate
 
 instance CanReplicateM [a] a Int where
     replicateM = Monad.replicateM

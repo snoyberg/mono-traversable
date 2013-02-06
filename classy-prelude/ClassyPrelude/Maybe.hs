@@ -1,11 +1,11 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.Maybe () where
 
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Eq, Int, Bool)
-import qualified Prelude
 import qualified Data.Maybe as Maybe
 import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
@@ -51,10 +51,10 @@ instance CanFoldFunc (Maybe a) a accum where
   foldFunc = Foldable.foldl'
 
 instance Eq a => CanIsInfixOf (Maybe a) where
-  isInfixOf = (Prelude.==)
+  isInfixOf = (==)
 
 instance CanReverse (Maybe a) where
-  reverse = Prelude.id
+  reverse = id
 
 instance CanFind (Maybe a) a where
   find = Foldable.find
