@@ -6,7 +6,6 @@ module ClassyPrelude.Map
     ( Map
     ) where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.Foldable as Foldable

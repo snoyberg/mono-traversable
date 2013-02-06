@@ -6,7 +6,6 @@ module ClassyPrelude.LText
     ( LText
     ) where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.Text.Lazy as LText

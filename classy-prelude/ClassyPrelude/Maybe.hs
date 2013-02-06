@@ -4,7 +4,6 @@
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.Maybe () where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.Maybe as Maybe

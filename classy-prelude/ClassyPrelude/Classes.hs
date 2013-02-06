@@ -6,7 +6,6 @@
 {-# LANGUAGE DefaultSignatures #-}
 module ClassyPrelude.Classes where
 
-import Prelude ()
 import CorePrelude
 import qualified Data.List as List
 

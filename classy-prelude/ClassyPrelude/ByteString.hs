@@ -6,7 +6,6 @@ module ClassyPrelude.ByteString
     ( ByteString
     ) where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.ByteString as ByteString

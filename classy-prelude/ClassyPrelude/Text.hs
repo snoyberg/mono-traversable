@@ -6,7 +6,6 @@ module ClassyPrelude.Text
     ( Text
     ) where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.Text as Text

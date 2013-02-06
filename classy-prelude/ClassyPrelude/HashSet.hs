@@ -6,7 +6,6 @@ module ClassyPrelude.HashSet
     ( HashSet
     ) where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.HashSet as HashSet

@@ -6,7 +6,6 @@ module ClassyPrelude.Set
     ( Set
     ) where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Control.Monad as Monad

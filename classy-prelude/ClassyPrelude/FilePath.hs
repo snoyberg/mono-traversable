@@ -4,7 +4,6 @@
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.FilePath () where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.List as List
