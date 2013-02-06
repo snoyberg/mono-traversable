@@ -5,21 +5,14 @@ module ClassyPrelude.LText
     ( LText
     ) where
 
+import Prelude ()
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.Int (Int64)
-import Data.Text (Text)
-import qualified Prelude
-import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.Text.Lazy as LText
 import qualified Data.Text.Lazy.IO as LText
 import qualified Data.Text.Lazy.Encoding as LText
 import qualified Data.Text.Encoding.Error as Text
 
-
-type LText = LText.Text
-type LByteString = LByteString.ByteString
 
 instance CanMapFunc LText LText Char Char where
     mapFunc = LText.map

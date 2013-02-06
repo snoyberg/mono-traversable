@@ -5,12 +5,9 @@ module ClassyPrelude.Text
     ( Text
     ) where
 
+import Prelude ()
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.ByteString (ByteString)
-import Data.Text (Text)
-import qualified Prelude
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Encoding.Error as Text

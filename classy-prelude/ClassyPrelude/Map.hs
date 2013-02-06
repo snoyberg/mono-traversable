@@ -5,11 +5,9 @@ module ClassyPrelude.Map
     ( Map
     ) where
 
+import Prelude ()
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Data.Monoid (Monoid)
-import Data.Map (Map)
-import qualified Prelude
 import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 
@@ -18,7 +16,7 @@ instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
     mapFunc = Map.map
 
 instance Ord k => CanFilterFunc (Map k v) (Map k v) (k, v) where
-    filterFunc = Map.filterWithKey . Prelude.curry
+    filterFunc = Map.filterWithKey . curry
 
 instance CanLength (Map k v) Int where
     length = Map.size

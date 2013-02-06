@@ -5,19 +5,13 @@ module ClassyPrelude.LByteString
     ( LByteString
     ) where
 
+import Prelude ()
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool, Char, Bool(..))
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.ByteString (ByteString)
-import Data.Word (Word8)
-import Data.Int (Int64)
-import qualified Prelude
 import qualified Data.ByteString as ByteString
 import qualified Filesystem.Path.CurrentOS as FilePath
 import qualified Data.ByteString.Lazy as LByteString
 
-
-type LByteString = LByteString.ByteString
 
 instance CanMapFunc LByteString LByteString Word8 Word8 where
     mapFunc = LByteString.map
@@ -78,13 +72,13 @@ instance CanToChunks LByteString ByteString where
 
 instance CanStripSuffix LByteString where
     stripSuffix x y
-        | x `LByteString.isSuffixOf` y = Just (LByteString.take (LByteString.length y Prelude.- LByteString.length x) y)
-        | Prelude.otherwise = Nothing
+        | x `LByteString.isSuffixOf` y = Just (LByteString.take (LByteString.length y - LByteString.length x) y)
+        | otherwise = Nothing
     isSuffixOf = LByteString.isSuffixOf
 
 instance CanToStrict LByteString ByteString where
     toStrict = ByteString.concat . toChunks
-    fromStrict = fromChunks . Prelude.return
+    fromStrict = fromChunks . return
 
 instance CanPartition LByteString Word8 where
     partition = LByteString.partition

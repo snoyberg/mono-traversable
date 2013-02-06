@@ -5,12 +5,9 @@ module ClassyPrelude.ByteString
     ( ByteString
     ) where
 
+import Prelude ()
+import CorePrelude
 import ClassyPrelude.Classes
-import Prelude ((.), ($), otherwise, Maybe(..), Monad, Ord, Eq, Int, Bool)
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.ByteString (ByteString)
-import Data.Word (Word8)
-import qualified Prelude
 import qualified Data.ByteString as ByteString
 import qualified Filesystem.Path.CurrentOS as FilePath
 
@@ -70,8 +67,8 @@ instance CanReplicate ByteString Word8 Int where
 
 instance CanStripSuffix ByteString where
     stripSuffix x y
-        | x `ByteString.isSuffixOf` y = Just (ByteString.take (ByteString.length y Prelude.- ByteString.length x) y)
-        | Prelude.otherwise = Nothing
+        | x `ByteString.isSuffixOf` y = Just (ByteString.take (ByteString.length y - ByteString.length x) y)
+        | otherwise = Nothing
     isSuffixOf = ByteString.isSuffixOf
 
 instance MonadIO m => CanGetLine (m ByteString) where
