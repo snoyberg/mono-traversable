@@ -83,7 +83,7 @@ filterProps :: ( CanPack a i
                , Show a
                , Arbitrary a
                , Eq a
-               , CanFilter a a i
+               , CanFilter a i
                )
             => a
             -> (i -> Bool)

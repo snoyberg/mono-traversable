@@ -27,8 +27,6 @@ library
 test-suite spec
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  other-modules:  Data.Conduit.ClassySpec
-                  Data.Conduit.ContainerSpec
   hs-source-dirs: test
   build-depends:  base
                 , hspec
