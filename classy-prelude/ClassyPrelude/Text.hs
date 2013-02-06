@@ -108,3 +108,9 @@ instance CanFind Text Char where
 
 instance CanPartition Text Char where
     partition = Text.partition
+
+instance CanCons Text Char where
+    cons = Text.cons
+
+instance CanUncons Text Char where
+    uncons = Text.uncons

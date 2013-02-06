@@ -69,6 +69,8 @@ module ClassyPrelude
     , sort
     , sortBy
     , sortWith
+    , cons
+    , uncons
       -- ** Map-like
     , lookup
     , insert

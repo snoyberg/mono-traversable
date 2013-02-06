@@ -133,3 +133,10 @@ instance (Eq a) => CanIntersection [a] where
 
 instance (Ord a) => CanSortBy [] a where
     sortBy = List.sortBy
+
+instance CanCons [a] a where
+    cons = (:)
+
+instance CanUncons [a] a where
+    uncons (head:tail) = Just (head, tail)
+    uncons _ = Nothing

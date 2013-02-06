@@ -116,3 +116,9 @@ instance CanFind LText Char where
 
 instance CanPartition LText Char where
     partition = LText.partition
+
+instance CanCons LText Char where
+    cons = LText.cons
+
+instance CanUncons LText Char where
+    uncons = LText.uncons

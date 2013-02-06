@@ -76,3 +76,9 @@ instance MonadIO m => CanGetLine (m ByteString) where
 
 instance CanPartition ByteString Word8 where
     partition = ByteString.partition
+
+instance CanCons ByteString Word8 where
+    cons = ByteString.cons
+
+instance CanUncons ByteString Word8 where
+    uncons = ByteString.uncons
