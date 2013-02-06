@@ -12,11 +12,11 @@ import qualified Data.Foldable as Foldable
 import qualified Data.HashMap.Strict as HashMap
 
 
-instance CanMapFunc (HashMap k v1) (HashMap k v2) v1 v2 where
-    mapFunc = HashMap.map
+instance CanMap (HashMap k v1) (HashMap k v2) v1 v2 where
+    map = HashMap.map
     
-instance Hashable k => CanFilterFunc (HashMap k v) (HashMap k v) (k, v) where
-    filterFunc = HashMap.filterWithKey . curry
+instance Hashable k => CanFilter (HashMap k v) (k, v) where
+    filter = HashMap.filterWithKey . curry
     
 instance CanLength (HashMap k v) Int where
     length = HashMap.size

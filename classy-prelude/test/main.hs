@@ -46,9 +46,9 @@ mapProps :: ( CanPack a i
             , Eq b
             , Show b
             , Arbitrary b
-            , CanMapFunc a b i j
-            , CanMapFunc a c i k
-            , CanMapFunc b c j k
+            , CanMap a b i j
+            , CanMap a c i k
+            , CanMap b c j k
             )
          => a
          -> (i -> j)
@@ -69,8 +69,8 @@ concatMapProps :: ( CanPack a i
             , Eq b
             , Show b
             , Arbitrary b
-            , CanMapFunc a b i j
-            , CanConcatMapFunc a b i js
+            , CanMap a b i j
+            , CanConcatMap a b i js
             )
          => a
          -> (i -> js)
@@ -83,7 +83,7 @@ filterProps :: ( CanPack a i
                , Show a
                , Arbitrary a
                , Eq a
-               , CanFilterFunc a a i
+               , CanFilter a a i
                )
             => a
             -> (i -> Bool)
@@ -96,7 +96,7 @@ filterMProps :: ( CanPack a i
                 , Show a
                 , Arbitrary a
                 , Eq a
-                , CanFilterMFunc a i
+                , CanFilterM a i
                 )
              => a
              -> (i -> Bool)
@@ -137,7 +137,7 @@ mapMProps :: ( Show a
              , Arbitrary a
              , CanPack a i
              , Eq i
-             , CanMapMFunc a co i i
+             , CanMapM a co i i
              , CanPack co i
              , Eq co
              )
@@ -155,7 +155,7 @@ mapM_Props :: ( Show a
               , Arbitrary a
               , CanPack a i
               , Eq i
-              , CanMapM_Func a i
+              , CanMapM_ a i
               )
            => a -> Spec
 mapM_Props dummy = do
@@ -224,8 +224,8 @@ replicateMProps dummy = do
 utf8Props :: ( Eq t
              , Show t
              , Arbitrary t
-             , CanEncodeUtf8Func t b
-             , CanDecodeUtf8Func b t
+             , CanEncodeUtf8 t b
+             , CanDecodeUtf8 b t
              ) => t -> Spec
 utf8Props dummy = do
     prop "decodeUtf8 . encodeUtf8 == id" $ \t ->

@@ -13,8 +13,8 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Set as Set
 
 
-instance (Ord a, Ord b) => CanMapFunc (Set a) (Set b) a b where
-    mapFunc = Set.map
+instance (Ord a, Ord b) => CanMap (Set a) (Set b) a b where
+    map = Set.map
 
 instance CanLength (Set x) Int where
     length = Set.size
@@ -35,11 +35,11 @@ instance (Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
 instance Ord x => CanMember (Set x) x where
     member = Set.member
 
-instance CanFoldFunc (Set a) a accum where
-    foldFunc = Set.foldl'
+instance CanFold (Set a) a accum where
+    fold = Set.foldl'
 
-instance Ord a => CanMapM_Func (Set a) a where
-    mapM_Func f = Monad.mapM_ f . unpack
+instance Ord a => CanMapM_ (Set a) a where
+    mapM_ f = Monad.mapM_ f . unpack
 
 instance CanFind (Set a) a where
     find = Foldable.find

@@ -228,10 +228,10 @@ asSet = id
 asVector :: Vector a -> Vector a
 asVector = id
 
-forM :: CanMapMFunc ci mco m i o => ci -> (i -> m o) -> mco
+forM :: CanMapM ci mco m i o => ci -> (i -> m o) -> mco
 forM = flip mapM
 
-forM_ :: (Monad m, CanMapM_Func ci i) => ci -> (i -> m o) -> m ()
+forM_ :: (Monad m, CanMapM_ ci i) => ci -> (i -> m o) -> m ()
 forM_ = flip mapM_
 
 -- | An alias for 'member'

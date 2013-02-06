@@ -12,14 +12,14 @@ import qualified Data.ByteString as ByteString
 import qualified Filesystem.Path.CurrentOS as FilePath
 
 
-instance CanMapFunc ByteString ByteString Word8 Word8 where
-    mapFunc = ByteString.map
+instance CanMap ByteString ByteString Word8 Word8 where
+    map = ByteString.map
 
-instance CanConcatMapFunc ByteString ByteString Word8 ByteString where
-    concatMapFunc = ByteString.concatMap
+instance CanConcatMap ByteString ByteString Word8 ByteString where
+    concatMap = ByteString.concatMap
 
-instance CanFilterFunc ByteString ByteString Word8 where
-    filterFunc = ByteString.filter
+instance CanFilter ByteString Word8 where
+    filter = ByteString.filter
 
 instance CanLength ByteString Int where
     length = ByteString.length
@@ -37,11 +37,11 @@ instance CanPack ByteString Word8 where
 instance CanIntersperse ByteString Word8 where
     intersperse = ByteString.intersperse
 
-instance MonadIO m => CanReadFile (m ByteString) where
+instance CanReadFile ByteString where
     readFile = liftIO . ByteString.readFile . FilePath.encodeString
 
-instance CanWriteFileFunc ByteString where
-    writeFileFunc fp = liftIO . ByteString.writeFile (FilePath.encodeString fp)
+instance CanWriteFile ByteString where
+    writeFile fp = liftIO . ByteString.writeFile (FilePath.encodeString fp)
 
 instance CanBreak ByteString Word8 where
     break = ByteString.break
@@ -59,8 +59,8 @@ instance CanSplitAt ByteString Int where
 instance CanReverse ByteString where
     reverse = ByteString.reverse
 
-instance CanFoldFunc ByteString Word8 accum where
-    foldFunc = ByteString.foldl'
+instance CanFold ByteString Word8 accum where
+    fold = ByteString.foldl'
 
 instance CanReplicate ByteString Word8 Int where
     replicate = ByteString.replicate

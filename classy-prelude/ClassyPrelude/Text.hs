@@ -14,14 +14,14 @@ import qualified Data.Text.Encoding.Error as Text
 import qualified Data.Text.IO as Text
 
 
-instance CanMapFunc Text Text Char Char where
-    mapFunc = Text.map
+instance CanMap Text Text Char Char where
+    map = Text.map
 
-instance CanConcatMapFunc Text Text Char Text where
-    concatMapFunc = Text.concatMap
+instance CanConcatMap Text Text Char Text where
+    concatMap = Text.concatMap
 
-instance CanFilterFunc Text Text Char where
-    filterFunc = Text.filter
+instance CanFilter Text Char where
+    filter = Text.filter
 
 instance CanLength Text Int where
     length = Text.length
@@ -60,8 +60,8 @@ instance CanWords Text where
     words = Text.words
     unwords = Text.unwords
 
-instance CanLinesFunc Text where
-    linesFunc = Text.lines
+instance CanLines Text where
+    lines = Text.lines
 
 instance CanUnlines Text where
     unlines = Text.unlines
@@ -79,17 +79,17 @@ instance CanIsInfixOf Text where
 instance CanReverse Text where
     reverse = Text.reverse
 
-instance CanFoldFunc Text Char accum where
-    foldFunc = Text.foldl'
+instance CanFold Text Char accum where
+    fold = Text.foldl'
 
 instance CanReplicate Text Text Int where
     replicate = Text.replicate
 
-instance CanEncodeUtf8Func Text ByteString where
-    encodeUtf8Func = Text.encodeUtf8
+instance CanEncodeUtf8 Text ByteString where
+    encodeUtf8 = Text.encodeUtf8
     
-instance CanDecodeUtf8Func ByteString Text where
-    decodeUtf8Func = Text.decodeUtf8With Text.lenientDecode
+instance CanDecodeUtf8 ByteString Text where
+    decodeUtf8 = Text.decodeUtf8With Text.lenientDecode
 
 instance MonadIO m => CanGetLine (m Text) where
     getLine = liftIO Text.getLine

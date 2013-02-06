@@ -12,17 +12,17 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Vector as Vector
 
 
-instance CanMapFunc (Vector a) (Vector b) a b where
-    mapFunc = Vector.map
+instance CanMap (Vector a) (Vector b) a b where
+    map = Vector.map
 
-instance CanConcatMapFunc (Vector a) (Vector b) a (Vector b) where
-    concatMapFunc = Vector.concatMap
+instance CanConcatMap (Vector a) (Vector b) a (Vector b) where
+    concatMap = Vector.concatMap
 
-instance CanFilterFunc (Vector a) (Vector a) a where
-    filterFunc = Vector.filter
+instance CanFilter (Vector a) a where
+    filter = Vector.filter
 
-instance CanFilterMFunc (Vector a) a where
-    filterMFunc = Vector.filterM
+instance CanFilterM (Vector a) a where
+    filterM = Vector.filterM
 
 instance CanLength (Vector a) Int where
     length = Vector.length
@@ -45,11 +45,11 @@ instance CanIntersperse (Vector a) a where
         prependToAll _ xs | null xs = Vector.empty
         prependToAll sep xs = Vector.cons sep $ Vector.cons (Vector.head xs) $ prependToAll sep $ Vector.unsafeTail xs
 
-instance Monad m => CanMapMFunc (Vector i) (m (Vector o)) m i o where
-    mapMFunc = Vector.mapM
+instance Monad m => CanMapM (Vector i) (m (Vector o)) m i o where
+    mapM = Vector.mapM
 
-instance CanMapM_Func (Vector a) a where
-    mapM_Func = Vector.mapM_
+instance CanMapM_ (Vector a) a where
+    mapM_ = Vector.mapM_
 
 instance Eq x => CanMember (Vector x) x where
     member x = Vector.any (== x)
@@ -67,8 +67,8 @@ instance CanAny (Vector a) a where
 instance CanSplitAt (Vector a) Int where
     splitAt = Vector.splitAt
 
-instance CanFoldFunc (Vector a) a accum where
-    foldFunc = Vector.foldl'
+instance CanFold (Vector a) a accum where
+    fold = Vector.foldl'
 
 instance CanReverse (Vector a) where
     reverse = Vector.reverse

@@ -14,14 +14,14 @@ import qualified Data.Text.Lazy.Encoding as LText
 import qualified Data.Text.Encoding.Error as Text
 
 
-instance CanMapFunc LText LText Char Char where
-    mapFunc = LText.map
+instance CanMap LText LText Char Char where
+    map = LText.map
 
-instance CanConcatMapFunc LText LText Char LText where
-    concatMapFunc = LText.concatMap
+instance CanConcatMap LText LText Char LText where
+    concatMap = LText.concatMap
 
-instance CanFilterFunc LText LText Char where
-    filterFunc = LText.filter
+instance CanFilter LText Char where
+    filter = LText.filter
 
 instance CanSingleton LText Char where
     singleton = LText.singleton
@@ -57,8 +57,8 @@ instance CanWords LText where
     words = LText.words
     unwords = LText.unwords
 
-instance CanLinesFunc LText where
-    linesFunc = LText.lines
+instance CanLines LText where
+    lines = LText.lines
 
 instance CanUnlines LText where
     unlines = LText.unlines
@@ -79,8 +79,8 @@ instance CanReverse LText where
 instance CanLength LText Int64 where
     length = LText.length
 
-instance CanFoldFunc LText Char accum where
-    foldFunc = LText.foldl'
+instance CanFold LText Char accum where
+    fold = LText.foldl'
 
 instance CanReplicate LText LText Int64 where
     replicate = LText.replicate
@@ -89,11 +89,11 @@ instance CanToChunks LText Text where
     toChunks = LText.toChunks
     fromChunks = LText.fromChunks
 
-instance CanEncodeUtf8Func LText LByteString where
-    encodeUtf8Func = LText.encodeUtf8
+instance CanEncodeUtf8 LText LByteString where
+    encodeUtf8 = LText.encodeUtf8
 
-instance CanDecodeUtf8Func LByteString LText where
-    decodeUtf8Func = LText.decodeUtf8With Text.lenientDecode
+instance CanDecodeUtf8 LByteString LText where
+    decodeUtf8 = LText.decodeUtf8With Text.lenientDecode
 
 instance CanToStrict LText Text where
     toStrict = LText.toStrict

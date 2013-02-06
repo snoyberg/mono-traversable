@@ -13,14 +13,14 @@ import qualified Filesystem.Path.CurrentOS as FilePath
 import qualified Data.ByteString.Lazy as LByteString
 
 
-instance CanMapFunc LByteString LByteString Word8 Word8 where
-    mapFunc = LByteString.map
+instance CanMap LByteString LByteString Word8 Word8 where
+    map = LByteString.map
 
-instance CanConcatMapFunc LByteString LByteString Word8 LByteString where
-    concatMapFunc = LByteString.concatMap
+instance CanConcatMap LByteString LByteString Word8 LByteString where
+    concatMap = LByteString.concatMap
 
-instance CanFilterFunc LByteString LByteString Word8 where
-    filterFunc = LByteString.filter
+instance CanFilter LByteString Word8 where
+    filter = LByteString.filter
 
 instance CanLength LByteString Int64 where
     length = LByteString.length
@@ -38,11 +38,11 @@ instance CanPack LByteString Word8 where
 instance CanIntersperse LByteString Word8 where
     intersperse = LByteString.intersperse
 
-instance MonadIO m => CanReadFile (m LByteString) where
+instance CanReadFile LByteString where
     readFile = liftIO . LByteString.readFile . FilePath.encodeString
 
-instance CanWriteFileFunc LByteString where
-    writeFileFunc fp = liftIO . LByteString.writeFile (FilePath.encodeString fp)
+instance CanWriteFile LByteString where
+    writeFile fp = liftIO . LByteString.writeFile (FilePath.encodeString fp)
 
 instance CanBreak LByteString Word8 where
     break = LByteString.break
@@ -60,8 +60,8 @@ instance CanSplitAt LByteString Int64 where
 instance CanReverse LByteString where
     reverse = LByteString.reverse
 
-instance CanFoldFunc LByteString Word8 accum where
-    foldFunc = LByteString.foldl'
+instance CanFold LByteString Word8 accum where
+    fold = LByteString.foldl'
 
 instance CanReplicate LByteString Word8 Int64 where
     replicate = LByteString.replicate

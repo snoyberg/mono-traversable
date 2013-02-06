@@ -12,8 +12,8 @@ import qualified Data.HashSet as HashSet
 import qualified Control.Monad as Monad
 
 
-instance (Eq b, Hashable b) => CanMapFunc (HashSet a) (HashSet b) a b where
-    mapFunc = HashSet.map
+instance (Eq b, Hashable b) => CanMap (HashSet a) (HashSet b) a b where
+    map = HashSet.map
     
 instance CanLength (HashSet x) Int where
     length = HashSet.size
@@ -34,11 +34,11 @@ instance (Eq x, Hashable x, HashSet x ~ s, x ~ x') => CanInsert (x' -> s -> Hash
 instance (Eq x, Hashable x) => CanMember (HashSet x) x where
     member = HashSet.member
 
-instance CanFoldFunc (HashSet a) a accum where
-    foldFunc = HashSet.foldl'
+instance CanFold (HashSet a) a accum where
+    fold = HashSet.foldl'
 
-instance (Eq a, Hashable a) => CanMapM_Func (HashSet a) a where
-    mapM_Func f = Monad.mapM_ f . unpack
+instance (Eq a, Hashable a) => CanMapM_ (HashSet a) a where
+    mapM_ f = Monad.mapM_ f . unpack
 
 instance (Eq a, Hashable a) => CanUnion (HashSet a) where
     union = HashSet.union

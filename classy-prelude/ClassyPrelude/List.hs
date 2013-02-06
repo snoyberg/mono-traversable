@@ -12,17 +12,17 @@ import qualified Data.Monoid as Monoid
 import qualified Data.Set as Set
 
 
-instance CanMapFunc [a] [b] a b where
-    mapFunc = List.map
+instance CanMap [a] [b] a b where
+    map = List.map
 
-instance CanConcatMapFunc [a] [b] a [b] where
-    concatMapFunc = List.concatMap
+instance CanConcatMap [a] [b] a [b] where
+    concatMap = List.concatMap
 
-instance CanFilterFunc [a] [a] a where
-    filterFunc = List.filter
+instance CanFilter [a] a where
+    filter = List.filter
 
-instance CanFilterMFunc [a] a where
-    filterMFunc = Monad.filterM
+instance CanFilterM [a] a where
+    filterM = Monad.filterM
 
 instance CanLength [a] Int where
     length = List.length
@@ -42,11 +42,11 @@ instance CanPack [a] a where
 instance CanIntersperse [a] a where
     intersperse = List.intersperse
 
-instance Monad m => CanMapMFunc [i] (m [o]) m i o where
-    mapMFunc = Monad.mapM
+instance Monad m => CanMapM [i] (m [o]) m i o where
+    mapM = Monad.mapM
 
-instance CanMapM_Func [a] a where
-    mapM_Func = Monad.mapM_
+instance CanMapM_ [a] a where
+    mapM_ = Monad.mapM_
 
 instance Eq k => CanLookup [(k, v)] k v where
     lookup = List.lookup
@@ -77,15 +77,15 @@ instance CanAny [a] a where
 instance CanSplitAt [c] Int where
     splitAt = List.splitAt
 
-instance CanFoldFunc [a] a accum where
-    foldFunc = List.foldl'
+instance CanFold [a] a accum where
+    fold = List.foldl'
 
 instance (c ~ Char) => CanWords [c] where
     words = List.words
     unwords = List.unwords
 
-instance (c ~ Char) => CanLinesFunc [c] where
-    linesFunc = List.lines
+instance (c ~ Char) => CanLines [c] where
+    lines = List.lines
 
 instance (c ~ Char) => CanUnlines [c] where
     unlines = List.unlines

@@ -12,11 +12,11 @@ import qualified Data.Foldable as Foldable
 import qualified Data.Map as Map
 
 
-instance CanMapFunc (Map k v1) (Map k v2) v1 v2 where
-    mapFunc = Map.map
+instance CanMap (Map k v1) (Map k v2) v1 v2 where
+    map = Map.map
 
-instance Ord k => CanFilterFunc (Map k v) (Map k v) (k, v) where
-    filterFunc = Map.filterWithKey . curry
+instance Ord k => CanFilter (Map k v) (k, v) where
+    filter = Map.filterWithKey . curry
 
 instance CanLength (Map k v) Int where
     length = Map.size
