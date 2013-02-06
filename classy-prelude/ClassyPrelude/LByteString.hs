@@ -82,3 +82,9 @@ instance CanToStrict LByteString ByteString where
 
 instance CanPartition LByteString Word8 where
     partition = LByteString.partition
+
+instance CanCons LByteString Word8 where
+    cons = LByteString.cons
+
+instance CanUncons LByteString Word8 where
+    uncons = LByteString.uncons

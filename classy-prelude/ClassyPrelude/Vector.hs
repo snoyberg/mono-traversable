@@ -87,3 +87,9 @@ instance (Monoid m) => CanConcat (Vector m) m where
 
 instance CanPartition (Vector a) a where
     partition = Vector.partition
+
+instance CanCons (Vector a) a where
+    cons = Vector.cons
+
+instance CanUncons (Vector a) a where
+    uncons v = if null v then Nothing else Just (Vector.unsafeHead v, Vector.unsafeTail v)

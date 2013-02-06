@@ -255,3 +255,9 @@ class CanSortBy c a where
     sort :: c a -> c a
     default sort :: (Ord a) => c a -> c a
     sort = sortBy compare
+
+class CanCons c a where
+    cons :: a -> c -> c
+
+class CanUncons c a where
+    uncons :: c -> Maybe (a, c)
