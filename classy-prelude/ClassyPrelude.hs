@@ -127,6 +127,7 @@ import CorePrelude hiding (print)
 import ClassyPrelude.Classes
 
 import ClassyPrelude.ByteString ()
+import ClassyPrelude.Char ()
 import ClassyPrelude.Classes ()
 import ClassyPrelude.FilePath ()
 import ClassyPrelude.HashMap ()
