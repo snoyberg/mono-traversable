@@ -1,9 +1,9 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude.Char where
 
-import Prelude ()
 import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.Char as Char
