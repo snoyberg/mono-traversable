@@ -71,6 +71,7 @@ module ClassyPrelude
     , sortWith
     , cons
     , uncons
+    , compareLength
       -- ** Map-like
     , lookup
     , insert

@@ -114,3 +114,6 @@ instance CanCons Text Char where
 
 instance CanUncons Text Char where
     uncons = Text.uncons
+
+instance CanCompareLength Text where
+    compareLength c = Text.compareLength c . fromIntegral

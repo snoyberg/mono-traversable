@@ -122,3 +122,6 @@ instance CanCons LText Char where
 
 instance CanUncons LText Char where
     uncons = LText.uncons
+
+instance CanCompareLength LText where
+    compareLength c = LText.compareLength c . fromIntegral
