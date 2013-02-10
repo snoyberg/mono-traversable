@@ -194,3 +194,10 @@ class CanCons c a where
 
 class CanUncons c a where
     uncons :: c -> Maybe (a, c)
+
+class CanCompareLength c where
+    -- | This is a more effective alternative to statements like @i >= length 
+    -- xs@ for types having an O(n) complexity of `length` operation like list 
+    -- or `Text`. It does not traverse the whole data structure if the value
+    -- being compared to is lesser.
+    compareLength :: (Integral l) => l -> c -> Ordering

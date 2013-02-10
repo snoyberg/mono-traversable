@@ -140,3 +140,9 @@ instance CanCons [a] a where
 instance CanUncons [a] a where
     uncons (head:tail) = Just (head, tail)
     uncons _ = Nothing
+
+instance CanCompareLength [a] where
+    compareLength 0 [] = EQ
+    compareLength _ [] = LT
+    compareLength 0 _ = GT
+    compareLength i (h:t) = compareLength (i-1) t
