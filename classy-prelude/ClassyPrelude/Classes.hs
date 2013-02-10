@@ -200,4 +200,4 @@ class CanCompareLength c where
     -- xs@ for types having an O(n) complexity of `length` operation like list 
     -- or `Text`. It does not traverse the whole data structure if the value
     -- being compared to is lesser.
-    compareLength :: (Integral l) => l -> c -> Ordering
+    compareLength :: (Integral l) => c -> l -> Ordering

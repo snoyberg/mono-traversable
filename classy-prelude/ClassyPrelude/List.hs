@@ -142,7 +142,7 @@ instance CanUncons [a] a where
     uncons _ = Nothing
 
 instance CanCompareLength [a] where
-    compareLength 0 [] = EQ
-    compareLength _ [] = LT
-    compareLength 0 _ = GT
-    compareLength i (h:t) = compareLength (i-1) t
+    compareLength [] 0 = EQ
+    compareLength _ i | i <= 0 = GT
+    compareLength [] _ = LT
+    compareLength (_:t) i = compareLength t (i-1)

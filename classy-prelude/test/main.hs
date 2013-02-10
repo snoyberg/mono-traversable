@@ -231,6 +231,18 @@ utf8Props dummy = do
     prop "decodeUtf8 . encodeUtf8 == id" $ \t ->
         decodeUtf8 (encodeUtf8 t) == (t `asTypeOf` dummy)
 
+compareLengthProps :: ( Show c
+                      , Arbitrary c
+                      , CanCompareLength c
+                      , Show l
+                      , Arbitrary l
+                      , Integral l
+                      , CanLength c l
+                      ) => c -> Spec
+compareLengthProps dummy = do
+    prop "compare (length c) i == compareLength c i" $ \i c ->
+        compare (length c) i == compareLength (c `asTypeOf` dummy) i
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -315,6 +327,10 @@ main = hspec $ do
     describe "encode/decode UTF8" $ do
         describe "Text" $ utf8Props (undefined :: Text)
         describe "LText" $ utf8Props (undefined :: LText)
+    describe "compareLength" $ do
+        describe "list" $ compareLengthProps (undefined :: [Int])
+        describe "Text" $ compareLengthProps (undefined :: Text)
+        describe "LText" $ compareLengthProps (undefined :: LText)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary
