@@ -37,7 +37,7 @@ library
                      , vector
                      , unordered-containers
                      , hashable
-                     , lifted-base
+                     , lifted-base                   >= 0.2
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
