@@ -131,8 +131,10 @@ instance (Eq a) => CanDifference [a] where
 instance (Eq a) => CanIntersection [a] where
     intersection = List.intersect
 
-instance (Ord a) => CanSortBy [] a where
+instance CanSortBy [a] a where
     sortBy = List.sortBy
+instance Ord a => CanSort [a] a where
+    sort = List.sort
 
 instance CanCons [a] a where
     cons = (:)

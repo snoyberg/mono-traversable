@@ -183,10 +183,12 @@ class CanDifference c where
 class CanIntersection c where
     intersection :: c -> c -> c
 
-class CanSortBy c a where
-    sortBy :: (a -> a -> Ordering) -> c a -> c a
-    sort :: c a -> c a
-    default sort :: (Ord a) => c a -> c a
+class CanSortBy c a | c -> a where
+    sortBy :: (a -> a -> Ordering) -> c -> c
+
+class Ord a => CanSort c a | c -> a where
+    sort :: c -> c
+    default sort :: CanSortBy c a => c -> c
     sort = sortBy compare
 
 class CanCons c a where

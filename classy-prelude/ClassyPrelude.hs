@@ -255,5 +255,5 @@ drop i c  = Prelude.snd (splitAt i c)
 -- | Sort elements using the user supplied function to project something out of
 -- each element.
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:sortWith>.
-sortWith :: (CanSortBy c a, Ord b) => (a -> b) -> c a -> c a
+sortWith :: (CanSortBy c a, Ord b) => (a -> b) -> c -> c
 sortWith f = sortBy $ comparing f
