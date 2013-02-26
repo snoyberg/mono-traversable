@@ -45,6 +45,14 @@ instance CanIntersperse (Vector a) a where
         prependToAll _ xs | null xs = Vector.empty
         prependToAll sep xs = Vector.cons sep $ Vector.cons (Vector.head xs) $ prependToAll sep $ Vector.unsafeTail xs
 
+instance Eq a => CanStripPrefix (Vector a) where
+    stripPrefix x y
+        | x == y1 = Just y2
+        | otherwise = Nothing
+      where
+        (y1, y2) = Vector.splitAt (Vector.length x) y
+    isPrefixOf x y = Vector.take (Vector.length x) y == x
+
 instance Monad m => CanMapM (Vector i) (m (Vector o)) m i o where
     mapM = Vector.mapM
 

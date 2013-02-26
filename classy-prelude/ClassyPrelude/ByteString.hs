@@ -37,6 +37,13 @@ instance CanPack ByteString Word8 where
 instance CanIntersperse ByteString Word8 where
     intersperse = ByteString.intersperse
 
+instance CanStripPrefix ByteString where
+    stripPrefix x y
+        | x `ByteString.isPrefixOf` y =
+            Just $ ByteString.drop (ByteString.length x) y
+        | otherwise = Nothing
+    isPrefixOf = ByteString.isPrefixOf
+
 instance CanReadFile ByteString where
     readFile = liftIO . ByteString.readFile . FilePath.encodeString
 

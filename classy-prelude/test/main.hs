@@ -243,6 +243,21 @@ compareLengthProps dummy = do
     prop "compare (length c) i == compareLength c i" $ \i c ->
         compare (length c) i == compareLength (c `asTypeOf` dummy) i
 
+prefixProps :: ( Show c
+               , Eq c
+               , Monoid c
+               , CanStripPrefix c
+               , Arbitrary c
+               )
+            => c -> Spec
+prefixProps dummy = do
+    prop "x `isPrefixOf` (x ++ y)" $ \x y ->
+        (x `asTypeOf` dummy) `isPrefixOf` (x ++ y)
+    prop "stripPrefix x (x ++ y) == Just y" $ \x y ->
+        stripPrefix x (x ++ y) == Just (y `asTypeOf` dummy)
+    prop "stripPrefix x y == Nothing || x `isPrefixOf` y" $ \x y ->
+        stripPrefix x y == Nothing || x `isPrefixOf` (y `asTypeOf` dummy)
+
 main :: IO ()
 main = hspec $ do
     describe "dictionary" $ do
@@ -331,6 +346,13 @@ main = hspec $ do
         describe "list" $ compareLengthProps (undefined :: [Int])
         describe "Text" $ compareLengthProps (undefined :: Text)
         describe "LText" $ compareLengthProps (undefined :: LText)
+    describe "Prefix" $ do
+        describe "list" $ prefixProps (undefined :: [Int])
+        describe "Text" $ prefixProps (undefined :: Text)
+        describe "LText" $ prefixProps (undefined :: LText)
+        describe "ByteString" $ prefixProps (undefined :: ByteString)
+        describe "LByteString" $ prefixProps (undefined :: LByteString)
+        describe "Vector" $ prefixProps (undefined :: Vector Int)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary

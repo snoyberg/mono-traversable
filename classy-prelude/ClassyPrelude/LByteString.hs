@@ -38,6 +38,13 @@ instance CanPack LByteString Word8 where
 instance CanIntersperse LByteString Word8 where
     intersperse = LByteString.intersperse
 
+instance CanStripPrefix LByteString where
+    stripPrefix x y
+        | x `LByteString.isPrefixOf` y =
+            Just $ LByteString.drop (LByteString.length x) y
+        | otherwise = Nothing
+    isPrefixOf = LByteString.isPrefixOf
+
 instance CanReadFile LByteString where
     readFile = liftIO . LByteString.readFile . FilePath.encodeString
 
