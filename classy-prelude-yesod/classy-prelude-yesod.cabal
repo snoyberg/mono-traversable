@@ -22,3 +22,5 @@ library
                      , http-types
                      , http-conduit
                      , persistent >= 1.1
+                     , aeson
+                     , data-default

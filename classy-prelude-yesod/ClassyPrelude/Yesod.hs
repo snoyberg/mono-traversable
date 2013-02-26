@@ -15,6 +15,8 @@ import Network.HTTP.Types as X
 import qualified ClassyPrelude.Classes
 import Database.Persist.GenericSql.Raw as X (SqlBackend, SqlPersist)
 import Database.Persist.GenericSql.Migration as X (runMigration)
+import Data.Default as X (Default (..))
+import Data.Aeson as X (ToJSON (..), FromJSON (..), (.:), (.=))
 
 instance
   ( backend ~ PersistMonadBackend m
