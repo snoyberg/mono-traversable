@@ -69,6 +69,9 @@ module ClassyPrelude
     , sort
     , sortBy
     , sortWith
+    , group
+    , groupBy
+    , groupWith
     , cons
     , uncons
     , compareLength
@@ -257,3 +260,11 @@ drop i c  = Prelude.snd (splitAt i c)
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:sortWith>.
 sortWith :: (CanSortBy c a, Ord b) => (a -> b) -> c -> c
 sortWith f = sortBy $ comparing f
+
+-- | The 'groupWith' function uses the user supplied function which
+-- projects an element out of every list element in order to first sort the
+-- input list and then to form groups by equality on these projected elements
+-- 
+-- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:groupWith>
+groupWith :: (CanGroupBy c a, Eq b) => (a -> b) -> c -> [c]
+groupWith f = groupBy (\a b -> f a == f b)

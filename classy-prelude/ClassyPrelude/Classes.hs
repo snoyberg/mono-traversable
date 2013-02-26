@@ -203,3 +203,11 @@ class CanCompareLength c where
     -- or `Text`. It does not traverse the whole data structure if the value
     -- being compared to is lesser.
     compareLength :: (Integral l) => c -> l -> Ordering
+
+class CanGroupBy c a | c -> a where
+    groupBy :: (a -> a -> Bool) -> c -> [c]
+
+class CanGroup c a | c -> a where
+    group :: c -> [c]
+    default group :: (CanGroupBy c a, Eq a) => c -> [c]
+    group = groupBy (==)

@@ -117,3 +117,9 @@ instance CanUncons Text Char where
 
 instance CanCompareLength Text where
     compareLength c = Text.compareLength c . fromIntegral
+
+instance CanGroupBy Text Char where
+    groupBy = Text.groupBy
+
+instance CanGroup Text Char where
+    group = Text.group
