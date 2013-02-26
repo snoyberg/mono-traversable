@@ -148,3 +148,7 @@ instance CanCompareLength [a] where
     compareLength _ i | i <= 0 = GT
     compareLength [] _ = LT
     compareLength (_:t) i = compareLength t (i-1)
+
+instance CanGroupBy [a] a where
+    groupBy = List.groupBy
+    

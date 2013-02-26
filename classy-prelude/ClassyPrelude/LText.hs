@@ -125,3 +125,6 @@ instance CanUncons LText Char where
 
 instance CanCompareLength LText where
     compareLength c = LText.compareLength c . fromIntegral
+
+instance CanGroupBy LText Char where
+    groupBy = LText.groupBy

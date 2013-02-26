@@ -89,3 +89,6 @@ instance CanCons ByteString Word8 where
 
 instance CanUncons ByteString Word8 where
     uncons = ByteString.uncons
+
+instance CanGroupBy ByteString Word8 where
+    groupBy = ByteString.groupBy

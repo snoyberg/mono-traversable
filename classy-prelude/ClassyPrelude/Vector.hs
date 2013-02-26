@@ -101,3 +101,24 @@ instance CanCons (Vector a) a where
 
 instance CanUncons (Vector a) a where
     uncons v = if null v then Nothing else Just (Vector.unsafeHead v, Vector.unsafeTail v)
+
+instance CanGroupBy (Vector a) a where
+    -- | Implementation is stolen from <http://hackage.haskell.org/packages/archive/storablevector/latest/doc/html/src/Data-StorableVector.html#groupBy>
+    groupBy k xs =
+      switchL []
+        (\h t ->
+          let n = 1 + findIndexOrEnd (not . k h) t
+          in  Vector.unsafeTake n xs : groupBy k (Vector.unsafeDrop n xs))
+        xs
+      where
+        -- | 'findIndexOrEnd' is a variant of findIndex, that returns the length
+        -- of the string if no element is found, rather than Nothing.
+        findIndexOrEnd p xs =
+           Vector.foldr
+              (\x k n ->
+                 if p x then n else k (succ n))
+              id xs 0
+        switchL n j x =
+           if null x
+             then n
+             else j (Vector.unsafeHead x) (Vector.unsafeTail x)
