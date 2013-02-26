@@ -128,3 +128,6 @@ instance CanCompareLength LText where
 
 instance CanGroupBy LText Char where
     groupBy = LText.groupBy
+
+instance CanGroup LText Char where
+    group = LText.group

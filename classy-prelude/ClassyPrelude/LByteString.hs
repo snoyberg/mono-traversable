@@ -98,3 +98,6 @@ instance CanUncons LByteString Word8 where
 
 instance CanGroupBy LByteString Word8 where
     groupBy = LByteString.groupBy
+
+instance CanGroup LByteString Word8 where
+    group = LByteString.group

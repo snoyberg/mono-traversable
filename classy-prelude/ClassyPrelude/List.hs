@@ -151,4 +151,6 @@ instance CanCompareLength [a] where
 
 instance CanGroupBy [a] a where
     groupBy = List.groupBy
-    
+
+instance Eq a => CanGroup [a] a where
+    group = List.group

@@ -120,3 +120,6 @@ instance CanCompareLength Text where
 
 instance CanGroupBy Text Char where
     groupBy = Text.groupBy
+
+instance CanGroup Text Char where
+    group = Text.group

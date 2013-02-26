@@ -261,9 +261,6 @@ drop i c  = Prelude.snd (splitAt i c)
 sortWith :: (CanSortBy c a, Ord b) => (a -> b) -> c -> c
 sortWith f = sortBy $ comparing f
 
-group :: (CanGroupBy c a, Eq a) => c -> [c]
-group = groupBy (==)
-
 -- | The 'groupWith' function uses the user supplied function which
 -- projects an element out of every list element in order to first sort the
 -- input list and then to form groups by equality on these projected elements

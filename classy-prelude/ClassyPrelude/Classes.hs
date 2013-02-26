@@ -206,3 +206,8 @@ class CanCompareLength c where
 
 class CanGroupBy c a | c -> a where
     groupBy :: (a -> a -> Bool) -> c -> [c]
+
+class CanGroup c a | c -> a where
+    group :: c -> [c]
+    default group :: (CanGroupBy c a, Eq a) => c -> [c]
+    group = groupBy (==)
