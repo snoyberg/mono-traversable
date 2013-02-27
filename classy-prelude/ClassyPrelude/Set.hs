@@ -16,7 +16,7 @@ import qualified Data.Set as Set
 instance (Ord a, Ord b) => CanMap (Set a) (Set b) a b where
     map = Set.map
 
-instance CanFilter (Set a) a where
+instance Ord a => CanFilter (Set a) a where
     filter = Set.filter
 
 instance CanLength (Set x) Int where

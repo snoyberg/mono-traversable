@@ -289,6 +289,7 @@ main = hspec $ do
         describe "Data.Text.Lazy" $ filterProps (undefined :: LText) (< 'A')
         describe "Data.Map" $ filterProps (undefined :: Map Int Char) (\(i, _) -> i < 20)
         describe "Data.HashMap" $ filterProps (undefined :: HashMap Int Char) (\(i, _) -> i < 20)
+        describe "Data.Set" $ filterProps (undefined :: Set Int) (< 20)
     describe "filterM" $ do
         describe "list" $ filterMProps (undefined :: [Int]) (< 20)
         describe "Data.Vector" $ filterMProps (undefined :: Vector Int) (< 20)
