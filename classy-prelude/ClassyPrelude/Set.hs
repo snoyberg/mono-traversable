@@ -16,6 +16,9 @@ import qualified Data.Set as Set
 instance (Ord a, Ord b) => CanMap (Set a) (Set b) a b where
     map = Set.map
 
+instance CanFilter (Set a) a where
+    filter = Set.filter
+
 instance CanLength (Set x) Int where
     length = Set.size
 
@@ -31,6 +34,9 @@ instance Ord x => CanPack (Set x) x where
 
 instance (Ord x, Set x ~ s, x ~ x') => CanInsert (x' -> s -> Set x) where
     insert = Set.insert
+
+instance Ord x => CanDeleteVal (Set x) x where
+    deleteVal = Set.delete
 
 instance Ord x => CanMember (Set x) x where
     member = Set.member
