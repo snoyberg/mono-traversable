@@ -78,6 +78,9 @@ instance CanStripSuffix ByteString where
         | otherwise = Nothing
     isSuffixOf = ByteString.isSuffixOf
 
+instance CanIsInfixOf ByteString where
+    isInfixOf = ByteString.isInfixOf
+
 instance MonadIO m => CanGetLine (m ByteString) where
     getLine = liftIO ByteString.getLine
 
