@@ -77,10 +77,6 @@ module ClassyPrelude
     , compareLength
     , Foldable.sum
     , Foldable.product
-    , Foldable.maximum
-    , Foldable.maximumBy
-    , Foldable.minimum
-    , Foldable.minimumBy
       -- ** Map-like
     , lookup
     , insert
