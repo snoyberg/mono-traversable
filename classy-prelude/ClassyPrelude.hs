@@ -75,6 +75,8 @@ module ClassyPrelude
     , cons
     , uncons
     , compareLength
+    , Foldable.sum
+    , Foldable.product
       -- ** Map-like
     , lookup
     , insert
