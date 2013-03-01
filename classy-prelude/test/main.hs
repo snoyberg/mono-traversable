@@ -273,6 +273,7 @@ main = hspec $ do
         describe "Data.ByteString.Lazy" $ mapProps (undefined :: LByteString) (+ 1) (+ 2)
         describe "Data.Text" $ mapProps (undefined :: Text) succ succ
         describe "Data.Text.Lazy" $ mapProps (undefined :: LText) succ succ
+        describe "Data.Sequence" $ mapProps (undefined :: Seq Int) succ succ
     describe "concatMap" $ do
         describe "list" $ concatMapProps (undefined :: [Int]) (\i -> [i + 1, i + 2])
         describe "Data.Vector" $ concatMapProps (undefined :: Vector Int) (\i -> fromList [i + 1, i + 2])
@@ -280,6 +281,7 @@ main = hspec $ do
         describe "Data.ByteString.Lazy" $ concatMapProps (undefined :: LByteString) (\i -> fromList [i + 1, i + 2])
         describe "Data.Text" $ concatMapProps (undefined :: Text) (\c -> pack [succ c, succ $ succ c])
         describe "Data.Text.Lazy" $ concatMapProps (undefined :: LText) (\c -> pack [succ c, succ $ succ c])
+        describe "Data.Sequence" $ concatMapProps (undefined :: Seq Int) (\i -> pack [i + 1, i + 2])
     describe "filter" $ do
         describe "list" $ filterProps (undefined :: [Int]) (< 20)
         describe "Data.Vector" $ filterProps (undefined :: Vector Int) (< 20)
@@ -289,9 +291,11 @@ main = hspec $ do
         describe "Data.Text.Lazy" $ filterProps (undefined :: LText) (< 'A')
         describe "Data.Map" $ filterProps (undefined :: Map Int Char) (\(i, _) -> i < 20)
         describe "Data.HashMap" $ filterProps (undefined :: HashMap Int Char) (\(i, _) -> i < 20)
+        describe "Data.Sequence" $ filterProps (undefined :: Seq Int) (< 20)
     describe "filterM" $ do
         describe "list" $ filterMProps (undefined :: [Int]) (< 20)
         describe "Data.Vector" $ filterMProps (undefined :: Vector Int) (< 20)
+        describe "Data.Sequence" $ filterMProps (undefined :: Seq Int) (< 20)
     describe "length" $ do
         describe "list" $ lengthProps (undefined :: [Int])
         describe "Data.Vector" $ lengthProps (undefined :: Vector Int)
@@ -303,14 +307,17 @@ main = hspec $ do
         describe "Data.HashMap" $ lengthProps (undefined :: HashMap Int Char)
         describe "Data.Set" $ lengthProps (undefined :: Set Int)
         describe "Data.HashSet" $ lengthProps (undefined :: HashSet Int)
+        describe "Data.Sequence" $ lengthProps (undefined :: Seq Int)
     describe "mapM" $ do
         describe "list" $ mapMProps (undefined :: [Int])
         describe "Data.Vector" $ mapMProps (undefined :: Vector Int)
+        describe "Seq" $ mapMProps (undefined :: Seq Int)
     describe "mapM_" $ do
         describe "list" $ mapM_Props (undefined :: [Int])
         describe "Data.Vector" $ mapM_Props (undefined :: Vector Int)
         describe "Set" $ mapM_Props (undefined :: Set Int)
         describe "HashSet" $ mapM_Props (undefined :: HashSet Int)
+        describe "Seq" $ mapM_Props (undefined :: Seq Int)
     describe "fold" $ do
         let f = flip (:)
         describe "list" $ foldProps (undefined :: [Int]) f []
@@ -321,6 +328,7 @@ main = hspec $ do
         describe "Data.Text.Lazy" $ foldProps (undefined :: LText) f []
         describe "Data.Set" $ foldProps (undefined :: Set Int) f []
         describe "Data.HashSet" $ foldProps (undefined :: HashSet Int) f []
+        describe "Data.Sequence" $ foldProps (undefined :: Seq Int) f []
     describe "replicate" $ do
         describe "list" $ replicateProps (undefined :: [Int]) pack
         describe "Data.Vector" $ replicateProps (undefined :: Vector Int) pack
@@ -328,6 +336,7 @@ main = hspec $ do
         describe "Data.ByteString.Lazy" $ replicateProps (undefined :: LByteString) pack
         describe "Data.Text" $ replicateProps (undefined :: Text) concat
         describe "Data.Text.Lazy" $ replicateProps (undefined :: LText) concat
+        describe "Data.Sequence" $ replicateProps (undefined :: Seq Int) pack
     describe "chunks" $ do
         describe "ByteString" $ chunkProps (asLByteString undefined)
         describe "Text" $ chunkProps (asLText undefined)
@@ -336,9 +345,11 @@ main = hspec $ do
         describe "LText" $ stripSuffixProps (undefined :: LText)
         describe "ByteString" $ stripSuffixProps (undefined :: ByteString)
         describe "LByteString" $ stripSuffixProps (undefined :: LByteString)
+        describe "Seq" $ stripSuffixProps (undefined :: Seq Int)
     describe "replicateM" $ do
         describe "list" $ replicateMProps (undefined :: [Int])
         describe "Vector" $ replicateMProps (undefined :: Vector Int)
+        describe "Seq" $ replicateMProps (undefined :: Seq Int)
     describe "encode/decode UTF8" $ do
         describe "Text" $ utf8Props (undefined :: Text)
         describe "LText" $ utf8Props (undefined :: LText)
@@ -353,6 +364,7 @@ main = hspec $ do
         describe "ByteString" $ prefixProps (undefined :: ByteString)
         describe "LByteString" $ prefixProps (undefined :: LByteString)
         describe "Vector" $ prefixProps (undefined :: Vector Int)
+        describe "Seq" $ prefixProps (undefined :: Seq Int)
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary
@@ -371,4 +383,6 @@ instance Arbitrary LByteString where
 instance Arbitrary Text where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary LText where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary (Seq Int) where
     arbitrary = fromList <$> arbitrary
