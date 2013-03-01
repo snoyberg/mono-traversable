@@ -6,6 +6,7 @@
 module ClassyPrelude
     ( -- * CorePrelude
       module CorePrelude
+    , Seq
       -- * Standard
       -- ** Monoid
     , empty
@@ -148,6 +149,7 @@ import ClassyPrelude.Maybe ()
 import ClassyPrelude.Set ()
 import ClassyPrelude.Text ()
 import ClassyPrelude.Vector ()
+import ClassyPrelude.Sequence (Seq)
 
 
 show :: (Show a, CanPack c Char) => a -> c
@@ -266,7 +268,7 @@ sortWith f = sortBy $ comparing f
 -- | The 'groupWith' function uses the user supplied function which
 -- projects an element out of every list element in order to first sort the
 -- input list and then to form groups by equality on these projected elements
--- 
+--
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:groupWith>
 groupWith :: (CanGroupBy c a, Eq b) => (a -> b) -> c -> [c]
 groupWith f = groupBy (\a b -> f a == f b)
