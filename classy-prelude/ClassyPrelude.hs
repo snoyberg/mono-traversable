@@ -78,6 +78,7 @@ module ClassyPrelude
     , compareLength
     , Foldable.sum
     , Foldable.product
+    , repeat
       -- ** Map-like
     , lookup
     , insert

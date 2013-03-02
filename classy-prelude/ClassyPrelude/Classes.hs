@@ -211,3 +211,6 @@ class CanGroup c a | c -> a where
     group :: c -> [c]
     default group :: (CanGroupBy c a, Eq a) => c -> [c]
     group = groupBy (==)
+
+class CanRepeat c a | c -> a where
+    repeat :: a -> c
