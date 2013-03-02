@@ -154,3 +154,6 @@ instance CanGroupBy [a] a where
 
 instance Eq a => CanGroup [a] a where
     group = List.group
+
+instance CanRepeat [a] a where
+    repeat = List.repeat

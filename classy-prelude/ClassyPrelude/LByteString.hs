@@ -101,3 +101,6 @@ instance CanGroupBy LByteString Word8 where
 
 instance CanGroup LByteString Word8 where
     group = LByteString.group
+
+instance CanRepeat LByteString Word8 where
+    repeat = LByteString.repeat
