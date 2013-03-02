@@ -154,3 +154,57 @@ instance CanGroupBy [a] a where
 
 instance Eq a => CanGroup [a] a where
     group = List.group
+
+instance CanZipWith [a] a [b] b [c] c where
+    zipWith = List.zipWith
+
+instance CanZipWith3 [a] a [b] b [c] c [d] d where
+    zipWith3 = List.zipWith3
+
+instance CanZipWith4 [a] a [b] b [c] c [d] d [e] e where
+    zipWith4 = List.zipWith4
+
+instance CanZipWith5 [a] a [b] b [c] c [d] d [e] e [f] f where
+    zipWith5 = List.zipWith5
+
+instance CanZipWith6 [a] a [b] b [c] c [d] d [e] e [f] f [g] g where
+    zipWith6 = List.zipWith6
+
+instance CanZipWith7 [a] a [b] b [c] c [d] d [e] e [f] f [g] g [h] h where
+    zipWith7 = List.zipWith7
+
+instance CanZip ([] a) a ([] b) b [] where
+    zip = List.zip
+
+instance CanZip3 ([] a) a ([] b) b ([] c) c [] where
+    zip3 = List.zip3
+
+instance CanZip4 ([] a) a ([] b) b ([] c) c ([] d) d [] where
+    zip4 = List.zip4
+
+instance CanZip5 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e [] where
+    zip5 = List.zip5
+
+instance CanZip6 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e ([] f) f [] where
+    zip6 = List.zip6
+
+instance CanZip7 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e ([] f) f ([] g) g [] where
+    zip7 = List.zip7
+
+instance CanUnzip ([] a) a ([] b) b [] where
+    unzip = List.unzip
+
+instance CanUnzip3 ([] a) a ([] b) b ([] c) c [] where
+    unzip3 = List.unzip3
+
+instance CanUnzip4 ([] a) a ([] b) b ([] c) c ([] d) d [] where
+    unzip4 = List.unzip4
+
+instance CanUnzip5 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e [] where
+    unzip5 = List.unzip5
+
+instance CanUnzip6 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e ([] f) f [] where
+    unzip6 = List.unzip6
+
+instance CanUnzip7 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e ([] f) f ([] g) g [] where
+    unzip7 = List.unzip7

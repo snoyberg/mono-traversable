@@ -65,6 +65,9 @@ module ClassyPrelude
     , subsequences
     , permutations
     , partition
+    , zip, zip3, zip4, zip5, zip6, zip7
+    , unzip, unzip3, unzip4, unzip5, unzip6, unzip7
+    , zipWith, zipWith3, zipWith4, zipWith5, zipWith6, zipWith7
     , nub
     , nubBy
     , sort

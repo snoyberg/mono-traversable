@@ -131,3 +131,9 @@ instance CanGroupBy LText Char where
 
 instance CanGroup LText Char where
     group = LText.group
+
+instance CanZipWith LText Char LText Char LText Char where
+    zipWith = LText.zipWith
+
+instance CanZip LText Char LText Char [] where
+    zip = LText.zip

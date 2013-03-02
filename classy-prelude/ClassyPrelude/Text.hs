@@ -123,3 +123,9 @@ instance CanGroupBy Text Char where
 
 instance CanGroup Text Char where
     group = Text.group
+
+instance CanZipWith Text Char Text Char Text Char where
+    zipWith = Text.zipWith
+
+instance CanZip Text Char Text Char [] where
+    zip = Text.zip

@@ -101,3 +101,12 @@ instance CanGroupBy LByteString Word8 where
 
 instance CanGroup LByteString Word8 where
     group = LByteString.group
+
+instance CanZipWith LByteString Word8 LByteString Word8 [a] a where
+    zipWith = LByteString.zipWith
+
+instance CanZip LByteString Word8 LByteString Word8 [] where
+    zip = LByteString.zip
+
+instance CanUnzip LByteString Word8 LByteString Word8 [] where
+    unzip = LByteString.unzip

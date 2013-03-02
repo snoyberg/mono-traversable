@@ -211,3 +211,57 @@ class CanGroup c a | c -> a where
     group :: c -> [c]
     default group :: (CanGroupBy c a, Eq a) => c -> [c]
     group = groupBy (==)
+
+class CanZipWith c1 i1 c2 i2 c3 i3 | c1 -> i1, c2 -> i2, c3 -> i3 where
+    zipWith :: (i1 -> i2 -> i3) -> c1 -> c2 -> c3
+
+class CanZipWith3 c1 i1 c2 i2 c3 i3 c4 i4 | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4 where
+    zipWith3 :: (i1 -> i2 -> i3 -> i4) -> c1 -> c2 -> c3 -> c4
+
+class CanZipWith4 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5 where
+    zipWith4 :: (i1 -> i2 -> i3 -> i4 -> i5) -> c1 -> c2 -> c3 -> c4 -> c5
+
+class CanZipWith5 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6 where
+    zipWith5 :: (i1 -> i2 -> i3 -> i4 -> i5 -> i6) -> c1 -> c2 -> c3 -> c4 -> c5 -> c6
+
+class CanZipWith6 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 c7 i7 | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6, c7 -> i7 where
+    zipWith6 :: (i1 -> i2 -> i3 -> i4 -> i5 -> i6 -> i7) -> c1 -> c2 -> c3 -> c4 -> c5 -> c6 -> c7
+
+class CanZipWith7 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 c7 i7 c8 i8 | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6, c7 -> i7, c8 -> i8 where
+    zipWith7 :: (i1 -> i2 -> i3 -> i4 -> i5 -> i6 -> i7 -> i8) -> c1 -> c2 -> c3 -> c4 -> c5 -> c6 -> c7 -> c8
+
+class CanZip c1 i1 c2 i2 t | c1 -> i1, c2 -> i2 where
+    zip :: c1 -> c2 -> t (i1, i2)
+
+class CanZip3 c1 i1 c2 i2 c3 i3 t | c1 -> i1, c2 -> i2, c3 -> i3 where
+    zip3 :: c1 -> c2 -> c3 -> t (i1, i2, i3)
+
+class CanZip4 c1 i1 c2 i2 c3 i3 c4 i4 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4 where
+    zip4 :: c1 -> c2 -> c3 -> c4 -> t (i1, i2, i3, i4)
+
+class CanZip5 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5 where
+    zip5 :: c1 -> c2 -> c3 -> c4 -> c5 -> t (i1, i2, i3, i4, i5)
+
+class CanZip6 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6 where
+    zip6 :: c1 -> c2 -> c3 -> c4 -> c5 -> c6 -> t (i1, i2, i3, i4, i5, i6)
+
+class CanZip7 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 c7 i7 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6, c7 -> i7 where
+    zip7 :: c1 -> c2 -> c3 -> c4 -> c5 -> c6 -> c7 -> t (i1, i2, i3, i4, i5, i6, i7)
+
+class CanUnzip c1 i1 c2 i2 t | c1 -> i1, c2 -> i2 where
+    unzip :: t (i1, i2) -> (c1, c2)
+
+class CanUnzip3 c1 i1 c2 i2 c3 i3 t | c1 -> i1, c2 -> i2, c3 -> i3 where
+    unzip3 :: t (i1, i2, i3) -> (c1, c2, c3)
+
+class CanUnzip4 c1 i1 c2 i2 c3 i3 c4 i4 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4 where
+    unzip4 :: t (i1, i2, i3, i4) -> (c1, c2, c3, c4)
+
+class CanUnzip5 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5 where
+    unzip5 :: t (i1, i2, i3, i4, i5) -> (c1, c2, c3, c4, c5)
+
+class CanUnzip6 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6 where
+    unzip6 :: t (i1, i2, i3, i4, i5, i6) -> (c1, c2, c3, c4, c5, c6)
+
+class CanUnzip7 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 c7 i7 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6, c7 -> i7 where
+    unzip7 :: t (i1, i2, i3, i4, i5, i6, i7) -> (c1, c2, c3, c4, c5, c6, c7)

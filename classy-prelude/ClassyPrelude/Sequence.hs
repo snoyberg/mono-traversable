@@ -133,3 +133,21 @@ instance CanUncons (Seq a) a where
     uncons s = case Seq.viewl s of
         EmptyL -> Nothing
         a :< s' -> Just (a, s')
+
+instance CanZipWith (Seq a) a (Seq b) b (Seq c) c where
+    zipWith = Seq.zipWith
+
+instance CanZipWith3 (Seq a) a (Seq b) b (Seq c) c (Seq d) d where
+    zipWith3 = Seq.zipWith3
+
+instance CanZipWith4 (Seq a) a (Seq b) b (Seq c) c (Seq d) d (Seq e) e where
+    zipWith4 = Seq.zipWith4
+
+instance CanZip (Seq a) a (Seq b) b Seq where
+    zip = Seq.zip
+
+instance CanZip3 (Seq a) a (Seq b) b (Seq c) c Seq where
+    zip3 = Seq.zip3
+
+instance CanZip4 (Seq a) a (Seq b) b (Seq c) c (Seq d) d Seq where
+    zip4 = Seq.zip4
