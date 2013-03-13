@@ -98,3 +98,12 @@ instance CanGroupBy ByteString Word8 where
 
 instance CanGroup ByteString Word8 where
     group = ByteString.group
+
+instance CanZipWith ByteString Word8 ByteString Word8 [a] a where
+    zipWith = ByteString.zipWith
+
+instance CanZip ByteString Word8 ByteString Word8 [] where
+    zip = ByteString.zip
+
+instance CanUnzip ByteString Word8 ByteString Word8 [] where
+    unzip = ByteString.unzip

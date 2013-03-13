@@ -137,3 +137,48 @@ switchL n j x =
     then n
     else j (Vector.unsafeHead x) (Vector.unsafeTail x)
 
+
+instance CanZipWith (Vector a) a (Vector b) b (Vector c) c where
+    zipWith = Vector.zipWith
+
+instance CanZipWith3 (Vector a) a (Vector b) b (Vector c) c (Vector d) d where
+    zipWith3 = Vector.zipWith3
+
+instance CanZipWith4 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e where
+    zipWith4 = Vector.zipWith4
+
+instance CanZipWith5 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e (Vector f) f where
+    zipWith5 = Vector.zipWith5
+
+instance CanZipWith6 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e (Vector f) f (Vector g) g where
+    zipWith6 = Vector.zipWith6
+
+instance CanZip (Vector a) a (Vector b) b Vector where
+    zip = Vector.zip
+
+instance CanZip3 (Vector a) a (Vector b) b (Vector c) c Vector where
+    zip3 = Vector.zip3
+
+instance CanZip4 (Vector a) a (Vector b) b (Vector c) c (Vector d) d Vector where
+    zip4 = Vector.zip4
+
+instance CanZip5 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e Vector where
+    zip5 = Vector.zip5
+
+instance CanZip6 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e (Vector f) f Vector where
+    zip6 = Vector.zip6
+
+instance CanUnzip (Vector a) a (Vector b) b Vector where
+    unzip = Vector.unzip
+
+instance CanUnzip3 (Vector a) a (Vector b) b (Vector c) c Vector where
+    unzip3 = Vector.unzip3
+
+instance CanUnzip4 (Vector a) a (Vector b) b (Vector c) c (Vector d) d Vector where
+    unzip4 = Vector.unzip4
+
+instance CanUnzip5 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e Vector where
+    unzip5 = Vector.unzip5
+
+instance CanUnzip6 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e (Vector f) f Vector where
+    unzip6 = Vector.unzip6
