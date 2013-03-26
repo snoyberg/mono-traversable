@@ -8,6 +8,7 @@ import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.Maybe as Maybe
 import qualified Control.Monad as Monad
+import qualified Control.Applicative as Applicative
 import qualified Data.Foldable as Foldable
 import qualified Data.Traversable as Traversable
 
@@ -58,3 +59,6 @@ instance CanReverse (Maybe a) where
 
 instance CanFind (Maybe a) a where
   find = Foldable.find
+
+instance CanEmpty (Maybe a) where
+  empty = Applicative.empty

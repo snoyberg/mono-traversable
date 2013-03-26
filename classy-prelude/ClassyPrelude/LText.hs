@@ -137,3 +137,5 @@ instance CanZipWith LText Char LText Char LText Char where
 
 instance CanZip LText Char LText Char [] where
     zip = LText.zip
+
+instance CanEmpty LText

@@ -10,6 +10,7 @@ import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.Foldable as Foldable
 import qualified Data.Vector as Vector
+import qualified Control.Applicative as Applicative
 
 
 instance CanMap (Vector a) (Vector b) a b where
@@ -182,3 +183,6 @@ instance CanUnzip5 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e
 
 instance CanUnzip6 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e (Vector f) f Vector where
     unzip6 = Vector.unzip6
+
+instance CanEmpty (Vector a) where
+  empty = Applicative.empty
