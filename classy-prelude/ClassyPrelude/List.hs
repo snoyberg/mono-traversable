@@ -8,7 +8,6 @@ import CorePrelude
 import ClassyPrelude.Classes
 import qualified Data.List as List
 import qualified Control.Monad as Monad
-import qualified Control.Applicative as Applicative
 import qualified Data.Monoid as Monoid
 import qualified Data.Set as Set
 
@@ -214,4 +213,4 @@ instance CanUnzip7 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e ([] f) f ([] g) 
     unzip7 = List.unzip7
 
 instance CanEmpty [a] where
-  empty = Applicative.empty
+    empty = []

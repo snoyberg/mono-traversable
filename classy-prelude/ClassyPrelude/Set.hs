@@ -65,4 +65,5 @@ instance (Ord a) => CanDifference (Set a) where
 instance (Ord a) => CanIntersection (Set a) where
     intersection = Set.intersection
 
-instance (Ord a) => CanEmpty (Set a)
+instance (Ord a) => CanEmpty (Set a) where
+    empty = Set.empty
