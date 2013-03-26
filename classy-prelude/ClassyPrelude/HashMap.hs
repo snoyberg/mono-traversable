@@ -58,4 +58,5 @@ instance (Hashable k, Eq k) => CanDifference (HashMap k a) where
 instance (Hashable k, Eq k) => CanIntersection (HashMap k a) where
     intersection = HashMap.intersection
 
-instance (Hashable k, Eq k) => CanEmpty (HashMap k a)
+instance (Hashable k, Eq k) => CanEmpty (HashMap k a) where
+    empty = HashMap.empty
