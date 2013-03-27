@@ -151,3 +151,6 @@ instance CanZip3 (Seq a) a (Seq b) b (Seq c) c Seq where
 
 instance CanZip4 (Seq a) a (Seq b) b (Seq c) c (Seq d) d Seq where
     zip4 = Seq.zip4
+
+instance CanEmpty (Seq a) where
+    empty = Seq.empty

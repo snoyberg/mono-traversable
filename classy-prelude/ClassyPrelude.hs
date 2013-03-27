@@ -181,10 +181,6 @@ append :: Monoid m => m -> m -> m
 append = mappend
 {-# INLINE append #-}
 
-empty :: Monoid m => m
-empty = mempty
-{-# INLINE empty #-}
-
 infixr 5  ++
 (++) :: Monoid m => m -> m -> m
 (++) = mappend

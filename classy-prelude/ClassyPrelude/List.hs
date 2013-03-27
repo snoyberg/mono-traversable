@@ -211,3 +211,6 @@ instance CanUnzip6 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e ([] f) f [] wher
 
 instance CanUnzip7 ([] a) a ([] b) b ([] c) c ([] d) d ([] e) e ([] f) f ([] g) g [] where
     unzip7 = List.unzip7
+
+instance CanEmpty [a] where
+    empty = []

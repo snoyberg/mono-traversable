@@ -23,3 +23,5 @@ instance CanStripPrefix FilePath where
         case stripPrefix a b of
             Nothing -> False
             Just {} -> True
+
+instance CanEmpty FilePath
