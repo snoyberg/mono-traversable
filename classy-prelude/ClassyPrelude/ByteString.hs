@@ -107,3 +107,5 @@ instance CanZip ByteString Word8 ByteString Word8 [] where
 
 instance CanUnzip ByteString Word8 ByteString Word8 [] where
     unzip = ByteString.unzip
+
+instance CanEmpty ByteString

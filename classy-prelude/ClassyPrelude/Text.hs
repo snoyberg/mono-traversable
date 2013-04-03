@@ -129,3 +129,5 @@ instance CanZipWith Text Char Text Char Text Char where
 
 instance CanZip Text Char Text Char [] where
     zip = Text.zip
+
+instance CanEmpty Text

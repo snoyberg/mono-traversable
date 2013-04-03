@@ -113,3 +113,5 @@ instance CanZip LByteString Word8 LByteString Word8 [] where
 
 instance CanUnzip LByteString Word8 LByteString Word8 [] where
     unzip = LByteString.unzip
+
+instance CanEmpty LByteString

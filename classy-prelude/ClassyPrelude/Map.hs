@@ -57,3 +57,6 @@ instance (Ord k) => CanDifference (Map k a) where
 
 instance (Ord k) => CanIntersection (Map k a) where
     intersection = Map.intersection
+
+instance (Ord k) => CanEmpty (Map k a) where
+    empty = Map.empty

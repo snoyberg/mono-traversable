@@ -182,3 +182,6 @@ instance CanUnzip5 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e
 
 instance CanUnzip6 (Vector a) a (Vector b) b (Vector c) c (Vector d) d (Vector e) e (Vector f) f Vector where
     unzip6 = Vector.unzip6
+
+instance CanEmpty (Vector a) where
+    empty = Vector.empty

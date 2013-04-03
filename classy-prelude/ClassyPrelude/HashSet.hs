@@ -48,3 +48,6 @@ instance (Eq a, Hashable a) => CanDifference (HashSet a) where
 
 instance (Eq a, Hashable a) => CanIntersection (HashSet a) where
     intersection = HashSet.intersection
+
+instance (Eq a, Hashable a) => CanEmpty (HashSet a) where
+    empty = HashSet.empty

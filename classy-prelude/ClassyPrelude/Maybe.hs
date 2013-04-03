@@ -58,3 +58,6 @@ instance CanReverse (Maybe a) where
 
 instance CanFind (Maybe a) a where
   find = Foldable.find
+
+instance CanEmpty (Maybe a) where
+  empty = Nothing

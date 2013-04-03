@@ -268,3 +268,8 @@ class CanUnzip6 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 t | c1 -> i1, c2 -> i2, c3 -
 
 class CanUnzip7 c1 i1 c2 i2 c3 i3 c4 i4 c5 i5 c6 i6 c7 i7 t | c1 -> i1, c2 -> i2, c3 -> i3, c4 -> i4, c5 -> i5, c6 -> i6, c7 -> i7 where
     unzip7 :: t (i1, i2, i3, i4, i5, i6, i7) -> (c1, c2, c3, c4, c5, c6, c7)
+
+class CanEmpty a where
+  empty :: a
+  default empty :: Monoid a => a
+  empty = mempty
