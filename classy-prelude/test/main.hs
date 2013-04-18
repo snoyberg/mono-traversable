@@ -8,7 +8,7 @@ import Test.Hspec.QuickCheck
 import ClassyPrelude
 import ClassyPrelude.Classes
 import Test.QuickCheck.Arbitrary
-import Prelude (asTypeOf, undefined, fromIntegral)
+import Prelude (asTypeOf, fromIntegral)
 import qualified Prelude
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
 import Data.Maybe (isJust)

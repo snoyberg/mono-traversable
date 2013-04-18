@@ -7,6 +7,7 @@ module ClassyPrelude
     ( -- * CorePrelude
       module CorePrelude
     , Seq
+    , undefined
       -- * Standard
       -- ** Monoid
     , empty
@@ -136,7 +137,7 @@ import qualified Data.Monoid as Monoid
 import Data.Foldable (Foldable)
 import qualified Data.Foldable as Foldable
 
-import CorePrelude hiding (print)
+import CorePrelude hiding (print, undefined)
 import ClassyPrelude.Classes
 
 import ClassyPrelude.ByteString ()
@@ -272,3 +273,17 @@ sortWith f = sortBy $ comparing f
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:groupWith>
 groupWith :: (CanGroupBy c a, Eq b) => (a -> b) -> c -> [c]
 groupWith f = groupBy (\a b -> f a == f b)
+
+-- | We define our own @undefined@ which is marked as deprecated. This makes it
+-- useful to use during development, but let's you more easily getting
+-- notification if you accidentally ship partial code in production.
+--
+-- The classy prelude recommendation for when you need to really have a partial
+-- function in production is to use @error@ with a very descriptive message so
+-- that, in case an exception is thrown, you get more information than
+-- @Prelude.undefined@.
+--
+-- Since 0.5.5
+undefined :: a
+undefined = error "ClassyPrelude.undefined"
+{-# DEPRECATED undefined "It is highly recommended that you either avoid partial functions or provide meaningful error messages" #-}
