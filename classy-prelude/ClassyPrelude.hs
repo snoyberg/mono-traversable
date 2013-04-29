@@ -133,6 +133,8 @@ module ClassyPrelude
     , asMaybe
     , asSet
     , asVector
+    , asIOException
+    , asSomeException
     ) where
 
 import qualified Prelude
@@ -337,3 +339,15 @@ handleIO = handle
 -- Since 0.5.6
 tryIO :: MonadBaseControl IO m => m a -> m (Either IOException a)
 tryIO = try
+
+-- |
+--
+-- Since 0.5.6
+asSomeException :: SomeException -> SomeException
+asSomeException = id
+
+-- |
+--
+-- Since 0.5.6
+asIOException :: IOException -> IOException
+asIOException = id
