@@ -113,6 +113,13 @@ module ClassyPrelude
       -- ** Chunking
     , toChunks
     , fromChunks
+      -- ** Exceptions
+    , catchAny
+    , handleAny
+    , tryAny
+    , catchIO
+    , handleIO
+    , tryIO
       -- ** Force types
       -- | Helper functions for situations where type inferer gets confused.
     , asByteString
@@ -130,6 +137,7 @@ module ClassyPrelude
 
 import qualified Prelude
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
 import Data.Monoid (Monoid)
@@ -287,3 +295,45 @@ groupWith f = groupBy (\a b -> f a == f b)
 undefined :: a
 undefined = error "ClassyPrelude.undefined"
 {-# DEPRECATED undefined "It is highly recommended that you either avoid partial functions or provide meaningful error messages" #-}
+
+-- | A version of 'catch' which is specialized for any exception. This
+-- simplifies usage as no explicit type signatures are necessary.
+--
+-- Since 0.5.6
+catchAny :: MonadBaseControl IO m => m a -> (SomeException -> m a) -> m a
+catchAny = catch
+
+-- | A version of 'handle' which is specialized for any exception.  This
+-- simplifies usage as no explicit type signatures are necessary.
+--
+-- Since 0.5.6
+handleAny :: MonadBaseControl IO m => (SomeException -> m a) -> m a -> m a
+handleAny = handle
+
+-- | A version of 'try' which is specialized for any exception.
+-- This simplifies usage as no explicit type signatures are necessary.
+--
+-- Since 0.5.6
+tryAny :: MonadBaseControl IO m => m a -> m (Either SomeException a)
+tryAny = try
+
+-- | A version of 'catch' which is specialized for IO exceptions. This
+-- simplifies usage as no explicit type signatures are necessary.
+--
+-- Since 0.5.6
+catchIO :: MonadBaseControl IO m => m a -> (IOException -> m a) -> m a
+catchIO = catch
+
+-- | A version of 'handle' which is specialized for IO exceptions.  This
+-- simplifies usage as no explicit type signatures are necessary.
+--
+-- Since 0.5.6
+handleIO :: MonadBaseControl IO m => (IOException -> m a) -> m a -> m a
+handleIO = handle
+
+-- | A version of 'try' which is specialized for IO exceptions.
+-- This simplifies usage as no explicit type signatures are necessary.
+--
+-- Since 0.5.6
+tryIO :: MonadBaseControl IO m => m a -> m (Either IOException a)
+tryIO = try
