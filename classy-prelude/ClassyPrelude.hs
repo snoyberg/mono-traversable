@@ -38,6 +38,7 @@ module ClassyPrelude
     , forM
     , forM_
     , replicateM
+    , replicateM_
     , stripPrefix
     , isPrefixOf
     , stripSuffix
