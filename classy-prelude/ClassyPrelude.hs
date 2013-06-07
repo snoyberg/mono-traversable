@@ -134,6 +134,7 @@ module ClassyPrelude
     , asMaybe
     , asSet
     , asVector
+    , asUVector  
     , asIOException
     , asSomeException
     ) where
@@ -165,6 +166,7 @@ import ClassyPrelude.Maybe ()
 import ClassyPrelude.Set ()
 import ClassyPrelude.Text ()
 import ClassyPrelude.Vector ()
+import ClassyPrelude.UVector ()
 import ClassyPrelude.Sequence (Seq)
 
 
@@ -247,6 +249,9 @@ asSet = id
 
 asVector :: Vector a -> Vector a
 asVector = id
+
+asUVector :: UVector a -> UVector a
+asUVector = id
 
 forM :: CanMapM ci mco m i o => ci -> (i -> m o) -> mco
 forM = flip mapM
