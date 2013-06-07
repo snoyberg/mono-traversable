@@ -24,6 +24,7 @@ library
                        ClassyPrelude.Set
                        ClassyPrelude.FilePath
                        ClassyPrelude.Vector
+                       ClassyPrelude.UVector
                        ClassyPrelude.HashMap
                        ClassyPrelude.HashSet
                        ClassyPrelude.Char
