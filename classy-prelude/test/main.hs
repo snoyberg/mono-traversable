@@ -269,6 +269,7 @@ main = hspec $ do
     describe "map" $ do
         describe "list" $ mapProps (undefined :: [Int]) (+ 1) (+ 2)
         describe "Data.Vector" $ mapProps (undefined :: Vector Int) (+ 1) (+ 2)
+        describe "Data.Vector.Unboxed" $ mapProps (undefined :: UVector Int) (+ 1) (+ 2)
         describe "Data.Set" $ mapProps (undefined :: Set Int) (+ 1) (+ 2)
         describe "Data.HashSet" $ mapProps (undefined :: HashSet Int) (+ 1) (+ 2)
         describe "Data.ByteString" $ mapProps (undefined :: ByteString) (+ 1) (+ 2)
@@ -279,6 +280,7 @@ main = hspec $ do
     describe "concatMap" $ do
         describe "list" $ concatMapProps (undefined :: [Int]) (\i -> [i + 1, i + 2])
         describe "Data.Vector" $ concatMapProps (undefined :: Vector Int) (\i -> fromList [i + 1, i + 2])
+        describe "Data.Vector.Unboxed" $ concatMapProps (undefined :: UVector Int) (\i -> fromList [i + 1, i + 2])
         describe "Data.ByteString" $ concatMapProps (undefined :: ByteString) (\i -> fromList [i + 1, i + 2])
         describe "Data.ByteString.Lazy" $ concatMapProps (undefined :: LByteString) (\i -> fromList [i + 1, i + 2])
         describe "Data.Text" $ concatMapProps (undefined :: Text) (\c -> pack [succ c, succ $ succ c])
@@ -287,6 +289,7 @@ main = hspec $ do
     describe "filter" $ do
         describe "list" $ filterProps (undefined :: [Int]) (< 20)
         describe "Data.Vector" $ filterProps (undefined :: Vector Int) (< 20)
+        describe "Data.Vector.Unboxed" $ filterProps (undefined :: UVector Int) (< 20)
         describe "Data.ByteString" $ filterProps (undefined :: ByteString) (< 20)
         describe "Data.ByteString.Lazy" $ filterProps (undefined :: LByteString) (< 20)
         describe "Data.Text" $ filterProps (undefined :: Text) (< 'A')
@@ -298,10 +301,12 @@ main = hspec $ do
     describe "filterM" $ do
         describe "list" $ filterMProps (undefined :: [Int]) (< 20)
         describe "Data.Vector" $ filterMProps (undefined :: Vector Int) (< 20)
+        describe "Data.Vector.Unboxed" $ filterMProps (undefined :: Vector Int) (< 20)
         describe "Data.Sequence" $ filterMProps (undefined :: Seq Int) (< 20)
     describe "length" $ do
         describe "list" $ lengthProps (undefined :: [Int])
         describe "Data.Vector" $ lengthProps (undefined :: Vector Int)
+        describe "Data.Vector.Unboxed" $ lengthProps (undefined :: UVector Int)
         describe "Data.ByteString" $ lengthProps (undefined :: ByteString)
         describe "Data.ByteString.Lazy" $ lengthProps (undefined :: LByteString)
         describe "Data.Text" $ lengthProps (undefined :: Text)
@@ -314,10 +319,12 @@ main = hspec $ do
     describe "mapM" $ do
         describe "list" $ mapMProps (undefined :: [Int])
         describe "Data.Vector" $ mapMProps (undefined :: Vector Int)
+        describe "Data.Vector.Unboxed" $ mapMProps (undefined :: UVector Int)
         describe "Seq" $ mapMProps (undefined :: Seq Int)
     describe "mapM_" $ do
         describe "list" $ mapM_Props (undefined :: [Int])
         describe "Data.Vector" $ mapM_Props (undefined :: Vector Int)
+        describe "Data.Vector.Unboxed" $ mapM_Props (undefined :: UVector Int)
         describe "Set" $ mapM_Props (undefined :: Set Int)
         describe "HashSet" $ mapM_Props (undefined :: HashSet Int)
         describe "Seq" $ mapM_Props (undefined :: Seq Int)
@@ -325,6 +332,7 @@ main = hspec $ do
         let f = flip (:)
         describe "list" $ foldProps (undefined :: [Int]) f []
         describe "Data.Vector" $ foldProps (undefined :: Vector Int) f []
+        describe "Data.Vector.Unboxed" $ foldProps (undefined :: UVector Int) f []
         describe "Data.ByteString" $ foldProps (undefined :: ByteString) f []
         describe "Data.ByteString.Lazy" $ foldProps (undefined :: LByteString) f []
         describe "Data.Text" $ foldProps (undefined :: Text) f []
@@ -335,6 +343,7 @@ main = hspec $ do
     describe "replicate" $ do
         describe "list" $ replicateProps (undefined :: [Int]) pack
         describe "Data.Vector" $ replicateProps (undefined :: Vector Int) pack
+        describe "Data.Vector.Unboxed" $ replicateProps (undefined :: UVector Int) pack
         describe "Data.ByteString" $ replicateProps (undefined :: ByteString) pack
         describe "Data.ByteString.Lazy" $ replicateProps (undefined :: LByteString) pack
         describe "Data.Text" $ replicateProps (undefined :: Text) concat
@@ -352,6 +361,7 @@ main = hspec $ do
     describe "replicateM" $ do
         describe "list" $ replicateMProps (undefined :: [Int])
         describe "Vector" $ replicateMProps (undefined :: Vector Int)
+        describe "UVector" $ replicateMProps (undefined :: UVector Int)
         describe "Seq" $ replicateMProps (undefined :: Seq Int)
     describe "encode/decode UTF8" $ do
         describe "Text" $ utf8Props (undefined :: Text)
@@ -367,6 +377,7 @@ main = hspec $ do
         describe "ByteString" $ prefixProps (undefined :: ByteString)
         describe "LByteString" $ prefixProps (undefined :: LByteString)
         describe "Vector" $ prefixProps (undefined :: Vector Int)
+        describe "UVector" $ prefixProps (undefined :: UVector Int)
         describe "Seq" $ prefixProps (undefined :: Seq Int)
 
 instance Arbitrary (Map Int Char) where
@@ -374,6 +385,8 @@ instance Arbitrary (Map Int Char) where
 instance Arbitrary (HashMap Int Char) where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary (Vector Int) where
+    arbitrary = fromList <$> arbitrary
+instance Arbitrary (UVector Int) where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary (Set Int) where
     arbitrary = fromList <$> arbitrary
