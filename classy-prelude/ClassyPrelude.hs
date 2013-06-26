@@ -18,6 +18,13 @@ module ClassyPrelude
       -- ** Mutable references
     , module Control.Concurrent.MVar.Lifted
     , module Data.IORef.Lifted
+      -- ** Debugging
+    , trace
+    , traceShow
+    , traceId
+    , traceM
+    , traceShowId
+    , traceShowM
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -169,6 +176,7 @@ import ClassyPrelude.Vector ()
 import ClassyPrelude.UVector ()
 import ClassyPrelude.Sequence (Seq)
 
+import Debug.Trace (trace, traceShow)
 
 show :: (Show a, CanPack c Char) => a -> c
 show = pack . Prelude.show
@@ -357,3 +365,27 @@ asSomeException = id
 -- Since 0.5.6
 asIOException :: IOException -> IOException
 asIOException = id
+
+-- |
+--
+-- Since 0.5.9
+traceId :: String -> String
+traceId a = trace a a
+
+-- |
+--
+-- Since 0.5.9
+traceM :: (Monad m) => String -> m ()
+traceM string = trace string $ return ()
+
+-- |
+--
+-- Since 0.5.9
+traceShowId :: (Show a) => a -> a
+traceShowId a = trace (show a) a
+
+-- |
+--
+-- Since 0.5.9
+traceShowM :: (Show a, Monad m) => a -> m ()
+traceShowM = traceM . show
