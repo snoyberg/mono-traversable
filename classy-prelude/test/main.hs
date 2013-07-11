@@ -3,6 +3,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE PatternGuards #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -15,6 +16,7 @@ import Control.Monad.Trans.Writer (tell, Writer, runWriter)
 import Data.Maybe (isJust)
 import Data.Functor.Identity (runIdentity)
 import Control.Concurrent (throwTo, threadDelay, forkIO)
+import Control.Exception (throw)
 
 dictionaryProps
     :: ( CanInsertVal a Int Char
@@ -404,6 +406,13 @@ main = hspec $ do
             threadDelay 50000
             didFail <- readIORef failed
             liftIO $ didFail `shouldBe` False
+        it "tryAnyDeep" $ do
+            eres <- tryAnyDeep $ return $ throw DummyException
+            case eres of
+                Left e
+                    | Just DummyException <- fromException e -> return ()
+                    | otherwise -> error "Expected a DummyException"
+                Right () -> error "Expected an exception" :: IO ()
 
 data DummyException = DummyException
     deriving (Show, Typeable)

@@ -42,6 +42,7 @@ library
                      , lifted-base                   >= 0.2
                      , monad-control
                      , async                         >= 2.0
+                     , deepseq
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test

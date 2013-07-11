@@ -125,6 +125,9 @@ module ClassyPrelude
     , catchAny
     , handleAny
     , tryAny
+    , catchAnyDeep
+    , handleAnyDeep
+    , tryAnyDeep
     , catchIO
     , handleIO
     , tryIO
@@ -156,6 +159,7 @@ import Data.Monoid (Monoid)
 import qualified Data.Monoid as Monoid
 import Data.Foldable (Foldable)
 import qualified Data.Foldable as Foldable
+import Control.DeepSeq (NFData, ($!!))
 
 import CorePrelude hiding (print, undefined)
 import ClassyPrelude.Classes
@@ -347,6 +351,31 @@ tryAny :: MonadBaseControl IO m => m a -> m (Either SomeException a)
 tryAny m =
     liftBaseWith (\runInIO -> withAsync (runInIO m) waitCatch) >>=
     either (return . Left) (liftM Right . restoreM)
+
+-- | An extension to @catchAny@ which ensures that the return value is fully
+-- evaluated. See @tryAnyDeep@.
+--
+-- Since 0.5.9
+catchAnyDeep :: MonadBaseControl IO m => m a -> (SomeException -> m a) -> m a
+catchAnyDeep action onE = tryAnyDeep action >>= either onE return
+
+-- | @flip catchAnyDeep@
+--
+-- Since 0.5.6
+handleAnyDeep :: MonadBaseControl IO m => (SomeException -> m a) -> m a -> m a
+handleAnyDeep = flip catchAnyDeep
+
+-- | An extension to @tryAny@ which ensures that the return value is fully
+-- evaluated. In other words, if you get a @Right@ response here, you can be
+-- confident that using it will not result in another exception.
+--
+-- Since 0.5.9
+tryAnyDeep :: (NFData a, MonadBaseControl IO m)
+           => m a
+           -> m (Either SomeException a)
+tryAnyDeep m = tryAny $ do
+    x <- m
+    return $!! x
 
 -- | A version of 'catch' which is specialized for IO exceptions. This
 -- simplifies usage as no explicit type signatures are necessary.
