@@ -41,6 +41,7 @@ library
                      , hashable
                      , lifted-base                   >= 0.2
                      , monad-control
+                     , async                         >= 2.0
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
