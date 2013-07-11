@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -13,6 +14,7 @@ import qualified Prelude
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
 import Data.Maybe (isJust)
 import Data.Functor.Identity (runIdentity)
+import Control.Concurrent (throwTo, threadDelay, forkIO)
 
 dictionaryProps
     :: ( CanInsertVal a Int Char
@@ -379,6 +381,33 @@ main = hspec $ do
         describe "Vector" $ prefixProps (undefined :: Vector Int)
         describe "UVector" $ prefixProps (undefined :: UVector Int)
         describe "Seq" $ prefixProps (undefined :: Seq Int)
+    describe "any exceptions" $ do
+        it "catchAny" $ do
+            failed <- newIORef 0
+            tid <- forkIO $ do
+                catchAny
+                    (threadDelay 20000)
+                    (const $ writeIORef failed 1)
+                writeIORef failed 2
+            threadDelay 10000
+            throwTo tid DummyException
+            threadDelay 50000
+            didFail <- readIORef failed
+            liftIO $ didFail `shouldBe` 0
+        it "tryAny" $ do
+            failed <- newIORef False
+            tid <- forkIO $ do
+                _ <- tryAny $ threadDelay 20000
+                writeIORef failed True
+            threadDelay 10000
+            throwTo tid DummyException
+            threadDelay 50000
+            didFail <- readIORef failed
+            liftIO $ didFail `shouldBe` False
+
+data DummyException = DummyException
+    deriving (Show, Typeable)
+instance Exception DummyException
 
 instance Arbitrary (Map Int Char) where
     arbitrary = fromList <$> arbitrary
