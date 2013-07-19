@@ -356,13 +356,13 @@ tryAny m =
 -- evaluated. See @tryAnyDeep@.
 --
 -- Since 0.5.9
-catchAnyDeep :: MonadBaseControl IO m => m a -> (SomeException -> m a) -> m a
+catchAnyDeep :: (NFData a, MonadBaseControl IO m) => m a -> (SomeException -> m a) -> m a
 catchAnyDeep action onE = tryAnyDeep action >>= either onE return
 
 -- | @flip catchAnyDeep@
 --
 -- Since 0.5.6
-handleAnyDeep :: MonadBaseControl IO m => (SomeException -> m a) -> m a -> m a
+handleAnyDeep :: (NFData a, MonadBaseControl IO m) => (SomeException -> m a) -> m a -> m a
 handleAnyDeep = flip catchAnyDeep
 
 -- | An extension to @tryAny@ which ensures that the return value is fully
