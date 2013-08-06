@@ -102,9 +102,6 @@ instance CanReplicate [i] i Int where
 instance CanReplicateM [a] a Int where
     replicateM = Monad.replicateM
 
-instance CanReplicateM_ a Int where
-    replicateM_ = Monad.replicateM_
-
 instance CanFind [a] a where
     find = List.find
 

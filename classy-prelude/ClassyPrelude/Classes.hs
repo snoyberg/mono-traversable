@@ -51,9 +51,6 @@ class CanMapM_ ci i | ci -> i where
 class CanReplicateM c i len | c -> i len where
     replicateM :: Monad m => len -> m i -> m c
 
-class CanReplicateM_ i len where
-    replicateM_ :: Monad m => len -> m i -> m ()
-
 class CanLookup c k v | c -> k v where
     lookup :: k -> c -> Maybe v
 

@@ -150,7 +150,7 @@ module ClassyPrelude
     ) where
 
 import qualified Prelude
-import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
+import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_)
 import Control.Monad.Trans.Control (MonadBaseControl, liftBaseWith, restoreM)
 import Control.Concurrent.Async (withAsync, waitCatch)
 import Control.Concurrent.MVar.Lifted
