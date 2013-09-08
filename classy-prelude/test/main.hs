@@ -7,10 +7,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 import Test.Hspec
 import Test.Hspec.QuickCheck
-import ClassyPrelude
+import ClassyPrelude hiding (undefined)
 import ClassyPrelude.Classes
 import Test.QuickCheck.Arbitrary
-import Prelude (asTypeOf, fromIntegral)
+import Prelude (asTypeOf, fromIntegral, undefined)
 import qualified Prelude
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
 import Data.Maybe (isJust)
