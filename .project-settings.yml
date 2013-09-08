@@ -1,0 +1,57 @@
+extensions: {}
+cabal-file: project.cabal
+version: 1
+environment: null
+module-template: ! 'module MODULE_NAME where
+
+'
+ghc-args: []
+modules:
+  ClassyPrelude.Map:
+    filename: classy-prelude/ClassyPrelude/Map.hs
+  ClassyPrelude.Maybe:
+    filename: classy-prelude/ClassyPrelude/Maybe.hs
+  ClassyPrelude.UVector:
+    filename: classy-prelude/ClassyPrelude/UVector.hs
+  ClassyPrelude.Text:
+    filename: classy-prelude/ClassyPrelude/Text.hs
+  ClassyPrelude.Char:
+    filename: classy-prelude/ClassyPrelude/Char.hs
+  ClassyPrelude.ByteString:
+    filename: classy-prelude/ClassyPrelude/ByteString.hs
+  ClassyPrelude.FilePath:
+    filename: classy-prelude/ClassyPrelude/FilePath.hs
+  ClassyPrelude.LByteString:
+    filename: classy-prelude/ClassyPrelude/LByteString.hs
+  ClassyPrelude.HashSet:
+    filename: classy-prelude/ClassyPrelude/HashSet.hs
+  Main(classy-prelude/Setup.hs):
+    filename: classy-prelude/Setup.hs
+  ClassyPrelude.HashMap:
+    filename: classy-prelude/ClassyPrelude/HashMap.hs
+  ClassyPrelude.Set:
+    filename: classy-prelude/ClassyPrelude/Set.hs
+  ClassyPrelude.Vector:
+    filename: classy-prelude/ClassyPrelude/Vector.hs
+  Main(classy-prelude-conduit/test/Spec.hs):
+    filename: classy-prelude-conduit/test/Spec.hs
+  ClassyPrelude.Classes:
+    filename: classy-prelude/ClassyPrelude/Classes.hs
+  Main(classy-prelude-yesod/Setup.hs):
+    filename: classy-prelude-yesod/Setup.hs
+  Main(classy-prelude-conduit/Setup.hs):
+    filename: classy-prelude-conduit/Setup.hs
+  ClassyPrelude:
+    filename: classy-prelude/ClassyPrelude.hs
+  ClassyPrelude.Yesod:
+    filename: classy-prelude-yesod/ClassyPrelude/Yesod.hs
+  Main(classy-prelude/test/main.hs):
+    filename: classy-prelude/test/main.hs
+  ClassyPrelude.Conduit:
+    filename: classy-prelude-conduit/ClassyPrelude/Conduit.hs
+  ClassyPrelude.LText:
+    filename: classy-prelude/ClassyPrelude/LText.hs
+  ClassyPrelude.Sequence:
+    filename: classy-prelude/ClassyPrelude/Sequence.hs
+  ClassyPrelude.List:
+    filename: classy-prelude/ClassyPrelude/List.hs
