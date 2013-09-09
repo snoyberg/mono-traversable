@@ -42,7 +42,7 @@ instance MonoFunctor TL.Text where
 
 class Monoid c => MonoFoldable c where
     foldMap :: Monoid m => (Element c -> m) -> c -> m
-    foldMap f = foldl' (\a b -> a `mappend` f b) mempty
+    foldMap f = foldr (mappend . f) mempty
 
     foldr :: (Element c -> b -> b) -> b -> c -> b
     foldl' :: (a -> Element c -> a) -> a -> c -> a
