@@ -143,10 +143,8 @@ instance FromList T.Text where
 instance FromList TL.Text where
     fromList = TL.pack
 
-class (MonoFunctor c, MonoFunctor d) => MonoTransform c d where
-    mtransform :: c -> d
-instance (MonoFunctor c, MonoFoldable c,
-          MonoFunctor d, FromList d,
-          Convertible (Element c) (Element d))
-         => MonoTransform c d where
-    mtransform = fromList . foldr ((:) . convert) []
+mtransform :: (MonoFunctor c, MonoFoldable c,
+               MonoFunctor d, FromList d,
+               Convertible (Element c) (Element d))
+           => c -> d
+mtransform = fromList . foldr ((:) . convert) []
