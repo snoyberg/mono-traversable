@@ -7,10 +7,11 @@ module Data.MonoTraversable where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Monad        (Monad (..), liftM)
+import           Control.Monad        (Monad (..), liftM, foldM)
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
 import           Data.Convertible
+import           Data.Either
 import qualified Data.Foldable        as F
 import           Data.Functor
 import           Data.Monoid
@@ -143,8 +144,15 @@ instance FromList T.Text where
 instance FromList TL.Text where
     fromList = TL.pack
 
-mtransform :: (MonoFunctor c, MonoFoldable c,
-               MonoFunctor d, FromList d,
-               Convertible (Element c) (Element d))
-           => c -> d
-mtransform = fromList . foldr ((:) . convert) []
+mconvert :: (MonoFunctor c, MonoFoldable c,
+             MonoFunctor d, FromList d,
+             Convertible (Element c) (Element d))
+         => c -> d
+mconvert = fromList . foldr ((:) . convert) []
+
+msafeConvert :: (MonoFunctor c, MonoFoldable c,
+             MonoFunctor d, FromList d,
+             Convertible (Element c) (Element d))
+         => c -> ConvertResult d
+msafeConvert =
+    fmap fromList . foldM ((. safeConvert) . (<$>) . flip (:)) [] . toList
