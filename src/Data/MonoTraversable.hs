@@ -114,3 +114,29 @@ mfor = flip mtraverse
 
 mforM :: (MonoTraversable c, Monad f) => c -> (Element c -> f (Element c)) -> f c
 mforM = flip mmapM
+
+class MonoPointed c where
+    mpoint :: Element c -> c
+instance Pointed t => MonoPointed (t a) where
+    mpoint = point
+instance MonoPointed S.ByteString where
+    mpoint = S.singleton
+instance MonoPointed L.ByteString where
+    mpoint = L.singleton
+instance MonoPointed T.Text where
+    mpoint = T.singleton
+instance MonoPointed TL.Text where
+    mpoint = TL.singleton
+
+class (Monoid c, MonoPointed c) => FromList c where
+    fromList :: [Element c] -> c
+    fromList = mconcat . fmap mpoint
+instance (Monoid (t a), Pointed t) => FromList (t a)
+instance FromList S.ByteString where
+    fromList = S.pack
+instance FromList L.ByteString where
+    fromList = L.pack
+instance FromList T.Text where
+    fromList = T.pack
+instance FromList TL.Text where
+    fromList = TL.pack
