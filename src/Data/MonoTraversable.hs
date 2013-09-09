@@ -1,14 +1,17 @@
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Data.MonoTraversable where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Monad        (Monad (..), liftM)
+import           Control.Monad        (Monad (..), liftM, foldM)
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
+import           Data.Convertible
+import           Data.Either
 import qualified Data.Foldable        as F
 import           Data.Functor
 import           Data.Monoid
@@ -160,3 +163,16 @@ instance FromList T.Text where
     fromList = T.pack
 instance FromList TL.Text where
     fromList = TL.pack
+
+mconvert :: (MonoFunctor c, MonoFoldable c,
+             MonoFunctor d, FromList d,
+             Convertible (Element c) (Element d))
+         => c -> d
+mconvert = fromList . foldr ((:) . convert) []
+
+msafeConvert :: (MonoFunctor c, MonoFoldable c,
+             MonoFunctor d, FromList d,
+             Convertible (Element c) (Element d))
+         => c -> ConvertResult d
+msafeConvert =
+    fmap fromList . foldM (\acc x -> (:acc) <$> safeConvert x) [] . toList
