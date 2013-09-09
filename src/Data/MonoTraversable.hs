@@ -1,24 +1,24 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Data.MonoTraversable where
 
-import Data.Monoid
-import qualified Data.Foldable as F
-import Data.Traversable
-import qualified Data.ByteString as S
+import           Control.Applicative
+import           Control.Category
+import           Control.Monad        (Monad (..), liftM)
+import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
-import Data.Word (Word8)
-import Control.Applicative
-import Data.Functor
-import Prelude (Char, flip, ($))
-import Control.Category
-import GHC.Exts (build)
-import Data.Pointed
-import Control.Monad (Monad (..), liftM)
+import qualified Data.Foldable        as F
+import           Data.Functor
+import           Data.Monoid
+import           Data.Pointed
+import qualified Data.Text            as T
+import qualified Data.Text.Lazy       as TL
+import           Data.Traversable
+import           Data.Word            (Word8)
+import           GHC.Exts             (build)
+import           Prelude              (Char, flip, ($))
 
 type family Element c
 type instance Element (t a) = a
