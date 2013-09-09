@@ -14,9 +14,11 @@ import qualified Data.Text.Lazy as TL
 import Data.Word (Word8)
 import Control.Applicative
 import Data.Functor
-import Prelude (Char, flip, Monad (..))
+import Prelude (Char, flip, ($))
 import Control.Category
 import GHC.Exts (build)
+import Data.Pointed
+import Control.Monad (Monad (..), liftM)
 
 type family Element c
 type instance Element (t a) = a
@@ -87,3 +89,28 @@ mapM_ f = foldr ((>>) . f) (return ())
 
 forM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
 forM_ = flip mapM_
+
+class (MonoFunctor c, MonoFoldable c) => MonoTraversable c where
+    mtraverse :: Applicative f => (Element c -> f (Element c)) -> c -> f c
+    mmapM :: Monad m => (Element c -> m (Element c)) -> c -> m c
+instance (Traversable t, Monoid (t a)) => MonoTraversable (t a) where
+    mtraverse = traverse
+    mmapM = mapM
+instance MonoTraversable S.ByteString where
+    mtraverse f = fmap S.pack . traverse f . S.unpack
+    mmapM f = liftM S.pack . mapM f . S.unpack
+instance MonoTraversable L.ByteString where
+    mtraverse f = fmap L.pack . traverse f . L.unpack
+    mmapM f = liftM L.pack . mapM f . L.unpack
+instance MonoTraversable T.Text where
+    mtraverse f = fmap T.pack . traverse f . T.unpack
+    mmapM f = liftM T.pack . mapM f . T.unpack
+instance MonoTraversable TL.Text where
+    mtraverse f = fmap TL.pack . traverse f . TL.unpack
+    mmapM f = liftM TL.pack . mapM f . TL.unpack
+
+mfor :: (MonoTraversable c, Applicative f) => c -> (Element c -> f (Element c)) -> f c
+mfor = flip mtraverse
+
+mforM :: (MonoTraversable c, Monad f) => c -> (Element c -> f (Element c)) -> f c
+mforM = flip mmapM
