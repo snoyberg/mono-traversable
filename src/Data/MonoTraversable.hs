@@ -155,4 +155,4 @@ msafeConvert :: (MonoFunctor c, MonoFoldable c,
              Convertible (Element c) (Element d))
          => c -> ConvertResult d
 msafeConvert =
-    fmap fromList . foldM ((. safeConvert) . (<$>) . flip (:)) [] . toList
+    fmap fromList . foldM (\acc x -> (:acc) <$> safeConvert x) [] . toList
