@@ -18,7 +18,7 @@ import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
 import           Data.Word            (Word8)
 import           GHC.Exts             (build)
-import           Prelude              (Char, flip, ($))
+import           Prelude              (Bool, Char, flip, ($))
 
 type family Element c
 type instance Element (t a) = a
@@ -51,6 +51,12 @@ class Monoid c => MonoFoldable c where
     toList :: c -> [Element c]
     toList t = build (\ c n -> foldr c n t)
     {-# INLINE toList #-}
+    
+    all :: (Element c -> Bool) -> c -> Bool
+    all f = getAll . foldMap (All . f)
+    
+    any :: (Element c -> Bool) -> c -> Bool
+    any f = getAny . foldMap (Any . f)
 
 instance (F.Foldable t, Monoid (t a)) => MonoFoldable (t a) where
     foldMap = F.foldMap
@@ -62,21 +68,29 @@ instance MonoFoldable S.ByteString where
     foldl' = S.foldl'
     mconcatMap = S.concatMap
     toList = S.unpack
+    all = S.all
+    any = S.any
 instance MonoFoldable L.ByteString where
     foldr = L.foldr
     foldl' = L.foldl'
     mconcatMap = L.concatMap
     toList = L.unpack
+    all = L.all
+    any = L.any
 instance MonoFoldable T.Text where
     foldr = T.foldr
     foldl' = T.foldl'
     mconcatMap = T.concatMap
     toList = T.unpack
+    all = T.all
+    any = T.any
 instance MonoFoldable TL.Text where
     foldr = TL.foldr
     foldl' = TL.foldl'
     mconcatMap = TL.concatMap
     toList = TL.unpack
+    all = TL.all
+    any = TL.any
 
 traverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
 traverse_ f = foldr ((*>) . f) (pure ())
