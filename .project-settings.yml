@@ -1,0 +1,9 @@
+extensions: {}
+cabal-file: project.cabal
+version: 1
+environment: null
+module-template: ! 'module MODULE_NAME where
+
+'
+ghc-args: []
+modules: {}
