@@ -13,6 +13,8 @@ ghc-args:
 modules:
   Data.Containers:
     filename: src/Data/Containers.hs
+  Data.Sequences:
+    filename: src/Data/Sequences.hs
   Data.MonoTraversable:
     filename: src/Data/MonoTraversable.hs
   Spec:

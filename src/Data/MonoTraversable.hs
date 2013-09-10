@@ -7,21 +7,20 @@ module Data.MonoTraversable where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Monad        (Monad (..), liftM, replicateM)
+import           Control.Monad        (Monad (..), liftM)
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Foldable        as F
 import           Data.Functor
 import           Data.Monoid (Monoid (..), Any (..), All (..))
-import           Data.Pointed
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
-import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either, replicate, (+))
-import Data.List (genericReplicate)
+import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either,
+                                       replicate, (+), Integral, Ordering (..), compare, fromIntegral)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
@@ -180,6 +179,9 @@ class MonoFoldable c where
     
     clength64 :: c -> Int64
     clength64 = cfoldl' (\i _ -> i + 1) 0
+    
+    ccompareLength :: Integral i => c -> i -> Ordering
+    ccompareLength c0 i0 = clength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
 
 instance MonoFoldable S.ByteString where
     cfoldr = S.foldr
@@ -213,7 +215,9 @@ instance MonoFoldable TL.Text where
     cany = TL.any
     cnull = TL.null
     clength64 = TL.length
-instance MonoFoldable [a]
+instance MonoFoldable [a] where
+    ctoList = id
+    {-# INLINE ctoList #-}
 instance MonoFoldable (Maybe a)
 instance MonoFoldable (Tree a)
 instance MonoFoldable (Seq a)
@@ -292,40 +296,3 @@ cfor = flip ctraverse
 
 cforM :: (MonoTraversable c, Monad f) => c -> (Element c -> f (Element c)) -> f c
 cforM = flip cmapM
-
-class MonoPointed c where
-    cpoint :: Element c -> c
-instance (Pointed t, a ~ Element (t a)) => MonoPointed (t a) where -- FIXME remove, or perhaps all of MonoPointed
-    cpoint = point
-instance MonoPointed S.ByteString where
-    cpoint = S.singleton
-instance MonoPointed L.ByteString where
-    cpoint = L.singleton
-instance MonoPointed T.Text where
-    cpoint = T.singleton
-instance MonoPointed TL.Text where
-    cpoint = TL.singleton
-
-class (Monoid c, MonoPointed c) => FromList c where
-    cfromList :: [Element c] -> c
-    cfromList = mconcat . fmap cpoint
-    
-    creplicate :: Int -> Element c -> c
-    creplicate i = cfromList . replicate i
-    
-    creplicate64 :: Int64 -> Element c -> c
-    creplicate64 i = cfromList . genericReplicate i
-    
-    creplicateM :: Monad m => Int -> m (Element c) -> m c
-    creplicateM i = liftM cfromList . replicateM i
-instance (Monoid (t a), Pointed t, a ~ Element (t a)) => FromList (t a)
-instance FromList S.ByteString where
-    cfromList = S.pack
-    creplicate = S.replicate
-instance FromList L.ByteString where
-    cfromList = L.pack
-    creplicate64 = L.replicate
-instance FromList T.Text where
-    cfromList = T.pack
-instance FromList TL.Text where
-    cfromList = TL.pack

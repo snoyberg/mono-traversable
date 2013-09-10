@@ -6,6 +6,8 @@ import Test.Hspec.QuickCheck
 import Data.MonoTraversable
 import Data.Text (Text)
 import qualified Data.ByteString.Lazy as L
+import Data.Sequences
+import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..))
 
 main :: IO ()
 main = hspec $ do
@@ -16,17 +18,22 @@ main = hspec $ do
         it "non-empty text" $ cnull ("foo" :: Text) `shouldBe` False
     describe "clength" $ do
         prop "list" $ \i' ->
-            let x = creplicate i () :: [()]
+            let x = replicate i () :: [()]
                 i = min 500 $ abs i'
              in clength x == i &&
                 clength64 x == fromIntegral i
         prop "text" $ \i' ->
-            let x = creplicate i 'a' :: Text
+            let x = replicate i 'a' :: Text
                 i = min 500 $ abs i'
              in clength x == i &&
                 clength64 x == fromIntegral i
         prop "lazy bytestring" $ \i' ->
-            let x = creplicate i 6 :: L.ByteString
+            let x = replicate i 6 :: L.ByteString
                 i = min 500 $ abs i'
              in clength x == i &&
                 clength64 x == fromIntegral i
+    describe "ccompareLength" $ do
+        prop "list" $ \i' j ->
+            let i = min 500 $ abs i'
+                x = replicate i () :: [()]
+             in ccompareLength x j == compare i j
