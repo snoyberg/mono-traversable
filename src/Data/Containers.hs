@@ -10,6 +10,7 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid)
 import Data.MonoTraversable (MonoFoldable, MonoTraversable, Element)
+import qualified Data.IntMap as IntMap
 
 class (Monoid c, MonoFoldable c) => Container c where
     type ContainerKey c
@@ -32,6 +33,13 @@ instance (Eq k, Hashable k) => Container (HashMap.HashMap k v) where
     union = HashMap.union
     difference = HashMap.difference
     intersection = HashMap.intersection
+instance Container (IntMap.IntMap v) where
+    type ContainerKey (IntMap.IntMap v) = Int
+    member = IntMap.member
+    notMember = IntMap.notMember
+    union = IntMap.union
+    difference = IntMap.difference
+    intersection = IntMap.intersection
 instance Ord e => Container (Set.Set e) where
     type ContainerKey (Set.Set e) = e
     member = Set.member
@@ -62,6 +70,11 @@ instance (Eq k, Hashable k) => IsMap (HashMap.HashMap k v) where
     insertMap = HashMap.insert
     deleteMap = HashMap.delete
     singletonMap = HashMap.singleton
+instance IsMap (IntMap.IntMap v) where
+    lookup = IntMap.lookup
+    insertMap = IntMap.insert
+    deleteMap = IntMap.delete
+    singletonMap = IntMap.singleton
 
 class (Container s, Element s ~ ContainerKey s) => IsSet s where
     insertSet :: Element s -> s -> s
