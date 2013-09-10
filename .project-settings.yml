@@ -1,11 +1,14 @@
 extensions: {}
 cabal-file: project.cabal
+extra-packages: ''
 version: 1
-environment: null
+environment: ghc-7.4.2-stable-13.09
 module-template: ! 'module MODULE_NAME where
 
 '
-ghc-args: []
+ghc-args:
+- -Wall
+- -Werror
 modules:
   Data.MonoTraversable:
     filename: src/Data/MonoTraversable.hs

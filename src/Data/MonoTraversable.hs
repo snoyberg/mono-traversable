@@ -58,6 +58,7 @@ type instance Element (IO a) = a
 type instance Element (ZipList a) = a
 type instance Element (Maybe a) = a
 type instance Element (Tree a) = a
+type instance Element (Seq a) = a
 type instance Element (ViewL a) = a
 type instance Element (ViewR a) = a
 type instance Element (IntMap a) = a
@@ -109,6 +110,7 @@ instance MonoFunctor (IO a)
 instance MonoFunctor (ZipList a)
 instance MonoFunctor (Maybe a)
 instance MonoFunctor (Tree a)
+instance MonoFunctor (Seq a)
 instance MonoFunctor (ViewL a)
 instance MonoFunctor (ViewR a)
 instance MonoFunctor (IntMap a)
@@ -191,6 +193,7 @@ instance MonoFoldable TL.Text where
 instance MonoFoldable [a]
 instance MonoFoldable (Maybe a)
 instance MonoFoldable (Tree a)
+instance MonoFoldable (Seq a)
 instance MonoFoldable (ViewL a)
 instance MonoFoldable (ViewR a)
 instance MonoFoldable (IntMap a)
@@ -248,6 +251,7 @@ instance MonoTraversable TL.Text where
 instance MonoTraversable [a]
 instance MonoTraversable (Maybe a)
 instance MonoTraversable (Tree a)
+instance MonoTraversable (Seq a)
 instance MonoTraversable (ViewL a)
 instance MonoTraversable (ViewR a)
 instance MonoTraversable (IntMap a)
