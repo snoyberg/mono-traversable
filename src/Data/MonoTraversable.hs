@@ -7,7 +7,7 @@ module Data.MonoTraversable where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Monad        (Monad (..), liftM)
+import           Control.Monad        (Monad (..), liftM, replicateM)
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Foldable        as F
@@ -315,6 +315,9 @@ class (Monoid c, MonoPointed c) => FromList c where
     
     creplicate64 :: Int64 -> Element c -> c
     creplicate64 i = cfromList . genericReplicate i
+    
+    creplicateM :: Monad m => Int -> m (Element c) -> m c
+    creplicateM i = liftM cfromList . replicateM i
 instance (Monoid (t a), Pointed t, a ~ Element (t a)) => FromList (t a)
 instance FromList S.ByteString where
     cfromList = S.pack
