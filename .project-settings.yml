@@ -9,6 +9,7 @@ module-template: ! 'module MODULE_NAME where
 ghc-args:
 - -Wall
 - -Werror
+- -hide-package=hashmap
 modules:
   Data.Containers:
     filename: src/Data/Containers.hs

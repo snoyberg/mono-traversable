@@ -47,6 +47,8 @@ import Control.Monad.Trans.Cont (ContT)
 import Data.Functor.Compose (Compose)
 import Data.Functor.Product (Product)
 import Data.Semigroupoid.Static (Static)
+import Data.Set (Set)
+import Data.HashSet (HashSet)
 
 type family Element c
 type instance Element S.ByteString = Word8
@@ -72,6 +74,8 @@ type instance Element (Const m a) = a
 type instance Element (WrappedMonad m a) = a
 type instance Element (Map k v) = v
 type instance Element (HashMap k v) = v
+type instance Element (Set e) = e
+type instance Element (HashSet e) = e
 type instance Element (Vector a) = a
 type instance Element (WrappedArrow a b c) = c
 type instance Element (MaybeApply f a) = a
@@ -210,6 +214,8 @@ instance MonoFoldable (Identity a)
 instance MonoFoldable (Map k v)
 instance MonoFoldable (HashMap k v)
 instance MonoFoldable (Vector a)
+instance MonoFoldable (Set e)
+instance MonoFoldable (HashSet e)
 
 ctraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
 ctraverse_ f = cfoldr ((*>) . f) (pure ())
