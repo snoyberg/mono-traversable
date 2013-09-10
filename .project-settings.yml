@@ -16,4 +16,4 @@ modules:
   Data.MonoTraversable:
     filename: src/Data/MonoTraversable.hs
   Spec:
-    filename: src/Spec.hs
+    filename: test/Spec.hs
