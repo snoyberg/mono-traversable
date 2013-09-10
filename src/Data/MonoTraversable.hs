@@ -19,7 +19,7 @@ import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
 import           Data.Word            (Word8)
 import           GHC.Exts             (build)
-import           Prelude              (Bool, Char, flip, ($), IO, Maybe, Either)
+import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
@@ -165,6 +165,9 @@ class MonoFoldable c where
     
     cany :: (Element c -> Bool) -> c -> Bool
     cany f = getAny . cfoldMap (Any . f)
+    
+    cnull :: c -> Bool
+    cnull = call (const False)
 
 instance MonoFoldable S.ByteString where
     cfoldr = S.foldr
@@ -172,24 +175,28 @@ instance MonoFoldable S.ByteString where
     ctoList = S.unpack
     call = S.all
     cany = S.any
+    cnull = S.null
 instance MonoFoldable L.ByteString where
     cfoldr = L.foldr
     cfoldl' = L.foldl'
     ctoList = L.unpack
     call = L.all
     cany = L.any
+    cnull = L.null
 instance MonoFoldable T.Text where
     cfoldr = T.foldr
     cfoldl' = T.foldl'
     ctoList = T.unpack
     call = T.all
     cany = T.any
+    cnull = T.null
 instance MonoFoldable TL.Text where
     cfoldr = TL.foldr
     cfoldl' = TL.foldl'
     ctoList = TL.unpack
     call = TL.all
     cany = TL.any
+    cnull = TL.null
 instance MonoFoldable [a]
 instance MonoFoldable (Maybe a)
 instance MonoFoldable (Tree a)
