@@ -8,8 +8,10 @@ import qualified Data.HashMap.Strict as HashMap
 import Data.Hashable (Hashable)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
+import Data.Monoid (Monoid)
+import Data.MonoTraversable (MonoFoldable, MonoTraversable)
 
-class Container c k | c -> k where
+class (Monoid c, MonoFoldable c) => Container c k | c -> k where
     member :: k -> c -> Bool
     notMember :: k -> c -> Bool
     union :: c -> c -> c
@@ -40,25 +42,31 @@ instance (Eq e, Hashable e) => Container (HashSet.HashSet e) e where
     difference = HashSet.difference
     intersection = HashSet.intersection
 
-class Container m k => IsMap m k v | m -> k v where
+class (MonoTraversable m, Container m k) => IsMap m k v | m -> k v where
     lookup :: k -> m -> Maybe v
     insertMap :: k -> v -> m -> m
     deleteMap :: k -> m -> m
+    singletonMap :: k -> v -> m
 instance Ord k => IsMap (Map.Map k v) k v where
     lookup = Map.lookup
     insertMap = Map.insert
     deleteMap = Map.delete
+    singletonMap = Map.singleton
 instance (Eq k, Hashable k) => IsMap (HashMap.HashMap k v) k v where
     lookup = HashMap.lookup
     insertMap = HashMap.insert
     deleteMap = HashMap.delete
+    singletonMap = HashMap.singleton
 
 class Container s e => IsSet s e | s -> e where
     insertSet :: e -> s -> s
     deleteSet :: e -> s -> s
+    singletonSet :: e -> s
 instance Ord e => IsSet (Set.Set e) e where
     insertSet = Set.insert
     deleteSet = Set.delete
+    singletonSet = Set.singleton
 instance (Eq e, Hashable e) => IsSet (HashSet.HashSet e) e where
     insertSet = HashSet.insert
     deleteSet = HashSet.delete
+    singletonSet = HashSet.singleton
