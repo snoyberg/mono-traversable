@@ -18,8 +18,10 @@ import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
 import           Data.Word            (Word8)
+import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
-import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either)
+import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either, replicate, (+))
+import Data.List (genericReplicate)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
@@ -172,6 +174,12 @@ class MonoFoldable c where
     
     cnull :: c -> Bool
     cnull = call (const False)
+    
+    clength :: c -> Int
+    clength = cfoldl' (\i _ -> i + 1) 0
+    
+    clength64 :: c -> Int64
+    clength64 = cfoldl' (\i _ -> i + 1) 0
 
 instance MonoFoldable S.ByteString where
     cfoldr = S.foldr
@@ -180,6 +188,7 @@ instance MonoFoldable S.ByteString where
     call = S.all
     cany = S.any
     cnull = S.null
+    clength = S.length
 instance MonoFoldable L.ByteString where
     cfoldr = L.foldr
     cfoldl' = L.foldl'
@@ -187,6 +196,7 @@ instance MonoFoldable L.ByteString where
     call = L.all
     cany = L.any
     cnull = L.null
+    clength64 = L.length
 instance MonoFoldable T.Text where
     cfoldr = T.foldr
     cfoldl' = T.foldl'
@@ -194,6 +204,7 @@ instance MonoFoldable T.Text where
     call = T.all
     cany = T.any
     cnull = T.null
+    clength = T.length
 instance MonoFoldable TL.Text where
     cfoldr = TL.foldr
     cfoldl' = TL.foldl'
@@ -201,6 +212,7 @@ instance MonoFoldable TL.Text where
     call = TL.all
     cany = TL.any
     cnull = TL.null
+    clength64 = TL.length
 instance MonoFoldable [a]
 instance MonoFoldable (Maybe a)
 instance MonoFoldable (Tree a)
@@ -295,14 +307,22 @@ instance MonoPointed TL.Text where
     cpoint = TL.singleton
 
 class (Monoid c, MonoPointed c) => FromList c where
-    fromList :: [Element c] -> c
-    fromList = mconcat . fmap cpoint
+    cfromList :: [Element c] -> c
+    cfromList = mconcat . fmap cpoint
+    
+    creplicate :: Int -> Element c -> c
+    creplicate i = cfromList . replicate i
+    
+    creplicate64 :: Int64 -> Element c -> c
+    creplicate64 i = cfromList . genericReplicate i
 instance (Monoid (t a), Pointed t, a ~ Element (t a)) => FromList (t a)
 instance FromList S.ByteString where
-    fromList = S.pack
+    cfromList = S.pack
+    creplicate = S.replicate
 instance FromList L.ByteString where
-    fromList = L.pack
+    cfromList = L.pack
+    creplicate64 = L.replicate
 instance FromList T.Text where
-    fromList = T.pack
+    cfromList = T.pack
 instance FromList TL.Text where
-    fromList = TL.pack
+    cfromList = TL.pack
