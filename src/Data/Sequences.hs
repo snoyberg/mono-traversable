@@ -1,6 +1,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Data.Sequences where
 
 import Data.Monoid
@@ -9,6 +12,8 @@ import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
 import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not)
+import Data.Char (Char)
+import Data.Word (Word8)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Text as T
@@ -19,6 +24,9 @@ import Control.Monad (liftM)
 import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy.Encoding as TL
+import Data.Text.Encoding.Error (lenientDecode)
 
 -- | Laws:
 --
@@ -394,3 +402,36 @@ class (IsSequence t, IsSequence b) => Textual t b | t -> b, b -> t where
     toLower :: t -> t
     toUpper :: t -> t
     toCaseFold :: t -> t
+
+instance (c ~ Char, w ~ Word8) => Textual [c] [w] where
+    words = List.words
+    unwords = List.unwords
+    lines = List.lines
+    unlines = List.unlines
+    encodeUtf8 = L.unpack . TL.encodeUtf8 . TL.pack
+    decodeUtf8 = TL.unpack . TL.decodeUtf8With lenientDecode . L.pack
+    toLower = TL.unpack . TL.toLower . TL.pack
+    toUpper = TL.unpack . TL.toUpper . TL.pack
+    toCaseFold = TL.unpack . TL.toCaseFold . TL.pack
+
+instance Textual T.Text S.ByteString where
+    words = T.words
+    unwords = T.unwords
+    lines = T.lines
+    unlines = T.unlines
+    encodeUtf8 = T.encodeUtf8
+    decodeUtf8 = T.decodeUtf8With lenientDecode
+    toLower = T.toLower
+    toUpper = T.toUpper
+    toCaseFold = T.toCaseFold
+
+instance Textual TL.Text L.ByteString where
+    words = TL.words
+    unwords = TL.unwords
+    lines = TL.lines
+    unlines = TL.unlines
+    encodeUtf8 = TL.encodeUtf8
+    decodeUtf8 = TL.decodeUtf8With lenientDecode
+    toLower = TL.toLower
+    toUpper = TL.toUpper
+    toCaseFold = TL.toCaseFold
