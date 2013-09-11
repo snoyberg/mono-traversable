@@ -8,7 +8,7 @@ import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Text as T
@@ -280,10 +280,22 @@ instance U.Unbox a => IsSequence (U.Vector a) where
 
 class (IsSequence c, Eq (Element c)) => EqSequence c where
     stripPrefix :: c -> c -> Maybe c
+    stripPrefix x y = fmap fromList (ctoList x `stripPrefix` ctoList y)
+    
     isPrefixOf :: c -> c -> Bool
+    isPrefixOf x y = ctoList x `isPrefixOf` ctoList y
+    
     stripSuffix :: c -> c -> Maybe c
+    stripSuffix x y = fmap fromList (ctoList x `stripSuffix` ctoList y)
+
     isSuffixOf :: c -> c -> Bool
+    isSuffixOf x y = ctoList x `isSuffixOf` ctoList y
+
     isInfixOf :: c -> c -> Bool
+    isInfixOf x y = ctoList x `isInfixOf` ctoList y
+
+    group :: c -> [c]
+    group = groupBy (==)
 
 instance Eq a => EqSequence [a] where
     stripPrefix = List.stripPrefix
@@ -291,12 +303,68 @@ instance Eq a => EqSequence [a] where
     stripSuffix x y = fmap reverse (List.stripPrefix (reverse x) (reverse y))
     isSuffixOf x y = List.isPrefixOf (reverse x) (reverse y)
     isInfixOf = List.isInfixOf
+    group = List.group
+
+instance EqSequence S.ByteString where
+    stripPrefix x y
+        | x `S.isPrefixOf` y = Just (S.drop (S.length x) y)
+        | otherwise = Nothing
+    isPrefixOf = S.isPrefixOf
+    stripSuffix x y
+        | x `S.isSuffixOf` y = Just (S.take (S.length y - S.length x) y)
+        | otherwise = Nothing
+    isSuffixOf = S.isSuffixOf
+    isInfixOf = S.isInfixOf
+    group = S.group
+
+instance EqSequence L.ByteString where
+    stripPrefix x y
+        | x `L.isPrefixOf` y = Just (L.drop (L.length x) y)
+        | otherwise = Nothing
+    isPrefixOf = L.isPrefixOf
+    stripSuffix x y
+        | x `L.isSuffixOf` y = Just (L.take (L.length y - L.length x) y)
+        | otherwise = Nothing
+    isSuffixOf = L.isSuffixOf
+    isInfixOf x y = L.unpack x `List.isInfixOf` L.unpack y
+    group = L.group
+
+instance EqSequence T.Text where
+    stripPrefix = T.stripPrefix
+    isPrefixOf = T.isPrefixOf
+    stripSuffix = T.stripSuffix
+    isSuffixOf = T.isSuffixOf
+    isInfixOf = T.isInfixOf
+    group = T.group
+
+instance EqSequence TL.Text where
+    stripPrefix = TL.stripPrefix
+    isPrefixOf = TL.isPrefixOf
+    stripSuffix = TL.stripSuffix
+    isSuffixOf = TL.isSuffixOf
+    isInfixOf = TL.isInfixOf
+    group = TL.group
+
+instance Eq a => EqSequence (Seq.Seq a)
+instance Eq a => EqSequence (V.Vector a)
+instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 
 class (EqSequence c, Ord (Element c)) => OrdSequence c where
     sort :: c -> c
-    sort = sortBy compare
-    group :: c -> [c]
-    group = groupBy (==)
+    sort = fromList . List.sort . ctoList
+
+instance Ord a => OrdSequence [a] where
+    sort = List.sort
+
+instance OrdSequence S.ByteString where
+    sort = S.sort
+
+instance OrdSequence L.ByteString
+instance OrdSequence T.Text
+instance OrdSequence TL.Text
+instance Ord a => OrdSequence (Seq.Seq a)
+instance Ord a => OrdSequence (V.Vector a)
+instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a)
 
 class (IsSequence l, IsSequence s) => LazySequence l s | l -> s, s -> l where
     toChunks :: l -> [s]
