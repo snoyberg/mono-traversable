@@ -8,7 +8,7 @@ import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Text as T
@@ -16,6 +16,8 @@ import qualified Data.Text.Lazy as TL
 import Control.Category
 import Control.Arrow ((***), second)
 import Control.Monad (liftM)
+import qualified Data.Sequence as Seq
+import qualified Data.Vector as V
 
 -- | Laws:
 --
@@ -197,6 +199,60 @@ instance IsSequence TL.Text where
     uncons = TL.uncons
     groupBy = TL.groupBy
     -- sortBy
+
+
+instance IsSequence (Seq.Seq a) where
+    singleton = Seq.singleton
+    fromList = Seq.fromList
+    replicate = Seq.replicate
+    replicate64 i = Seq.replicate (fromIntegral i)
+    replicateM = Seq.replicateM
+    filter = Seq.filter
+    --filterM = Seq.filterM
+    --intersperse = Seq.intersperse
+    break = Seq.breakl
+    span = Seq.spanl
+    dropWhile = Seq.dropWhileL
+    takeWhile = Seq.takeWhileL
+    splitAt = Seq.splitAt
+    splitAt64 i = Seq.splitAt (fromIntegral i)
+    reverse = Seq.reverse
+    --find = Seq.find
+    partition = Seq.partition
+    sortBy = Seq.sortBy
+    cons = (Seq.<|)
+    uncons s =
+        case Seq.viewl s of
+            Seq.EmptyL -> Nothing
+            x Seq.:< xs -> Just (x, xs)
+    --groupBy = Seq.groupBy
+
+instance IsSequence (V.Vector a) where
+    singleton = V.singleton
+    fromList = V.fromList
+    replicate = V.replicate
+    replicate64 i = V.replicate (fromIntegral i)
+    replicateM = V.replicateM
+    filter = V.filter
+    filterM = V.filterM
+    --intersperse = V.intersperse
+    break = V.break
+    span = V.span
+    dropWhile = V.dropWhile
+    takeWhile = V.takeWhile
+    splitAt = V.splitAt
+    splitAt64 i = V.splitAt (fromIntegral i)
+    reverse = V.reverse
+    find = V.find
+    partition = V.partition
+    --sortBy = V.sortBy
+    cons = V.cons
+    uncons v
+        | V.null v = Nothing
+        | otherwise = Just (V.head v, V.tail v)
+    --groupBy = V.groupBy
+
+-- FIXME unboxed Vector
 
 class (IsSequence c, Eq (Element c)) => EqSequence c where
     stripPrefix :: c -> c -> Maybe c
