@@ -372,6 +372,18 @@ class (IsSequence l, IsSequence s) => LazySequence l s | l -> s, s -> l where
     toStrict :: l -> s
     fromStrict :: s -> l
 
+instance LazySequence L.ByteString S.ByteString where
+    toChunks = L.toChunks
+    fromChunks = L.fromChunks
+    toStrict = mconcat . L.toChunks
+    fromStrict = L.fromChunks . return
+
+instance LazySequence TL.Text T.Text where
+    toChunks = TL.toChunks
+    fromChunks = TL.fromChunks
+    toStrict = TL.toStrict
+    fromStrict = TL.fromStrict
+
 class (IsSequence t, IsSequence b) => Textual t b | t -> b, b -> t where
     words :: t -> [t]
     unwords :: [t] -> t
