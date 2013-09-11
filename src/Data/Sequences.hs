@@ -18,6 +18,7 @@ import Control.Arrow ((***), second)
 import Control.Monad (liftM)
 import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as U
 
 -- | Laws:
 --
@@ -252,7 +253,30 @@ instance IsSequence (V.Vector a) where
         | otherwise = Just (V.head v, V.tail v)
     --groupBy = V.groupBy
 
--- FIXME unboxed Vector
+instance U.Unbox a => IsSequence (U.Vector a) where
+    singleton = U.singleton
+    fromList = U.fromList
+    replicate = U.replicate
+    replicate64 i = U.replicate (fromIntegral i)
+    replicateM = U.replicateM
+    filter = U.filter
+    filterM = U.filterM
+    --intersperse = U.intersperse
+    break = U.break
+    span = U.span
+    dropWhile = U.dropWhile
+    takeWhile = U.takeWhile
+    splitAt = U.splitAt
+    splitAt64 i = U.splitAt (fromIntegral i)
+    reverse = U.reverse
+    find = U.find
+    partition = U.partition
+    --sortBy = U.sortBy
+    cons = U.cons
+    uncons v
+        | U.null v = Nothing
+        | otherwise = Just (U.head v, U.tail v)
+    --groupBy = U.groupBy
 
 class (IsSequence c, Eq (Element c)) => EqSequence c where
     stripPrefix :: c -> c -> Maybe c

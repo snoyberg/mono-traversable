@@ -50,6 +50,7 @@ import Data.Functor.Product (Product)
 import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
 import Data.HashSet (HashSet)
+import qualified Data.Vector.Unboxed as U
 
 type family Element c
 type instance Element S.ByteString = Word8
@@ -97,6 +98,7 @@ type instance Element (ContT r m a) = a
 type instance Element (Compose f g a) = a
 type instance Element (Product f g a) = a
 type instance Element (Static f a b) = b
+type instance Element (U.Vector a) = a
 
 class MonoFunctor c where
     cmap :: (Element c -> Element c) -> c -> c
@@ -149,6 +151,8 @@ instance Functor m => MonoFunctor (ContT r m a)
 instance (Functor f, Functor g) => MonoFunctor (Compose f g a)
 instance (Functor f, Functor g) => MonoFunctor (Product f g a)
 instance Functor f => MonoFunctor (Static f a b)
+instance U.Unbox a => MonoFunctor (U.Vector a) where
+    cmap = U.map
 
 class MonoFoldable c where
     cfoldMap :: Monoid m => (Element c -> m) -> c -> m
@@ -232,6 +236,14 @@ instance MonoFoldable (HashMap k v)
 instance MonoFoldable (Vector a)
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
+instance U.Unbox a => MonoFoldable (U.Vector a) where
+    cfoldr = U.foldr
+    cfoldl' = U.foldl'
+    ctoList = U.toList
+    call = U.all
+    cany = U.any
+    cnull = U.null
+    clength = U.length
 
 ctraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
 ctraverse_ f = cfoldr ((*>) . f) (pure ())
@@ -290,6 +302,9 @@ instance MonoTraversable (Identity a)
 instance MonoTraversable (Map k v)
 instance MonoTraversable (HashMap k v)
 instance MonoTraversable (Vector a)
+instance U.Unbox a => MonoTraversable (U.Vector a) where
+    ctraverse f = fmap U.fromList . traverse f . U.toList
+    cmapM = U.mapM
 
 cfor :: (MonoTraversable c, Applicative f) => c -> (Element c -> f (Element c)) -> f c
 cfor = flip ctraverse
