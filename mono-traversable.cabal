@@ -1,0 +1,43 @@
+name:                mono-traversable
+version:             0.1.0.0
+synopsis:            Type classes for mapping, folding, and traversing monomorphic containers
+description:         Monomorphic variants of the Functor, Foldable, and Traversable typeclasses. Contains even more experimental code for abstracting containers and sequences.
+homepage:            https://github.com/snoyberg/mono-traversable
+license:             MIT
+license-file:        LICENSE
+author:              Michael Snoyman
+maintainer:          michael@snoyman.com
+category:            Data
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Data.Containers
+                       Data.MonoTraversable
+                       Data.Sequences
+  build-depends:       base >= 4 && < 5
+                     , containers >= 0.4
+                     , unordered-containers >=0.2
+                     , hashable
+                     , bytestring >= 0.9
+                     , text >=0.11
+                     , semigroups >=0.9
+                     , transformers >=0.3
+                     , vector >=0.10
+                     , semigroupoids >=3.1
+                     , comonad >=3.1
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+
+test-suite test
+  main-is:             main.hs
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  other-modules:       Spec
+  default-language:    Haskell2010
+  build-depends:       base
+                     , mono-traversable
+                     , bytestring
+                     , text
+                     , hspec
