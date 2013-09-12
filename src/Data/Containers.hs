@@ -11,6 +11,8 @@ import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid)
 import Data.MonoTraversable (MonoFoldable, MonoTraversable, Element)
 import qualified Data.IntMap as IntMap
+import Data.Function (on)
+import qualified Data.List as List
 
 class (Monoid c, MonoFoldable c) => Container c where
     type ContainerKey c
@@ -54,6 +56,13 @@ instance (Eq e, Hashable e) => Container (HashSet.HashSet e) where
     union = HashSet.union
     difference = HashSet.difference
     intersection = HashSet.intersection
+instance Ord k => Container [(k, v)] where
+    type ContainerKey [(k, v)] = k
+    member k = List.any ((== k) . fst)
+    notMember k = not . member k
+    union = List.unionBy ((==) `on` fst)
+    x `difference` y = Map.toList (Map.fromList x `Map.difference` Map.fromList y)
+    intersection = List.intersectBy ((==) `on` fst)
 
 class (MonoTraversable m, Container m) => IsMap m where
     -- | Using just @Element@ can lead to very confusing error messages.
@@ -88,7 +97,14 @@ instance IsMap (IntMap.IntMap v) where
     singletonMap = IntMap.singleton
     mapFromList = IntMap.fromList
     mapToList = IntMap.toList
--- FIXME assoc list instance?
+instance Ord k => IsMap [(k, v)] where
+    type ContainerValue [(k, v)] = v
+    lookup = List.lookup
+    insertMap k v = ((k, v):) . deleteMap k
+    deleteMap k = List.filter ((/= k) . fst)
+    singletonMap k v = [(k, v)]
+    mapFromList = id
+    mapToList = id
 
 class (Container s, Element s ~ ContainerKey s) => IsSet s where
     insertSet :: Element s -> s -> s
