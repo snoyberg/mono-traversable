@@ -56,13 +56,16 @@ instance (Eq e, Hashable e) => Container (HashSet.HashSet e) where
     intersection = HashSet.intersection
 
 class (MonoTraversable m, Container m) => IsMap m where
-    lookup :: ContainerKey m -> m -> Maybe (Element m)
-    insertMap :: ContainerKey m -> Element m -> m -> m
+    -- | Using just @Element@ can lead to very confusing error messages.
+    type ContainerValue m
+    lookup :: ContainerKey m -> m -> Maybe (ContainerValue m)
+    insertMap :: ContainerKey m -> ContainerValue m -> m -> m
     deleteMap :: ContainerKey m -> m -> m
-    singletonMap :: ContainerKey m -> Element m -> m
-    mapFromList :: [(ContainerKey m, Element m)] -> m
-    mapToList :: m -> [(ContainerKey m, Element m)]
+    singletonMap :: ContainerKey m -> ContainerValue m -> m
+    mapFromList :: [(ContainerKey m, ContainerValue m)] -> m
+    mapToList :: m -> [(ContainerKey m, ContainerValue m)]
 instance Ord k => IsMap (Map.Map k v) where
+    type ContainerValue (Map.Map k v) = v
     lookup = Map.lookup
     insertMap = Map.insert
     deleteMap = Map.delete
@@ -70,6 +73,7 @@ instance Ord k => IsMap (Map.Map k v) where
     mapFromList = Map.fromList
     mapToList = Map.toList
 instance (Eq k, Hashable k) => IsMap (HashMap.HashMap k v) where
+    type ContainerValue (HashMap.HashMap k v) = v
     lookup = HashMap.lookup
     insertMap = HashMap.insert
     deleteMap = HashMap.delete
@@ -77,6 +81,7 @@ instance (Eq k, Hashable k) => IsMap (HashMap.HashMap k v) where
     mapFromList = HashMap.fromList
     mapToList = HashMap.toList
 instance IsMap (IntMap.IntMap v) where
+    type ContainerValue (IntMap.IntMap v) = v
     lookup = IntMap.lookup
     insertMap = IntMap.insert
     deleteMap = IntMap.delete
