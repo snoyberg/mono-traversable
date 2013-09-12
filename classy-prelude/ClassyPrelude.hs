@@ -20,6 +20,9 @@ module ClassyPrelude
     , traceM
     , traceShowId
     , traceShowM
+      -- * Poly hierarchy
+    , module Data.Foldable
+    , module Data.Traversable
       -- * Mono hierarchy
     , module Data.MonoTraversable
     , module Data.Sequences
@@ -107,6 +110,9 @@ import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
 import qualified Data.Monoid as Monoid
 import qualified Data.Traversable as Traversable
+import Data.Traversable (Traversable)
+import qualified Data.Foldable as Foldable
+import Data.Foldable (Foldable)
 import Control.DeepSeq (NFData, ($!!))
 
 import CorePrelude hiding (print, undefined)
@@ -156,8 +162,8 @@ mapM_ = omapM_
 forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m a) -> m ()
 forM_ = oforM_
 
-concatMap :: MonoFoldableMonoid c => (Element c -> c) -> c -> c
-concatMap = oconcatMap
+concatMap :: (Monoid m, Foldable t) => (a -> m) -> t a -> m
+concatMap = Foldable.foldMap
 
 foldr :: MonoFoldable c => (Element c -> b -> b) -> b -> c -> b
 foldr = ofoldr
