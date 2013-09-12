@@ -66,15 +66,15 @@ instance Ord k => Container [(k, v)] where
 
 class (MonoTraversable m, Container m) => IsMap m where
     -- | Using just @Element@ can lead to very confusing error messages.
-    type ContainerValue m
-    lookup :: ContainerKey m -> m -> Maybe (ContainerValue m)
-    insertMap :: ContainerKey m -> ContainerValue m -> m -> m
+    type MapValue m
+    lookup :: ContainerKey m -> m -> Maybe (MapValue m)
+    insertMap :: ContainerKey m -> MapValue m -> m -> m
     deleteMap :: ContainerKey m -> m -> m
-    singletonMap :: ContainerKey m -> ContainerValue m -> m
-    mapFromList :: [(ContainerKey m, ContainerValue m)] -> m
-    mapToList :: m -> [(ContainerKey m, ContainerValue m)]
+    singletonMap :: ContainerKey m -> MapValue m -> m
+    mapFromList :: [(ContainerKey m, MapValue m)] -> m
+    mapToList :: m -> [(ContainerKey m, MapValue m)]
 instance Ord k => IsMap (Map.Map k v) where
-    type ContainerValue (Map.Map k v) = v
+    type MapValue (Map.Map k v) = v
     lookup = Map.lookup
     insertMap = Map.insert
     deleteMap = Map.delete
@@ -82,7 +82,7 @@ instance Ord k => IsMap (Map.Map k v) where
     mapFromList = Map.fromList
     mapToList = Map.toList
 instance (Eq k, Hashable k) => IsMap (HashMap.HashMap k v) where
-    type ContainerValue (HashMap.HashMap k v) = v
+    type MapValue (HashMap.HashMap k v) = v
     lookup = HashMap.lookup
     insertMap = HashMap.insert
     deleteMap = HashMap.delete
@@ -90,7 +90,7 @@ instance (Eq k, Hashable k) => IsMap (HashMap.HashMap k v) where
     mapFromList = HashMap.fromList
     mapToList = HashMap.toList
 instance IsMap (IntMap.IntMap v) where
-    type ContainerValue (IntMap.IntMap v) = v
+    type MapValue (IntMap.IntMap v) = v
     lookup = IntMap.lookup
     insertMap = IntMap.insert
     deleteMap = IntMap.delete
@@ -98,7 +98,7 @@ instance IsMap (IntMap.IntMap v) where
     mapFromList = IntMap.fromList
     mapToList = IntMap.toList
 instance Ord k => IsMap [(k, v)] where
-    type ContainerValue [(k, v)] = v
+    type MapValue [(k, v)] = v
     lookup = List.lookup
     insertMap k v = ((k, v):) . deleteMap k
     deleteMap k = List.filter ((/= k) . fst)
