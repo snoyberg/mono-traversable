@@ -318,6 +318,12 @@ class (IsSequence c, Eq (Element c)) => EqSequence c where
     group :: c -> [c]
     group = groupBy (==)
 
+    elem :: Element c -> c -> Bool
+    elem e = List.elem e . otoList
+
+    notElem :: Element c -> c -> Bool
+    notElem e = List.notElem e . otoList
+
 instance Eq a => EqSequence [a] where
     stripPrefix = List.stripPrefix
     isPrefixOf = List.isPrefixOf
@@ -325,6 +331,8 @@ instance Eq a => EqSequence [a] where
     isSuffixOf x y = List.isPrefixOf (reverse x) (reverse y)
     isInfixOf = List.isInfixOf
     group = List.group
+    elem = List.elem
+    notElem = List.notElem
 
 instance EqSequence S.ByteString where
     stripPrefix x y
@@ -337,6 +345,8 @@ instance EqSequence S.ByteString where
     isSuffixOf = S.isSuffixOf
     isInfixOf = S.isInfixOf
     group = S.group
+    elem = S.elem
+    notElem = S.notElem
 
 instance EqSequence L.ByteString where
     stripPrefix x y
@@ -349,6 +359,8 @@ instance EqSequence L.ByteString where
     isSuffixOf = L.isSuffixOf
     isInfixOf x y = L.unpack x `List.isInfixOf` L.unpack y
     group = L.group
+    elem = L.elem
+    notElem = L.notElem
 
 instance EqSequence T.Text where
     stripPrefix = T.stripPrefix
