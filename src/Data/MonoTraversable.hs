@@ -101,17 +101,17 @@ type instance Element (Static f a b) = b
 type instance Element (U.Vector a) = a
 
 class MonoFunctor c where
-    cmap :: (Element c -> Element c) -> c -> c
-    default cmap :: (Functor f, Element (f a) ~ a, f a ~ c) => (a -> a) -> f a -> f a
-    cmap = fmap
+    omap :: (Element c -> Element c) -> c -> c
+    default omap :: (Functor f, Element (f a) ~ a, f a ~ c) => (a -> a) -> f a -> f a
+    omap = fmap
 instance MonoFunctor S.ByteString where
-    cmap = S.map
+    omap = S.map
 instance MonoFunctor L.ByteString where
-    cmap = L.map
+    omap = L.map
 instance MonoFunctor T.Text where
-    cmap = T.map
+    omap = T.map
 instance MonoFunctor TL.Text where
-    cmap = TL.map
+    omap = TL.map
 instance MonoFunctor [a]
 instance MonoFunctor (IO a)
 instance MonoFunctor (ZipList a)
@@ -152,76 +152,76 @@ instance (Functor f, Functor g) => MonoFunctor (Compose f g a)
 instance (Functor f, Functor g) => MonoFunctor (Product f g a)
 instance Functor f => MonoFunctor (Static f a b)
 instance U.Unbox a => MonoFunctor (U.Vector a) where
-    cmap = U.map
+    omap = U.map
 
 class MonoFoldable c where
-    cfoldMap :: Monoid m => (Element c -> m) -> c -> m
-    cfoldMap f = cfoldr (mappend . f) mempty
+    ofoldMap :: Monoid m => (Element c -> m) -> c -> m
+    ofoldMap f = ofoldr (mappend . f) mempty
 
-    cfoldr :: (Element c -> b -> b) -> b -> c -> b
-    default cfoldr :: (t a ~ c, a ~ Element (t a), F.Foldable t) => (Element c -> b -> b) -> b -> c -> b
-    cfoldr = F.foldr
+    ofoldr :: (Element c -> b -> b) -> b -> c -> b
+    default ofoldr :: (t a ~ c, a ~ Element (t a), F.Foldable t) => (Element c -> b -> b) -> b -> c -> b
+    ofoldr = F.foldr
     
-    cfoldl' :: (a -> Element c -> a) -> a -> c -> a
-    default cfoldl' :: (t b ~ c, b ~ Element (t b), F.Foldable t) => (a -> Element c -> a) -> a -> c -> a
-    cfoldl' = F.foldl'
+    ofoldl' :: (a -> Element c -> a) -> a -> c -> a
+    default ofoldl' :: (t b ~ c, b ~ Element (t b), F.Foldable t) => (a -> Element c -> a) -> a -> c -> a
+    ofoldl' = F.foldl'
 
-    ctoList :: c -> [Element c]
-    ctoList t = build (\ c n -> cfoldr c n t)
+    otoList :: c -> [Element c]
+    otoList t = build (\ c n -> ofoldr c n t)
     
-    call :: (Element c -> Bool) -> c -> Bool
-    call f = getAll . cfoldMap (All . f)
+    oall :: (Element c -> Bool) -> c -> Bool
+    oall f = getAll . ofoldMap (All . f)
     
-    cany :: (Element c -> Bool) -> c -> Bool
-    cany f = getAny . cfoldMap (Any . f)
+    oany :: (Element c -> Bool) -> c -> Bool
+    oany f = getAny . ofoldMap (Any . f)
     
-    cnull :: c -> Bool
-    cnull = call (const False)
+    onull :: c -> Bool
+    onull = oall (const False)
     
-    clength :: c -> Int
-    clength = cfoldl' (\i _ -> i + 1) 0
+    olength :: c -> Int
+    olength = ofoldl' (\i _ -> i + 1) 0
     
-    clength64 :: c -> Int64
-    clength64 = cfoldl' (\i _ -> i + 1) 0
+    olength64 :: c -> Int64
+    olength64 = ofoldl' (\i _ -> i + 1) 0
     
-    ccompareLength :: Integral i => c -> i -> Ordering
-    ccompareLength c0 i0 = clength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
+    ocompareLength :: Integral i => c -> i -> Ordering
+    ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
 
 instance MonoFoldable S.ByteString where
-    cfoldr = S.foldr
-    cfoldl' = S.foldl'
-    ctoList = S.unpack
-    call = S.all
-    cany = S.any
-    cnull = S.null
-    clength = S.length
+    ofoldr = S.foldr
+    ofoldl' = S.foldl'
+    otoList = S.unpack
+    oall = S.all
+    oany = S.any
+    onull = S.null
+    olength = S.length
 instance MonoFoldable L.ByteString where
-    cfoldr = L.foldr
-    cfoldl' = L.foldl'
-    ctoList = L.unpack
-    call = L.all
-    cany = L.any
-    cnull = L.null
-    clength64 = L.length
+    ofoldr = L.foldr
+    ofoldl' = L.foldl'
+    otoList = L.unpack
+    oall = L.all
+    oany = L.any
+    onull = L.null
+    olength64 = L.length
 instance MonoFoldable T.Text where
-    cfoldr = T.foldr
-    cfoldl' = T.foldl'
-    ctoList = T.unpack
-    call = T.all
-    cany = T.any
-    cnull = T.null
-    clength = T.length
+    ofoldr = T.foldr
+    ofoldl' = T.foldl'
+    otoList = T.unpack
+    oall = T.all
+    oany = T.any
+    onull = T.null
+    olength = T.length
 instance MonoFoldable TL.Text where
-    cfoldr = TL.foldr
-    cfoldl' = TL.foldl'
-    ctoList = TL.unpack
-    call = TL.all
-    cany = TL.any
-    cnull = TL.null
-    clength64 = TL.length
+    ofoldr = TL.foldr
+    ofoldl' = TL.foldl'
+    otoList = TL.unpack
+    oall = TL.all
+    oany = TL.any
+    onull = TL.null
+    olength64 = TL.length
 instance MonoFoldable [a] where
-    ctoList = id
-    {-# INLINE ctoList #-}
+    otoList = id
+    {-# INLINE otoList #-}
 instance MonoFoldable (Maybe a)
 instance MonoFoldable (Tree a)
 instance MonoFoldable (Seq a)
@@ -237,58 +237,58 @@ instance MonoFoldable (Vector a)
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
 instance U.Unbox a => MonoFoldable (U.Vector a) where
-    cfoldr = U.foldr
-    cfoldl' = U.foldl'
-    ctoList = U.toList
-    call = U.all
-    cany = U.any
-    cnull = U.null
-    clength = U.length
+    ofoldr = U.foldr
+    ofoldl' = U.foldl'
+    otoList = U.toList
+    oall = U.all
+    oany = U.any
+    onull = U.null
+    olength = U.length
 
-ctraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
-ctraverse_ f = cfoldr ((*>) . f) (pure ())
+otraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
+otraverse_ f = ofoldr ((*>) . f) (pure ())
 
-cfor_ :: (MonoFoldable c, Applicative f) => c -> (Element c -> f b) -> f ()
-cfor_ = flip ctraverse_
+ofor_ :: (MonoFoldable c, Applicative f) => c -> (Element c -> f b) -> f ()
+ofor_ = flip otraverse_
 
-cmapM_ :: (MonoFoldable c, Monad m) => (Element c -> m b) -> c -> m ()
-cmapM_ f = cfoldr ((>>) . f) (return ())
+omapM_ :: (MonoFoldable c, Monad m) => (Element c -> m b) -> c -> m ()
+omapM_ f = ofoldr ((>>) . f) (return ())
 
-cforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
-cforM_ = flip cmapM_
+oforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
+oforM_ = flip omapM_
 
 class (MonoFoldable c, Monoid c) => MonoFoldableMonoid c where
-    cconcatMap :: (Element c -> c) -> c -> c
-    cconcatMap = cfoldMap
+    oconcatMap :: (Element c -> c) -> c -> c
+    oconcatMap = ofoldMap
 instance (MonoFoldable (t a), Monoid (t a)) => MonoFoldableMonoid (t a) -- FIXME
 instance MonoFoldableMonoid S.ByteString where
-    cconcatMap = S.concatMap
+    oconcatMap = S.concatMap
 instance MonoFoldableMonoid L.ByteString where
-    cconcatMap = L.concatMap
+    oconcatMap = L.concatMap
 instance MonoFoldableMonoid T.Text where
-    cconcatMap = T.concatMap
+    oconcatMap = T.concatMap
 instance MonoFoldableMonoid TL.Text where
-    cconcatMap = TL.concatMap
+    oconcatMap = TL.concatMap
 
 class (MonoFunctor c, MonoFoldable c) => MonoTraversable c where
-    ctraverse :: Applicative f => (Element c -> f (Element c)) -> c -> f c
-    default ctraverse :: (Traversable t, c ~ t a, a ~ Element c, Applicative f) => (Element c -> f (Element c)) -> c -> f c
-    ctraverse = traverse
-    cmapM :: Monad m => (Element c -> m (Element c)) -> c -> m c
-    default cmapM :: (Traversable t, c ~ t a, a ~ Element c, Monad m) => (Element c -> m (Element c)) -> c -> m c
-    cmapM = mapM
+    otraverse :: Applicative f => (Element c -> f (Element c)) -> c -> f c
+    default otraverse :: (Traversable t, c ~ t a, a ~ Element c, Applicative f) => (Element c -> f (Element c)) -> c -> f c
+    otraverse = traverse
+    omapM :: Monad m => (Element c -> m (Element c)) -> c -> m c
+    default omapM :: (Traversable t, c ~ t a, a ~ Element c, Monad m) => (Element c -> m (Element c)) -> c -> m c
+    omapM = mapM
 instance MonoTraversable S.ByteString where
-    ctraverse f = fmap S.pack . traverse f . S.unpack
-    cmapM f = liftM S.pack . mapM f . S.unpack
+    otraverse f = fmap S.pack . traverse f . S.unpack
+    omapM f = liftM S.pack . mapM f . S.unpack
 instance MonoTraversable L.ByteString where
-    ctraverse f = fmap L.pack . traverse f . L.unpack
-    cmapM f = liftM L.pack . mapM f . L.unpack
+    otraverse f = fmap L.pack . traverse f . L.unpack
+    omapM f = liftM L.pack . mapM f . L.unpack
 instance MonoTraversable T.Text where
-    ctraverse f = fmap T.pack . traverse f . T.unpack
-    cmapM f = liftM T.pack . mapM f . T.unpack
+    otraverse f = fmap T.pack . traverse f . T.unpack
+    omapM f = liftM T.pack . mapM f . T.unpack
 instance MonoTraversable TL.Text where
-    ctraverse f = fmap TL.pack . traverse f . TL.unpack
-    cmapM f = liftM TL.pack . mapM f . TL.unpack
+    otraverse f = fmap TL.pack . traverse f . TL.unpack
+    omapM f = liftM TL.pack . mapM f . TL.unpack
 instance MonoTraversable [a]
 instance MonoTraversable (Maybe a)
 instance MonoTraversable (Tree a)
@@ -303,11 +303,11 @@ instance MonoTraversable (Map k v)
 instance MonoTraversable (HashMap k v)
 instance MonoTraversable (Vector a)
 instance U.Unbox a => MonoTraversable (U.Vector a) where
-    ctraverse f = fmap U.fromList . traverse f . U.toList
-    cmapM = U.mapM
+    otraverse f = fmap U.fromList . traverse f . U.toList
+    omapM = U.mapM
 
-cfor :: (MonoTraversable c, Applicative f) => c -> (Element c -> f (Element c)) -> f c
-cfor = flip ctraverse
+ofor :: (MonoTraversable c, Applicative f) => c -> (Element c -> f (Element c)) -> f c
+ofor = flip otraverse
 
-cforM :: (MonoTraversable c, Monad f) => c -> (Element c -> f (Element c)) -> f c
-cforM = flip cmapM
+oforM :: (MonoTraversable c, Monad f) => c -> (Element c -> f (Element c)) -> f c
+oforM = flip omapM

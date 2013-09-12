@@ -32,7 +32,7 @@ import Data.Text.Encoding.Error (lenientDecode)
 --
 -- > fromList . toList = id
 -- > fromList (x <> y) = fromList x <> fromList y
--- > ctoList (fromList x <> fromList y) = x <> y
+-- > otoList (fromList x <> fromList y) = x <> y
 class (Monoid c, MonoTraversable c, Integral (Index c)) => IsSequence c where
     type Index c
     singleton :: Element c -> c
@@ -47,28 +47,28 @@ class (Monoid c, MonoTraversable c, Integral (Index c)) => IsSequence c where
     replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
 
     filter :: (Element c -> Bool) -> c -> c
-    filter f = fromList . List.filter f . ctoList
+    filter f = fromList . List.filter f . otoList
 
     filterM :: Monad m => (Element c -> m Bool) -> c -> m c
-    filterM f = Control.Monad.liftM fromList . filterM f . ctoList
+    filterM f = Control.Monad.liftM fromList . filterM f . otoList
 
     intersperse :: Element c -> c -> c
-    intersperse e = fromList . List.intersperse e . ctoList
+    intersperse e = fromList . List.intersperse e . otoList
 
     break :: (Element c -> Bool) -> c -> (c, c)
-    break f = (fromList *** fromList) . List.break f . ctoList
+    break f = (fromList *** fromList) . List.break f . otoList
 
     span :: (Element c -> Bool) -> c -> (c, c)
-    span f = (fromList *** fromList) . List.span f . ctoList
+    span f = (fromList *** fromList) . List.span f . otoList
 
     dropWhile :: (Element c -> Bool) -> c -> c
-    dropWhile f = fromList . List.dropWhile f . ctoList
+    dropWhile f = fromList . List.dropWhile f . otoList
     
     takeWhile :: (Element c -> Bool) -> c -> c
-    takeWhile f = fromList . List.takeWhile f . ctoList
+    takeWhile f = fromList . List.takeWhile f . otoList
 
     splitAt :: Index c -> c -> (c, c)
-    splitAt i = (fromList *** fromList) . List.genericSplitAt i . ctoList
+    splitAt i = (fromList *** fromList) . List.genericSplitAt i . otoList
 
     take :: Index c -> c -> c
     take i = fst . splitAt i
@@ -79,31 +79,31 @@ class (Monoid c, MonoTraversable c, Integral (Index c)) => IsSequence c where
     -- FIXME split :: (Element c -> Bool) -> c -> [c]
 
     reverse :: c -> c
-    reverse = fromList . List.reverse . ctoList
+    reverse = fromList . List.reverse . otoList
 
     find :: (Element c -> Bool) -> c -> Maybe (Element c)
-    find f = List.find f . ctoList
+    find f = List.find f . otoList
     
     partition :: (Element c -> Bool) -> c -> (c, c)
-    partition f = (fromList *** fromList) . List.partition f . ctoList
+    partition f = (fromList *** fromList) . List.partition f . otoList
     
     sortBy :: (Element c -> Element c -> Ordering) -> c -> c
-    sortBy f = fromList . List.sortBy f . ctoList
+    sortBy f = fromList . List.sortBy f . otoList
     
     cons :: Element c -> c -> c
-    cons e = fromList . (e:) . ctoList
+    cons e = fromList . (e:) . otoList
 
     uncons :: c -> Maybe (Element c, c)
-    uncons = fmap (second fromList) . uncons . ctoList
+    uncons = fmap (second fromList) . uncons . otoList
 
     groupBy :: (Element c -> Element c -> Bool) -> c -> [c]
-    groupBy f = fmap fromList . List.groupBy f . ctoList
+    groupBy f = fmap fromList . List.groupBy f . otoList
 
     subsequences :: c -> [c]
-    subsequences = List.map fromList . List.subsequences . ctoList
+    subsequences = List.map fromList . List.subsequences . otoList
 
     permutations :: c -> [c]
-    permutations = List.map fromList . List.permutations . ctoList
+    permutations = List.map fromList . List.permutations . otoList
 
 instance IsSequence [a] where
     type Index [a] = Int
@@ -301,19 +301,19 @@ instance U.Unbox a => IsSequence (U.Vector a) where
 
 class (IsSequence c, Eq (Element c)) => EqSequence c where
     stripPrefix :: c -> c -> Maybe c
-    stripPrefix x y = fmap fromList (ctoList x `stripPrefix` ctoList y)
+    stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
     
     isPrefixOf :: c -> c -> Bool
-    isPrefixOf x y = ctoList x `isPrefixOf` ctoList y
+    isPrefixOf x y = otoList x `isPrefixOf` otoList y
     
     stripSuffix :: c -> c -> Maybe c
-    stripSuffix x y = fmap fromList (ctoList x `stripSuffix` ctoList y)
+    stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
 
     isSuffixOf :: c -> c -> Bool
-    isSuffixOf x y = ctoList x `isSuffixOf` ctoList y
+    isSuffixOf x y = otoList x `isSuffixOf` otoList y
 
     isInfixOf :: c -> c -> Bool
-    isInfixOf x y = ctoList x `isInfixOf` ctoList y
+    isInfixOf x y = otoList x `isInfixOf` otoList y
 
     group :: c -> [c]
     group = groupBy (==)
@@ -372,7 +372,7 @@ instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 
 class (EqSequence c, Ord (Element c)) => OrdSequence c where
     sort :: c -> c
-    sort = fromList . List.sort . ctoList
+    sort = fromList . List.sort . otoList
 
 instance Ord a => OrdSequence [a] where
     sort = List.sort
