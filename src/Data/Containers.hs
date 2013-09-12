@@ -60,31 +60,46 @@ class (MonoTraversable m, Container m) => IsMap m where
     insertMap :: ContainerKey m -> Element m -> m -> m
     deleteMap :: ContainerKey m -> m -> m
     singletonMap :: ContainerKey m -> Element m -> m
+    mapFromList :: [(ContainerKey m, Element m)] -> m
+    mapToList :: m -> [(ContainerKey m, Element m)]
 instance Ord k => IsMap (Map.Map k v) where
     lookup = Map.lookup
     insertMap = Map.insert
     deleteMap = Map.delete
     singletonMap = Map.singleton
+    mapFromList = Map.fromList
+    mapToList = Map.toList
 instance (Eq k, Hashable k) => IsMap (HashMap.HashMap k v) where
     lookup = HashMap.lookup
     insertMap = HashMap.insert
     deleteMap = HashMap.delete
     singletonMap = HashMap.singleton
+    mapFromList = HashMap.fromList
+    mapToList = HashMap.toList
 instance IsMap (IntMap.IntMap v) where
     lookup = IntMap.lookup
     insertMap = IntMap.insert
     deleteMap = IntMap.delete
     singletonMap = IntMap.singleton
+    mapFromList = IntMap.fromList
+    mapToList = IntMap.toList
+-- FIXME assoc list instance?
 
 class (Container s, Element s ~ ContainerKey s) => IsSet s where
     insertSet :: Element s -> s -> s
     deleteSet :: Element s -> s -> s
     singletonSet :: Element s -> s
+    setFromList :: [Element s] -> s
+    setToList :: s -> [Element s]
 instance Ord e => IsSet (Set.Set e) where
     insertSet = Set.insert
     deleteSet = Set.delete
     singletonSet = Set.singleton
+    setFromList = Set.fromList
+    setToList = Set.toList
 instance (Eq e, Hashable e) => IsSet (HashSet.HashSet e) where
     insertSet = HashSet.insert
     deleteSet = HashSet.delete
     singletonSet = HashSet.singleton
+    setFromList = HashSet.fromList
+    setToList = HashSet.toList
