@@ -11,7 +11,7 @@ import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral)
 import Data.Char (Char)
 import Data.Word (Word8)
 import qualified Data.ByteString as S
@@ -33,21 +33,19 @@ import Data.Text.Encoding.Error (lenientDecode)
 -- > fromList . toList = id
 -- > fromList (x <> y) = fromList x <> fromList y
 -- > ctoList (fromList x <> fromList y) = x <> y
-class (Monoid c, MonoTraversable c) => IsSequence c where
+class (Monoid c, MonoTraversable c, Integral (Index c)) => IsSequence c where
+    type Index c
     singleton :: Element c -> c
 
     fromList :: [Element c] -> c
     fromList = mconcat . fmap singleton
 
-    replicate :: Int -> Element c -> c
-    replicate i = fromList . List.replicate i
-    
-    replicate64 :: Int64 -> Element c -> c
-    replicate64 i = fromList . List.genericReplicate i
-    
-    replicateM :: Monad m => Int -> m (Element c) -> m c
-    replicateM i = liftM fromList . Control.Monad.replicateM i
-    
+    replicate :: Index c -> Element c -> c
+    replicate i = fromList . List.genericReplicate i
+
+    replicateM :: Monad m => Index c -> m (Element c) -> m c
+    replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
+
     filter :: (Element c -> Bool) -> c -> c
     filter f = fromList . List.filter f . ctoList
 
@@ -69,11 +67,14 @@ class (Monoid c, MonoTraversable c) => IsSequence c where
     takeWhile :: (Element c -> Bool) -> c -> c
     takeWhile f = fromList . List.takeWhile f . ctoList
 
-    splitAt :: Int -> c -> (c, c)
-    splitAt i = (fromList *** fromList) . List.splitAt i . ctoList
+    splitAt :: Index c -> c -> (c, c)
+    splitAt i = (fromList *** fromList) . List.genericSplitAt i . ctoList
 
-    splitAt64 :: Int64 -> c -> (c, c)
-    splitAt64 i = (fromList *** fromList) . List.genericSplitAt i . ctoList
+    take :: Index c -> c -> c
+    take i = fst . splitAt i
+
+    drop :: Index c -> c -> c
+    drop i = snd . splitAt i
 
     -- FIXME split :: (Element c -> Bool) -> c -> [c]
 
@@ -103,15 +104,13 @@ class (Monoid c, MonoTraversable c) => IsSequence c where
 
     permutations :: c -> [c]
     permutations = List.map fromList . List.permutations . ctoList
-    
-    -- FIXME take, drop
 
 instance IsSequence [a] where
+    type Index [a] = Int
     singleton = return
     fromList = id
     {-# INLINE fromList #-}
     replicate = List.replicate
-    replicate64 = List.genericReplicate
     replicateM = Control.Monad.replicateM
     filter = List.filter
     filterM = Control.Monad.filterM
@@ -121,7 +120,8 @@ instance IsSequence [a] where
     dropWhile = List.dropWhile
     takeWhile = List.takeWhile
     splitAt = List.splitAt
-    splitAt64 = List.genericSplitAt
+    take = List.take
+    drop = List.drop
     reverse = List.reverse
     find = List.find
     partition = List.partition
@@ -132,10 +132,10 @@ instance IsSequence [a] where
     groupBy = List.groupBy
 
 instance IsSequence S.ByteString where
+    type Index S.ByteString = Int
     singleton = S.singleton
     fromList = S.pack
     replicate = S.replicate
-    replicate64 i = S.replicate (fromIntegral i)
     filter = S.filter
     intersperse = S.intersperse
     break = S.break
@@ -143,7 +143,8 @@ instance IsSequence S.ByteString where
     dropWhile = S.dropWhile
     takeWhile = S.takeWhile
     splitAt = S.splitAt
-    splitAt64 i = S.splitAt (fromIntegral i)
+    take = S.take
+    drop = S.drop
     reverse = S.reverse
     find = S.find
     partition = S.partition
@@ -153,10 +154,10 @@ instance IsSequence S.ByteString where
     -- sortBy
 
 instance IsSequence T.Text where
+    type Index T.Text = Int
     singleton = T.singleton
     fromList = T.pack
     replicate i c = T.replicate i (T.singleton c)
-    replicate64 i c = T.replicate (fromIntegral i) (T.singleton c)
     filter = T.filter
     intersperse = T.intersperse
     break = T.break
@@ -164,7 +165,8 @@ instance IsSequence T.Text where
     dropWhile = T.dropWhile
     takeWhile = T.takeWhile
     splitAt = T.splitAt
-    splitAt64 i = T.splitAt (fromIntegral i)
+    take = T.take
+    drop = T.drop
     reverse = T.reverse
     find = T.find
     partition = T.partition
@@ -174,18 +176,19 @@ instance IsSequence T.Text where
     -- sortBy
 
 instance IsSequence L.ByteString where
+    type Index L.ByteString = Int64
     singleton = L.singleton
     fromList = L.pack
-    replicate i = L.replicate (fromIntegral i)
-    replicate64 = L.replicate
+    replicate = L.replicate
     filter = L.filter
     intersperse = L.intersperse
     break = L.break
     span = L.span
     dropWhile = L.dropWhile
     takeWhile = L.takeWhile
-    splitAt i = L.splitAt (fromIntegral i)
-    splitAt64 = L.splitAt
+    splitAt = L.splitAt
+    take = L.take
+    drop = L.drop
     reverse = L.reverse
     find = L.find
     partition = L.partition
@@ -195,18 +198,19 @@ instance IsSequence L.ByteString where
     -- sortBy
 
 instance IsSequence TL.Text where
+    type Index TL.Text = Int64
     singleton = TL.singleton
     fromList = TL.pack
-    replicate i c = TL.replicate (fromIntegral i) (TL.singleton c)
-    replicate64 i c = TL.replicate i (TL.singleton c)
+    replicate i c = TL.replicate i (TL.singleton c)
     filter = TL.filter
     intersperse = TL.intersperse
     break = TL.break
     span = TL.span
     dropWhile = TL.dropWhile
     takeWhile = TL.takeWhile
-    splitAt i = TL.splitAt (fromIntegral i)
-    splitAt64 = TL.splitAt
+    splitAt = TL.splitAt
+    take = TL.take
+    drop = TL.drop
     reverse = TL.reverse
     find = TL.find
     partition = TL.partition
@@ -217,10 +221,10 @@ instance IsSequence TL.Text where
 
 
 instance IsSequence (Seq.Seq a) where
+    type Index (Seq.Seq a) = Int
     singleton = Seq.singleton
     fromList = Seq.fromList
     replicate = Seq.replicate
-    replicate64 i = Seq.replicate (fromIntegral i)
     replicateM = Seq.replicateM
     filter = Seq.filter
     --filterM = Seq.filterM
@@ -230,7 +234,8 @@ instance IsSequence (Seq.Seq a) where
     dropWhile = Seq.dropWhileL
     takeWhile = Seq.takeWhileL
     splitAt = Seq.splitAt
-    splitAt64 i = Seq.splitAt (fromIntegral i)
+    take = Seq.take
+    drop = Seq.drop
     reverse = Seq.reverse
     --find = Seq.find
     partition = Seq.partition
@@ -243,10 +248,10 @@ instance IsSequence (Seq.Seq a) where
     --groupBy = Seq.groupBy
 
 instance IsSequence (V.Vector a) where
+    type Index (V.Vector a) = Int
     singleton = V.singleton
     fromList = V.fromList
     replicate = V.replicate
-    replicate64 i = V.replicate (fromIntegral i)
     replicateM = V.replicateM
     filter = V.filter
     filterM = V.filterM
@@ -256,7 +261,8 @@ instance IsSequence (V.Vector a) where
     dropWhile = V.dropWhile
     takeWhile = V.takeWhile
     splitAt = V.splitAt
-    splitAt64 i = V.splitAt (fromIntegral i)
+    take = V.take
+    drop = V.drop
     reverse = V.reverse
     find = V.find
     partition = V.partition
@@ -268,10 +274,10 @@ instance IsSequence (V.Vector a) where
     --groupBy = V.groupBy
 
 instance U.Unbox a => IsSequence (U.Vector a) where
+    type Index (U.Vector a) = Int
     singleton = U.singleton
     fromList = U.fromList
     replicate = U.replicate
-    replicate64 i = U.replicate (fromIntegral i)
     replicateM = U.replicateM
     filter = U.filter
     filterM = U.filterM
@@ -281,7 +287,8 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     dropWhile = U.dropWhile
     takeWhile = U.takeWhile
     splitAt = U.splitAt
-    splitAt64 i = U.splitAt (fromIntegral i)
+    take = U.take
+    drop = U.drop
     reverse = U.reverse
     find = U.find
     partition = U.partition
