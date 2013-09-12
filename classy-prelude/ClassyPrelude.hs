@@ -43,6 +43,7 @@ module ClassyPrelude
     , all
     , foldl'
     , foldr
+    , foldM
     --, split
     , readMay
     , intercalate
@@ -163,6 +164,9 @@ foldr = ofoldr
 
 foldl' :: MonoFoldable c => (a -> Element c -> a) -> a -> c -> a
 foldl' = ofoldl'
+
+foldM :: (Monad m, MonoFoldable c) => (a -> Element c -> m a) -> a -> c -> m a
+foldM = ofoldlM
 
 concat :: (MonoFoldable c, Monoid (Element c)) => c -> Element c
 concat = ofoldMap id
