@@ -1,17 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 module ClassyPrelude
     ( -- * CorePrelude
       module CorePrelude
-    , Seq
     , undefined
       -- * Standard
       -- ** Monoid
-    , empty
-    , append
     , (++)
       -- ** Monad
     , module Control.Monad
@@ -25,102 +20,56 @@ module ClassyPrelude
     , traceM
     , traceShowId
     , traceShowM
+      -- * Mono hierarchy
+    , module Data.MonoTraversable
+    , module Data.Sequences
+    , module Data.Containers
       -- * Non-standard
       -- ** List-like classes
     , map
     , concat
     , concatMap
-    , filter
-    , find
     , length
-    , singleton
     , null
     , pack
     , unpack
     , repack
-    , fromList
     , toList
-    , mapM
+    , Traversable.mapM
     , mapM_
-    , forM
+    , Traversable.forM
     , forM_
-    , replicateM
-    , replicateM_
-    , stripPrefix
-    , isPrefixOf
-    , stripSuffix
-    , isSuffixOf
-    , isInfixOf
-    , break
-    , span
-    , dropWhile
-    , takeWhile
     , any
     , all
-    , splitAt, take, drop
-    , fold
-    , words
-    , unwords
-    , lines
-    , unlines
-    , split
-    , reverse
+    , foldl'
+    , foldr
+    --, split
     , readMay
-    , replicate
     , intercalate
-    , intersperse
-    , encodeUtf8
-    , decodeUtf8
-    , subsequences
-    , permutations
-    , partition
     , zip, zip3, zip4, zip5, zip6, zip7
     , unzip, unzip3, unzip4, unzip5, unzip6, unzip7
     , zipWith, zipWith3, zipWith4, zipWith5, zipWith6, zipWith7
+    {-
     , nub
     , nubBy
-    , sort
-    , sortBy
+    -}
     , sortWith
-    , group
-    , groupBy
     , groupWith
-    , cons
-    , uncons
     , compareLength
-    , Foldable.sum
-    , Foldable.product
-    , repeat
-      -- ** Map-like
-    , lookup
-    , insert
-    , delete
+    , sum
+    , product
+    , Prelude.repeat
       -- ** Set-like
-    , member
-    , notMember
-    , elem
-    , notElem
-    , union
-    , difference
     , (\\)
-    , intersection
     , intersect
     , unions
       -- ** Text-like
     , show
-    , toLower
-    , toUpper
-    , toCaseFold
-    , toStrict
-    , fromStrict
       -- ** IO
     , readFile
     , writeFile
     , getLine
     , print
-      -- ** Chunking
-    , toChunks
-    , fromChunks
       -- ** Exceptions
     , catchAny
     , handleAny
@@ -150,63 +99,88 @@ module ClassyPrelude
     ) where
 
 import qualified Prelude
-import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_)
+import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_)
 import Control.Monad.Trans.Control (MonadBaseControl, liftBaseWith, restoreM)
 import Control.Concurrent.Async (withAsync, waitCatch)
 import Control.Concurrent.MVar.Lifted
 import Data.IORef.Lifted
-import Data.Monoid (Monoid)
 import qualified Data.Monoid as Monoid
-import Data.Foldable (Foldable)
-import qualified Data.Foldable as Foldable
+import qualified Data.Traversable as Traversable
 import Control.DeepSeq (NFData, ($!!))
 
 import CorePrelude hiding (print, undefined)
 import ClassyPrelude.Classes
-
-import ClassyPrelude.ByteString ()
-import ClassyPrelude.Char ()
-import ClassyPrelude.Classes ()
-import ClassyPrelude.FilePath ()
-import ClassyPrelude.HashMap ()
-import ClassyPrelude.HashSet ()
-import ClassyPrelude.LByteString ()
-import ClassyPrelude.LText ()
-import ClassyPrelude.List ()
-import ClassyPrelude.Map ()
-import ClassyPrelude.Maybe ()
-import ClassyPrelude.Set ()
-import ClassyPrelude.Text ()
-import ClassyPrelude.Vector ()
-import ClassyPrelude.UVector ()
-import ClassyPrelude.Sequence (Seq)
+import Data.Sequences
+import Data.MonoTraversable
+import Data.Containers
 
 import Debug.Trace (trace, traceShow)
 
-show :: (Show a, CanPack c Char) => a -> c
-show = pack . Prelude.show
+show :: (IsSequence c, Element c ~ Char, Show a) => a -> c
+show = fromList . Prelude.show
 
-fromList :: CanPack c i => [i] -> c
-fromList = pack
+-- Renames from mono-traversable
 
-toList :: CanPack c i => c -> [i]
-toList = unpack
+pack :: IsSequence c => [Element c] -> c
+pack = fromList
 
-readMay :: (Read b, CanPack a Char) => a -> Maybe b
-readMay a =
-    case [x | (x, t) <- Prelude.reads (unpack a), null t] of
+unpack, toList :: MonoFoldable c => c -> [Element c]
+unpack = otoList
+toList = otoList
+
+null :: MonoFoldable c => c -> Bool
+null = onull
+
+compareLength :: (Integral i, MonoFoldable c) => c -> i -> Ordering
+compareLength = ocompareLength
+
+sum :: (MonoFoldable c, Num (Element c)) => c -> Element c
+sum = osum
+
+product :: (MonoFoldable c, Num (Element c)) => c -> Element c
+product = oproduct
+
+all :: MonoFoldable c => (Element c -> Bool) -> c -> Bool
+all = oall
+
+any :: MonoFoldable c => (Element c -> Bool) -> c -> Bool
+any = oany
+
+length :: MonoFoldable c => c -> Int
+length = olength
+
+mapM_ :: (Monad m, MonoFoldable c) => (Element c -> m a) -> c -> m ()
+mapM_ = omapM_
+
+forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m a) -> m ()
+forM_ = oforM_
+
+concatMap :: MonoFoldableMonoid c => (Element c -> c) -> c -> c
+concatMap = oconcatMap
+
+foldr :: MonoFoldable c => (Element c -> b -> b) -> b -> c -> b
+foldr = ofoldr
+
+foldl' :: MonoFoldable c => (a -> Element c -> a) -> a -> c -> a
+foldl' = ofoldl'
+
+concat :: (MonoFoldable c, Monoid (Element c)) => c -> Element c
+concat = ofoldMap id
+
+readMay :: (Element c ~ Char, MonoFoldable c, Read a) => c -> Maybe a
+readMay a = -- FIXME replace with safe-failure stuff
+    case [x | (x, t) <- Prelude.reads (otoList a :: String), onull t] of
         [x] -> Just x
         _ -> Nothing
 
 -- | Repack from one type to another, dropping to a list in the middle.
 --
 -- @repack = pack . unpack@.
-repack :: (CanPack a i, CanPack b i) => a -> b
-repack = pack . unpack
+repack :: (MonoFoldable a, IsSequence b, Element a ~ Element b) => a -> b
+repack = fromList . toList
 
-append :: Monoid m => m -> m -> m
-append = mappend
-{-# INLINE append #-}
+map :: Functor f => (a -> b) -> f a -> f b
+map = fmap
 
 infixr 5  ++
 (++) :: Monoid m => m -> m -> m
@@ -215,19 +189,19 @@ infixr 5  ++
 
 infixl 9 \\{-This comment teaches CPP correct behaviour -}
 -- | An alias for `difference`.
-(\\) :: CanDifference c => c -> c -> c
+(\\) :: Container a => a -> a -> a
 (\\) = difference
 {-# INLINE (\\) #-}
 
 -- | An alias for `intersection`.
-intersect :: CanIntersection c => c -> c -> c
+intersect :: Container a => a -> a -> a
 intersect = intersection
 {-# INLINE intersect #-}
 
-unions :: (Foldable cc, Monoid c, CanUnion c) => cc c -> c
-unions = Foldable.foldl' union Monoid.mempty
+unions :: (MonoFoldable c, Container (Element c)) => c -> Element c
+unions = ofoldl' union Monoid.mempty
 
-intercalate :: (CanConcat c i, CanIntersperse c i) => i -> c -> i
+intercalate :: (Monoid (Element c), IsSequence c) => Element c -> c -> Element c
 intercalate xs xss = concat (intersperse xs xss)
 
 asByteString :: ByteString -> ByteString
@@ -266,33 +240,13 @@ asVector = id
 asUVector :: UVector a -> UVector a
 asUVector = id
 
-forM :: CanMapM ci mco m i o => ci -> (i -> m o) -> mco
-forM = flip mapM
-
-forM_ :: (Monad m, CanMapM_ ci i) => ci -> (i -> m o) -> m ()
-forM_ = flip mapM_
-
--- | An alias for 'member'
-elem :: CanMember c k => k -> c -> Bool
-elem = member
-
--- | An alias for 'notMember'
-notElem :: CanMember c k => k -> c -> Bool
-notElem = notMember
-
 print :: (Show a, MonadIO m) => a -> m ()
 print = liftIO . Prelude.print
-
-take :: CanSplitAt c i => i -> c -> c
-take i c  = Prelude.fst (splitAt i c)
-
-drop :: CanSplitAt c i => i -> c -> c
-drop i c  = Prelude.snd (splitAt i c)
 
 -- | Sort elements using the user supplied function to project something out of
 -- each element.
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:sortWith>.
-sortWith :: (CanSortBy c a, Ord b) => (a -> b) -> c -> c
+sortWith :: (Ord a, IsSequence c) => (Element c -> a) -> c -> c
 sortWith f = sortBy $ comparing f
 
 -- | The 'groupWith' function uses the user supplied function which
@@ -300,7 +254,7 @@ sortWith f = sortBy $ comparing f
 -- input list and then to form groups by equality on these projected elements
 --
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:groupWith>
-groupWith :: (CanGroupBy c a, Eq b) => (a -> b) -> c -> [c]
+groupWith :: (IsSequence c, Eq a) => (Element c -> a) -> c -> [c]
 groupWith f = groupBy (\a b -> f a == f b)
 
 -- | We define our own @undefined@ which is marked as deprecated. This makes it
@@ -433,3 +387,7 @@ traceShowId a = trace (show a) a
 -- Since 0.5.9
 traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
+
+-- FIXME export toFilePath, fromFilePath
+-- FIXME export Handle, stdout, stderr
+-- FIXME mapSet

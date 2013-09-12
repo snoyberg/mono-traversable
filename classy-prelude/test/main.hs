@@ -4,107 +4,94 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 import Test.Hspec
 import Test.Hspec.QuickCheck
-import ClassyPrelude
-import ClassyPrelude.Classes
+import ClassyPrelude hiding (undefined)
 import Test.QuickCheck.Arbitrary
-import Prelude (asTypeOf, fromIntegral)
+import Prelude (asTypeOf, fromIntegral, undefined)
 import qualified Prelude
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
-import Data.Maybe (isJust)
 import Data.Functor.Identity (runIdentity)
 import Control.Concurrent (throwTo, threadDelay, forkIO)
 import Control.Exception (throw)
+import qualified Data.Set as Set
+import qualified Data.HashSet as HashSet
 
 dictionaryProps
-    :: ( CanInsertVal a Int Char
-       , CanDeleteVal a Int
-       , CanEmpty a
-       , Show a
-       , Eq a
-       , Arbitrary a
-       , Monoid a
-       , CanLookup a Int Char
-       , CanPack a (Int, Char)
+    :: ( Element c ~ Char
+       , ContainerKey c ~ Int
+       , Arbitrary c
+       , IsMap c
+       , Eq c
+       , Show c
        )
-    => a -> Spec
+    => c
+    -> Spec
 dictionaryProps dummy = do
     prop "insert x y (insert x z c) == insert x y c" $ \x y z c ->
-        insert x y (insert x z (c `asTypeOf` dummy)) == insert x y c
-    prop "insert x y (delete x c) == insert x y c" $ \x y c ->
-        insert x y (delete x (c `asTypeOf` dummy)) == insert x y c
-    prop "delete x (insert x y c) == delete x c" $ \x y c ->
-        pack (unpack $ delete x (insert x y (c `asTypeOf` dummy))) == (pack (unpack ((delete x c) `asTypeOf` dummy) :: [(Int, Char)]) `asTypeOf` dummy)
-    prop "lookup k (insert k v empty) == Just v" $ \k v ->
-        lookup k (insert k v empty `asTypeOf` dummy) == Just v
-    prop "lookup k (delete k c) == Nothing" $ \k c ->
-        lookup k (delete k c`asTypeOf` dummy) == Nothing
+        insertMap x y (insertMap x z (c `asTypeOf` dummy)) == insertMap x y c
+    prop "insertMap x y (deleteMap x c) == insertMap x y c" $ \x y c ->
+        insertMap x y (deleteMap x (c `asTypeOf` dummy)) == insertMap x y c
+    prop "deleteMap x (insertMap x y c) == deleteMap x c" $ \x y c ->
+        mapFromList (mapToList $ deleteMap x (insertMap x y (c `asTypeOf` dummy))) == (mapFromList (mapToList ((deleteMap x c) `asTypeOf` dummy) :: [(Int, Char)]) `asTypeOf` dummy)
+    prop "lookup k (insertMap k v empty) == Just v" $ \k v ->
+        lookup k (insertMap k v mempty `asTypeOf` dummy) == Just v
+    prop "lookup k (deleteMap k c) == Nothing" $ \k c ->
+        lookup k (deleteMap k c`asTypeOf` dummy) == Nothing
 
-mapProps :: ( CanPack a i
-            , CanPack b j
-            , Eq a
+mapProps :: ( i ~ Element c
+            , MonoFoldable c
             , Eq c
-            , Show a
-            , Arbitrary a
-            , Eq b
-            , Show b
-            , Arbitrary b
-            , CanMap a b i j
-            , CanMap a c i k
-            , CanMap b c j k
+            , Arbitrary c
+            , Show c
             )
-         => a
-         -> (i -> j)
-         -> (j -> k)
+         => ((i -> i) -> c -> c)
+         -> ([i] -> c)
+         -> c
+         -> (i -> i)
+         -> (i -> i)
          -> Spec
-mapProps dummy f g = do
+mapProps map' pack' dummy f g = do
     prop "map f c == pack (map f (unpack c))" $ \c ->
-        map f (c `asTypeOf` dummy) == pack (map f (unpack c))
+        map' f (c `asTypeOf` dummy) == pack' (fmap f (unpack c))
     prop "map (f . g) c == map f (map g c)" $ \c ->
-        map (g . f) (c `asTypeOf` dummy) == map g (map f c)
+        map' (g . f) (c `asTypeOf` dummy) == map' g (map' f c)
 
-concatMapProps :: ( CanPack a i
-            , CanPack b j
-            , CanPack js j
-            , Eq a
-            , Show a
-            , Arbitrary a
-            , Eq b
-            , Show b
-            , Arbitrary b
-            , CanMap a b i j
-            , CanConcatMap a b i js
-            )
-         => a
-         -> (i -> js)
-         -> Spec
+concatMapProps :: ( MonoFoldable c
+                  , IsSequence c
+                  , Eq c
+                  , MonoFoldableMonoid c
+                  , Arbitrary c
+                  , Show c
+                  )
+               => c
+               -> (Element c -> c)
+               -> Spec
 concatMapProps dummy f = do
     prop "concatMap f c == pack (concatMap (unpack . f) (unpack c))" $ \c ->
         concatMap f (c `asTypeOf` dummy) == pack (concatMap (unpack . f) (unpack c))
 
-filterProps :: ( CanPack a i
-               , Show a
-               , Arbitrary a
-               , Eq a
-               , CanFilter a i
+filterProps :: ( Eq c
+               , Show c
+               , IsSequence c
+               , Arbitrary c
                )
-            => a
-            -> (i -> Bool)
+            => c
+            -> (Element c -> Bool)
             -> Spec
 filterProps dummy f = do
     prop "filter f c == pack (filter f (unpack c))" $ \c ->
         (repack (filter f (c `asTypeOf` dummy)) `asTypeOf` dummy) == pack (filter f (unpack c))
 
-filterMProps :: ( CanPack a i
-                , Show a
-                , Arbitrary a
-                , Eq a
-                , CanFilterM a i
+filterMProps :: ( Eq c
+                , Show c
+                , IsSequence c
+                , Arbitrary c
                 )
-             => a
-             -> (i -> Bool)
+             => c
+             -> (Element c -> Bool)
              -> Spec
 filterMProps dummy f' = do
     prop "filterM f c == fmap pack (filterM f (unpack c))" $ \c ->
@@ -112,19 +99,13 @@ filterMProps dummy f' = do
   where
     f = return . f'
 
-lengthProps :: ( Show a
-               , Eq a
-               , Arbitrary a
-               , CanPack a i
-               , CanLength a len
-               , CanEmpty a
-               , Prelude.Num len
-               , Eq len
-               , CanNull a
-               , Ord len
-               , Monoid a
+lengthProps :: ( Show c
+               , MonoFoldable c
+               , Monoid c
+               , Arbitrary c
                )
-            => a -> Spec
+            => c
+            -> Spec
 lengthProps dummy = do
     prop "length c == fromIntegral (length (unpack c))" $ \c ->
         length (c `asTypeOf` dummy) == fromIntegral (length (unpack c))
@@ -135,93 +116,101 @@ lengthProps dummy = do
     prop "length (x ++ y) >= max (length x) (length y)" $ \x y ->
         length (x ++ y `asTypeOf` dummy) >= max (length x) (length y)
     prop "length (x ++ empty) == length x" $ \x ->
-        length (x ++ empty `asTypeOf` dummy) == length x
-    prop "null empty" $ null (empty `asTypeOf` dummy)
+        length (x ++ mempty `asTypeOf` dummy) == length x
+    prop "null empty" $ null (mempty `asTypeOf` dummy)
 
-{-
-mapMProps :: ( Show a
-             , Arbitrary a
-             , CanPack a i
-             , Eq i
-             , CanMapM a co i i
-             , CanPack co i
-             , Eq co
+mapMProps :: ( Eq c
+             , Show c
+             , IsSequence c
+             , Arbitrary c
+             , Element c ~ Int
              )
-           => a -> Spec
--}
+          => c
+          -> Spec
 mapMProps dummy = do
     let f :: Int -> Writer [Int] Int
         f x = tell [x] >> return x
-    prop "mapM f c == mapM f (toList c)" $ \c ->
-        runWriter (mapM f (c `asTypeOf` dummy)) ==
-            let (x, y) = runWriter (mapM f (toList c))
+    prop "omapM f c == omapM f (toList c)" $ \c ->
+        runWriter (omapM f (c `asTypeOf` dummy)) ==
+            let (x, y) = runWriter (omapM f (toList c))
              in (pack x, y)
 
-mapM_Props :: ( Show a
-              , Arbitrary a
-              , CanPack a i
-              , Eq i
-              , CanMapM_ a i
+mapM_Props :: ( Eq (Element c)
+              , Show c
+              , MonoFoldable c
+              , Arbitrary c
               )
-           => a -> Spec
+           => c
+           -> Spec
 mapM_Props dummy = do
     let f x = tell [x]
     prop "mapM_ f c == mapM_ f (toList c)" $ \c ->
         runWriter (mapM_ f (c `asTypeOf` dummy)) == runWriter (mapM_ f (toList c))
 
+foldProps :: ( Eq a
+             , Show c
+             , MonoFoldable c
+             , Arbitrary c
+             )
+          => c
+          -> (a -> Element c -> a)
+          -> a
+          -> Spec
 foldProps dummy f accum =
-    prop "fold f accum c == fold f accum (toList c)" $ \c ->
-        fold f accum (c `asTypeOf` dummy) == fold f accum (toList c)
+    prop "foldl' f accum c == foldl' f accum (toList c)" $ \c ->
+        foldl' f accum (c `asTypeOf` dummy) == foldl' f accum (toList c)
 
-replicateProps :: ( Show a
-                  , Eq a
-                  , CanReplicate a i len
-                  , Integral len
-                  , Show len
-                  , Arbitrary len
-                  , Show i
-                  , Arbitrary i
+replicateProps :: ( Eq a
+                  , Show (Element c)
+                  , IsSequence a
+                  , IsSequence c
+                  , Arbitrary (Element c)
+                  , Element a ~ Element c
                   )
-               => a -> ([i] -> a) -> Spec
+               => a
+               -> (c -> a)
+               -> Spec
 replicateProps dummy pack' =
     prop "replicate i a == pack (replicate i a)" $ \{- takes too long i-} a ->
-        (replicate i a `asTypeOf` dummy) == pack' (replicate (fromIntegral i) a)
+        (replicate i a `asTypeOf` dummy) == pack' (replicate i a)
   where
     i = 3
 
 chunkProps :: ( Eq a
               , Show a
               , Arbitrary a
-              , CanToChunks a i
-              , Monoid i
-              ) => a -> Spec
+              , LazySequence a s
+              )
+           => a
+           -> Spec
 chunkProps dummy = do
     prop "fromChunks . toChunks == id" $ \a ->
         fromChunks (toChunks (a `asTypeOf` dummy)) == a
     prop "fromChunks . return . concat . toChunks == id" $ \a ->
         fromChunks [concat $ toChunks (a `asTypeOf` dummy)] == a
 
-stripSuffixProps :: ( Eq a
-                    , Monoid a
-                    , CanStripSuffix a
-                    , Show a
-                    , Arbitrary a
-                    ) => a -> Spec
+stripSuffixProps :: ( Eq c
+                    , Show c
+                    , Arbitrary c
+                    , EqSequence c
+                    )
+                 => c
+                 -> Spec
 stripSuffixProps dummy = do
     prop "stripSuffix y (x ++ y) == Just x" $ \x y ->
         stripSuffix y (x ++ y) == Just (x `asTypeOf` dummy)
     prop "isJust (stripSuffix x y) == isSuffixOf x y" $ \x y ->
         isJust (stripSuffix x y) == isSuffixOf x (y `asTypeOf` dummy)
 
-replicateMProps :: ( Eq c
-                   , Show len
-                   , Arbitrary len
-                   , CanReplicateM c i len
-                   , CanReplicate c i len
-                   , Show i
-                   , Arbitrary i
-                   , Integral len
-                   ) => c -> Spec
+replicateMProps :: ( Eq a
+                   , Show (Index a)
+                   , Show (Element a)
+                   , IsSequence a
+                   , Arbitrary (Index a)
+                   , Arbitrary (Element a)
+                   )
+                => a
+                -> Spec
 replicateMProps dummy = do
     prop "runIdentity (replicateM i (return x)) == replicate i x" $ \i' x ->
         let i = i' `mod` 20
@@ -230,32 +219,31 @@ replicateMProps dummy = do
 utf8Props :: ( Eq t
              , Show t
              , Arbitrary t
-             , CanEncodeUtf8 t b
-             , CanDecodeUtf8 b t
-             ) => t -> Spec
+             , Textual t b
+             )
+          => t
+          -> Spec
 utf8Props dummy = do
     prop "decodeUtf8 . encodeUtf8 == id" $ \t ->
         decodeUtf8 (encodeUtf8 t) == (t `asTypeOf` dummy)
 
-compareLengthProps :: ( Show c
+compareLengthProps :: ( MonoFoldable c
                       , Arbitrary c
-                      , CanCompareLength c
-                      , Show l
-                      , Arbitrary l
-                      , Integral l
-                      , CanLength c l
-                      ) => c -> Spec
+                      , Show c
+                      )
+                   => c
+                   -> Spec
 compareLengthProps dummy = do
     prop "compare (length c) i == compareLength c i" $ \i c ->
         compare (length c) i == compareLength (c `asTypeOf` dummy) i
 
-prefixProps :: ( Show c
-               , Eq c
-               , Monoid c
-               , CanStripPrefix c
+prefixProps :: ( Eq c
+               , EqSequence c
                , Arbitrary c
+               , Show c
                )
-            => c -> Spec
+            => c
+            -> Spec
 prefixProps dummy = do
     prop "x `isPrefixOf` (x ++ y)" $ \x y ->
         (x `asTypeOf` dummy) `isPrefixOf` (x ++ y)
@@ -269,18 +257,18 @@ main = hspec $ do
     describe "dictionary" $ do
         describe "Data.Map" $ dictionaryProps (undefined :: Map Int Char)
         describe "Data.HashMap" $ dictionaryProps (undefined :: HashMap Int Char)
-        describe "assoc list" $ dictionaryProps (undefined :: [(Int, Char)])
+        -- FIXME describe "assoc list" $ dictionaryProps (undefined :: [(Int, Char)])
     describe "map" $ do
-        describe "list" $ mapProps (undefined :: [Int]) (+ 1) (+ 2)
-        describe "Data.Vector" $ mapProps (undefined :: Vector Int) (+ 1) (+ 2)
-        describe "Data.Vector.Unboxed" $ mapProps (undefined :: UVector Int) (+ 1) (+ 2)
-        describe "Data.Set" $ mapProps (undefined :: Set Int) (+ 1) (+ 2)
-        describe "Data.HashSet" $ mapProps (undefined :: HashSet Int) (+ 1) (+ 2)
-        describe "Data.ByteString" $ mapProps (undefined :: ByteString) (+ 1) (+ 2)
-        describe "Data.ByteString.Lazy" $ mapProps (undefined :: LByteString) (+ 1) (+ 2)
-        describe "Data.Text" $ mapProps (undefined :: Text) succ succ
-        describe "Data.Text.Lazy" $ mapProps (undefined :: LText) succ succ
-        describe "Data.Sequence" $ mapProps (undefined :: Seq Int) succ succ
+        describe "list" $ mapProps fmap pack (undefined :: [Int]) (+ 1) (+ 2)
+        describe "Data.Vector" $ mapProps fmap pack (undefined :: Vector Int) (+ 1) (+ 2)
+        describe "Data.Vector.Unboxed" $ mapProps omap pack (undefined :: UVector Int) (+ 1) (+ 2)
+        describe "Data.Set" $ mapProps Set.map setFromList (undefined :: Set Int) (+ 1) (+ 2)
+        describe "Data.HashSet" $ mapProps HashSet.map setFromList (undefined :: HashSet Int) (+ 1) (+ 2)
+        describe "Data.ByteString" $ mapProps omap pack (undefined :: ByteString) (+ 1) (+ 2)
+        describe "Data.ByteString.Lazy" $ mapProps omap pack (undefined :: LByteString) (+ 1) (+ 2)
+        describe "Data.Text" $ mapProps omap pack (undefined :: Text) succ succ
+        describe "Data.Text.Lazy" $ mapProps omap pack (undefined :: LText) succ succ
+        describe "Data.Sequence" $ mapProps fmap pack (undefined :: Seq Int) succ succ
     describe "concatMap" $ do
         describe "list" $ concatMapProps (undefined :: [Int]) (\i -> [i + 1, i + 2])
         describe "Data.Vector" $ concatMapProps (undefined :: Vector Int) (\i -> fromList [i + 1, i + 2])
@@ -298,9 +286,11 @@ main = hspec $ do
         describe "Data.ByteString.Lazy" $ filterProps (undefined :: LByteString) (< 20)
         describe "Data.Text" $ filterProps (undefined :: Text) (< 'A')
         describe "Data.Text.Lazy" $ filterProps (undefined :: LText) (< 'A')
+        {- FIXME
         describe "Data.Map" $ filterProps (undefined :: Map Int Char) (\(i, _) -> i < 20)
         describe "Data.HashMap" $ filterProps (undefined :: HashMap Int Char) (\(i, _) -> i < 20)
         describe "Data.Set" $ filterProps (undefined :: Set Int) (< 20)
+        -}
         describe "Data.Sequence" $ filterProps (undefined :: Seq Int) (< 20)
     describe "filterM" $ do
         describe "list" $ filterMProps (undefined :: [Int]) (< 20)
@@ -350,8 +340,8 @@ main = hspec $ do
         describe "Data.Vector.Unboxed" $ replicateProps (undefined :: UVector Int) pack
         describe "Data.ByteString" $ replicateProps (undefined :: ByteString) pack
         describe "Data.ByteString.Lazy" $ replicateProps (undefined :: LByteString) pack
-        describe "Data.Text" $ replicateProps (undefined :: Text) concat
-        describe "Data.Text.Lazy" $ replicateProps (undefined :: LText) concat
+        describe "Data.Text" $ replicateProps (undefined :: Text) pack
+        describe "Data.Text.Lazy" $ replicateProps (undefined :: LText) pack
         describe "Data.Sequence" $ replicateProps (undefined :: Seq Int) pack
     describe "chunks" $ do
         describe "ByteString" $ chunkProps (asLByteString undefined)
@@ -395,7 +385,7 @@ main = hspec $ do
             throwTo tid DummyException
             threadDelay 50000
             didFail <- readIORef failed
-            liftIO $ didFail `shouldBe` 0
+            liftIO $ didFail `shouldBe` (0 :: Int)
         it "tryAny" $ do
             failed <- newIORef False
             tid <- forkIO $ do
@@ -419,17 +409,17 @@ data DummyException = DummyException
 instance Exception DummyException
 
 instance Arbitrary (Map Int Char) where
-    arbitrary = fromList <$> arbitrary
+    arbitrary = mapFromList <$> arbitrary
 instance Arbitrary (HashMap Int Char) where
-    arbitrary = fromList <$> arbitrary
+    arbitrary = mapFromList <$> arbitrary
 instance Arbitrary (Vector Int) where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary (UVector Int) where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary (Set Int) where
-    arbitrary = fromList <$> arbitrary
+    arbitrary = setFromList <$> arbitrary
 instance Arbitrary (HashSet Int) where
-    arbitrary = fromList <$> arbitrary
+    arbitrary = setFromList <$> arbitrary
 instance Arbitrary ByteString where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary LByteString where
