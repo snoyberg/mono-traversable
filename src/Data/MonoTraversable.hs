@@ -258,6 +258,10 @@ omapM_ f = ofoldr ((>>) . f) (return ())
 oforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
 oforM_ = flip omapM_
 
+ofoldlM :: (MonoFoldable c, Monad m) => (a -> Element c -> m a) -> a -> c -> m a
+ofoldlM f z0 xs = ofoldr f' return xs z0
+  where f' x k z = f z x >>= k
+
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable c, Num (Element c)) => c -> Element c
 osum = getSum . ofoldMap Sum
