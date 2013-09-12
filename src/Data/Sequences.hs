@@ -97,6 +97,12 @@ class (Monoid c, MonoTraversable c) => IsSequence c where
 
     groupBy :: (Element c -> Element c -> Bool) -> c -> [c]
     groupBy f = fmap fromList . List.groupBy f . ctoList
+
+    subsequences :: c -> [c]
+    subsequences = List.map fromList . List.subsequences . ctoList
+
+    permutations :: c -> [c]
+    permutations = List.map fromList . List.permutations . ctoList
     
     -- FIXME take, drop
 
