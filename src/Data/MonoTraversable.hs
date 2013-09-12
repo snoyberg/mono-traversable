@@ -12,7 +12,8 @@ import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Foldable        as F
 import           Data.Functor
-import           Data.Monoid (Monoid (..), Any (..), All (..))
+import           Data.Monoid (Monoid (..), Any (..), All (..), Sum (..))
+import qualified Data.Monoid
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
@@ -20,7 +21,7 @@ import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either,
-                                       replicate, (+), Integral, Ordering (..), compare, fromIntegral)
+                                       replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
@@ -256,6 +257,14 @@ omapM_ f = ofoldr ((>>) . f) (return ())
 
 oforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
 oforM_ = flip omapM_
+
+-- | The 'sum' function computes the sum of the numbers of a structure.
+osum :: (MonoFoldable c, Num (Element c)) => c -> Element c
+osum = getSum . ofoldMap Sum
+
+-- | The 'product' function computes the product of the numbers of a structure.
+oproduct :: (MonoFoldable c, Num (Element c)) => c -> Element c
+oproduct = Data.Monoid.getProduct . ofoldMap Data.Monoid.Product
 
 class (MonoFoldable c, Monoid c) => MonoFoldableMonoid c where
     oconcatMap :: (Element c -> c) -> c -> c
