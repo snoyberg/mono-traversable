@@ -264,8 +264,8 @@ sortWith f = sortBy $ comparing f
 -- input list and then to form groups by equality on these projected elements
 --
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:groupWith>
-groupWith :: (IsSequence c, Eq a) => (Element c -> a) -> c -> [c]
-groupWith f = groupBy (\a b -> f a == f b)
+groupWith :: (Eq a, IsSequence c) => (Element c -> a) -> c -> [c]
+groupWith f = groupBy' (\a b -> f a == f b)
 
 -- | We define our own @undefined@ which is marked as deprecated. This makes it
 -- useful to use during development, but let's you more easily getting
