@@ -1,6 +1,10 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ConstraintKinds #-}
 module Data.Containers where
 
 import qualified Data.Map as Map
@@ -13,6 +17,7 @@ import Data.MonoTraversable (MonoFoldable, MonoTraversable, Element)
 import qualified Data.IntMap as IntMap
 import Data.Function (on)
 import qualified Data.List as List
+import GHC.Exts (Constraint)
 
 class (Monoid c, MonoFoldable c) => Container c where
     type ContainerKey c
@@ -124,3 +129,20 @@ instance (Eq e, Hashable e) => IsSet (HashSet.HashSet e) where
     singletonSet = HashSet.singleton
     setFromList = HashSet.fromList
     setToList = HashSet.toList
+
+class LooseMap t e1 e2 where
+    lMap :: (e1 -> e2) -> t e1 -> t e2
+instance (Ord e1, Ord e2) => LooseMap Set.Set e1 e2 where
+    lMap = Set.map
+
+class ConstrainedMap t where
+    type MapConstraint t e :: Constraint
+    cMap :: (MapConstraint t e1, MapConstraint t e2) => (e1 -> e2) -> t e1 -> t e2
+instance ConstrainedMap Set.Set where
+    type MapConstraint Set.Set e = Ord e
+    cMap = Set.map
+
+class MonoLooseMap c1 c2 | c1 -> c2, c2 -> c1 where
+    mlMap :: (Element c1 -> Element c2) -> c1 -> c2
+instance (Ord e1, Ord e2) => MonoLooseMap (Set.Set e1) (Set.Set e2) where
+    mlMap = Set.map
