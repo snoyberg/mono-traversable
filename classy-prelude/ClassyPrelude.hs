@@ -111,7 +111,6 @@ import Data.IORef.Lifted
 import qualified Data.Monoid as Monoid
 import qualified Data.Traversable as Traversable
 import Data.Traversable (Traversable)
-import qualified Data.Foldable as Foldable
 import Data.Foldable (Foldable)
 import Control.DeepSeq (NFData, ($!!))
 
@@ -162,8 +161,8 @@ mapM_ = omapM_
 forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m a) -> m ()
 forM_ = oforM_
 
-concatMap :: (Monoid m, Foldable t) => (a -> m) -> t a -> m
-concatMap = Foldable.foldMap
+concatMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
+concatMap = ofoldMap
 
 foldr :: MonoFoldable c => (Element c -> b -> b) -> b -> c -> b
 foldr = ofoldr

@@ -20,7 +20,7 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 
 dictionaryProps
-    :: ( Element c ~ Char
+    :: ( MapValue c ~ Char
        , ContainerKey c ~ Int
        , Arbitrary c
        , IsMap c
@@ -257,7 +257,7 @@ main = hspec $ do
     describe "dictionary" $ do
         describe "Data.Map" $ dictionaryProps (undefined :: Map Int Char)
         describe "Data.HashMap" $ dictionaryProps (undefined :: HashMap Int Char)
-        -- FIXME describe "assoc list" $ dictionaryProps (undefined :: [(Int, Char)])
+        describe "assoc list" $ dictionaryProps (undefined :: [(Int, Char)])
     describe "map" $ do
         describe "list" $ mapProps fmap pack (undefined :: [Int]) (+ 1) (+ 2)
         describe "Data.Vector" $ mapProps fmap pack (undefined :: Vector Int) (+ 1) (+ 2)
