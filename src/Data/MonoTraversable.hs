@@ -188,6 +188,22 @@ class MonoFoldable c where
     ocompareLength :: Integral i => c -> i -> Ordering
     ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
 
+    otraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
+    otraverse_ f = ofoldr ((*>) . f) (pure ())
+    
+    ofor_ :: (MonoFoldable c, Applicative f) => c -> (Element c -> f b) -> f ()
+    ofor_ = flip otraverse_
+    
+    omapM_ :: (MonoFoldable c, Monad m) => (Element c -> m b) -> c -> m ()
+    omapM_ f = ofoldr ((>>) . f) (return ())
+    
+    oforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
+    oforM_ = flip omapM_
+    
+    ofoldlM :: (MonoFoldable c, Monad m) => (a -> Element c -> m a) -> a -> c -> m a
+    ofoldlM f z0 xs = ofoldr f' return xs z0
+      where f' x k z = f z x >>= k
+    
 instance MonoFoldable S.ByteString where
     ofoldr = S.foldr
     ofoldl' = S.foldl'
@@ -245,22 +261,6 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     oany = U.any
     onull = U.null
     olength = U.length
-
-otraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
-otraverse_ f = ofoldr ((*>) . f) (pure ())
-
-ofor_ :: (MonoFoldable c, Applicative f) => c -> (Element c -> f b) -> f ()
-ofor_ = flip otraverse_
-
-omapM_ :: (MonoFoldable c, Monad m) => (Element c -> m b) -> c -> m ()
-omapM_ f = ofoldr ((>>) . f) (return ())
-
-oforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
-oforM_ = flip omapM_
-
-ofoldlM :: (MonoFoldable c, Monad m) => (a -> Element c -> m a) -> a -> c -> m a
-ofoldlM f z0 xs = ofoldr f' return xs z0
-  where f' x k z = f z x >>= k
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable c, Num (Element c)) => c -> Element c
