@@ -207,10 +207,22 @@ class CanCompareLength c where
 class CanGroupBy c a | c -> a where
     groupBy :: (a -> a -> Bool) -> c -> [c]
 
+class CanGroupBy' c a | c -> a where
+    -- | Similar to standard 'groupBy', but operates on the whole collection, 
+    -- not just the consecutive items.
+    groupBy' :: (a -> a -> Bool) -> c -> [c]
+
 class CanGroup c a | c -> a where
     group :: c -> [c]
     default group :: (CanGroupBy c a, Eq a) => c -> [c]
     group = groupBy (==)
+
+class CanGroup' c a | c -> a where
+    -- | Similar to standard 'group', but operates on the whole collection, 
+    -- not just the consecutive items.
+    group' :: c -> [c]
+    default group' :: (CanGroupBy' c a, Eq a) => c -> [c]
+    group' = groupBy' (==)
 
 class CanRepeat c a | c -> a where
     repeat :: a -> c

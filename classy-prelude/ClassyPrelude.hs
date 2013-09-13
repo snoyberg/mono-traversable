@@ -83,7 +83,9 @@ module ClassyPrelude
     , sortBy
     , sortWith
     , group
+    , group'
     , groupBy
+    , groupBy'
     , groupWith
     , cons
     , uncons
@@ -300,8 +302,8 @@ sortWith f = sortBy $ comparing f
 -- input list and then to form groups by equality on these projected elements
 --
 -- Inspired by <http://hackage.haskell.org/packages/archive/base/latest/doc/html/GHC-Exts.html#v:groupWith>
-groupWith :: (CanGroupBy c a, Eq b) => (a -> b) -> c -> [c]
-groupWith f = groupBy (\a b -> f a == f b)
+groupWith :: (CanGroupBy' c a, Eq b) => (a -> b) -> c -> [c]
+groupWith f = groupBy' (\a b -> f a == f b)
 
 -- | We define our own @undefined@ which is marked as deprecated. This makes it
 -- useful to use during development, but let's you more easily getting

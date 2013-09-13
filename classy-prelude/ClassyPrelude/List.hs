@@ -152,8 +152,16 @@ instance CanCompareLength [a] where
 instance CanGroupBy [a] a where
     groupBy = List.groupBy
 
+instance CanGroupBy' [a] a where
+    groupBy' f (head : tail) = let
+      (matches, nonMatches) = partition (f head) tail
+      in (head : matches) : groupBy' f nonMatches
+    groupBy' _ [] = []
+
 instance Eq a => CanGroup [a] a where
     group = List.group
+
+instance Eq a => CanGroup' [a] a
 
 instance CanRepeat [a] a where
     repeat = List.repeat
