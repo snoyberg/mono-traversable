@@ -9,6 +9,8 @@ module ClassyPrelude.Classes where
 
 import CorePrelude
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.List.NonEmpty (NonEmpty)
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.Text as Text
@@ -68,6 +70,10 @@ instance CanZip [a] [b] [c] [] where
     zip = List.zip
     unzip = List.unzip
     zipWith = List.zipWith
+instance CanZip (NonEmpty a) (NonEmpty b) (NonEmpty c) NonEmpty where
+    zip = NonEmpty.zip
+    unzip = NonEmpty.unzip
+    zipWith = NonEmpty.zipWith
 instance CanZip (Vector a) (Vector b) (Vector c) Vector where
     zip = Vector.zip
     unzip = Vector.unzip

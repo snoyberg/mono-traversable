@@ -29,6 +29,7 @@ library
                      , async                         >= 2.0
                      , deepseq
                      , mono-traversable
+                     , semigroups
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
