@@ -160,7 +160,8 @@ instance U.Unbox a => MonoFunctor (U.Vector a) where
 
 class MonoFoldable c where
     ofoldMap :: Monoid m => (Element c -> m) -> c -> m
-    ofoldMap f = ofoldr (mappend . f) mempty
+    default ofoldMap :: (t a ~ c, a ~ Element (t a), F.Foldable t, Monoid m) => (Element c -> m) -> c -> m
+    ofoldMap = F.foldMap
 
     ofoldr :: (Element c -> b -> b) -> b -> c -> b
     default ofoldr :: (t a ~ c, a ~ Element (t a), F.Foldable t) => (Element c -> b -> b) -> b -> c -> b
@@ -208,6 +209,7 @@ class MonoFoldable c where
       where f' x k z = f z x >>= k
     
 instance MonoFoldable S.ByteString where
+    ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = S.foldr
     ofoldl' = S.foldl'
     otoList = S.unpack
@@ -216,6 +218,7 @@ instance MonoFoldable S.ByteString where
     onull = S.null
     olength = S.length
 instance MonoFoldable L.ByteString where
+    ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = L.foldr
     ofoldl' = L.foldl'
     otoList = L.unpack
@@ -224,6 +227,7 @@ instance MonoFoldable L.ByteString where
     onull = L.null
     olength64 = L.length
 instance MonoFoldable T.Text where
+    ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr
     ofoldl' = T.foldl'
     otoList = T.unpack
@@ -232,6 +236,7 @@ instance MonoFoldable T.Text where
     onull = T.null
     olength = T.length
 instance MonoFoldable TL.Text where
+    ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = TL.foldr
     ofoldl' = TL.foldl'
     otoList = TL.unpack
@@ -240,6 +245,7 @@ instance MonoFoldable TL.Text where
     onull = TL.null
     olength64 = TL.length
 instance MonoFoldable IntSet where
+    ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = IntSet.foldr
     ofoldl' = IntSet.foldl'
     otoList = IntSet.toList
@@ -263,6 +269,7 @@ instance MonoFoldable (Vector a)
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
 instance U.Unbox a => MonoFoldable (U.Vector a) where
+    ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = U.foldr
     ofoldl' = U.foldl'
     otoList = U.toList
