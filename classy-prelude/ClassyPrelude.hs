@@ -27,6 +27,11 @@ module ClassyPrelude
     , module Data.MonoTraversable
     , module Data.Sequences
     , module Data.Containers
+      -- * I\/O
+    , Handle
+    , stdin
+    , stdout
+    , stderr
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -67,6 +72,7 @@ module ClassyPrelude
     , (\\)
     , intersect
     , unions
+    -- FIXME , mapSet
       -- ** Text-like
     , show
       -- ** IO
@@ -74,6 +80,14 @@ module ClassyPrelude
     , writeFile
     , getLine
     , print
+    , hGetContents
+    , hGetLine
+    , hPut
+      -- ** FilePath
+    , fpToString
+    , fpFromString
+    , fpToText
+    , fpFromText
       -- ** Exceptions
     , catchAny
     , handleAny
@@ -119,6 +133,8 @@ import ClassyPrelude.Classes
 import Data.Sequences
 import Data.MonoTraversable
 import Data.Containers
+import qualified Filesystem.Path.CurrentOS as F
+import System.IO (Handle, stdin, stdout, stderr)
 
 import Debug.Trace (trace, traceShow)
 
@@ -397,6 +413,14 @@ traceShowId a = trace (show a) a
 traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
 
--- FIXME export toFilePath, fromFilePath
--- FIXME export Handle, stdout, stderr
--- FIXME mapSet
+fpToString :: FilePath -> String
+fpToString = F.encodeString
+
+fpFromString :: String -> FilePath
+fpFromString = F.decodeString
+
+fpToText :: FilePath -> Text
+fpToText = either id id . F.toText
+
+fpFromText :: Text -> FilePath
+fpFromText = F.fromText
