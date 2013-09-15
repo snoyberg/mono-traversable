@@ -26,6 +26,7 @@ import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
 import Data.IntMap (IntMap)
+import Data.IntSet (IntSet)
 import Data.Semigroup (Option)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Functor.Identity (Identity)
@@ -52,6 +53,7 @@ import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
 import Data.HashSet (HashSet)
 import qualified Data.Vector.Unboxed as U
+import qualified Data.IntSet as IntSet
 
 type family Element c
 type instance Element S.ByteString = Word8
@@ -67,6 +69,7 @@ type instance Element (Seq a) = a
 type instance Element (ViewL a) = a
 type instance Element (ViewR a) = a
 type instance Element (IntMap a) = a
+type instance Element IntSet = Int
 type instance Element (Option a) = a
 type instance Element (NonEmpty a) = a
 type instance Element (Identity a) = a
@@ -236,6 +239,12 @@ instance MonoFoldable TL.Text where
     oany = TL.any
     onull = TL.null
     olength64 = TL.length
+instance MonoFoldable IntSet where
+    ofoldr = IntSet.foldr
+    ofoldl' = IntSet.foldl'
+    otoList = IntSet.toList
+    onull = IntSet.null
+    olength = IntSet.size
 instance MonoFoldable [a] where
     otoList = id
     {-# INLINE otoList #-}

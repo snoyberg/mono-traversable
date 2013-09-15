@@ -13,6 +13,7 @@ import Data.MonoTraversable (MonoFoldable, MonoTraversable, Element)
 import qualified Data.IntMap as IntMap
 import Data.Function (on)
 import qualified Data.List as List
+import qualified Data.IntSet as IntSet
 
 class (Monoid c, MonoFoldable c) => Container c where
     type ContainerKey c
@@ -56,6 +57,13 @@ instance (Eq e, Hashable e) => Container (HashSet.HashSet e) where
     union = HashSet.union
     difference = HashSet.difference
     intersection = HashSet.intersection
+instance Container IntSet.IntSet where
+    type ContainerKey IntSet.IntSet = Int
+    member = IntSet.member
+    notMember = IntSet.notMember
+    union = IntSet.union
+    difference = IntSet.difference
+    intersection = IntSet.intersection
 instance Ord k => Container [(k, v)] where
     type ContainerKey [(k, v)] = k
     member k = List.any ((== k) . fst)
@@ -124,3 +132,9 @@ instance (Eq e, Hashable e) => IsSet (HashSet.HashSet e) where
     singletonSet = HashSet.singleton
     setFromList = HashSet.fromList
     setToList = HashSet.toList
+instance IsSet IntSet.IntSet where
+    insertSet = IntSet.insert
+    deleteSet = IntSet.delete
+    singletonSet = IntSet.singleton
+    setFromList = IntSet.fromList
+    setToList = IntSet.toList
