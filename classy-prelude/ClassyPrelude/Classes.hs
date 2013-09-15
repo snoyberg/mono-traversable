@@ -8,10 +8,12 @@
 module ClassyPrelude.Classes where
 
 import CorePrelude
+import qualified Prelude
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Char8 as ByteString8
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
@@ -25,6 +27,7 @@ import Data.MonoTraversable
 import Data.Sequences (fromStrict)
 import Control.Monad (liftM)
 import System.IO (Handle)
+import qualified System.IO
 
 class IOData a where
     readFile :: MonadIO m => FilePath -> m a
@@ -33,6 +36,7 @@ class IOData a where
     hGetContents :: MonadIO m => Handle -> m a
     hGetLine :: MonadIO m => Handle -> m a
     hPut :: MonadIO m => Handle -> a -> m ()
+    hPutStrLn :: MonadIO m => Handle -> a -> m ()
 instance IOData ByteString where
     readFile = liftIO . ByteString.readFile . FilePath.encodeString
     writeFile fp = liftIO . ByteString.writeFile (FilePath.encodeString fp)
@@ -40,6 +44,7 @@ instance IOData ByteString where
     hGetContents = liftIO . ByteString.hGetContents
     hGetLine = liftIO . ByteString.hGetLine
     hPut h = liftIO . ByteString.hPut h
+    hPutStrLn h = liftIO . ByteString8.hPutStrLn h
 instance IOData LByteString where
     readFile = liftIO . LByteString.readFile . FilePath.encodeString
     writeFile fp = liftIO . LByteString.writeFile (FilePath.encodeString fp)
@@ -47,6 +52,9 @@ instance IOData LByteString where
     hGetContents = liftIO . LByteString.hGetContents
     hGetLine = liftM fromStrict . liftIO . ByteString.hGetLine
     hPut h = liftIO . LByteString.hPut h
+    hPutStrLn h lbs = liftIO $ do
+        LByteString.hPutStr h lbs
+        ByteString8.hPutStrLn h ByteString.empty
 instance IOData Text where
     readFile = liftIO . Text.readFile . FilePath.encodeString
     writeFile fp = liftIO . Text.writeFile (FilePath.encodeString fp)
@@ -54,6 +62,7 @@ instance IOData Text where
     hGetContents = liftIO . Text.hGetContents
     hGetLine = liftIO . Text.hGetLine
     hPut h = liftIO . Text.hPutStr h
+    hPutStrLn h = liftIO . Text.hPutStrLn h
 instance IOData LText where
     readFile = liftIO . LText.readFile . FilePath.encodeString
     writeFile fp = liftIO . LText.writeFile (FilePath.encodeString fp)
@@ -61,6 +70,15 @@ instance IOData LText where
     hGetContents = liftIO . LText.hGetContents
     hGetLine = liftIO . LText.hGetLine
     hPut h = liftIO . LText.hPutStr h
+    hPutStrLn h = liftIO . LText.hPutStrLn h
+instance (Char ~ c) => IOData [c] where
+    readFile = liftIO . Prelude.readFile . FilePath.encodeString
+    writeFile fp = liftIO . Prelude.writeFile (FilePath.encodeString fp)
+    getLine = liftIO Prelude.getLine
+    hGetContents = liftIO . System.IO.hGetContents
+    hGetLine = liftIO . System.IO.hGetLine
+    hPut h = liftIO . System.IO.hPutStr h
+    hPutStrLn h = liftIO . System.IO.hPutStrLn h
 
 class CanZip c1 c2 withRes t | c1 -> c2 withRes t , c2 -> c1 where
     zip :: c1 -> c2 -> t (Element c1, Element c2)
