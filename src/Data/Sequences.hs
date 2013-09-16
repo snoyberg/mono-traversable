@@ -101,7 +101,7 @@ class (Monoid c, MonoTraversable c, Integral (Index c)) => IsSequence c where
 
     -- | Similar to standard 'groupBy', but operates on the whole collection, 
     -- not just the consecutive items.
-    groupAllBy :: (Element c -> Element c -> Bool) -> c -> [c]
+    groupAllBy :: Eq b => (Element c -> b) -> c -> [c]
     groupAllBy f = fmap fromList . groupAllBy f . otoList
 
     subsequences :: c -> [c]
@@ -138,7 +138,7 @@ instance IsSequence [a] where
     groupAllBy f (head : tail) =
         (head : matches) : groupAllBy f nonMatches
       where
-        (matches, nonMatches) = partition (f head) tail
+        (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllBy _ [] = []
 
 instance IsSequence S.ByteString where
@@ -331,7 +331,7 @@ class (IsSequence c, Eq (Element c)) => EqSequence c where
     -- | Similar to standard 'group', but operates on the whole collection, 
     -- not just the consecutive items.
     groupAll :: c -> [c]
-    groupAll = groupAllBy (==)
+    groupAll = groupAllBy id
 
     elem :: Element c -> c -> Bool
     elem e = List.elem e . otoList

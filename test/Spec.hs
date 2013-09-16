@@ -7,7 +7,7 @@ import Data.MonoTraversable
 import Data.Text (Text)
 import qualified Data.ByteString.Lazy as L
 import Data.Sequences
-import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String)
+import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int)
 
 main :: IO ()
 main = hspec $ do
@@ -34,6 +34,8 @@ main = hspec $ do
             let i = min 500 $ abs i'
                 x = replicate i () :: [()]
              in ocompareLength x j == compare i j
-    describe "group'" $ do
+    describe "groupAll" $ do
         it "list" $ groupAll ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
         it "Text" $ groupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
+    describe "groupAllBy" $ do
+        it "list" $ groupAllBy (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
