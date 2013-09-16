@@ -29,7 +29,7 @@ main = hspec $ do
             let x = replicate i 6 :: L.ByteString
                 i = min 500 $ abs i'
              in olength64 x == i
-    describe "ccompareLength" $ do
+    describe "ccompareLength" $
         prop "list" $ \i' j ->
             let i = min 500 $ abs i'
                 x = replicate i () :: [()]
