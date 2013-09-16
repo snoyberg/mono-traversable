@@ -33,81 +33,101 @@ import Data.Text.Encoding.Error (lenientDecode)
 -- > fromList . toList = id
 -- > fromList (x <> y) = fromList x <> fromList y
 -- > otoList (fromList x <> fromList y) = x <> y
-class (Monoid c, MonoTraversable c, Integral (Index c)) => IsSequence c where
-    type Index c
-    singleton :: Element c -> c
+class ( Monoid container
+      , MonoTraversable container
+      , Integral (Index container)
+      ) => IsSequence container
+  where
+    type Index container
+    singleton :: Element container -> container
 
-    fromList :: [Element c] -> c
+    fromList :: [Element container] -> container
     fromList = mconcat . fmap singleton
 
-    replicate :: Index c -> Element c -> c
+    replicate :: Index container -> Element container -> container
     replicate i = fromList . List.genericReplicate i
 
-    replicateM :: Monad m => Index c -> m (Element c) -> m c
+    replicateM :: Monad m
+               => Index container
+               -> m (Element container)
+               -> m container
     replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
 
-    filter :: (Element c -> Bool) -> c -> c
+    filter :: (Element container -> Bool) -> container -> container
     filter f = fromList . List.filter f . otoList
 
-    filterM :: Monad m => (Element c -> m Bool) -> c -> m c
+    filterM :: Monad m
+            => (Element container -> m Bool)
+            -> container
+            -> m container
     filterM f = Control.Monad.liftM fromList . filterM f . otoList
 
-    intersperse :: Element c -> c -> c
+    intersperse :: Element container -> container -> container
     intersperse e = fromList . List.intersperse e . otoList
 
-    break :: (Element c -> Bool) -> c -> (c, c)
+    break :: (Element container -> Bool) -> container -> (container, container)
     break f = (fromList *** fromList) . List.break f . otoList
 
-    span :: (Element c -> Bool) -> c -> (c, c)
+    span :: (Element container -> Bool) -> container -> (container, container)
     span f = (fromList *** fromList) . List.span f . otoList
 
-    dropWhile :: (Element c -> Bool) -> c -> c
+    dropWhile :: (Element container -> Bool) -> container -> container
     dropWhile f = fromList . List.dropWhile f . otoList
     
-    takeWhile :: (Element c -> Bool) -> c -> c
+    takeWhile :: (Element container -> Bool) -> container -> container
     takeWhile f = fromList . List.takeWhile f . otoList
 
-    splitAt :: Index c -> c -> (c, c)
+    splitAt :: Index container -> container -> (container, container)
     splitAt i = (fromList *** fromList) . List.genericSplitAt i . otoList
 
-    take :: Index c -> c -> c
+    take :: Index container -> container -> container
     take i = fst . splitAt i
 
-    drop :: Index c -> c -> c
+    drop :: Index container -> container -> container
     drop i = snd . splitAt i
 
     -- FIXME split :: (Element c -> Bool) -> c -> [c]
 
-    reverse :: c -> c
+    reverse :: container -> container
     reverse = fromList . List.reverse . otoList
 
-    find :: (Element c -> Bool) -> c -> Maybe (Element c)
+    find :: (Element container -> Bool)
+         -> container
+         -> Maybe (Element container)
     find f = List.find f . otoList
     
-    partition :: (Element c -> Bool) -> c -> (c, c)
+    partition :: (Element container -> Bool)
+              -> container
+              -> (container, container)
     partition f = (fromList *** fromList) . List.partition f . otoList
     
-    sortBy :: (Element c -> Element c -> Ordering) -> c -> c
+    sortBy :: (Element container -> Element container -> Ordering)
+           -> container
+           -> container
     sortBy f = fromList . List.sortBy f . otoList
     
-    cons :: Element c -> c -> c
+    cons :: Element container -> container -> container
     cons e = fromList . (e:) . otoList
 
-    uncons :: c -> Maybe (Element c, c)
+    uncons :: container -> Maybe (Element container, container)
     uncons = fmap (second fromList) . uncons . otoList
 
-    groupBy :: (Element c -> Element c -> Bool) -> c -> [c]
+    groupBy :: (Element container -> Element container -> Bool)
+            -> container
+            -> [container]
     groupBy f = fmap fromList . List.groupBy f . otoList
 
     -- | Similar to standard 'groupBy', but operates on the whole collection, 
     -- not just the consecutive items.
-    groupAllBy :: (Element c -> Element c -> Bool) -> c -> [c]
+    groupAllBy :: (Element container -> Element container -> Bool)
+               -> container
+               -> [container]
     groupAllBy f = fmap fromList . groupAllBy f . otoList
 
-    subsequences :: c -> [c]
+    subsequences :: container -> [container]
     subsequences = List.map fromList . List.subsequences . otoList
 
-    permutations :: c -> [c]
+    permutations :: container -> [container]
     permutations = List.map fromList . List.permutations . otoList
 
 instance IsSequence [a] where
@@ -309,34 +329,37 @@ instance U.Unbox a => IsSequence (U.Vector a) where
         | otherwise = Just (U.head v, U.tail v)
     --groupBy = U.groupBy
 
-class (IsSequence c, Eq (Element c)) => EqSequence c where
-    stripPrefix :: c -> c -> Maybe c
+class ( IsSequence container
+      , Eq (Element container)
+      ) => EqSequence container
+  where
+    stripPrefix :: container -> container -> Maybe container
     stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
     
-    isPrefixOf :: c -> c -> Bool
+    isPrefixOf :: container -> container -> Bool
     isPrefixOf x y = otoList x `isPrefixOf` otoList y
     
-    stripSuffix :: c -> c -> Maybe c
+    stripSuffix :: container -> container -> Maybe container
     stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
 
-    isSuffixOf :: c -> c -> Bool
+    isSuffixOf :: container -> container -> Bool
     isSuffixOf x y = otoList x `isSuffixOf` otoList y
 
-    isInfixOf :: c -> c -> Bool
+    isInfixOf :: container -> container -> Bool
     isInfixOf x y = otoList x `isInfixOf` otoList y
 
-    group :: c -> [c]
+    group :: container -> [container]
     group = groupBy (==)
     
     -- | Similar to standard 'group', but operates on the whole collection, 
     -- not just the consecutive items.
-    groupAll :: c -> [c]
+    groupAll :: container -> [container]
     groupAll = groupAllBy (==)
 
-    elem :: Element c -> c -> Bool
+    elem :: Element container -> container -> Bool
     elem e = List.elem e . otoList
 
-    notElem :: Element c -> c -> Bool
+    notElem :: Element container -> container -> Bool
     notElem e = List.notElem e . otoList
 
 instance Eq a => EqSequence [a] where
@@ -397,8 +420,11 @@ instance Eq a => EqSequence (Seq.Seq a)
 instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 
-class (EqSequence c, Ord (Element c)) => OrdSequence c where
-    sort :: c -> c
+class ( EqSequence container
+      , Ord (Element container)
+      ) => OrdSequence container
+  where
+    sort :: container -> container
     sort = fromList . List.sort . otoList
 
 instance Ord a => OrdSequence [a] where
@@ -414,11 +440,14 @@ instance Ord a => OrdSequence (Seq.Seq a)
 instance Ord a => OrdSequence (V.Vector a)
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a)
 
-class (IsSequence l, IsSequence s) => LazySequence l s | l -> s, s -> l where
-    toChunks :: l -> [s]
-    fromChunks :: [s] -> l
-    toStrict :: l -> s
-    fromStrict :: s -> l
+class ( IsSequence lazy
+      , IsSequence strict
+      ) => LazySequence lazy strict | lazy -> strict, strict -> lazy
+  where
+    toChunks :: lazy -> [strict]
+    fromChunks :: [strict] -> lazy
+    toStrict :: lazy -> strict
+    fromStrict :: strict -> lazy
 
 instance LazySequence L.ByteString S.ByteString where
     toChunks = L.toChunks
@@ -432,18 +461,21 @@ instance LazySequence TL.Text T.Text where
     toStrict = TL.toStrict
     fromStrict = TL.fromStrict
 
-class (IsSequence t, IsSequence b) => Textual t b | t -> b, b -> t where
-    words :: t -> [t]
-    unwords :: [t] -> t
-    lines :: t -> [t]
-    unlines :: [t] -> t
-    encodeUtf8 :: t -> b
-    decodeUtf8 :: b -> t
-    toLower :: t -> t
-    toUpper :: t -> t
-    toCaseFold :: t -> t
+class ( IsSequence text
+      , IsSequence bin
+      ) => Textual text bin | text -> bin, bin -> text
+  where
+    words :: text -> [text]
+    unwords :: [text] -> text
+    lines :: text -> [text]
+    unlines :: [text] -> text
+    encodeUtf8 :: text -> bin
+    decodeUtf8 :: bin -> text
+    toLower :: text -> text
+    toUpper :: text -> text
+    toCaseFold :: text -> text
 
-instance (c ~ Char, w ~ Word8) => Textual [c] [w] where
+instance (char ~ Char, word8 ~ Word8) => Textual [char] [word8] where
     words = List.words
     unwords = List.unwords
     lines = List.lines
