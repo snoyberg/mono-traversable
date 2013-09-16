@@ -35,5 +35,5 @@ main = hspec $ do
                 x = replicate i () :: [()]
              in ocompareLength x j == compare i j
     describe "group'" $ do
-        it "list" $ group' ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
-        it "Text" $ group' ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
+        it "list" $ groupAll ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
+        it "Text" $ groupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
