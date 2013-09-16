@@ -9,7 +9,7 @@ import Data.Hashable (Hashable)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid)
-import Data.MonoTraversable (MonoFoldable, MonoTraversable, Element)
+import Data.MonoTraversable (MonoFoldable, MonoTraversable, ElementOf)
 import qualified Data.IntMap as IntMap
 import Data.Function (on)
 import qualified Data.List as List
@@ -80,7 +80,7 @@ instance Ord key => SetContainer [(key, value)] where
     intersection = List.intersectBy ((==) `on` fst)
 
 class (MonoTraversable map, SetContainer map) => IsMap map where
-    -- | Using just @Element@ can lead to very confusing error messages.
+    -- | Using just @ElementOf@ can lead to very confusing error messages.
     type ValueOf map
     lookup       :: KeyOf map -> map -> Maybe (ValueOf map)
     insertMap    :: KeyOf map -> ValueOf map -> map -> map
@@ -125,12 +125,12 @@ instance Ord key => IsMap [(key, value)] where
     mapFromList = id
     mapToList = id
 
-class (SetContainer set, Element set ~ KeyOf set) => IsSet set where
-    insertSet :: Element set -> set -> set
-    deleteSet :: Element set -> set -> set
-    singletonSet :: Element set -> set
-    setFromList :: [Element set] -> set
-    setToList :: set -> [Element set]
+class (SetContainer set, ElementOf set ~ KeyOf set) => IsSet set where
+    insertSet :: ElementOf set -> set -> set
+    deleteSet :: ElementOf set -> set -> set
+    singletonSet :: ElementOf set -> set
+    setFromList :: [ElementOf set] -> set
+    setToList :: set -> [ElementOf set]
 
 instance Ord element => IsSet (Set.Set element) where
     insertSet = Set.insert

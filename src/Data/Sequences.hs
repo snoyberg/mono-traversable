@@ -39,42 +39,42 @@ class ( Monoid container
       ) => IsSequence container
   where
     type Index container
-    singleton :: Element container -> container
+    singleton :: ElementOf container -> container
 
-    fromList :: [Element container] -> container
+    fromList :: [ElementOf container] -> container
     fromList = mconcat . fmap singleton
 
-    replicate :: Index container -> Element container -> container
+    replicate :: Index container -> ElementOf container -> container
     replicate i = fromList . List.genericReplicate i
 
     replicateM :: Monad m
                => Index container
-               -> m (Element container)
+               -> m (ElementOf container)
                -> m container
     replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
 
-    filter :: (Element container -> Bool) -> container -> container
+    filter :: (ElementOf container -> Bool) -> container -> container
     filter f = fromList . List.filter f . otoList
 
     filterM :: Monad m
-            => (Element container -> m Bool)
+            => (ElementOf container -> m Bool)
             -> container
             -> m container
     filterM f = Control.Monad.liftM fromList . filterM f . otoList
 
-    intersperse :: Element container -> container -> container
+    intersperse :: ElementOf container -> container -> container
     intersperse e = fromList . List.intersperse e . otoList
 
-    break :: (Element container -> Bool) -> container -> (container, container)
+    break :: (ElementOf container -> Bool) -> container -> (container, container)
     break f = (fromList *** fromList) . List.break f . otoList
 
-    span :: (Element container -> Bool) -> container -> (container, container)
+    span :: (ElementOf container -> Bool) -> container -> (container, container)
     span f = (fromList *** fromList) . List.span f . otoList
 
-    dropWhile :: (Element container -> Bool) -> container -> container
+    dropWhile :: (ElementOf container -> Bool) -> container -> container
     dropWhile f = fromList . List.dropWhile f . otoList
     
-    takeWhile :: (Element container -> Bool) -> container -> container
+    takeWhile :: (ElementOf container -> Bool) -> container -> container
     takeWhile f = fromList . List.takeWhile f . otoList
 
     splitAt :: Index container -> container -> (container, container)
@@ -86,40 +86,40 @@ class ( Monoid container
     drop :: Index container -> container -> container
     drop i = snd . splitAt i
 
-    -- FIXME split :: (Element c -> Bool) -> c -> [c]
+    -- FIXME split :: (ElementOf c -> Bool) -> c -> [c]
 
     reverse :: container -> container
     reverse = fromList . List.reverse . otoList
 
-    find :: (Element container -> Bool)
+    find :: (ElementOf container -> Bool)
          -> container
-         -> Maybe (Element container)
+         -> Maybe (ElementOf container)
     find f = List.find f . otoList
     
-    partition :: (Element container -> Bool)
+    partition :: (ElementOf container -> Bool)
               -> container
               -> (container, container)
     partition f = (fromList *** fromList) . List.partition f . otoList
     
-    sortBy :: (Element container -> Element container -> Ordering)
+    sortBy :: (ElementOf container -> ElementOf container -> Ordering)
            -> container
            -> container
     sortBy f = fromList . List.sortBy f . otoList
     
-    cons :: Element container -> container -> container
+    cons :: ElementOf container -> container -> container
     cons e = fromList . (e:) . otoList
 
-    uncons :: container -> Maybe (Element container, container)
+    uncons :: container -> Maybe (ElementOf container, container)
     uncons = fmap (second fromList) . uncons . otoList
 
-    groupBy :: (Element container -> Element container -> Bool)
+    groupBy :: (ElementOf container -> ElementOf container -> Bool)
             -> container
             -> [container]
     groupBy f = fmap fromList . List.groupBy f . otoList
 
     -- | Similar to standard 'groupBy', but operates on the whole collection, 
     -- not just the consecutive items.
-    groupAllBy :: (Element container -> Element container -> Bool)
+    groupAllBy :: (ElementOf container -> ElementOf container -> Bool)
                -> container
                -> [container]
     groupAllBy f = fmap fromList . groupAllBy f . otoList
@@ -330,7 +330,7 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     --groupBy = U.groupBy
 
 class ( IsSequence container
-      , Eq (Element container)
+      , Eq (ElementOf container)
       ) => EqSequence container
   where
     stripPrefix :: container -> container -> Maybe container
@@ -356,10 +356,10 @@ class ( IsSequence container
     groupAll :: container -> [container]
     groupAll = groupAllBy (==)
 
-    elem :: Element container -> container -> Bool
+    elem :: ElementOf container -> container -> Bool
     elem e = List.elem e . otoList
 
-    notElem :: Element container -> container -> Bool
+    notElem :: ElementOf container -> container -> Bool
     notElem e = List.notElem e . otoList
 
 instance Eq a => EqSequence [a] where
@@ -421,7 +421,7 @@ instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 
 class ( EqSequence container
-      , Ord (Element container)
+      , Ord (ElementOf container)
       ) => OrdSequence container
   where
     sort :: container -> container

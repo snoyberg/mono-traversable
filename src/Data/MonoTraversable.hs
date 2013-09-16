@@ -55,58 +55,58 @@ import Data.HashSet (HashSet)
 import qualified Data.Vector.Unboxed as U
 import qualified Data.IntSet as IntSet
 
-type family Element c
-type instance Element S.ByteString = Word8
-type instance Element L.ByteString = Word8
-type instance Element T.Text = Char
-type instance Element TL.Text = Char
-type instance Element [a] = a
-type instance Element (IO a) = a
-type instance Element (ZipList a) = a
-type instance Element (Maybe a) = a
-type instance Element (Tree a) = a
-type instance Element (Seq a) = a
-type instance Element (ViewL a) = a
-type instance Element (ViewR a) = a
-type instance Element (IntMap a) = a
-type instance Element IntSet = Int
-type instance Element (Option a) = a
-type instance Element (NonEmpty a) = a
-type instance Element (Identity a) = a
-type instance Element (r -> a) = a
-type instance Element (Either a b) = b
-type instance Element (a, b) = b
-type instance Element (Const m a) = a
-type instance Element (WrappedMonad m a) = a
-type instance Element (Map k v) = v
-type instance Element (HashMap k v) = v
-type instance Element (Set e) = e
-type instance Element (HashSet e) = e
-type instance Element (Vector a) = a
-type instance Element (WrappedArrow a b c) = c
-type instance Element (MaybeApply f a) = a
-type instance Element (WrappedApplicative f a) = a
-type instance Element (Cokleisli w a b) = b
-type instance Element (MaybeT m a) = a
-type instance Element (ListT m a) = a
-type instance Element (IdentityT m a) = a
-type instance Element (WriterT w m a) = a
-type instance Element (Strict.WriterT w m a) = a
-type instance Element (StateT s m a) = a
-type instance Element (Strict.StateT s m a) = a
-type instance Element (RWST r w s m a) = a
-type instance Element (Strict.RWST r w s m a) = a
-type instance Element (ReaderT r m a) = a
-type instance Element (ErrorT e m a) = a
-type instance Element (ContT r m a) = a
-type instance Element (Compose f g a) = a
-type instance Element (Product f g a) = a
-type instance Element (Static f a b) = b
-type instance Element (U.Vector a) = a
+type family ElementOf c
+type instance ElementOf S.ByteString = Word8
+type instance ElementOf L.ByteString = Word8
+type instance ElementOf T.Text = Char
+type instance ElementOf TL.Text = Char
+type instance ElementOf [a] = a
+type instance ElementOf (IO a) = a
+type instance ElementOf (ZipList a) = a
+type instance ElementOf (Maybe a) = a
+type instance ElementOf (Tree a) = a
+type instance ElementOf (Seq a) = a
+type instance ElementOf (ViewL a) = a
+type instance ElementOf (ViewR a) = a
+type instance ElementOf (IntMap a) = a
+type instance ElementOf IntSet = Int
+type instance ElementOf (Option a) = a
+type instance ElementOf (NonEmpty a) = a
+type instance ElementOf (Identity a) = a
+type instance ElementOf (r -> a) = a
+type instance ElementOf (Either a b) = b
+type instance ElementOf (a, b) = b
+type instance ElementOf (Const m a) = a
+type instance ElementOf (WrappedMonad m a) = a
+type instance ElementOf (Map k v) = v
+type instance ElementOf (HashMap k v) = v
+type instance ElementOf (Set e) = e
+type instance ElementOf (HashSet e) = e
+type instance ElementOf (Vector a) = a
+type instance ElementOf (WrappedArrow a b c) = c
+type instance ElementOf (MaybeApply f a) = a
+type instance ElementOf (WrappedApplicative f a) = a
+type instance ElementOf (Cokleisli w a b) = b
+type instance ElementOf (MaybeT m a) = a
+type instance ElementOf (ListT m a) = a
+type instance ElementOf (IdentityT m a) = a
+type instance ElementOf (WriterT w m a) = a
+type instance ElementOf (Strict.WriterT w m a) = a
+type instance ElementOf (StateT s m a) = a
+type instance ElementOf (Strict.StateT s m a) = a
+type instance ElementOf (RWST r w s m a) = a
+type instance ElementOf (Strict.RWST r w s m a) = a
+type instance ElementOf (ReaderT r m a) = a
+type instance ElementOf (ErrorT e m a) = a
+type instance ElementOf (ContT r m a) = a
+type instance ElementOf (Compose f g a) = a
+type instance ElementOf (Product f g a) = a
+type instance ElementOf (Static f a b) = b
+type instance ElementOf (U.Vector a) = a
 
 class MonoFunctor c where
-    omap :: (Element c -> Element c) -> c -> c
-    default omap :: (Functor f, Element (f a) ~ a, f a ~ c) => (a -> a) -> f a -> f a
+    omap :: (ElementOf c -> ElementOf c) -> c -> c
+    default omap :: (Functor f, ElementOf (f a) ~ a, f a ~ c) => (a -> a) -> f a -> f a
     omap = fmap
 instance MonoFunctor S.ByteString where
     omap = S.map
@@ -159,25 +159,25 @@ instance U.Unbox a => MonoFunctor (U.Vector a) where
     omap = U.map
 
 class MonoFoldable c where
-    ofoldMap :: Monoid m => (Element c -> m) -> c -> m
-    default ofoldMap :: (t a ~ c, a ~ Element (t a), F.Foldable t, Monoid m) => (Element c -> m) -> c -> m
+    ofoldMap :: Monoid m => (ElementOf c -> m) -> c -> m
+    default ofoldMap :: (t a ~ c, a ~ ElementOf (t a), F.Foldable t, Monoid m) => (ElementOf c -> m) -> c -> m
     ofoldMap = F.foldMap
 
-    ofoldr :: (Element c -> b -> b) -> b -> c -> b
-    default ofoldr :: (t a ~ c, a ~ Element (t a), F.Foldable t) => (Element c -> b -> b) -> b -> c -> b
+    ofoldr :: (ElementOf c -> b -> b) -> b -> c -> b
+    default ofoldr :: (t a ~ c, a ~ ElementOf (t a), F.Foldable t) => (ElementOf c -> b -> b) -> b -> c -> b
     ofoldr = F.foldr
     
-    ofoldl' :: (a -> Element c -> a) -> a -> c -> a
-    default ofoldl' :: (t b ~ c, b ~ Element (t b), F.Foldable t) => (a -> Element c -> a) -> a -> c -> a
+    ofoldl' :: (a -> ElementOf c -> a) -> a -> c -> a
+    default ofoldl' :: (t b ~ c, b ~ ElementOf (t b), F.Foldable t) => (a -> ElementOf c -> a) -> a -> c -> a
     ofoldl' = F.foldl'
 
-    otoList :: c -> [Element c]
+    otoList :: c -> [ElementOf c]
     otoList t = build (\ c n -> ofoldr c n t)
     
-    oall :: (Element c -> Bool) -> c -> Bool
+    oall :: (ElementOf c -> Bool) -> c -> Bool
     oall f = getAll . ofoldMap (All . f)
     
-    oany :: (Element c -> Bool) -> c -> Bool
+    oany :: (ElementOf c -> Bool) -> c -> Bool
     oany f = getAny . ofoldMap (Any . f)
     
     onull :: c -> Bool
@@ -192,19 +192,19 @@ class MonoFoldable c where
     ocompareLength :: Integral i => c -> i -> Ordering
     ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
 
-    otraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
+    otraverse_ :: (MonoFoldable c, Applicative f) => (ElementOf c -> f b) -> c -> f ()
     otraverse_ f = ofoldr ((*>) . f) (pure ())
     
-    ofor_ :: (MonoFoldable c, Applicative f) => c -> (Element c -> f b) -> f ()
+    ofor_ :: (MonoFoldable c, Applicative f) => c -> (ElementOf c -> f b) -> f ()
     ofor_ = flip otraverse_
     
-    omapM_ :: (MonoFoldable c, Monad m) => (Element c -> m b) -> c -> m ()
+    omapM_ :: (MonoFoldable c, Monad m) => (ElementOf c -> m b) -> c -> m ()
     omapM_ f = ofoldr ((>>) . f) (return ())
     
-    oforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
+    oforM_ :: (MonoFoldable c, Monad m) => c -> (ElementOf c -> m b) -> m ()
     oforM_ = flip omapM_
     
-    ofoldlM :: (MonoFoldable c, Monad m) => (a -> Element c -> m a) -> a -> c -> m a
+    ofoldlM :: (MonoFoldable c, Monad m) => (a -> ElementOf c -> m a) -> a -> c -> m a
     ofoldlM f z0 xs = ofoldr f' return xs z0
       where f' x k z = f z x >>= k
     
@@ -279,15 +279,15 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     olength = U.length
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
-osum :: (MonoFoldable c, Num (Element c)) => c -> Element c
+osum :: (MonoFoldable c, Num (ElementOf c)) => c -> ElementOf c
 osum = getSum . ofoldMap Sum
 
 -- | The 'product' function computes the product of the numbers of a structure.
-oproduct :: (MonoFoldable c, Num (Element c)) => c -> Element c
+oproduct :: (MonoFoldable c, Num (ElementOf c)) => c -> ElementOf c
 oproduct = Data.Monoid.getProduct . ofoldMap Data.Monoid.Product
 
 class (MonoFoldable c, Monoid c) => MonoFoldableMonoid c where
-    oconcatMap :: (Element c -> c) -> c -> c
+    oconcatMap :: (ElementOf c -> c) -> c -> c
     oconcatMap = ofoldMap
 instance (MonoFoldable (t a), Monoid (t a)) => MonoFoldableMonoid (t a) -- FIXME
 instance MonoFoldableMonoid S.ByteString where
@@ -300,11 +300,11 @@ instance MonoFoldableMonoid TL.Text where
     oconcatMap = TL.concatMap
 
 class (MonoFunctor c, MonoFoldable c) => MonoTraversable c where
-    otraverse :: Applicative f => (Element c -> f (Element c)) -> c -> f c
-    default otraverse :: (Traversable t, c ~ t a, a ~ Element c, Applicative f) => (Element c -> f (Element c)) -> c -> f c
+    otraverse :: Applicative f => (ElementOf c -> f (ElementOf c)) -> c -> f c
+    default otraverse :: (Traversable t, c ~ t a, a ~ ElementOf c, Applicative f) => (ElementOf c -> f (ElementOf c)) -> c -> f c
     otraverse = traverse
-    omapM :: Monad m => (Element c -> m (Element c)) -> c -> m c
-    default omapM :: (Traversable t, c ~ t a, a ~ Element c, Monad m) => (Element c -> m (Element c)) -> c -> m c
+    omapM :: Monad m => (ElementOf c -> m (ElementOf c)) -> c -> m c
+    default omapM :: (Traversable t, c ~ t a, a ~ ElementOf c, Monad m) => (ElementOf c -> m (ElementOf c)) -> c -> m c
     omapM = mapM
 instance MonoTraversable S.ByteString where
     otraverse f = fmap S.pack . traverse f . S.unpack
@@ -335,8 +335,8 @@ instance U.Unbox a => MonoTraversable (U.Vector a) where
     otraverse f = fmap U.fromList . traverse f . U.toList
     omapM = U.mapM
 
-ofor :: (MonoTraversable c, Applicative f) => c -> (Element c -> f (Element c)) -> f c
+ofor :: (MonoTraversable c, Applicative f) => c -> (ElementOf c -> f (ElementOf c)) -> f c
 ofor = flip otraverse
 
-oforM :: (MonoTraversable c, Monad f) => c -> (Element c -> f (Element c)) -> f c
+oforM :: (MonoTraversable c, Monad f) => c -> (ElementOf c -> f (ElementOf c)) -> f c
 oforM = flip omapM
