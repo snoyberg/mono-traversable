@@ -112,7 +112,7 @@ module ClassyPrelude
     , asMaybe
     , asSet
     , asVector
-    , asUVector  
+    , asUVector
     , asIOException
     , asSomeException
     ) where
