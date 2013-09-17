@@ -44,7 +44,6 @@ test-suite test
                    , transformers
                    , containers
                    , unordered-containers
-                   , semigroups >= 0.10
     ghc-options:     -Wall
 
 source-repository head

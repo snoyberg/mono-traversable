@@ -214,8 +214,8 @@ map :: Functor f => (a -> b) -> f a -> f b
 map = fmap
 
 infixr 5  ++
-(++) :: Semigroup m => m -> m -> m
-(++) = (<>)
+(++) :: Monoid m => m -> m -> m
+(++) = mappend
 {-# INLINE (++) #-}
 
 infixl 9 \\{-This comment teaches CPP correct behaviour -}
