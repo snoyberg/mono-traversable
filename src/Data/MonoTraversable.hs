@@ -53,6 +53,7 @@ import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
 import Data.HashSet (HashSet)
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
 
 type family Element c
@@ -103,6 +104,7 @@ type instance Element (Compose f g a) = a
 type instance Element (Product f g a) = a
 type instance Element (Static f a b) = b
 type instance Element (U.Vector a) = a
+type instance Element (VS.Vector a) = a
 
 class MonoFunctor c where
     omap :: (Element c -> Element c) -> c -> c
@@ -157,6 +159,8 @@ instance (Functor f, Functor g) => MonoFunctor (Product f g a)
 instance Functor f => MonoFunctor (Static f a b)
 instance U.Unbox a => MonoFunctor (U.Vector a) where
     omap = U.map
+instance VS.Storable a => MonoFunctor (VS.Vector a) where
+    omap = VS.map
 
 class MonoFoldable c where
     ofoldMap :: Monoid m => (Element c -> m) -> c -> m
@@ -277,6 +281,15 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     oany = U.any
     onull = U.null
     olength = U.length
+instance VS.Storable a => MonoFoldable (VS.Vector a) where
+    ofoldMap f = ofoldr (mappend . f) mempty
+    ofoldr = VS.foldr
+    ofoldl' = VS.foldl'
+    otoList = VS.toList
+    oall = VS.all
+    oany = VS.any
+    onull = VS.null
+    olength = VS.length
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable c, Num (Element c)) => c -> Element c
@@ -334,6 +347,9 @@ instance MonoTraversable (Vector a)
 instance U.Unbox a => MonoTraversable (U.Vector a) where
     otraverse f = fmap U.fromList . traverse f . U.toList
     omapM = U.mapM
+instance VS.Storable a => MonoTraversable (VS.Vector a) where
+    otraverse f = fmap VS.fromList . traverse f . VS.toList
+    omapM = VS.mapM
 
 ofor :: (MonoTraversable c, Applicative f) => c -> (Element c -> f (Element c)) -> f c
 ofor = flip otraverse

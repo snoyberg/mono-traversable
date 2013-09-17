@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds #-}
 module Data.Sequences where
 
 import Data.Monoid
@@ -24,9 +25,14 @@ import Control.Monad (liftM)
 import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Storable as VS
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy.Encoding as TL
 import Data.Text.Encoding.Error (lenientDecode)
+import GHC.Exts (Constraint)
+import qualified Data.Set as Set
+import qualified Data.HashSet as HashSet
+import Data.Hashable (Hashable)
 
 -- | Laws:
 --
@@ -309,6 +315,32 @@ instance U.Unbox a => IsSequence (U.Vector a) where
         | otherwise = Just (U.head v, U.tail v)
     --groupBy = U.groupBy
 
+instance VS.Storable a => IsSequence (VS.Vector a) where
+    type Index (VS.Vector a) = Int
+    singleton = VS.singleton
+    fromList = VS.fromList
+    replicate = VS.replicate
+    replicateM = VS.replicateM
+    filter = VS.filter
+    filterM = VS.filterM
+    --intersperse = U.intersperse
+    break = VS.break
+    span = VS.span
+    dropWhile = VS.dropWhile
+    takeWhile = VS.takeWhile
+    splitAt = VS.splitAt
+    take = VS.take
+    drop = VS.drop
+    reverse = VS.reverse
+    find = VS.find
+    partition = VS.partition
+    --sortBy = U.sortBy
+    cons = VS.cons
+    uncons v
+        | VS.null v = Nothing
+        | otherwise = Just (VS.head v, VS.tail v)
+    --groupBy = U.groupBy
+
 class (IsSequence c, Eq (Element c)) => EqSequence c where
     stripPrefix :: c -> c -> Maybe c
     stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
@@ -396,6 +428,7 @@ instance EqSequence TL.Text where
 instance Eq a => EqSequence (Seq.Seq a)
 instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
+instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 
 class (EqSequence c, Ord (Element c)) => OrdSequence c where
     sort :: c -> c
@@ -413,6 +446,7 @@ instance OrdSequence TL.Text
 instance Ord a => OrdSequence (Seq.Seq a)
 instance Ord a => OrdSequence (V.Vector a)
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a)
+instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a)
 
 class (IsSequence l, IsSequence s) => LazySequence l s | l -> s, s -> l where
     toChunks :: l -> [s]
@@ -475,3 +509,21 @@ instance Textual TL.Text L.ByteString where
     toLower = TL.toLower
     toUpper = TL.toUpper
     toCaseFold = TL.toCaseFold
+
+-- | A @map@-like function which doesn't obey the @Functor@ laws,
+-- and/or requires extra constraints on the contained values.
+class LooseMap t where
+    type LooseMapConstraint t e :: Constraint
+    looseMap :: (LooseMapConstraint t e1, LooseMapConstraint t e2) => (e1 -> e2) -> t e1 -> t e2
+instance LooseMap Set.Set where
+    type LooseMapConstraint Set.Set a = Ord a
+    looseMap = Set.map
+instance LooseMap HashSet.HashSet where
+    type LooseMapConstraint HashSet.HashSet a = (Eq a, Hashable a)
+    looseMap = HashSet.map
+instance LooseMap U.Vector where
+    type LooseMapConstraint U.Vector a = U.Unbox a
+    looseMap = U.map
+instance LooseMap VS.Vector where
+    type LooseMapConstraint VS.Vector a = VS.Storable a
+    looseMap = VS.map
