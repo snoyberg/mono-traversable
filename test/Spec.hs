@@ -37,5 +37,5 @@ main = hspec $ do
     describe "groupAll" $ do
         it "list" $ groupAll ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
         it "Text" $ groupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
-    describe "groupAllBy" $ do
-        it "list" $ groupAllBy (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
+    describe "groupAllOn" $ do
+        it "list" $ groupAllOn (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
