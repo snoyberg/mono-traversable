@@ -77,7 +77,9 @@ module ClassyPrelude
     , unions
     -- FIXME , mapSet
       -- ** Text-like
-    , show
+    , Show (..)
+    , tshow
+    , tlshow
       -- ** IO
     , readFile
     , writeFile
@@ -143,9 +145,13 @@ import System.IO (Handle, stdin, stdout, stderr)
 
 import Debug.Trace (trace, traceShow)
 import Data.Semigroup (Semigroup (..), WrappedMonoid (..))
+import Prelude (Show (..))
 
-show :: (IsSequence c, Element c ~ Char, Show a) => a -> c
-show = fromList . Prelude.show
+tshow :: Show a => a -> Text
+tshow = fromList . Prelude.show
+
+tlshow :: Show a => a -> LText
+tlshow = fromList . Prelude.show
 
 -- Renames from mono-traversable
 
