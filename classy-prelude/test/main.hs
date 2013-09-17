@@ -102,6 +102,7 @@ filterMProps dummy f' = do
 lengthProps :: ( Show c
                , MonoFoldable c
                , Monoid c
+               , Semigroup c
                , Arbitrary c
                )
             => c
@@ -193,6 +194,7 @@ stripSuffixProps :: ( Eq c
                     , Show c
                     , Arbitrary c
                     , EqSequence c
+                    , Semigroup c -- FIXME make Semigroup a superclass of IsSequence
                     )
                  => c
                  -> Spec
@@ -241,6 +243,7 @@ prefixProps :: ( Eq c
                , EqSequence c
                , Arbitrary c
                , Show c
+               , Semigroup c -- FIXME make Semigroup a superclass of IsSequence
                )
             => c
             -> Spec

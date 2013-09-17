@@ -8,6 +8,9 @@ module ClassyPrelude
       -- * Standard
       -- ** Monoid
     , (++)
+      -- ** Semigroup
+    , Semigroup (..)
+    , WrappedMonoid
       -- ** Monad
     , module Control.Monad
       -- ** Mutable references
@@ -129,7 +132,8 @@ import Data.Traversable (Traversable)
 import Data.Foldable (Foldable)
 import Control.DeepSeq (NFData, ($!!))
 
-import CorePrelude hiding (print, undefined)
+import Data.Vector.Instances ()
+import CorePrelude hiding (print, undefined, (<>))
 import ClassyPrelude.Classes
 import Data.Sequences
 import Data.MonoTraversable
@@ -138,6 +142,7 @@ import qualified Filesystem.Path.CurrentOS as F
 import System.IO (Handle, stdin, stdout, stderr)
 
 import Debug.Trace (trace, traceShow)
+import Data.Semigroup (Semigroup (..), WrappedMonoid (..))
 
 show :: (IsSequence c, Element c ~ Char, Show a) => a -> c
 show = fromList . Prelude.show
@@ -209,8 +214,8 @@ map :: Functor f => (a -> b) -> f a -> f b
 map = fmap
 
 infixr 5  ++
-(++) :: Monoid m => m -> m -> m
-(++) = mappend
+(++) :: Semigroup m => m -> m -> m
+(++) = (<>)
 {-# INLINE (++) #-}
 
 infixl 9 \\{-This comment teaches CPP correct behaviour -}

@@ -30,6 +30,7 @@ library
                      , deepseq
                      , mono-traversable
                      , semigroups
+                     , vector-instances
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
@@ -43,6 +44,7 @@ test-suite test
                    , transformers
                    , containers
                    , unordered-containers
+                   , semigroups >= 0.10
     ghc-options:     -Wall
 
 source-repository head
