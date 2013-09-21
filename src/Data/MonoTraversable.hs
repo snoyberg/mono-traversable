@@ -56,7 +56,7 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
 
-type family Element c
+type family Element mofu
 type instance Element S.ByteString = Word8
 type instance Element L.ByteString = Word8
 type instance Element T.Text = Char
@@ -106,9 +106,9 @@ type instance Element (Static f a b) = b
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
 
-class MonoFunctor c where
-    omap :: (Element c -> Element c) -> c -> c
-    default omap :: (Functor f, Element (f a) ~ a, f a ~ c) => (a -> a) -> f a -> f a
+class MonoFunctor mofu where
+    omap :: (Element mofu -> Element mofu) -> mofu -> mofu
+    default omap :: (Functor f, Element (f a) ~ a, f a ~ mofu) => (a -> a) -> f a -> f a
     omap = fmap
 instance MonoFunctor S.ByteString where
     omap = S.map
@@ -162,53 +162,53 @@ instance U.Unbox a => MonoFunctor (U.Vector a) where
 instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
 
-class MonoFoldable c where
-    ofoldMap :: Monoid m => (Element c -> m) -> c -> m
-    default ofoldMap :: (t a ~ c, a ~ Element (t a), F.Foldable t, Monoid m) => (Element c -> m) -> c -> m
+class MonoFoldable mofo where
+    ofoldMap :: Monoid m => (Element mofo -> m) -> mofo -> m
+    default ofoldMap :: (t a ~ mofo, a ~ Element (t a), F.Foldable t, Monoid m) => (Element mofo -> m) -> mofo -> m
     ofoldMap = F.foldMap
 
-    ofoldr :: (Element c -> b -> b) -> b -> c -> b
-    default ofoldr :: (t a ~ c, a ~ Element (t a), F.Foldable t) => (Element c -> b -> b) -> b -> c -> b
+    ofoldr :: (Element mofo -> b -> b) -> b -> mofo -> b
+    default ofoldr :: (t a ~ mofo, a ~ Element (t a), F.Foldable t) => (Element mofo -> b -> b) -> b -> mofo -> b
     ofoldr = F.foldr
     
-    ofoldl' :: (a -> Element c -> a) -> a -> c -> a
-    default ofoldl' :: (t b ~ c, b ~ Element (t b), F.Foldable t) => (a -> Element c -> a) -> a -> c -> a
+    ofoldl' :: (a -> Element mofo -> a) -> a -> mofo -> a
+    default ofoldl' :: (t b ~ mofo, b ~ Element (t b), F.Foldable t) => (a -> Element mofo -> a) -> a -> mofo -> a
     ofoldl' = F.foldl'
 
-    otoList :: c -> [Element c]
-    otoList t = build (\ c n -> ofoldr c n t)
+    otoList :: mofo -> [Element mofo]
+    otoList t = build (\ mofo n -> ofoldr mofo n t)
     
-    oall :: (Element c -> Bool) -> c -> Bool
+    oall :: (Element mofo -> Bool) -> mofo -> Bool
     oall f = getAll . ofoldMap (All . f)
     
-    oany :: (Element c -> Bool) -> c -> Bool
+    oany :: (Element mofo -> Bool) -> mofo -> Bool
     oany f = getAny . ofoldMap (Any . f)
     
-    onull :: c -> Bool
+    onull :: mofo -> Bool
     onull = oall (const False)
     
-    olength :: c -> Int
+    olength :: mofo -> Int
     olength = ofoldl' (\i _ -> i + 1) 0
     
-    olength64 :: c -> Int64
+    olength64 :: mofo -> Int64
     olength64 = ofoldl' (\i _ -> i + 1) 0
     
-    ocompareLength :: Integral i => c -> i -> Ordering
+    ocompareLength :: Integral i => mofo -> i -> Ordering
     ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
 
-    otraverse_ :: (MonoFoldable c, Applicative f) => (Element c -> f b) -> c -> f ()
+    otraverse_ :: (MonoFoldable mofo, Applicative f) => (Element mofo -> f b) -> mofo -> f ()
     otraverse_ f = ofoldr ((*>) . f) (pure ())
     
-    ofor_ :: (MonoFoldable c, Applicative f) => c -> (Element c -> f b) -> f ()
+    ofor_ :: (MonoFoldable mofo, Applicative f) => mofo -> (Element mofo -> f b) -> f ()
     ofor_ = flip otraverse_
     
-    omapM_ :: (MonoFoldable c, Monad m) => (Element c -> m b) -> c -> m ()
+    omapM_ :: (MonoFoldable mofo, Monad m) => (Element mofo -> m b) -> mofo -> m ()
     omapM_ f = ofoldr ((>>) . f) (return ())
     
-    oforM_ :: (MonoFoldable c, Monad m) => c -> (Element c -> m b) -> m ()
+    oforM_ :: (MonoFoldable mofo, Monad m) => mofo -> (Element mofo -> m b) -> m ()
     oforM_ = flip omapM_
     
-    ofoldlM :: (MonoFoldable c, Monad m) => (a -> Element c -> m a) -> a -> c -> m a
+    ofoldlM :: (MonoFoldable mofo, Monad m) => (a -> Element mofo -> m a) -> a -> mofo -> m a
     ofoldlM f z0 xs = ofoldr f' return xs z0
       where f' x k z = f z x >>= k
     
@@ -292,15 +292,15 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     olength = VS.length
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
-osum :: (MonoFoldable c, Num (Element c)) => c -> Element c
+osum :: (MonoFoldable mofo, Num (Element mofo)) => mofo -> Element mofo
 osum = getSum . ofoldMap Sum
 
 -- | The 'product' function computes the product of the numbers of a structure.
-oproduct :: (MonoFoldable c, Num (Element c)) => c -> Element c
+oproduct :: (MonoFoldable mofo, Num (Element mofo)) => mofo -> Element mofo
 oproduct = Data.Monoid.getProduct . ofoldMap Data.Monoid.Product
 
-class (MonoFoldable c, Monoid c) => MonoFoldableMonoid c where
-    oconcatMap :: (Element c -> c) -> c -> c
+class (MonoFoldable mofo, Monoid mofo) => MonoFoldableMonoid mofo where
+    oconcatMap :: (Element mofo -> mofo) -> mofo -> mofo
     oconcatMap = ofoldMap
 instance (MonoFoldable (t a), Monoid (t a)) => MonoFoldableMonoid (t a) -- FIXME
 instance MonoFoldableMonoid S.ByteString where
@@ -312,12 +312,12 @@ instance MonoFoldableMonoid T.Text where
 instance MonoFoldableMonoid TL.Text where
     oconcatMap = TL.concatMap
 
-class (MonoFunctor c, MonoFoldable c) => MonoTraversable c where
-    otraverse :: Applicative f => (Element c -> f (Element c)) -> c -> f c
-    default otraverse :: (Traversable t, c ~ t a, a ~ Element c, Applicative f) => (Element c -> f (Element c)) -> c -> f c
+class (MonoFunctor mot, MonoFoldable mot) => MonoTraversable mot where
+    otraverse :: Applicative f => (Element mot -> f (Element mot)) -> mot -> f mot
+    default otraverse :: (Traversable t, mot ~ t a, a ~ Element mot, Applicative f) => (Element mot -> f (Element mot)) -> mot -> f mot
     otraverse = traverse
-    omapM :: Monad m => (Element c -> m (Element c)) -> c -> m c
-    default omapM :: (Traversable t, c ~ t a, a ~ Element c, Monad m) => (Element c -> m (Element c)) -> c -> m c
+    omapM :: Monad m => (Element mot -> m (Element mot)) -> mot -> m mot
+    default omapM :: (Traversable t, mot ~ t a, a ~ Element mot, Monad m) => (Element mot -> m (Element mot)) -> mot -> m mot
     omapM = mapM
 instance MonoTraversable S.ByteString where
     otraverse f = fmap S.pack . traverse f . S.unpack
@@ -351,8 +351,8 @@ instance VS.Storable a => MonoTraversable (VS.Vector a) where
     otraverse f = fmap VS.fromList . traverse f . VS.toList
     omapM = VS.mapM
 
-ofor :: (MonoTraversable c, Applicative f) => c -> (Element c -> f (Element c)) -> f c
+ofor :: (MonoTraversable mot, Applicative f) => mot -> (Element mot -> f (Element mot)) -> f mot
 ofor = flip otraverse
 
-oforM :: (MonoTraversable c, Monad f) => c -> (Element c -> f (Element c)) -> f c
+oforM :: (MonoTraversable mot, Monad f) => mot -> (Element mot -> f (Element mot)) -> f mot
 oforM = flip omapM
