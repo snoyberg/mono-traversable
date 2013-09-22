@@ -15,13 +15,13 @@ import Data.Function (on)
 import qualified Data.List as List
 import qualified Data.IntSet as IntSet
 
-class (Monoid c, MonoFoldable c) => Container c where
-    type ContainerKey c
-    member :: ContainerKey c -> c -> Bool
-    notMember ::  ContainerKey c -> c -> Bool
-    union :: c -> c -> c
-    difference :: c -> c -> c
-    intersection :: c -> c -> c
+class (Monoid set, MonoFoldable set) => Container set where
+    type ContainerKey set
+    member :: ContainerKey set -> set -> Bool
+    notMember ::  ContainerKey set -> set -> Bool
+    union :: set -> set -> set
+    difference :: set -> set -> set
+    intersection :: set -> set -> set
 instance Ord k => Container (Map.Map k v) where
     type ContainerKey (Map.Map k v) = k
     member = Map.member

@@ -39,81 +39,81 @@ import Data.Hashable (Hashable)
 -- > fromList . toList = id
 -- > fromList (x <> y) = fromList x <> fromList y
 -- > otoList (fromList x <> fromList y) = x <> y
-class (Monoid c, MonoTraversable c, Integral (Index c)) => IsSequence c where
-    type Index c
-    singleton :: Element c -> c
+class (Monoid seq, MonoTraversable seq, Integral (Index seq)) => IsSequence seq where
+    type Index seq
+    singleton :: Element seq -> seq
 
-    fromList :: [Element c] -> c
+    fromList :: [Element seq] -> seq
     fromList = mconcat . fmap singleton
 
-    replicate :: Index c -> Element c -> c
+    replicate :: Index seq -> Element seq -> seq
     replicate i = fromList . List.genericReplicate i
 
-    replicateM :: Monad m => Index c -> m (Element c) -> m c
+    replicateM :: Monad m => Index seq -> m (Element seq) -> m seq
     replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
 
-    filter :: (Element c -> Bool) -> c -> c
+    filter :: (Element seq -> Bool) -> seq -> seq
     filter f = fromList . List.filter f . otoList
 
-    filterM :: Monad m => (Element c -> m Bool) -> c -> m c
+    filterM :: Monad m => (Element seq -> m Bool) -> seq -> m seq
     filterM f = Control.Monad.liftM fromList . filterM f . otoList
 
-    intersperse :: Element c -> c -> c
+    intersperse :: Element seq -> seq -> seq
     intersperse e = fromList . List.intersperse e . otoList
 
-    break :: (Element c -> Bool) -> c -> (c, c)
+    break :: (Element seq -> Bool) -> seq -> (seq, seq)
     break f = (fromList *** fromList) . List.break f . otoList
 
-    span :: (Element c -> Bool) -> c -> (c, c)
+    span :: (Element seq -> Bool) -> seq -> (seq, seq)
     span f = (fromList *** fromList) . List.span f . otoList
 
-    dropWhile :: (Element c -> Bool) -> c -> c
+    dropWhile :: (Element seq -> Bool) -> seq -> seq
     dropWhile f = fromList . List.dropWhile f . otoList
     
-    takeWhile :: (Element c -> Bool) -> c -> c
+    takeWhile :: (Element seq -> Bool) -> seq -> seq
     takeWhile f = fromList . List.takeWhile f . otoList
 
-    splitAt :: Index c -> c -> (c, c)
+    splitAt :: Index seq -> seq -> (seq, seq)
     splitAt i = (fromList *** fromList) . List.genericSplitAt i . otoList
 
-    take :: Index c -> c -> c
+    take :: Index seq -> seq -> seq
     take i = fst . splitAt i
 
-    drop :: Index c -> c -> c
+    drop :: Index seq -> seq -> seq
     drop i = snd . splitAt i
 
-    -- FIXME split :: (Element c -> Bool) -> c -> [c]
+    -- FIXME split :: (Element seq -> Bool) -> seq -> [seq]
 
-    reverse :: c -> c
+    reverse :: seq -> seq
     reverse = fromList . List.reverse . otoList
 
-    find :: (Element c -> Bool) -> c -> Maybe (Element c)
+    find :: (Element seq -> Bool) -> seq -> Maybe (Element seq)
     find f = List.find f . otoList
     
-    partition :: (Element c -> Bool) -> c -> (c, c)
+    partition :: (Element seq -> Bool) -> seq -> (seq, seq)
     partition f = (fromList *** fromList) . List.partition f . otoList
     
-    sortBy :: (Element c -> Element c -> Ordering) -> c -> c
+    sortBy :: (Element seq -> Element seq -> Ordering) -> seq -> seq
     sortBy f = fromList . List.sortBy f . otoList
     
-    cons :: Element c -> c -> c
+    cons :: Element seq -> seq -> seq
     cons e = fromList . (e:) . otoList
 
-    uncons :: c -> Maybe (Element c, c)
+    uncons :: seq -> Maybe (Element seq, seq)
     uncons = fmap (second fromList) . uncons . otoList
 
-    groupBy :: (Element c -> Element c -> Bool) -> c -> [c]
+    groupBy :: (Element seq -> Element seq -> Bool) -> seq -> [seq]
     groupBy f = fmap fromList . List.groupBy f . otoList
 
     -- | Similar to standard 'groupBy', but operates on the whole collection, 
     -- not just the consecutive items.
-    groupAllOn :: Eq b => (Element c -> b) -> c -> [c]
+    groupAllOn :: Eq b => (Element seq -> b) -> seq -> [seq]
     groupAllOn f = fmap fromList . groupAllOn f . otoList
 
-    subsequences :: c -> [c]
+    subsequences :: seq -> [seq]
     subsequences = List.map fromList . List.subsequences . otoList
 
-    permutations :: c -> [c]
+    permutations :: seq -> [seq]
     permutations = List.map fromList . List.permutations . otoList
 
 instance IsSequence [a] where
@@ -341,34 +341,34 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
         | otherwise = Just (VS.head v, VS.tail v)
     --groupBy = U.groupBy
 
-class (IsSequence c, Eq (Element c)) => EqSequence c where
-    stripPrefix :: c -> c -> Maybe c
+class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
+    stripPrefix :: seq -> seq -> Maybe seq
     stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
     
-    isPrefixOf :: c -> c -> Bool
+    isPrefixOf :: seq -> seq -> Bool
     isPrefixOf x y = otoList x `isPrefixOf` otoList y
     
-    stripSuffix :: c -> c -> Maybe c
+    stripSuffix :: seq -> seq -> Maybe seq
     stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
 
-    isSuffixOf :: c -> c -> Bool
+    isSuffixOf :: seq -> seq -> Bool
     isSuffixOf x y = otoList x `isSuffixOf` otoList y
 
-    isInfixOf :: c -> c -> Bool
+    isInfixOf :: seq -> seq -> Bool
     isInfixOf x y = otoList x `isInfixOf` otoList y
 
-    group :: c -> [c]
+    group :: seq -> [seq]
     group = groupBy (==)
     
     -- | Similar to standard 'group', but operates on the whole collection, 
     -- not just the consecutive items.
-    groupAll :: c -> [c]
+    groupAll :: seq -> [seq]
     groupAll = groupAllOn id
 
-    elem :: Element c -> c -> Bool
+    elem :: Element seq -> seq -> Bool
     elem e = List.elem e . otoList
 
-    notElem :: Element c -> c -> Bool
+    notElem :: Element seq -> seq -> Bool
     notElem e = List.notElem e . otoList
 
 instance Eq a => EqSequence [a] where
@@ -430,8 +430,8 @@ instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 
-class (EqSequence c, Ord (Element c)) => OrdSequence c where
-    sort :: c -> c
+class (EqSequence seq, Ord (Element seq)) => OrdSequence seq where
+    sort :: seq -> seq
     sort = fromList . List.sort . otoList
 
 instance Ord a => OrdSequence [a] where
