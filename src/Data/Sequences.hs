@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ConstraintKinds #-}
+-- | Note: This module should be considered highly experimental.
 module Data.Sequences where
 
 import Data.Monoid

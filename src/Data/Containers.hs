@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+-- | Note: This module should be considered highly experimental.
 module Data.Containers where
 
 import qualified Data.Map as Map
