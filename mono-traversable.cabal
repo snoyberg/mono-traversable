@@ -16,6 +16,7 @@ library
   exposed-modules:     Data.Containers
                        Data.MonoTraversable
                        Data.Sequences
+                       Data.NonNull
   build-depends:       base >= 4 && < 5
                      , containers >= 0.4
                      , unordered-containers >=0.2
