@@ -1,5 +1,16 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
+-- | Warning, this is Experimental!
+--
+-- Data.NonNull attempts to extend the concepts from
+-- 'Data.List.NonEmpty' to any 'IsSequence'.
+--
+-- 'NonNull' is for a sequence with 1 or more elements.
+-- 'Stream' is for a 'NonNull' that supports efficient
+-- modification of the front of the sequence.
+--
+-- This code is experimental and likely to change dramatically and future versions.
+-- Please send your feedback.
 module Data.NonNull where
 
 import Prelude hiding (head, tail, init, last)
