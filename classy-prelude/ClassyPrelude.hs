@@ -81,13 +81,8 @@ module ClassyPrelude
     , tshow
     , tlshow
       -- ** IO
-    , readFile
-    , writeFile
-    , getLine
+    , IOData (..)
     , print
-    , hGetContents
-    , hGetLine
-    , hPut
       -- ** FilePath
     , fpToString
     , fpFromString
