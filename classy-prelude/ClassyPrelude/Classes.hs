@@ -24,12 +24,12 @@ import qualified Data.Vector as Vector
 import qualified Data.Vector.Unboxed as UVector
 import qualified Data.Sequence as Seq
 import Data.MonoTraversable
-import Data.Sequences (fromStrict)
+import Data.Sequences (fromStrict, IsSequence)
 import Control.Monad (liftM)
 import System.IO (Handle)
 import qualified System.IO
 
-class IOData a where
+class IsSequence a => IOData a where
     readFile :: MonadIO m => FilePath -> m a
     writeFile :: MonadIO m => FilePath -> a -> m ()
     getLine :: MonadIO m => m a
@@ -37,6 +37,7 @@ class IOData a where
     hGetLine :: MonadIO m => Handle -> m a
     hPut :: MonadIO m => Handle -> a -> m ()
     hPutStrLn :: MonadIO m => Handle -> a -> m ()
+    hGetChunk :: MonadIO m => Handle -> m a
 instance IOData ByteString where
     readFile = liftIO . ByteString.readFile . FilePath.encodeString
     writeFile fp = liftIO . ByteString.writeFile (FilePath.encodeString fp)
@@ -45,6 +46,7 @@ instance IOData ByteString where
     hGetLine = liftIO . ByteString.hGetLine
     hPut h = liftIO . ByteString.hPut h
     hPutStrLn h = liftIO . ByteString8.hPutStrLn h
+    hGetChunk = liftIO . flip ByteString.hGetSome 4096
 instance IOData LByteString where
     readFile = liftIO . LByteString.readFile . FilePath.encodeString
     writeFile fp = liftIO . LByteString.writeFile (FilePath.encodeString fp)
@@ -55,6 +57,7 @@ instance IOData LByteString where
     hPutStrLn h lbs = liftIO $ do
         LByteString.hPutStr h lbs
         ByteString8.hPutStrLn h ByteString.empty
+    hGetChunk = liftM fromStrict . hGetChunk
 instance IOData Text where
     readFile = liftIO . Text.readFile . FilePath.encodeString
     writeFile fp = liftIO . Text.writeFile (FilePath.encodeString fp)
@@ -63,6 +66,7 @@ instance IOData Text where
     hGetLine = liftIO . Text.hGetLine
     hPut h = liftIO . Text.hPutStr h
     hPutStrLn h = liftIO . Text.hPutStrLn h
+    hGetChunk = liftIO . Text.hGetChunk
 instance IOData LText where
     readFile = liftIO . LText.readFile . FilePath.encodeString
     writeFile fp = liftIO . LText.writeFile (FilePath.encodeString fp)
@@ -71,6 +75,7 @@ instance IOData LText where
     hGetLine = liftIO . LText.hGetLine
     hPut h = liftIO . LText.hPutStr h
     hPutStrLn h = liftIO . LText.hPutStrLn h
+    hGetChunk = liftM fromStrict . hGetChunk
 instance (Char ~ c) => IOData [c] where
     readFile = liftIO . Prelude.readFile . FilePath.encodeString
     writeFile fp = liftIO . Prelude.writeFile (FilePath.encodeString fp)
@@ -79,6 +84,7 @@ instance (Char ~ c) => IOData [c] where
     hGetLine = liftIO . System.IO.hGetLine
     hPut h = liftIO . System.IO.hPutStr h
     hPutStrLn h = liftIO . System.IO.hPutStrLn h
+    hGetChunk = liftM Text.unpack . hGetChunk
 
 class CanZip c1 c2 withRes t | c1 -> c2 withRes t , c2 -> c1 where
     zip :: c1 -> c2 -> t (Element c1, Element c2)

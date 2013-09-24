@@ -83,6 +83,7 @@ module ClassyPrelude
       -- ** IO
     , IOData (..)
     , print
+    , hClose
       -- ** FilePath
     , fpToString
     , fpFromString
@@ -136,7 +137,7 @@ import Data.Sequences
 import Data.MonoTraversable
 import Data.Containers
 import qualified Filesystem.Path.CurrentOS as F
-import System.IO (Handle, stdin, stdout, stderr)
+import System.IO (Handle, stdin, stdout, stderr, hClose)
 
 import Debug.Trace (trace, traceShow)
 import Data.Semigroup (Semigroup (..), WrappedMonoid (..))
