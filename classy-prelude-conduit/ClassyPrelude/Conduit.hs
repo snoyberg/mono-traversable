@@ -125,8 +125,11 @@ dropWhileC f =
       where
         y = dropWhile f c
 
-concatC :: (Monad m, c ~ Element cs, MonoFoldable cs) => Conduit cs m c
+concatC :: (Monad m, MonoFoldable c) => Conduit c m (Element c)
 concatC = awaitForever $ mapM_ yield
+
+unconcatC :: (Monad m, IsSequence c) => Conduit (Element c) m c
+unconcatC = awaitForever $ yield . singleton
 
 elemIndicesC :: (MonoFoldable c, Eq (Element c), Monad m) => Element c -> Conduit c m Int
 elemIndicesC x = findIndicesC (== x)
