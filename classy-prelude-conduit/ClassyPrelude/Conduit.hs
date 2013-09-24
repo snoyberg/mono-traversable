@@ -16,6 +16,7 @@ import Data.Conduit
 import Data.Conduit.List (consume, sinkNull)
 import qualified System.IO as SIO
 import qualified Data.Conduit.List as CL
+import qualified Filesystem as F
 
 stdinLnC :: (MonadIO m, IOData a) => Producer m a
 stdinLnC = fromHandleC stdin
@@ -254,3 +255,51 @@ sumC = foldC (+) 0
 
 productC :: (Monad m, MonoFoldable c, Num (Element c)) => Consumer c m (Element c)
 productC = foldC (*) 1
+
+sourceFile :: (MonadResource m, IOData a) => FilePath -> Producer m a
+sourceFile fp = sourceIOHandle (F.openFile fp SIO.ReadMode)
+
+sourceHandle :: (MonadIO m, IOData a) => Handle -> Producer m a
+sourceHandle h =
+    loop
+  where
+    loop = do
+        x <- liftIO (hGetChunk h)
+        if null x
+            then return ()
+            else yield x >> loop
+
+sourceIOHandle :: (MonadResource m, IOData a) => IO Handle -> Producer m a
+sourceIOHandle alloc = bracketP alloc hClose sourceHandle
+
+sinkHandle :: (MonadIO m, IOData a) => Handle -> Consumer a m ()
+sinkHandle = awaitForever . hPut
+
+sinkIOHandle :: (MonadResource m, IOData a) => IO Handle -> Consumer a m ()
+sinkIOHandle alloc = bracketP alloc hClose sinkHandle
+
+sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
+sinkFile fp = sinkIOHandle (F.openFile fp SIO.WriteMode)
+
+lazySource :: (Monad m, LazySequence lazy strict) => lazy -> Producer m strict
+lazySource = mapM_ yield . toChunks
+
+lazySink :: (Monad m, LazySequence lazy strict) => Consumer strict m lazy
+lazySink = fmap fromChunks CL.consume
+
+foldLines :: (Monad m, Element c ~ Char, IsSequence c)
+          => (a -> ConduitM c o m a)
+          -> a
+          -> ConduitM c o m a
+foldLines f =
+    start
+  where
+    start a = CL.peek >>= maybe (return a) (const $ loop $ f a)
+
+    loop consumer = do
+        a <- takeWhileC (/= '\n') =$= do
+            a <- filterC (/= '\r') =$= consumer
+            CL.sinkNull
+            return a
+        _ <- headC
+        start a

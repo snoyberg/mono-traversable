@@ -21,6 +21,7 @@ library
                      , resourcet
                      , void
                      , bytestring
+                     , system-fileio
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite spec
