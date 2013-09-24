@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -66,7 +67,12 @@ instance IOData Text where
     hGetLine = liftIO . Text.hGetLine
     hPut h = liftIO . Text.hPutStr h
     hPutStrLn h = liftIO . Text.hPutStrLn h
+#if MIN_VERSION_text(0, 11, 3)
     hGetChunk = liftIO . Text.hGetChunk
+#else
+    -- Dangerously inefficient!
+    hGetChunk = liftIO . liftM Text.singleton . System.IO.hGetChar
+#endif
 instance IOData LText where
     readFile = liftIO . LText.readFile . FilePath.encodeString
     writeFile fp = liftIO . LText.writeFile (FilePath.encodeString fp)
