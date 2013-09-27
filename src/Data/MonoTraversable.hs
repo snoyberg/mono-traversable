@@ -3,6 +3,23 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- | Type classes mirroring standard typeclasses, but working with monomorphic containers.
+--
+-- The motivation is that some commonly used data types (i.e., @ByteString@ and
+-- @Text@) do not allow for instances of typeclasses like @Functor@ and
+-- @Foldable@, since they are monomorphic structures. This module allows both
+-- monomorphic and polymorphic data types to be instances of the same
+-- typeclasses.
+--
+-- All of the laws for the polymorphic typeclasses apply to their monomorphic
+-- cousins. Thus, even though a @MonoFunctor@ instance for @Set@ could
+-- theoretically be defined, it is omitted since it could violate the functor
+-- law of @omap f . omap g = omap (f . g)@.
+--
+-- Note that all typeclasses have been prefixed with @Mono@, and functions have
+-- been prefixed with @o@. The mnemonic for @o@ is \"only one,\" or alternatively
+-- \"it's mono, but m is overused in Haskell, so we'll use the second letter
+-- instead.\" (Agreed, it's not a great mangling scheme, input is welcome!)
 module Data.MonoTraversable where
 
 import           Control.Applicative
