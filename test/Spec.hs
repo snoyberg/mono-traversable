@@ -7,7 +7,7 @@ import Data.MonoTraversable
 import Data.Text (Text)
 import qualified Data.ByteString.Lazy as L
 import Data.Sequences
-import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int)
+import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, show)
 
 main :: IO ()
 main = hspec $ do
@@ -39,3 +39,21 @@ main = hspec $ do
         it "Text" $ groupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
     describe "groupAllOn" $ do
         it "list" $ groupAllOn (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
+    describe "breakWord" $ do
+        let test x y z = it (show (x, y, z)) $ breakWord (x :: Text) `shouldBe` (y, z)
+        test "hello world" "hello" "world"
+        test "hello     world" "hello" "world"
+        test "hello\r\nworld" "hello" "world"
+        test "hello there  world" "hello" "there  world"
+        test "" "" ""
+        test "hello    \n\r\t" "hello" ""
+    describe "breakLine" $ do
+        let test x y z = it (show (x, y, z)) $ breakLine (x :: Text) `shouldBe` (y, z)
+        test "hello world" "hello world" ""
+        test "hello\r\n world" "hello" " world"
+        test "hello\n world" "hello" " world"
+        test "hello\r world" "hello\r world" ""
+        test "hello\r\nworld" "hello" "world"
+        test "hello\r\nthere\nworld" "hello" "there\nworld"
+        test "hello\n\r\nworld" "hello" "\r\nworld"
+        test "" "" ""
