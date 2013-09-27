@@ -14,7 +14,7 @@ import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
 import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral)
-import Data.Char (Char)
+import Data.Char (Char, isSpace)
 import Data.Word (Word8)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
@@ -34,6 +34,7 @@ import GHC.Exts (Constraint)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Hashable (Hashable)
+import Data.String (IsString)
 
 -- | Laws:
 --
@@ -102,6 +103,15 @@ class (Monoid seq, MonoTraversable seq, Integral (Index seq)) => IsSequence seq 
 
     uncons :: seq -> Maybe (Element seq, seq)
     uncons = fmap (second fromList) . uncons . otoList
+    
+    snoc :: seq -> Element seq -> seq
+    snoc seq e = fromList (otoList seq `mappend` [e])
+    
+    unsnoc :: seq -> Maybe (seq, Element seq)
+    unsnoc seq =
+        case reverse (otoList seq) of
+            [] -> Nothing
+            x:xs -> Just (fromList (reverse xs), x)
 
     groupBy :: (Element seq -> Element seq -> Bool) -> seq -> [seq]
     groupBy f = fmap fromList . List.groupBy f . otoList
@@ -167,6 +177,10 @@ instance IsSequence S.ByteString where
     partition = S.partition
     cons = S.cons
     uncons = S.uncons
+    snoc = S.snoc
+    unsnoc s
+        | S.null s = Nothing
+        | otherwise = Just (S.init s, S.last s)
     groupBy = S.groupBy
     -- sortBy
 
@@ -189,6 +203,10 @@ instance IsSequence T.Text where
     partition = T.partition
     cons = T.cons
     uncons = T.uncons
+    snoc = T.snoc
+    unsnoc t
+        | T.null t = Nothing
+        | otherwise = Just (T.init t, T.last t)
     groupBy = T.groupBy
     -- sortBy
 
@@ -211,6 +229,10 @@ instance IsSequence L.ByteString where
     partition = L.partition
     cons = L.cons
     uncons = L.uncons
+    snoc = L.snoc
+    unsnoc s
+        | L.null s = Nothing
+        | otherwise = Just (L.init s, L.last s)
     groupBy = L.groupBy
     -- sortBy
 
@@ -233,6 +255,10 @@ instance IsSequence TL.Text where
     partition = TL.partition
     cons = TL.cons
     uncons = TL.uncons
+    snoc = TL.snoc
+    unsnoc t
+        | TL.null t = Nothing
+        | otherwise = Just (TL.init t, TL.last t)
     groupBy = TL.groupBy
     -- sortBy
 
@@ -262,6 +288,11 @@ instance IsSequence (Seq.Seq a) where
         case Seq.viewl s of
             Seq.EmptyL -> Nothing
             x Seq.:< xs -> Just (x, xs)
+    snoc = (Seq.|>)
+    unsnoc s =
+        case Seq.viewr s of
+            Seq.EmptyR -> Nothing
+            xs Seq.:> x -> Just (xs, x)
     --groupBy = Seq.groupBy
 
 instance IsSequence (V.Vector a) where
@@ -288,6 +319,10 @@ instance IsSequence (V.Vector a) where
     uncons v
         | V.null v = Nothing
         | otherwise = Just (V.head v, V.tail v)
+    snoc = V.snoc
+    unsnoc v
+        | V.null v = Nothing
+        | otherwise = Just (V.init v, V.last v)
     --groupBy = V.groupBy
 
 instance U.Unbox a => IsSequence (U.Vector a) where
@@ -314,6 +349,10 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     uncons v
         | U.null v = Nothing
         | otherwise = Just (U.head v, U.tail v)
+    snoc = U.snoc
+    unsnoc v
+        | U.null v = Nothing
+        | otherwise = Just (U.init v, U.last v)
     --groupBy = U.groupBy
 
 instance VS.Storable a => IsSequence (VS.Vector a) where
@@ -340,6 +379,10 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     uncons v
         | VS.null v = Nothing
         | otherwise = Just (VS.head v, VS.tail v)
+    snoc = VS.snoc
+    unsnoc v
+        | VS.null v = Nothing
+        | otherwise = Just (VS.init v, VS.last v)
     --groupBy = U.groupBy
 
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
@@ -467,49 +510,67 @@ instance LazySequence TL.Text T.Text where
     toStrict = TL.toStrict
     fromStrict = TL.fromStrict
 
-class (IsSequence t, IsSequence b) => Textual t b | t -> b, b -> t where
+class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]
     unwords :: [t] -> t
     lines :: t -> [t]
     unlines :: [t] -> t
-    encodeUtf8 :: t -> b
-    decodeUtf8 :: b -> t
     toLower :: t -> t
     toUpper :: t -> t
     toCaseFold :: t -> t
 
-instance (c ~ Char, w ~ Word8) => Textual [c] [w] where
+    breakWord :: t -> (t, t)
+    breakWord = fmap (dropWhile isSpace) . break isSpace
+    
+    breakLine :: t -> (t, t)
+    breakLine =
+        (killCR *** drop 1) . break (== '\n')
+      where
+        killCR t =
+            case unsnoc t of
+                Just (t', '\r') -> t'
+                _ -> t
+
+instance (c ~ Char) => Textual [c] where
     words = List.words
     unwords = List.unwords
     lines = List.lines
     unlines = List.unlines
-    encodeUtf8 = L.unpack . TL.encodeUtf8 . TL.pack
-    decodeUtf8 = TL.unpack . TL.decodeUtf8With lenientDecode . L.pack
     toLower = TL.unpack . TL.toLower . TL.pack
     toUpper = TL.unpack . TL.toUpper . TL.pack
     toCaseFold = TL.unpack . TL.toCaseFold . TL.pack
 
-instance Textual T.Text S.ByteString where
+instance Textual T.Text where
     words = T.words
     unwords = T.unwords
     lines = T.lines
     unlines = T.unlines
-    encodeUtf8 = T.encodeUtf8
-    decodeUtf8 = T.decodeUtf8With lenientDecode
     toLower = T.toLower
     toUpper = T.toUpper
     toCaseFold = T.toCaseFold
 
-instance Textual TL.Text L.ByteString where
+instance Textual TL.Text where
     words = TL.words
     unwords = TL.unwords
     lines = TL.lines
     unlines = TL.unlines
-    encodeUtf8 = TL.encodeUtf8
-    decodeUtf8 = TL.decodeUtf8With lenientDecode
     toLower = TL.toLower
     toUpper = TL.toUpper
     toCaseFold = TL.toCaseFold
+
+class (Textual t, IsSequence b) => Utf8 t b | t -> b, b -> t where
+    encodeUtf8 :: t -> b
+    decodeUtf8 :: b -> t
+instance (c ~ Char, w ~ Word8) => Utf8 [c] [w] where
+    encodeUtf8 = L.unpack . TL.encodeUtf8 . TL.pack
+    decodeUtf8 = TL.unpack . TL.decodeUtf8With lenientDecode . L.pack
+instance Utf8 T.Text S.ByteString where
+    encodeUtf8 = T.encodeUtf8
+    decodeUtf8 = T.decodeUtf8With lenientDecode
+instance Utf8 TL.Text L.ByteString where
+    encodeUtf8 = TL.encodeUtf8
+    decodeUtf8 = TL.decodeUtf8With lenientDecode
+    
 
 -- | A @map@-like function which doesn't obey the @Functor@ laws,
 -- and/or requires extra constraints on the contained values.
