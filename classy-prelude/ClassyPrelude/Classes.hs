@@ -29,6 +29,7 @@ import Data.Sequences (fromStrict, IsSequence)
 import Control.Monad (liftM)
 import System.IO (Handle)
 import qualified System.IO
+import Data.ByteString.Lazy.Internal (defaultChunkSize)
 
 class IsSequence a => IOData a where
     readFile :: MonadIO m => FilePath -> m a
@@ -47,7 +48,7 @@ instance IOData ByteString where
     hGetLine = liftIO . ByteString.hGetLine
     hPut h = liftIO . ByteString.hPut h
     hPutStrLn h = liftIO . ByteString8.hPutStrLn h
-    hGetChunk = liftIO . flip ByteString.hGetSome 4096
+    hGetChunk = liftIO . flip ByteString.hGetSome defaultChunkSize
 instance IOData LByteString where
     readFile = liftIO . LByteString.readFile . FilePath.encodeString
     writeFile fp = liftIO . LByteString.writeFile (FilePath.encodeString fp)
