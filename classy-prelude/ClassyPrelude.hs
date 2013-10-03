@@ -80,6 +80,9 @@ module ClassyPrelude
     , Show (..)
     , tshow
     , tlshow
+      -- *** Case conversion
+    , charToLower
+    , charToUpper
       -- ** IO
     , IOData (..)
     , print
@@ -133,6 +136,7 @@ import Control.DeepSeq (NFData, ($!!))
 import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>))
 import ClassyPrelude.Classes
+import qualified Data.Char as Char
 import Data.Sequences
 import Data.MonoTraversable
 import Data.Containers
@@ -148,6 +152,20 @@ tshow = fromList . Prelude.show
 
 tlshow :: Show a => a -> LText
 tlshow = fromList . Prelude.show
+
+-- | Convert a character to lower case.
+--
+-- Character-based case conversion is lossy in comparison to string-based 'Data.MonoTraversable.toLower'.
+-- For instance, \'&#x130;\' will be converted to \'i\', instead of \"i&#x307;\".
+charToLower :: Char -> Char
+charToLower = Char.toLower
+
+-- | Convert a character to upper case.
+--
+-- Character-based case conversion is lossy in comparison to string-based 'Data.MonoTraversable.toUpper'.
+-- For instance, \'&#xdf;\' won't be converted to \"SS\".
+charToUpper :: Char -> Char
+charToUpper = Char.toUpper
 
 -- Renames from mono-traversable
 
