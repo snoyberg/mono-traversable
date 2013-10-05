@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
 -- | Warning: This module should be considered highly experimental.
 module Data.Containers where
 
@@ -10,11 +11,17 @@ import Data.Hashable (Hashable)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid)
-import Data.MonoTraversable (MonoFoldable, MonoTraversable, Element)
+import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element)
 import qualified Data.IntMap as IntMap
 import Data.Function (on)
 import qualified Data.List as List
 import qualified Data.IntSet as IntSet
+
+import qualified Data.Text.Lazy as LText
+import qualified Data.Text as Text
+import qualified Data.ByteString.Lazy as LByteString
+import qualified Data.ByteString as ByteString
+import Control.Arrow ((&&&), (***))
 
 class (Monoid set, MonoFoldable set) => SetContainer set where
     type ContainerKey set
@@ -152,3 +159,39 @@ instance IsSet IntSet.IntSet where
     singletonSet = IntSet.singleton
     setFromList = IntSet.fromList
     setToList = IntSet.toList
+
+
+
+class (MonoFunctor mfIn, MonoFunctor mfOut, Functor f)
+     => MonoZip mfIn mfOut f -- | mfIn -> f
+  where
+    ozipWith :: (Element mfIn -> Element mfIn -> Element mfOut) -> mfIn -> mfIn -> mfOut
+
+    ozip :: mfIn -> mfIn -> f (Element mfIn, Element mfIn)
+    -- ozip = ozipWith (,)
+
+    ounzip :: f (Element mfIn, Element mfIn) -> (mfIn, mfIn)
+    -- ounzip = omap fst &&& omap snd
+
+{-
+    ozap :: f (Element mfIn -> Element mfOut) -> mfIn -> mfOut
+    ozap = ozipWith id
+-}
+
+instance MonoZip ByteString.ByteString [a] [] where
+    ozip = ByteString.zip
+    ounzip = ByteString.unzip
+    ozipWith = ByteString.zipWith
+instance MonoZip LByteString.ByteString [a] [] where
+    ozip = LByteString.zip
+    ounzip = LByteString.unzip
+    ozipWith = LByteString.zipWith
+instance MonoZip Text.Text Text.Text [] where
+    ozip = Text.zip
+    ounzip = (Text.pack *** Text.pack) . List.unzip
+    ozipWith = Text.zipWith
+instance MonoZip LText.Text LText.Text [] where
+    ozip = LText.zip
+    ounzip = (LText.pack *** LText.pack) . List.unzip
+    ozipWith = LText.zipWith
+
