@@ -161,29 +161,26 @@ instance IsSet IntSet.IntSet where
     setToList = IntSet.toList
 
 
-
 -- | zip operations on MonoFunctors.
--- The types are fairly restrictive, just enough to unify Text & ByteString
--- This makes it difficult to implement default definitions of the methods
-class (MonoFunctor mono, MonoFunctor monoOut) => MonoZip mono monoOut where
-    ozipWith :: (Element mono -> Element mono -> Element monoOut) -> mono -> mono -> monoOut
+class MonoFunctor mono => MonoZip mono where
+    ozipWith :: (Element mono -> Element mono -> Element mono) -> mono -> mono -> mono
     ozip :: mono -> mono -> [(Element mono, Element mono)]
     ounzip :: [(Element mono, Element mono)] -> (mono, mono)
 
-instance MonoZip ByteString.ByteString [a] where
+
+instance MonoZip ByteString.ByteString where
     ozip     = ByteString.zip
     ounzip   = ByteString.unzip
-    ozipWith = ByteString.zipWith
-instance MonoZip LByteString.ByteString [a] where
+    ozipWith f xs = ByteString.pack . ByteString.zipWith f xs
+instance MonoZip LByteString.ByteString where
     ozip     = LByteString.zip
     ounzip   = LByteString.unzip
-    ozipWith = LByteString.zipWith
-instance MonoZip Text.Text Text.Text where
+    ozipWith f xs = LByteString.pack . LByteString.zipWith f xs
+instance MonoZip Text.Text where
     ozip     = Text.zip
     ounzip   = (Text.pack *** Text.pack) . List.unzip
     ozipWith = Text.zipWith
-instance MonoZip LText.Text LText.Text where
+instance MonoZip LText.Text where
     ozip     = LText.zip
     ounzip   = (LText.pack *** LText.pack) . List.unzip
     ozipWith = LText.zipWith
-
