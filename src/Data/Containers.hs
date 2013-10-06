@@ -162,36 +162,28 @@ instance IsSet IntSet.IntSet where
 
 
 
-class (MonoFunctor mfIn, MonoFunctor mfOut, Functor f)
-     => MonoZip mfIn mfOut f -- | mfIn -> f
-  where
-    ozipWith :: (Element mfIn -> Element mfIn -> Element mfOut) -> mfIn -> mfIn -> mfOut
+-- | zip operations on MonoFunctors.
+-- The types are fairly restrictive, just enough to unify Text & ByteString
+-- This makes it difficult to implement default definitions of the methods
+class (MonoFunctor mono, MonoFunctor monoOut) => MonoZip mono monoOut where
+    ozipWith :: (Element mono -> Element mono -> Element monoOut) -> mono -> mono -> monoOut
+    ozip :: mono -> mono -> [(Element mono, Element mono)]
+    ounzip :: [(Element mono, Element mono)] -> (mono, mono)
 
-    ozip :: mfIn -> mfIn -> f (Element mfIn, Element mfIn)
-    -- ozip = ozipWith (,)
-
-    ounzip :: f (Element mfIn, Element mfIn) -> (mfIn, mfIn)
-    -- ounzip = omap fst &&& omap snd
-
-{-
-    ozap :: f (Element mfIn -> Element mfOut) -> mfIn -> mfOut
-    ozap = ozipWith id
--}
-
-instance MonoZip ByteString.ByteString [a] [] where
-    ozip = ByteString.zip
-    ounzip = ByteString.unzip
+instance MonoZip ByteString.ByteString [a] where
+    ozip     = ByteString.zip
+    ounzip   = ByteString.unzip
     ozipWith = ByteString.zipWith
-instance MonoZip LByteString.ByteString [a] [] where
-    ozip = LByteString.zip
-    ounzip = LByteString.unzip
+instance MonoZip LByteString.ByteString [a] where
+    ozip     = LByteString.zip
+    ounzip   = LByteString.unzip
     ozipWith = LByteString.zipWith
-instance MonoZip Text.Text Text.Text [] where
-    ozip = Text.zip
-    ounzip = (Text.pack *** Text.pack) . List.unzip
+instance MonoZip Text.Text Text.Text where
+    ozip     = Text.zip
+    ounzip   = (Text.pack *** Text.pack) . List.unzip
     ozipWith = Text.zipWith
-instance MonoZip LText.Text LText.Text [] where
-    ozip = LText.zip
-    ounzip = (LText.pack *** LText.pack) . List.unzip
+instance MonoZip LText.Text LText.Text where
+    ozip     = LText.zip
+    ounzip   = (LText.pack *** LText.pack) . List.unzip
     ozipWith = LText.zipWith
 
