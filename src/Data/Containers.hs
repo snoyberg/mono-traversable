@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
 -- | Warning: This module should be considered highly experimental.
 module Data.Containers where
 
@@ -10,11 +11,17 @@ import Data.Hashable (Hashable)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid)
-import Data.MonoTraversable (MonoFoldable, MonoTraversable, Element)
+import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element)
 import qualified Data.IntMap as IntMap
 import Data.Function (on)
 import qualified Data.List as List
 import qualified Data.IntSet as IntSet
+
+import qualified Data.Text.Lazy as LText
+import qualified Data.Text as Text
+import qualified Data.ByteString.Lazy as LByteString
+import qualified Data.ByteString as ByteString
+import Control.Arrow ((&&&), (***))
 
 class (Monoid set, MonoFoldable set) => SetContainer set where
     type ContainerKey set
@@ -152,3 +159,28 @@ instance IsSet IntSet.IntSet where
     singletonSet = IntSet.singleton
     setFromList = IntSet.fromList
     setToList = IntSet.toList
+
+
+-- | zip operations on MonoFunctors.
+class MonoFunctor mono => MonoZip mono where
+    ozipWith :: (Element mono -> Element mono -> Element mono) -> mono -> mono -> mono
+    ozip :: mono -> mono -> [(Element mono, Element mono)]
+    ounzip :: [(Element mono, Element mono)] -> (mono, mono)
+
+
+instance MonoZip ByteString.ByteString where
+    ozip     = ByteString.zip
+    ounzip   = ByteString.unzip
+    ozipWith f xs = ByteString.pack . ByteString.zipWith f xs
+instance MonoZip LByteString.ByteString where
+    ozip     = LByteString.zip
+    ounzip   = LByteString.unzip
+    ozipWith f xs = LByteString.pack . LByteString.zipWith f xs
+instance MonoZip Text.Text where
+    ozip     = Text.zip
+    ounzip   = (Text.pack *** Text.pack) . List.unzip
+    ozipWith = Text.zipWith
+instance MonoZip LText.Text where
+    ozip     = LText.zip
+    ounzip   = (LText.pack *** LText.pack) . List.unzip
+    ozipWith = LText.zipWith
