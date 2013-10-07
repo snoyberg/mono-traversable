@@ -18,18 +18,22 @@ import qualified Data.ByteString.Char8 as ByteString8
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
-import qualified Data.Text.Lazy as LText
 import qualified Data.Text.Lazy.IO as LText
 import qualified Filesystem.Path.CurrentOS as FilePath
 import qualified Data.Vector as Vector
-import qualified Data.Vector.Unboxed as UVector
+-- import qualified Data.Vector.Unboxed as UVector
 import qualified Data.Sequence as Seq
-import Data.MonoTraversable
 import Data.Sequences (fromStrict, IsSequence)
 import Control.Monad (liftM)
 import System.IO (Handle)
 import qualified System.IO
 import Data.ByteString.Lazy.Internal (defaultChunkSize)
+import Control.Monad.Trans.Identity
+import Control.Monad.Trans.Reader
+import qualified Data.IntMap as IntMap
+import Data.Tree
+import Data.Functor.Compose
+import Data.Foldable (toList)
 
 class IsSequence a => IOData a where
     readFile :: MonadIO m => FilePath -> m a
@@ -93,128 +97,158 @@ instance (Char ~ c) => IOData [c] where
     hPutStrLn h = liftIO . System.IO.hPutStrLn h
     hGetChunk = liftM Text.unpack . hGetChunk
 
-class CanZip c1 c2 withRes t | c1 -> c2 withRes t , c2 -> c1 where
-    zip :: c1 -> c2 -> t (Element c1, Element c2)
-    unzip :: t (Element c1, Element c2) -> (c1, c2)
-    zipWith :: (Element c1 -> Element c2 -> Element withRes) -> c1 -> c2 -> withRes
-instance CanZip [a] [b] [c] [] where
+
+class Functor f => Zip f where
+    zipWith :: (a -> b -> c) -> f a -> f b -> f c
+
+    zip :: f a -> f b -> f (a, b)
+    zip = zipWith (,)
+
+    zap :: f (a -> b) -> f a -> f b
+    zap = zipWith id
+
+    unzip :: f (a, b) -> (f a, f b)
+    unzip = fmap fst &&& fmap snd
+
+instance Zip [] where
     zip = List.zip
-    unzip = List.unzip
     zipWith = List.zipWith
-instance CanZip (NonEmpty a) (NonEmpty b) (NonEmpty c) NonEmpty where
+    unzip = List.unzip
+instance Zip NonEmpty where
+    zipWith = NonEmpty.zipWith
     zip = NonEmpty.zip
     unzip = NonEmpty.unzip
-    zipWith = NonEmpty.zipWith
-instance CanZip (Vector a) (Vector b) (Vector c) Vector where
+instance Zip Seq where
+    zip = Seq.zip
+    zipWith = Seq.zipWith
+    unzip = (Seq.fromList *** Seq.fromList) . List.unzip . toList
+instance Zip Tree where
+    zipWith f (Node a as) (Node b bs) = Node (f a b) (zipWith (zipWith f) as bs)
+instance Zip Vector where
     zip = Vector.zip
     unzip = Vector.unzip
     zipWith = Vector.zipWith
-instance (Unbox a, Unbox b, Unbox c) => CanZip (UVector a) (UVector b) (UVector c) UVector where
+  {-
+instance Zip UVector where
     zip = UVector.zip
     unzip = UVector.unzip
     zipWith = UVector.zipWith
-instance CanZip (Seq a) (Seq b) (Seq c) Seq where
-    zip = Seq.zip
-    unzip = (\(a, b) -> (Seq.fromList a, Seq.fromList b)) . List.unzip . otoList
-    zipWith = Seq.zipWith
-instance CanZip ByteString ByteString [a] [] where
-    zip = ByteString.zip
-    unzip = ByteString.unzip
-    zipWith = ByteString.zipWith
-instance CanZip LByteString LByteString [a] [] where
-    zip = LByteString.zip
-    unzip = LByteString.unzip
-    zipWith = LByteString.zipWith
-instance CanZip Text Text Text [] where
-    zip = Text.zip
-    unzip = (Text.pack *** Text.pack) . List.unzip
-    zipWith = Text.zipWith
-instance CanZip LText LText LText [] where
-    zip = LText.zip
-    unzip = (LText.pack *** LText.pack) . List.unzip
-    zipWith = LText.zipWith
+    -}
 
-class CanZip3 t a b c d | t -> a b c d where
-    zip3 :: t a -> t b -> t c -> t (a, b, c)
-    unzip3 :: t (a, b, c) -> (t a, t b, t c)
-    zipWith3 :: (a -> b -> c -> d) -> t a -> t b -> t c -> t d
-instance CanZip3 [] a b c d where
+instance Zip m => Zip (IdentityT m) where
+    zipWith f (IdentityT m) (IdentityT n) = IdentityT (zipWith f m n)
+instance Zip ((->)a) where
+    zipWith f g h a = f (g a) (h a)
+instance Zip m => Zip (ReaderT e m) where
+    zipWith f (ReaderT m) (ReaderT n) = ReaderT $ \a ->
+      zipWith f (m a) (n a)
+instance Zip IntMap.IntMap where
+    zipWith = IntMap.intersectionWith
+instance (Zip f, Zip g) => Zip (Compose f g) where
+    zipWith f (Compose a) (Compose b) = Compose $ zipWith (zipWith f) a b
+
+class Functor f => Zip3 f where
+    zipWith3 :: (a -> b -> c -> d) -> f a -> f b -> f c -> f d
+
+    zip3 :: f a -> f b -> f c -> f (a, b, c)
+    zip3 = zipWith3 (\x y z -> (x,y,z))
+
+    zap3 :: f (a -> b -> c) -> f a -> f b -> f c
+    zap3 = zipWith3 id
+
+    unzip3 :: f (a, b, c) -> (f a, f b, f c)
+    -- unzip3 = fmap (\(x,_,_)->x) &&& fmap (\(_,x,_)->x) &&& fmap (\(_,_,x)->x)
+
+instance Zip3 [] where
     zip3 = List.zip3
     unzip3 = List.unzip3
     zipWith3 = List.zipWith3
-instance CanZip3 Vector a b c d where
+instance Zip3 Vector where
     zip3 = Vector.zip3
     unzip3 = Vector.unzip3
     zipWith3 = Vector.zipWith3
-instance (Unbox a, Unbox b, Unbox c, Unbox d) => CanZip3 UVector a b c d where
-    zip3 = UVector.zip3
-    unzip3 = UVector.unzip3
-    zipWith3 = UVector.zipWith3
-instance CanZip3 Seq a b c d where
+instance Zip3 Seq where
     zip3 = Seq.zip3
-    unzip3 = (\(a, b, c) -> (Seq.fromList a, Seq.fromList b, Seq.fromList c)) . List.unzip3 . otoList
+    unzip3 = (\(a, b, c) -> (Seq.fromList a, Seq.fromList b, Seq.fromList c)) . List.unzip3 . toList
     zipWith3 = Seq.zipWith3
 
-class CanZip4 t a b c d e | t -> a b c d e where
-    zip4 :: t a -> t b -> t c -> t d -> t (a, b, c, d)
-    unzip4 :: t (a, b, c, d) -> (t a, t b, t c, t d)
-    zipWith4 :: (a -> b -> c -> d -> e) -> t a -> t b -> t c -> t d -> t e
-instance CanZip4 [] a b c d e where
+class Functor f => Zip4 f where
+    zipWith4 :: (a -> b -> c -> d -> e) -> f a -> f b -> f c -> f d -> f e
+
+    zip4 :: f a -> f b -> f c -> f d ->  f (a, b, c, d)
+    zip4 = zipWith4 (\w x y z -> (w, x,y,z))
+
+    zap4 :: f (a -> b -> c -> d) -> f a -> f b -> f c -> f d
+    zap4 = zipWith4 id
+
+    unzip4 :: f (a, b, c, d) -> (f a, f b, f c, f d)
+
+instance Zip4 [] where
     zip4 = List.zip4
     unzip4 = List.unzip4
     zipWith4 = List.zipWith4
-instance CanZip4 Vector a b c d e where
+instance Zip4 Vector where
     zip4 = Vector.zip4
     unzip4 = Vector.unzip4
     zipWith4 = Vector.zipWith4
-instance (Unbox a, Unbox b, Unbox c, Unbox d, Unbox e) => CanZip4 UVector a b c d e where
-    zip4 = UVector.zip4
-    unzip4 = UVector.unzip4
-    zipWith4 = UVector.zipWith4
-instance CanZip4 Seq a b c d e where
+instance Zip4 Seq where
     zip4 = Seq.zip4
-    unzip4 = (\(a, b, c, d) -> (Seq.fromList a, Seq.fromList b, Seq.fromList c, Seq.fromList d)) . List.unzip4 . otoList
+    unzip4 = (\(a, b, c, d) -> (Seq.fromList a, Seq.fromList b, Seq.fromList c, Seq.fromList d)) . List.unzip4 . toList
     zipWith4 = Seq.zipWith4
 
-class CanZip5 t a b c d e f | t -> a b c d e f where
-    zip5 :: t a -> t b -> t c -> t d -> t e -> t (a, b, c, d, e)
-    unzip5 :: t (a, b, c, d, e) -> (t a, t b, t c, t d, t e)
-    zipWith5 :: (a -> b -> c -> d -> e -> f) -> t a -> t b -> t c -> t d -> t e -> t f
-instance CanZip5 [] a b c d e f where
+class Functor f => Zip5 f where
+    zipWith5 :: (a -> b -> c -> d -> e -> g) -> f a -> f b -> f c -> f d -> f e -> f g
+
+    zip5 :: f a -> f b -> f c -> f d -> f e -> f (a, b, c, d, e)
+    zip5 = zipWith5 (\v w x y z -> (v,w,x,y,z))
+
+    zap5 :: f (a -> b -> c -> d -> e) -> f a -> f b -> f c -> f d -> f e
+    zap5 = zipWith5 id
+
+    unzip5 :: f (a, b, c, d, e) -> (f a, f b, f c, f d, f e)
+
+instance Zip5 [] where
     zip5 = List.zip5
     unzip5 = List.unzip5
     zipWith5 = List.zipWith5
-instance CanZip5 Vector a b c d e f where
+instance Zip5 Vector where
     zip5 = Vector.zip5
     unzip5 = Vector.unzip5
     zipWith5 = Vector.zipWith5
-instance (Unbox a, Unbox b, Unbox c, Unbox d, Unbox e, Unbox f) => CanZip5 UVector a b c d e f where
-    zip5 = UVector.zip5
-    unzip5 = UVector.unzip5
-    zipWith5 = UVector.zipWith5
 
-class CanZip6 t a b c d e f g | t -> a b c d e f g where
-    zip6 :: t a -> t b -> t c -> t d -> t e -> t f -> t (a, b, c, d, e, f)
-    unzip6 :: t (a, b, c, d, e, f) -> (t a, t b, t c, t d, t e, t f)
-    zipWith6 :: (a -> b -> c -> d -> e -> f -> g) -> t a -> t b -> t c -> t d -> t e -> t f -> t g
-instance CanZip6 [] a b c d e f g where
+class Functor f => Zip6 f where
+    zipWith6 :: (a -> b -> c -> d -> e -> g -> h) -> f a -> f b -> f c -> f d -> f e -> f g -> f h
+
+    zip6 :: f a -> f b -> f c -> f d -> f e -> f g -> f (a, b, c, d, e, g)
+    zip6 = zipWith6 (\u v w x y z -> (u, v,w,x,y,z))
+
+    zap6 :: f (a -> b -> c -> d -> e -> g) -> f a -> f b -> f c -> f d -> f e -> f g
+    zap6 = zipWith6 id
+
+    unzip6 :: f (a, b, c, d, e, g) -> (f a, f b, f c, f d, f e, f g)
+
+instance Zip6 [] where
     zip6 = List.zip6
     unzip6 = List.unzip6
     zipWith6 = List.zipWith6
-instance CanZip6 Vector a b c d e f g where
+instance Zip6 Vector where
     zip6 = Vector.zip6
     unzip6 = Vector.unzip6
     zipWith6 = Vector.zipWith6
-instance (Unbox a, Unbox b, Unbox c, Unbox d, Unbox e, Unbox f, Unbox g) => CanZip6 UVector a b c d e f g where
-    zip6 = UVector.zip6
-    unzip6 = UVector.unzip6
-    zipWith6 = UVector.zipWith6
 
-class CanZip7 t a b c d e f g h | t -> a b c d e f g h where
-    zip7 :: t a -> t b -> t c -> t d -> t e -> t f -> t g -> t (a, b, c, d, e, f, g)
-    unzip7 :: t (a, b, c, d, e, f, g) -> (t a, t b, t c, t d, t e, t f, t g)
-    zipWith7 :: (a -> b -> c -> d -> e -> f -> g -> h) -> t a -> t b -> t c -> t d -> t e -> t f -> t g -> t h
-instance CanZip7 [] a b c d e f g h where
+class Functor f => Zip7 f where
+    zipWith7 :: (a -> b -> c -> d -> e -> g -> h -> i) -> f a -> f b -> f c -> f d -> f e -> f g -> f h -> f i
+
+    zip7 :: f a -> f b -> f c -> f d -> f e -> f g -> f h -> f (a, b, c, d, e, g, h)
+    zip7 = zipWith7 (\t u v w x y z -> (t,u,v,w,x,y,z))
+
+    zap7 :: f (a -> b -> c -> d -> e -> g -> h) -> f a -> f b -> f c -> f d -> f e -> f g -> f h
+    zap7 = zipWith7 id
+
+    unzip7 :: f (a, b, c, d, e, g, h) -> (f a, f b, f c, f d, f e, f g, f h)
+    -- unzip3 = fmap (\(x,_,_)->x) &&& fmap (\(_,x,_)->x) &&& fmap (\(_,_,x)->x)
+
+instance Zip7 [] where
     zip7 = List.zip7
     unzip7 = List.unzip7
     zipWith7 = List.zipWith7
