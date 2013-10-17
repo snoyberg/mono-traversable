@@ -62,10 +62,11 @@ module ClassyPrelude
     , zip, zip3, zip4, zip5, zip6, zip7
     , unzip, unzip3, unzip4, unzip5, unzip6, unzip7
     , zipWith, zipWith3, zipWith4, zipWith5, zipWith6, zipWith7
-    {-
-    , nub
-    , nubBy
-    -}
+
+    , hashNub
+    , ordNub
+    , ordNubBy
+
     , sortWith
     , compareLength
     , sum
@@ -146,6 +147,10 @@ import System.IO (Handle, stdin, stdout, stderr, hClose)
 import Debug.Trace (trace, traceShow)
 import Data.Semigroup (Semigroup (..), WrappedMonoid (..))
 import Prelude (Show (..))
+
+import qualified Data.Set as Set
+import qualified Data.Map as Map
+import qualified Data.HashSet as HashSet
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
@@ -442,3 +447,45 @@ fpToText = either id id . F.toText
 
 fpFromText :: Text -> FilePath
 fpFromText = F.fromText
+
+-- Below is a lot of coding for classy-prelude!
+-- These functions are restricted to lists right now.
+-- Should eventually exist in mono-foldable and be extended to MonoFoldable
+-- when doing that should re-run the haskell-ordnub benchmarks
+
+-- | same behavior as nub, but requires Hashable & Eq and is O(n log n)
+-- https://github.com/nh2/haskell-ordnub
+hashNub :: (Hashable a, Eq a) => [a] -> [a]
+hashNub = go HashSet.empty
+  where
+    go _ []     = []
+    go s (x:xs) | x `HashSet.member` s = go s xs
+                | otherwise            = x : go (HashSet.insert x s) xs
+
+-- | same behavior as nub, but requires Ord and is O(n log n)
+-- https://github.com/nh2/haskell-ordnub
+ordNub :: (Ord a) => [a] -> [a]
+ordNub = go Set.empty
+  where
+    go _ [] = []
+    go s (x:xs) | x `Set.member` s = go s xs
+                | otherwise        = x : go (Set.insert x s) xs
+
+-- | same behavior as nubBy, but requires Ord and is O(n log n)
+-- https://github.com/nh2/haskell-ordnub
+ordNubBy :: (Ord b) => (a -> b) -> (a -> a -> Bool) -> [a] -> [a]
+ordNubBy p f = go Map.empty
+  -- When removing duplicates, the first function assigns the input to a bucket,
+  -- the second function checks whether it is already in the bucket (linear search).
+  where
+    go _ []     = []
+    go m (x:xs) = let b = p x in case b `Map.lookup` m of
+                    Nothing     -> x : go (Map.insert b [x] m) xs
+                    Just bucket
+                      | elem_by f x bucket -> go m xs
+                      | otherwise          -> x : go (Map.insert b (x:bucket) m) xs
+
+    -- From the Data.List source code.
+    elem_by :: (a -> a -> Bool) -> a -> [a] -> Bool
+    elem_by _  _ []     = False
+    elem_by eq y (x:xs) = y `eq` x || elem_by eq y xs
