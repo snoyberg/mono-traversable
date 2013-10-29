@@ -123,10 +123,12 @@ type instance Element (Static f a b) = b
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
 
+
 class MonoFunctor mono where
     omap :: (Element mono -> Element mono) -> mono -> mono
     default omap :: (Functor f, Element (f a) ~ a, f a ~ mono) => (a -> a) -> f a -> f a
     omap = fmap
+
 instance MonoFunctor S.ByteString where
     omap = S.map
 instance MonoFunctor L.ByteString where
