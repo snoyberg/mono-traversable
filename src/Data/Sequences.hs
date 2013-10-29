@@ -13,7 +13,7 @@ import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral, ($), flip)
 import Data.Char (Char, isSpace)
 import Data.Word (Word8)
 import qualified Data.ByteString as S
@@ -35,6 +35,7 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Hashable (Hashable)
 import Data.String (IsString)
+import qualified Data.List.NonEmpty as NE
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 -- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
@@ -196,6 +197,17 @@ instance IsSequence [a] where
       where
         (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllOn _ [] = []
+
+instance SemiSequence (NE.NonEmpty a) where
+    type Index (NE.NonEmpty a) = Int
+
+    singleton    = (NE.:| [])
+    intersperse  = NE.intersperse
+    reverse      = NE.reverse
+    find         = find
+    cons         = NE.cons
+    snoc xs x    = NE.fromList $ flip snoc x $ NE.toList xs
+    sortBy f     = NE.fromList . List.sortBy f . NE.toList
 
 instance SemiSequence S.ByteString where
     type Index S.ByteString = Int

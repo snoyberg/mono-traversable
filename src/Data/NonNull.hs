@@ -15,12 +15,10 @@
 -- Please send your feedback.
 module Data.NonNull where
 
-import Prelude hiding (head, tail, init, last, reverse, find)
+import Prelude hiding (head, tail, init, last, reverse)
 import Data.MonoTraversable
 import Data.Sequences
 import qualified Data.List.NonEmpty as NE
-import Data.Semigroup
-import qualified Data.List as List
 import qualified Data.Foldable as Foldable
 
 import qualified Data.Vector as V
@@ -67,17 +65,6 @@ class SemiSequence seq => NonNull seq where
     (.:) :: Element seq -> Nullable seq -> seq
 
 
-instance SemiSequence (NE.NonEmpty a) where
-    type Index (NE.NonEmpty a) = Int
-
-    singleton    = (NE.:| [])
-    intersperse  = NE.intersperse
-    reverse      = NE.reverse
-    find         = find
-    cons         = NE.cons
-    snoc xs x    = NE.fromList $ flip snoc x $ NE.toList xs
-    sortBy f     = NE.fromList . List.sortBy f . NE.toList
-
 
 
 -- | NonNull list reuses 'Data.List.NonEmpty'
@@ -121,9 +108,9 @@ instance NonNull (NotEmpty (Seq.Seq a)) where
     fromNonEmpty = NotEmpty . Seq.fromList . NE.toList
     nfilter f = Seq.filter f . toNullable
     head = flip Seq.index 1 . toNullable
-    last (NotEmpty seq) = Seq.index   seq (Seq.length seq - 1)
+    last (NotEmpty xs) = Seq.index xs (Seq.length xs - 1)
     tail = Seq.drop 1 . toNullable
-    init (NotEmpty seq) = Seq.take (Seq.length seq - 1) seq
+    init (NotEmpty xs) = Seq.take (Seq.length xs - 1) xs
     (.:) x = NotEmpty . cons x
 
 instance NonNull (NotEmpty (V.Vector a)) where

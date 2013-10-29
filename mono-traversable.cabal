@@ -13,6 +13,7 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
+  ghc-options: -Wall
   exposed-modules:     Data.Containers
                        Data.MonoTraversable
                        Data.Sequences
