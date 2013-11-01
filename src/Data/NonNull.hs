@@ -13,9 +13,15 @@
 --
 -- This code is experimental and likely to change dramatically and future versions.
 -- Please send your feedback.
-module Data.NonNull where
+module Data.NonNull (
+    NonNull(..)
+  , NotEmpty
+  , toNullable
+  , fromNullable
+  , (<|)
+) where
 
-import Prelude hiding (head, tail, init, last, reverse)
+import Prelude hiding (head, tail, init, last, reverse, seq)
 import Data.MonoTraversable
 import Data.Sequences
 import qualified Data.List.NonEmpty as NE
@@ -59,10 +65,18 @@ class SemiSequence seq => NonNull seq where
     -- | like 'Sequence.filter', but starts with a NonNull
     nfilter :: (Element seq -> Bool) -> seq -> Nullable seq
 
-    -- | Prepend an element, creating a NonNull
+    -- | Like cons, but creates a NonNull
+    --
+    -- Prepend an element, creating a NonNull
     -- Data.List.NonEmpty gets to use the (:|) operator,
     -- but this can't because it is not a data constructor
-    (.:) :: Element seq -> Nullable seq -> seq
+    --
+    -- Generally this uses cons underneath.
+    -- cons is not efficient for many data structures.
+    -- An alternative could be to construct a 'NonEmpty'
+    -- and build your data structure with 'fromNonEmpty'.
+    -- 'fronNonEmpty' will use the data structure's fromList function.
+    nonNull :: Element seq -> Nullable seq -> seq
 
 
 
@@ -72,18 +86,27 @@ instance NonNull (NE.NonEmpty a) where
     type Nullable (NE.NonEmpty a) = [a]
 
     fromNonEmpty = id
+    {-# INLINE fromNonEmpty #-}
+
     head = NE.head
     tail = NE.tail
     last = NE.last
     init = NE.init
     nfilter = NE.filter
-    (.:) = (NE.:|)
+    nonNull = (NE.:|)
 
 
 -- | a newtype wrapper indicating there are 1 or more elements
 -- unwrap with 'toNullable'
 newtype NotEmpty seq = NotEmpty { toNullable :: seq }
-                      deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
+                       deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
+
+-- | A partial function: it throws an exception if the sequence is null
+fromNullable :: (MonoFoldable seq, SemiSequence seq) => seq -> NotEmpty seq
+fromNullable seq | onull seq = error msg
+                 | otherwise = NotEmpty seq
+  where
+    msg = "fromMono: expected seqeuence to not be null."
 
 type instance Element (NotEmpty seq) = Element seq
 instance MonoFunctor seq => MonoFunctor (NotEmpty seq) where
@@ -111,7 +134,7 @@ instance NonNull (NotEmpty (Seq.Seq a)) where
     last (NotEmpty xs) = Seq.index xs (Seq.length xs - 1)
     tail = Seq.drop 1 . toNullable
     init (NotEmpty xs) = Seq.take (Seq.length xs - 1) xs
-    (.:) x = NotEmpty . cons x
+    nonNull x = NotEmpty . cons x
 
 instance NonNull (NotEmpty (V.Vector a)) where
     type Nullable (NotEmpty (V.Vector a)) = V.Vector a
@@ -121,9 +144,9 @@ instance NonNull (NotEmpty (V.Vector a)) where
     tail = V.tail . toNullable
     last = V.last . toNullable
     init = V.init . toNullable
-    (.:) x = NotEmpty . cons x
+    nonNull x = NotEmpty . cons x
 
-infixr 5 .:, <|
+infixr 5 <|
 
 -- | Prepend an element to a NonNull
 (<|) :: NonNull seq => Element seq -> seq -> seq
