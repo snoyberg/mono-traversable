@@ -24,6 +24,9 @@ module ClassyPrelude
     , traceShowId
     , traceShowM
     , assert
+      -- ** Time (since 0.6.1)
+    , module Data.Time
+    , defaultTimeLocale
       -- * Poly hierarchy
     , module Data.Foldable
     , module Data.Traversable
@@ -147,6 +150,15 @@ import System.IO (Handle, stdin, stdout, stderr, hClose)
 import Debug.Trace (trace, traceShow)
 import Data.Semigroup (Semigroup (..), WrappedMonoid (..))
 import Prelude (Show (..))
+import Data.Time
+    ( UTCTime (..)
+    , Day (..)
+    , toGregorian
+    , fromGregorian
+    , formatTime
+    , parseTime
+    )
+import System.Locale (defaultTimeLocale)
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map
