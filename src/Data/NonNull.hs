@@ -18,6 +18,7 @@ module Data.NonNull (
     NonNull(..)
   , SafeSequence(..)
   , NotEmpty
+  , OrdNonNull(..)
   , (<|)
 ) where
 
