@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 -- | Warning, this is Experimental!
@@ -15,44 +16,96 @@
 -- Please send your feedback.
 module Data.NonNull (
     NonNull(..)
+  , SafeSequence(..)
   , NotEmpty
-  , toNullable
-  , fromNullable
   , (<|)
 ) where
 
-import Prelude hiding (head, tail, init, last, reverse, seq)
+import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate)
 import Data.MonoTraversable
 import Data.Sequences
+import Control.Exception.Base (Exception, throw)
+import Data.Monoid (mempty)
 import qualified Data.List.NonEmpty as NE
-import qualified Data.Foldable as Foldable
+import qualified Data.Foldable as F
 
+import qualified Data.ByteString as S
+import qualified Data.ByteString.Lazy as L
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Storable as VS
 import qualified Data.Sequence as Seq
-import Data.Sequence (Seq)
 import Data.Data
 
+data NullError = NullError String deriving (Show, Typeable)
+instance Exception NullError
 
 -- | a 'NonNull' sequence has 1 or more items
--- Whereas 'IsSequence' is allowed to have zero items.
+-- In contrast, 'IsSequence' is allowed to have zero items.
 --
--- Unlike 'IsSequence', any functions that
--- return an empty sequence or decreases the number of elements
--- use a different 'Nullable' type.
+-- Any NonNull functions that
+-- decreases the number of elements in the sequences
+-- will return a different 'Nullable' type.
 --
 -- The Nullable type for a 'NonEmpty' List is the normal List '[]'
 --
--- NonNull allows us to safely perform what would otherwise be partial functions.
--- Hopefully you have abandoned partial functions and are using the safe package.
--- However, safe essentially provides convenience functions for null checking and one can still ends up using error (but with more unique messages).
---
--- With NonNull rather than always reacting with null checks we can proactively encode in our program that a type is NonNull.
--- It is easier to understand what is happening in our programs based on our type signatures since we have encoded more information in them.
+-- NonNull allows one to safely perform what would otherwise be partial functions.
+-- Hopefully you have abandoned partial functions, perhaps you are using the safe package.
+-- However, safe essentially provides convenience functions for null checking.
+-- With NonNull rather than always reacting with null checks we can proactively encode in our program when we know that a type is NonNull.
+-- Now we have an invariant encoded in our types, making our program easier to understand.
+-- This information is leveraged to avoid awkward null checking later on.
 class SemiSequence seq => NonNull seq where
     type Nullable seq
 
+    -- | safely construct a 'NonNull' sequence from a 'NonEmpty' list
     fromNonEmpty :: NE.NonEmpty (Element seq) -> seq
 
+    -- | safely convert a 'Nullable' to a 'NonNull'
+    fromNullable :: Nullable seq -> Maybe seq
+
+    -- | convert a 'Nullable' with elements to a 'NonNull'
+    -- throw an exception if the 'Nullable' is empty.
+    -- do not use this unless you have proved your structure is non-null
+    nonNull :: Nullable seq -> seq
+    nonNull nullable = case fromNullable nullable of
+                         Nothing -> throw $ NullError "Data.NonNull.nonNull (NonNull default): expected non-null"
+                         Just xs -> xs
+
+    -- | used internally to construct a 'NonNull'.
+    -- does not check whether the 'Nullable' is empty
+    -- do not use this unless you have proved your structure is nonNull
+    -- nonNullUnsafe :: Nullable seq -> seq
+
+    -- | convert a 'NonNull' to a 'Nullable'
+    toNullable :: seq -> Nullable seq
+
+    -- | Like cons, prepends an element.
+    -- However, the prepend is to a Nullable, creating a 'NonNull'
+    --
+    -- Generally this uses cons underneath.
+    -- cons is not efficient for most data structures.
+    --
+    -- Alternatives:
+    --   * if you don't need to cons, use 'fromNullable' or 'nonNull' if you can create your structure in one go.
+    --   * if you need to cons, you might be able to start off with an efficient data structure such as a 'NonEmpty' List.
+    --     'fronNonEmpty' will convert that to your data structure using the structure's fromList function.
+    ncons :: Element seq -> Nullable seq -> seq
+
+    -- | like 'Sequence.filter', but starts with a NonNull
+    nfilter :: (Element seq -> Bool) -> seq -> Nullable seq
+
+    -- | like 'Sequence.filterM', but starts with a NonNull
+    nfilterM :: Monad m => (Element seq -> m Bool) -> seq -> m (Nullable seq)
+
+    -- | i must be > 0. like 'Sequence.replicate'
+    nReplicate :: Index seq -> Element seq -> seq
+
+
+-- | SafeSequence contains functions that would be partial on a 'Nullable'
+class SafeSequence seq where
     -- | like Data.List, but not partial on a NonEmpty
     head :: seq -> Element seq
     -- | like Data.List, but not partial on a NonEmpty
@@ -61,22 +114,6 @@ class SemiSequence seq => NonNull seq where
     last :: seq -> Element seq
     -- | like Data.List, but not partial on a NonEmpty
     init :: seq -> Nullable seq
-
-    -- | like 'Sequence.filter', but starts with a NonNull
-    nfilter :: (Element seq -> Bool) -> seq -> Nullable seq
-
-    -- | Like cons, but creates a NonNull
-    --
-    -- Prepend an element, creating a NonNull
-    -- Data.List.NonEmpty gets to use the (:|) operator,
-    -- but this can't because it is not a data constructor
-    --
-    -- Generally this uses cons underneath.
-    -- cons is not efficient for many data structures.
-    -- An alternative could be to construct a 'NonEmpty'
-    -- and build your data structure with 'fromNonEmpty'.
-    -- 'fronNonEmpty' will use the data structure's fromList function.
-    nonNull :: Element seq -> Nullable seq -> seq
 
 
 
@@ -87,31 +124,38 @@ instance NonNull (NE.NonEmpty a) where
 
     fromNonEmpty = id
     {-# INLINE fromNonEmpty #-}
+    fromNullable = NE.nonEmpty
 
+    nonNull = NE.fromList
+    -- nonNullUnsafe = nonNull
+
+    toNullable = NE.toList
+
+    ncons = (NE.:|)
+
+    nfilter = NE.filter
+    nfilterM f = filterM f . toNullable
+
+    nReplicate i x = NE.unfold unfold i
+      where
+        unfold countdown | countdown < 1 = (x, Nothing)
+                         | otherwise     = (x, Just (countdown - 1))
+
+instance SafeSequence (NE.NonEmpty a) where
     head = NE.head
     tail = NE.tail
     last = NE.last
     init = NE.init
-    nfilter = NE.filter
-    nonNull = (NE.:|)
 
 
 -- | a newtype wrapper indicating there are 1 or more elements
 -- unwrap with 'toNullable'
-newtype NotEmpty seq = NotEmpty { toNullable :: seq }
+newtype NotEmpty seq = NotEmpty { fromNotEmpty :: seq }
                        deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
-
--- | A partial function: it throws an exception if the sequence is null
-fromNullable :: (MonoFoldable seq, SemiSequence seq) => seq -> NotEmpty seq
-fromNullable seq | onull seq = error msg
-                 | otherwise = NotEmpty seq
-  where
-    msg = "fromMono: expected seqeuence to not be null."
 
 type instance Element (NotEmpty seq) = Element seq
 instance MonoFunctor seq => MonoFunctor (NotEmpty seq) where
   omap f (NotEmpty xs) = NotEmpty $ omap f xs
-
 
 instance SemiSequence seq => SemiSequence (NotEmpty seq) where
     type Index (NotEmpty seq) = Index seq
@@ -119,32 +163,84 @@ instance SemiSequence seq => SemiSequence (NotEmpty seq) where
     singleton     = NotEmpty . singleton
     intersperse e = fmap $ intersperse e
     reverse       = fmap reverse
-    find f        = find f . toNullable
+    find f        = find f . fromNotEmpty
     cons x        = fmap $ cons x
     snoc xs x     = fmap (flip snoc x) xs
     sortBy f      = fmap $ sortBy f
 
 
-instance NonNull (NotEmpty (Seq.Seq a)) where
-    type Nullable (NotEmpty (Seq a)) = Seq a
+-- normally we favor defaulting, should we use it here?
+-- this re-uses IsSequence functions and IsSequence uses defaulting
+instance (IsSequence seq) => NonNull (NotEmpty seq) where
+    type Nullable (NotEmpty seq) = seq
 
-    fromNonEmpty = NotEmpty . Seq.fromList . NE.toList
-    nfilter f = Seq.filter f . toNullable
-    head = flip Seq.index 1 . toNullable
+    fromNonEmpty = NotEmpty . fromList . NE.toList
+    fromNullable xs | onull xs = Nothing
+                    | otherwise = Just $ NotEmpty xs
+
+    nonNull xs | onull xs = throw $ NullError "Data.NonNull.nonNull expected NotEmpty"
+               | otherwise = NotEmpty xs
+
+    -- nonNullUnsafe = NotEmpty
+    toNullable = fromNotEmpty
+    ncons x xs = NotEmpty $ cons x xs
+
+    -- | i must be > 0. like 'Sequence.replicate'
+    -- < 0 produces a 1 element NonEmpty
+    nReplicate i x | i < 1 = ncons x mempty
+                   | otherwise = NotEmpty $ replicate i x
+
+    nfilter f = filter f . toNullable
+    nfilterM f = filterM f . toNullable
+
+
+instance SafeSequence (NotEmpty (Seq.Seq a)) where
+    head = flip Seq.index 1 . fromNotEmpty
     last (NotEmpty xs) = Seq.index xs (Seq.length xs - 1)
-    tail = Seq.drop 1 . toNullable
+    tail = Seq.drop 1 . fromNotEmpty
     init (NotEmpty xs) = Seq.take (Seq.length xs - 1) xs
-    nonNull x = NotEmpty . cons x
 
-instance NonNull (NotEmpty (V.Vector a)) where
-    type Nullable (NotEmpty (V.Vector a)) = V.Vector a
-    fromNonEmpty = NotEmpty . V.fromList . NE.toList
-    nfilter f = V.filter f . toNullable
-    head = V.head . toNullable
-    tail = V.tail . toNullable
-    last = V.last . toNullable
-    init = V.init . toNullable
-    nonNull x = NotEmpty . cons x
+instance SafeSequence (NotEmpty (V.Vector a)) where
+    head = V.head . fromNotEmpty
+    tail = V.tail . fromNotEmpty
+    last = V.last . fromNotEmpty
+    init = V.init . fromNotEmpty
+
+instance U.Unbox a => SafeSequence (NotEmpty (U.Vector a)) where
+    head = U.head . fromNotEmpty
+    tail = U.tail . fromNotEmpty
+    last = U.last . fromNotEmpty
+    init = U.init . fromNotEmpty
+
+instance VS.Storable a => SafeSequence (NotEmpty (VS.Vector a)) where
+    head = VS.head . fromNotEmpty
+    tail = VS.tail . fromNotEmpty
+    last = VS.last . fromNotEmpty
+    init = VS.init . fromNotEmpty
+
+instance SafeSequence (NotEmpty S.ByteString) where
+    head = S.head . fromNotEmpty
+    tail = S.tail . fromNotEmpty
+    last = S.last . fromNotEmpty
+    init = S.init . fromNotEmpty
+
+instance SafeSequence (NotEmpty T.Text) where
+    head = T.head . fromNotEmpty
+    tail = T.tail . fromNotEmpty
+    last = T.last . fromNotEmpty
+    init = T.init . fromNotEmpty
+
+instance SafeSequence (NotEmpty L.ByteString) where
+    head = L.head . fromNotEmpty
+    tail = L.tail . fromNotEmpty
+    last = L.last . fromNotEmpty
+    init = L.init . fromNotEmpty
+
+instance SafeSequence (NotEmpty TL.Text) where
+    head = TL.head . fromNotEmpty
+    tail = TL.tail . fromNotEmpty
+    last = TL.last . fromNotEmpty
+    init = TL.init . fromNotEmpty
 
 infixr 5 <|
 
@@ -156,27 +252,36 @@ infixr 5 <|
 class (NonNull seq, Ord (Element seq)) => OrdNonNull seq where
     -- | like Data.List, but not partial on a NonNull
     maximum :: seq -> Element seq
+    default maximum :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => seq -> Element seq
+    maximum = F.maximum . toNullable
+
     -- | like Data.List, but not partial on a NonNull
     minimum :: seq -> Element seq
+    default minimum :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => seq -> Element seq
+    minimum = F.minimum . toNullable
+
     -- | like Data.List, but not partial on a NonNull
     maximumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    default maximumBy :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    maximumBy f = F.maximumBy f . toNullable
+
     -- | like Data.List, but not partial on a NonNull
     minimumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    default minimumBy :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    minimumBy f = F.minimumBy f . toNullable
 
 instance Ord a => OrdNonNull (NE.NonEmpty a) where
-    maximum = Foldable.maximum
-    minimum = Foldable.minimum
-    maximumBy = Foldable.maximumBy
-    minimumBy = Foldable.minimumBy
+    maximum = F.maximum
+    minimum = F.minimum
+    maximumBy = F.maximumBy
+    minimumBy = F.minimumBy
 
-instance Ord a => OrdNonNull (NotEmpty (Seq a)) where
-    maximum = Foldable.maximum . toNullable
-    minimum = Foldable.minimum . toNullable
-    maximumBy f = Foldable.maximumBy f . toNullable
-    minimumBy f = Foldable.minimumBy f . toNullable
+instance Ord a => OrdNonNull (NotEmpty (Seq.Seq a))
+instance Ord a => OrdNonNull (NotEmpty (V.Vector a))
 
-instance Ord a => OrdNonNull (NotEmpty (V.Vector a)) where
-    maximum = Foldable.maximum . toNullable
-    minimum = Foldable.minimum . toNullable
-    maximumBy f = Foldable.maximumBy f . toNullable
-    minimumBy f = Foldable.minimumBy f . toNullable
+-- Problem, these are MonoFoldable, not Foldable
+-- try replacing default Foldable constraint with MonoFoldable, need to re-implement Foldable methods
+-- instance OrdNonNull (NotEmpty (S.ByteString))
+-- instance OrdNonNull (NotEmpty (L.ByteString))
+-- instance OrdNonNull (NotEmpty (T.Text))
+-- instance OrdNonNull (NotEmpty (TL.Text))

@@ -8,7 +8,7 @@
 -- | Warning: This module should be considered highly experimental.
 module Data.Sequences where
 
-import Data.Monoid (Monoid, mconcat)
+import Data.Monoid (Monoid, mconcat, mempty)
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
@@ -49,6 +49,7 @@ import qualified Data.List.NonEmpty as NE
 -- a 'SemiSequence' keeps the same type when increasing its number of elements.
 -- However, a decreasing function such as filter may change a 'NonNull' type.
 -- For example, from 'NonEmpty' to '[]'
+-- This exists on 'NonNull' as 'nfilter'
 --
 -- 'filter' and other such functions are placed in 'IsSequence'
 class (Integral (Index seq)) => SemiSequence seq where
@@ -68,6 +69,7 @@ class (Integral (Index seq)) => SemiSequence seq where
     cons :: Element seq -> seq -> seq
 
     snoc :: seq -> Element seq -> seq
+
 
 -- | Sequence Laws:
 --
@@ -161,6 +163,26 @@ defaultCons e = fromList . (e:) . otoList
 defaultSnoc :: IsSequence seq => seq -> Element seq -> seq
 defaultSnoc seq e = fromList (otoList seq List.++ [e])
 
+
+-- | like Data.List.head, but not partial
+headMay :: IsSequence seq => seq -> Maybe (Element seq)
+headMay = fmap fst . uncons
+
+-- | like Data.List.last, but not partial
+lastMay :: IsSequence seq => seq -> Maybe (Element seq)
+lastMay = fmap snd . unsnoc
+
+-- | like Data.List.tail, but an input of @mempty@ returns @mempty@
+tailDef :: IsSequence seq => seq -> seq
+tailDef xs = case uncons xs of
+               Nothing -> mempty
+               Just tuple -> snd tuple
+
+-- | like Data.List.init, but an input of @mempty@ returns @mempty@
+initDef :: IsSequence seq => seq -> seq
+initDef xs = case unsnoc xs of
+               Nothing -> mempty
+               Just tuple -> fst tuple
 
 
 
