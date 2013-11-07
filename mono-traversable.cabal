@@ -13,6 +13,7 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
+  ghc-options: -Wall
   exposed-modules:     Data.Containers
                        Data.MonoTraversable
                        Data.Sequences
@@ -23,7 +24,7 @@ library
                      , hashable
                      , bytestring >= 0.9
                      , text >=0.11
-                     , semigroups >=0.9
+                     , semigroups >= 0.9
                      , transformers >=0.3
                      , vector >=0.10
                      , semigroupoids >=3.0

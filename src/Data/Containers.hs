@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | Warning: This module should be considered highly experimental.
 module Data.Containers where
 
@@ -21,7 +21,7 @@ import qualified Data.Text.Lazy as LText
 import qualified Data.Text as Text
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.ByteString as ByteString
-import Control.Arrow ((&&&), (***))
+import Control.Arrow ((***))
 
 class (Monoid set, MonoFoldable set) => SetContainer set where
     type ContainerKey set
