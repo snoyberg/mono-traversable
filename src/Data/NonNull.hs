@@ -1,6 +1,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 -- | Warning, this is Experimental!
@@ -26,7 +28,7 @@ import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate)
 import Data.MonoTraversable
 import Data.Sequences
 import Control.Exception.Base (Exception, throw)
-import Data.Monoid (mempty)
+import Data.Semigroup
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Foldable as F
 
@@ -58,7 +60,7 @@ instance Exception NullError
 -- With NonNull rather than always reacting with null checks we can proactively encode in our program when we know that a type is NonNull.
 -- Now we have an invariant encoded in our types, making our program easier to understand.
 -- This information is leveraged to avoid awkward null checking later on.
-class SemiSequence seq => NonNull seq where
+class (SemiSequence seq, IsSequence (Nullable seq), Element seq ~ Element (Nullable seq)) => NonNull seq where
     type Nullable seq
 
     -- | safely construct a 'NonNull' sequence from a 'NonEmpty' list
@@ -95,6 +97,21 @@ class SemiSequence seq => NonNull seq where
     --     'fronNonEmpty' will convert that to your data structure using the structure's fromList function.
     ncons :: Element seq -> Nullable seq -> seq
 
+    -- | like 'uncons' of 'SemiSequence'
+    nuncons :: seq -> (Element seq, Maybe seq)
+    -- default nuncons :: IsSequence (Nullable seq) => seq -> (Element seq, Maybe seq)
+    nuncons xs = case uncons $ toNullable xs of
+                   Nothing -> error "Data.NonNull.nuncons: data structure is null, it should be non-null"
+                   Just (x, xsNullable) -> (x, fromNullable xsNullable)
+
+    -- | like 'uncons' of 'SemiSequence'
+    splitFirst :: seq -> (Element seq, Nullable seq)
+    -- default splitFirst :: IsSequence (Nullable seq) => seq -> (Element seq, Nullable seq)
+    splitFirst xs = case uncons $ toNullable xs of
+                     Nothing -> error "Data.NonNull.splitFirst: data structure is null, it should be non-null"
+                     Just tup -> tup
+
+
     -- | like 'Sequence.filter', but starts with a NonNull
     nfilter :: (Element seq -> Bool) -> seq -> Nullable seq
 
@@ -104,6 +121,11 @@ class SemiSequence seq => NonNull seq where
     -- | i must be > 0. like 'Sequence.replicate'
     nReplicate :: Index seq -> Element seq -> seq
 
+{-
+maybeToNullable :: (Monoid (Nullable seq), NonNull seq) => Maybe seq -> Nullable seq
+maybeToNullable Nothing   = mempty
+maybeToNullable (Just xs) = toNullable xs
+-}
 
 -- | SafeSequence contains functions that would be partial on a 'Nullable'
 class SafeSequence seq where
@@ -153,10 +175,13 @@ instance SafeSequence (NE.NonEmpty a) where
 -- unwrap with 'toNullable'
 newtype NotEmpty seq = NotEmpty { fromNotEmpty :: seq }
                        deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
+deriving instance Semigroup seq => Semigroup (NotEmpty seq)
+deriving instance MonoFunctor seq => MonoFunctor (NotEmpty seq)
+deriving instance MonoFoldable seq => MonoFoldable (NotEmpty seq)
+deriving instance MonoTraversable seq => MonoTraversable (NotEmpty seq)
 
 type instance Element (NotEmpty seq) = Element seq
-instance MonoFunctor seq => MonoFunctor (NotEmpty seq) where
-  omap f (NotEmpty xs) = NotEmpty $ omap f xs
+
 
 instance SemiSequence seq => SemiSequence (NotEmpty seq) where
     type Index (NotEmpty seq) = Index seq
@@ -172,7 +197,7 @@ instance SemiSequence seq => SemiSequence (NotEmpty seq) where
 
 -- normally we favor defaulting, should we use it here?
 -- this re-uses IsSequence functions and IsSequence uses defaulting
-instance (IsSequence seq) => NonNull (NotEmpty seq) where
+instance IsSequence seq => NonNull (NotEmpty seq) where
     type Nullable (NotEmpty seq) = seq
 
     fromNonEmpty = NotEmpty . fromList . NE.toList
@@ -253,23 +278,27 @@ infixr 5 <|
 class (NonNull seq, Ord (Element seq)) => OrdNonNull seq where
     -- | like Data.List, but not partial on a NonNull
     maximum :: seq -> Element seq
-    default maximum :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => seq -> Element seq
-    maximum = F.maximum . toNullable
+    default maximum :: (MonoFoldable (Nullable seq)) => seq -> Element seq
+    -- what is the performance of uncons? If constant, use that
+    maximum = fromJust . ofoldl' monoMax Nothing . toNullable
+      where monoMax Nothing  y = Just y
+            monoMax (Just x) y = Just $ max x y
+            fromJust Nothing = error "Data/NonNull.hs: impossible Nothing"
+            fromJust (Just x) = x
 
     -- | like Data.List, but not partial on a NonNull
     minimum :: seq -> Element seq
-    default minimum :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => seq -> Element seq
-    minimum = F.minimum . toNullable
+    default minimum :: (MonoFoldable (Nullable seq)) => seq -> Element seq
+    minimum seq = let (x, xs) = splitFirst seq
+                  in ofoldl' min x xs
 
     -- | like Data.List, but not partial on a NonNull
     maximumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    default maximumBy :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    maximumBy f = F.maximumBy f . toNullable
+    -- default maximumBy :: (MonoFoldable (Nullable seq)) => (Element seq -> Element seq -> Ordering) seq -> Element seq
 
     -- | like Data.List, but not partial on a NonNull
     minimumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    default minimumBy :: (F.Foldable t, t a ~ Nullable seq, a ~ Element (t a), a ~ Element seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    minimumBy f = F.minimumBy f . toNullable
+    -- default minimumBy :: (MonoFoldable (Nullable seq)) => (Element seq -> Element seq -> Ordering) seq -> Element seq
 
 instance Ord a => OrdNonNull (NE.NonEmpty a) where
     maximum = F.maximum
@@ -279,10 +308,7 @@ instance Ord a => OrdNonNull (NE.NonEmpty a) where
 
 instance Ord a => OrdNonNull (NotEmpty (Seq.Seq a))
 instance Ord a => OrdNonNull (NotEmpty (V.Vector a))
-
--- Problem, these are MonoFoldable, not Foldable
--- try replacing default Foldable constraint with MonoFoldable, need to re-implement Foldable methods
--- instance OrdNonNull (NotEmpty (S.ByteString))
--- instance OrdNonNull (NotEmpty (L.ByteString))
--- instance OrdNonNull (NotEmpty (T.Text))
--- instance OrdNonNull (NotEmpty (TL.Text))
+instance OrdNonNull (NotEmpty (S.ByteString))
+instance OrdNonNull (NotEmpty (L.ByteString))
+instance OrdNonNull (NotEmpty (T.Text))
+instance OrdNonNull (NotEmpty (TL.Text))
