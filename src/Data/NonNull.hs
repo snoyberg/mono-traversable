@@ -30,6 +30,7 @@ import Data.MonoTraversable
 import Data.Sequences
 import Control.Exception.Base (Exception, throw)
 import Data.Semigroup
+import qualified Data.Monoid as Monoid
 import Data.Data
 import Data.Maybe (fromMaybe)
 import qualified Data.List.NonEmpty as NE
@@ -175,12 +176,15 @@ instance SafeSequence (NE.NonEmpty a) where
 -- unwrap with 'toNullable'
 newtype NotEmpty seq = NotEmpty { fromNotEmpty :: seq }
                        deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
-deriving instance Semigroup seq => Semigroup (NotEmpty seq)
+type instance Element (NotEmpty seq) = Element seq
 deriving instance MonoFunctor seq => MonoFunctor (NotEmpty seq)
 deriving instance MonoFoldable seq => MonoFoldable (NotEmpty seq)
 deriving instance MonoTraversable seq => MonoTraversable (NotEmpty seq)
 
-type instance Element (NotEmpty seq) = Element seq
+instance Monoid seq => Semigroup (NotEmpty seq) where
+  x <> y  = NotEmpty (fromNotEmpty x `Monoid.mappend` fromNotEmpty y)
+  sconcat = NotEmpty . Monoid.mconcat . fmap fromNotEmpty . NE.toList
+
 
 
 instance SemiSequence seq => SemiSequence (NotEmpty seq) where
