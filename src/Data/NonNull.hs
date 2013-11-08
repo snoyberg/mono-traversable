@@ -29,6 +29,8 @@ import Data.MonoTraversable
 import Data.Sequences
 import Control.Exception.Base (Exception, throw)
 import Data.Semigroup
+import Data.Data
+import Data.Maybe (fromMaybe)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Foldable as F
 
@@ -40,7 +42,6 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.Sequence as Seq
-import Data.Data
 
 data NullError = NullError String deriving (Show, Typeable)
 instance Exception NullError
@@ -99,14 +100,12 @@ class (SemiSequence seq, IsSequence (Nullable seq), Element seq ~ Element (Nulla
 
     -- | like 'uncons' of 'SemiSequence'
     nuncons :: seq -> (Element seq, Maybe seq)
-    -- default nuncons :: IsSequence (Nullable seq) => seq -> (Element seq, Maybe seq)
     nuncons xs = case uncons $ toNullable xs of
                    Nothing -> error "Data.NonNull.nuncons: data structure is null, it should be non-null"
                    Just (x, xsNullable) -> (x, fromNullable xsNullable)
 
     -- | like 'uncons' of 'SemiSequence'
     splitFirst :: seq -> (Element seq, Nullable seq)
-    -- default splitFirst :: IsSequence (Nullable seq) => seq -> (Element seq, Nullable seq)
     splitFirst xs = case uncons $ toNullable xs of
                      Nothing -> error "Data.NonNull.splitFirst: data structure is null, it should be non-null"
                      Just tup -> tup
@@ -275,30 +274,63 @@ infixr 5 <|
 (<|) = cons
 
 
-class (NonNull seq, Ord (Element seq)) => OrdNonNull seq where
+class (NonNull seq, MonoFoldable (Nullable seq)) => MonoFoldable1 seq where
+  ofoldMap1 :: Semigroup m => (Element seq -> m) -> seq -> m
+  ofoldMap1 f = maybe (error "Data.NonNull.foldMap1 (MonoFoldable1)") id . getOption . ofoldMap (Option . Just . f) . toNullable
+
+  -- ofold1 :: (Semigroup m ~ Element seq) => seq -> Element seq
+  -- ofold1 = ofoldMap1 id
+
+  -- @'foldr1' f = 'Prelude.foldr1' f . 'toList'@
+  ofoldr1 :: (Element seq -> Element seq -> Element seq) -> seq -> Element seq
+  ofoldr1 f = fromMaybe (error "Data.NonNull.foldr1 (MonoFoldable1): empty structure") .
+                  (ofoldr mf Nothing) . toNullable
+    where
+      mf x Nothing = Just x
+      mf x (Just y) = Just (f x y)
+
+  -- | A variant of 'foldl' that has no base case,
+  -- and thus may only be applied to non-empty structures.
+  --
+  -- @'foldl1' f = 'Prelude.foldl1' f . 'toList'@
+  foldl1 :: (Element seq -> Element seq -> Element seq) -> seq -> Element seq
+  foldl1 f = fromMaybe (error "foldl1: empty structure") .
+                  (ofoldl' mf Nothing) . toNullable
+    where
+      mf Nothing y = Just y
+      mf (Just x) y = Just (f x y)
+
+
+instance MonoFoldable1 (NE.NonEmpty a)
+instance (MonoFoldable mono, IsSequence mono) => MonoFoldable1 (NotEmpty mono)
+
+
+class (MonoFoldable1 seq, OrdSequence (Nullable seq)) => OrdNonNull seq where
     -- | like Data.List, but not partial on a NonNull
     maximum :: seq -> Element seq
-    default maximum :: (MonoFoldable (Nullable seq)) => seq -> Element seq
-    -- what is the performance of uncons? If constant, use that
-    maximum = fromJust . ofoldl' monoMax Nothing . toNullable
-      where monoMax Nothing  y = Just y
-            monoMax (Just x) y = Just $ max x y
-            fromJust Nothing = error "Data/NonNull.hs: impossible Nothing"
-            fromJust (Just x) = x
+    default maximum :: (MonoFoldable1 seq) => seq -> Element seq
+    maximum = ofoldr1 max
 
     -- | like Data.List, but not partial on a NonNull
     minimum :: seq -> Element seq
-    default minimum :: (MonoFoldable (Nullable seq)) => seq -> Element seq
-    minimum seq = let (x, xs) = splitFirst seq
-                  in ofoldl' min x xs
+    default minimum :: (MonoFoldable1 seq, Element (Nullable seq) ~ Element seq) => seq -> Element seq
+    minimum = ofoldr1 min
 
     -- | like Data.List, but not partial on a NonNull
     maximumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    -- default maximumBy :: (MonoFoldable (Nullable seq)) => (Element seq -> Element seq -> Ordering) seq -> Element seq
+    default maximumBy :: (MonoFoldable1 seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    maximumBy cmp = ofoldr1 max'
+      where max' x y = case cmp x y of
+                            GT -> x
+                            _  -> y
 
     -- | like Data.List, but not partial on a NonNull
     minimumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    -- default minimumBy :: (MonoFoldable (Nullable seq)) => (Element seq -> Element seq -> Ordering) seq -> Element seq
+    default minimumBy :: (MonoFoldable1 seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    minimumBy cmp = ofoldr1 min'
+      where min' x y = case cmp x y of
+                            GT -> y
+                            _  -> x
 
 instance Ord a => OrdNonNull (NE.NonEmpty a) where
     maximum = F.maximum
