@@ -274,6 +274,8 @@ infixr 5 <|
 (<|) = cons
 
 
+-- | fold operations that assume one or more elements
+-- Guaranteed to be safe on a NonNull
 class (NonNull seq, MonoFoldable (Nullable seq)) => MonoFoldable1 seq where
   ofoldMap1 :: Semigroup m => (Element seq -> m) -> seq -> m
   ofoldMap1 f = maybe (error "Data.NonNull.foldMap1 (MonoFoldable1)") id . getOption . ofoldMap (Option . Just . f) . toNullable
@@ -281,7 +283,7 @@ class (NonNull seq, MonoFoldable (Nullable seq)) => MonoFoldable1 seq where
   -- ofold1 :: (Semigroup m ~ Element seq) => seq -> Element seq
   -- ofold1 = ofoldMap1 id
 
-  -- @'foldr1' f = 'Prelude.foldr1' f . 'toList'@
+  -- @'foldr1' f = 'Prelude.foldr1' f . 'otoList'@
   ofoldr1 :: (Element seq -> Element seq -> Element seq) -> seq -> Element seq
   ofoldr1 f = fromMaybe (error "Data.NonNull.foldr1 (MonoFoldable1): empty structure") .
                   (ofoldr mf Nothing) . toNullable
@@ -289,12 +291,12 @@ class (NonNull seq, MonoFoldable (Nullable seq)) => MonoFoldable1 seq where
       mf x Nothing = Just x
       mf x (Just y) = Just (f x y)
 
-  -- | A variant of 'foldl' that has no base case,
+  -- | A variant of 'ofoldl\'' that has no base case,
   -- and thus may only be applied to non-empty structures.
   --
-  -- @'foldl1' f = 'Prelude.foldl1' f . 'toList'@
-  foldl1 :: (Element seq -> Element seq -> Element seq) -> seq -> Element seq
-  foldl1 f = fromMaybe (error "foldl1: empty structure") .
+  -- @'foldl1\'' f = 'Prelude.foldl1' f . 'otoList'@
+  ofoldl1' :: (Element seq -> Element seq -> Element seq) -> seq -> Element seq
+  ofoldl1' f = fromMaybe (error "ofoldl1': empty structure") .
                   (ofoldl' mf Nothing) . toNullable
     where
       mf Nothing y = Just y
