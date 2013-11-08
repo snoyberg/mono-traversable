@@ -20,6 +20,7 @@ module Data.NonNull (
     NonNull(..)
   , SafeSequence(..)
   , NotEmpty
+  , MonoFoldable1(..)
   , OrdNonNull(..)
   , (<|)
 ) where
@@ -304,6 +305,7 @@ class (NonNull seq, MonoFoldable (Nullable seq)) => MonoFoldable1 seq where
 
 
 instance MonoFoldable1 (NE.NonEmpty a)
+-- normally we favor defaulting, should we be using it here?
 instance (MonoFoldable mono, IsSequence mono) => MonoFoldable1 (NotEmpty mono)
 
 
