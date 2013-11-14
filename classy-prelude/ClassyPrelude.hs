@@ -33,6 +33,8 @@ module ClassyPrelude
       -- * Mono hierarchy
     , module Data.MonoTraversable
     , module Data.Sequences
+    , module Data.Sequences.Lazy
+    , module Data.Textual.Encoding
     , module Data.Containers
       -- * I\/O
     , Handle
@@ -164,6 +166,9 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified Data.HashSet as HashSet
 
+import Data.Textual.Encoding
+import Data.Sequences.Lazy
+
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
 
@@ -257,16 +262,16 @@ infixr 5  ++
 
 infixl 9 \\{-This comment teaches CPP correct behaviour -}
 -- | An alias for `difference`.
-(\\) :: Container a => a -> a -> a
+(\\) :: SetContainer a => a -> a -> a
 (\\) = difference
 {-# INLINE (\\) #-}
 
 -- | An alias for `intersection`.
-intersect :: Container a => a -> a -> a
+intersect :: SetContainer a => a -> a -> a
 intersect = intersection
 {-# INLINE intersect #-}
 
-unions :: (MonoFoldable c, Container (Element c)) => c -> Element c
+unions :: (MonoFoldable c, SetContainer (Element c)) => c -> Element c
 unions = ofoldl' union Monoid.mempty
 
 intercalate :: (Monoid (Element c), IsSequence c) => Element c -> c -> Element c

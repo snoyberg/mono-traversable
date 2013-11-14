@@ -6,7 +6,7 @@ module ClassyPrelude.Yesod
     ) where
 
 import ClassyPrelude.Conduit as X hiding (lift)
-import Yesod as X hiding (Header)
+import Yesod as X hiding (Header, parseTime)
 import qualified Yesod
 import Yesod.Static as X
 import Yesod.Feed as X

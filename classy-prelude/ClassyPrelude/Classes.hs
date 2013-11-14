@@ -23,7 +23,8 @@ import qualified Filesystem.Path.CurrentOS as FilePath
 import qualified Data.Vector as Vector
 -- import qualified Data.Vector.Unboxed as UVector
 import qualified Data.Sequence as Seq
-import Data.Sequences (fromStrict, IsSequence)
+import Data.Sequences (IsSequence)
+import Data.Sequences.Lazy (fromStrict)
 import Control.Monad (liftM)
 import System.IO (Handle)
 import qualified System.IO
