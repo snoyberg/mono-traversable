@@ -124,7 +124,6 @@ mapMProps :: ( Eq c
              , IsSequence c
              , Arbitrary c
              , Element c ~ Int
-             , MonoTraversable c -- FIXME: https://github.com/snoyberg/mono-traversable/commit/f63a9594f0cd07fb350b07bd34ad9e1da3343c3e#commitcomment-4603482
              )
           => c
           -> Spec
