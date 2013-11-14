@@ -15,7 +15,6 @@ import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
 import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral, ($), flip)
 import Data.Char (Char, isSpace)
-import Data.Word (Word8)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Text as T
@@ -27,9 +26,6 @@ import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
-import qualified Data.Text.Encoding as T
-import qualified Data.Text.Lazy.Encoding as TL
-import Data.Text.Encoding.Error (lenientDecode)
 import GHC.Exts (Constraint)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
@@ -584,24 +580,6 @@ instance Ord a => OrdSequence (V.Vector a)
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a)
 instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a)
 
-class (IsSequence l, IsSequence s) => LazySequence l s | l -> s, s -> l where
-    toChunks :: l -> [s]
-    fromChunks :: [s] -> l
-    toStrict :: l -> s
-    fromStrict :: s -> l
-
-instance LazySequence L.ByteString S.ByteString where
-    toChunks = L.toChunks
-    fromChunks = L.fromChunks
-    toStrict = mconcat . L.toChunks
-    fromStrict = L.fromChunks . return
-
-instance LazySequence TL.Text T.Text where
-    toChunks = TL.toChunks
-    fromChunks = TL.fromChunks
-    toStrict = TL.toStrict
-    fromStrict = TL.fromStrict
-
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]
     unwords :: [t] -> t
@@ -613,7 +591,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
 
     breakWord :: t -> (t, t)
     breakWord = fmap (dropWhile isSpace) . break isSpace
-    
+
     breakLine :: t -> (t, t)
     breakLine =
         (killCR *** drop 1) . break (== '\n')
@@ -649,20 +627,6 @@ instance Textual TL.Text where
     toLower = TL.toLower
     toUpper = TL.toUpper
     toCaseFold = TL.toCaseFold
-
-class (Textual t, IsSequence b) => Utf8 t b | t -> b, b -> t where
-    encodeUtf8 :: t -> b
-    decodeUtf8 :: b -> t
-instance (c ~ Char, w ~ Word8) => Utf8 [c] [w] where
-    encodeUtf8 = L.unpack . TL.encodeUtf8 . TL.pack
-    decodeUtf8 = TL.unpack . TL.decodeUtf8With lenientDecode . L.pack
-instance Utf8 T.Text S.ByteString where
-    encodeUtf8 = T.encodeUtf8
-    decodeUtf8 = T.decodeUtf8With lenientDecode
-instance Utf8 TL.Text L.ByteString where
-    encodeUtf8 = TL.encodeUtf8
-    decodeUtf8 = TL.decodeUtf8With lenientDecode
-    
 
 -- | A @map@-like function which doesn't obey the @Functor@ laws,
 -- and/or requires extra constraints on the contained values.
