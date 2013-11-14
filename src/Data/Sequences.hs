@@ -72,7 +72,7 @@ class (Integral (Index seq)) => SemiSequence seq where
 -- > fromList . otoList = id
 -- > fromList (x <> y) = fromList x <> fromList y
 -- > otoList (fromList x <> fromList y) = x <> y
-class (Monoid seq, MonoFoldable seq, SemiSequence seq) => IsSequence seq where
+class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq where
     fromList :: [Element seq] -> seq
     -- this definition creates the Monoid constraint
     -- However, all the instances define their own fromList
