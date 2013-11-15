@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -8,14 +6,13 @@
 -- | Warning: This module should be considered highly experimental.
 module Data.Sequences where
 
-import Data.Monoid
+import Data.Monoid (Monoid, mconcat, mempty)
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral, ($), flip)
 import Data.Char (Char, isSpace)
-import Data.Word (Word8)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Text as T
@@ -27,42 +24,59 @@ import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
-import qualified Data.Text.Encoding as T
-import qualified Data.Text.Lazy.Encoding as TL
-import Data.Text.Encoding.Error (lenientDecode)
 import GHC.Exts (Constraint)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Hashable (Hashable)
 import Data.String (IsString)
+import qualified Data.List.NonEmpty as NE
 
--- | Laws:
+-- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
+-- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
+-- 'SemiSequence' is exported so that you can define new instances of 'IsSequence' or 'NonNull'
 --
--- > fromList . toList = id
--- > fromList (x <> y) = fromList x <> fromList y
--- > otoList (fromList x <> fromList y) = x <> y
-class (Monoid seq, MonoTraversable seq, Integral (Index seq)) => IsSequence seq where
+-- @Semi@ means 'SemiGroup'
+-- A 'SemiSequence' can accomodate a 'SemiGroup' such as 'NonEmpty'
+-- A Monoid should be able to fill out 'IsSequence'
+--
+-- As a base for 'NonNull',
+-- a 'SemiSequence' keeps the same type when increasing its number of elements.
+-- However, a decreasing function such as filter may change a 'NonNull' type.
+-- For example, from 'NonEmpty' to '[]'
+-- This exists on 'NonNull' as 'nfilter'
+--
+-- 'filter' and other such functions are placed in 'IsSequence'
+class (Integral (Index seq)) => SemiSequence seq where
     type Index seq
     singleton :: Element seq -> seq
 
+    intersperse :: Element seq -> seq -> seq
+
+    -- FIXME split :: (Element seq -> Bool) -> seq -> [seq]
+
+    reverse :: seq -> seq
+
+    find :: (Element seq -> Bool) -> seq -> Maybe (Element seq)
+
+    sortBy :: (Element seq -> Element seq -> Ordering) -> seq -> seq
+
+    cons :: Element seq -> seq -> seq
+
+    snoc :: seq -> Element seq -> seq
+
+
+-- | Sequence Laws:
+--
+-- > fromList . otoList = id
+-- > fromList (x <> y) = fromList x <> fromList y
+-- > otoList (fromList x <> fromList y) = x <> y
+class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq where
     fromList :: [Element seq] -> seq
+    -- this definition creates the Monoid constraint
+    -- However, all the instances define their own fromList
     fromList = mconcat . fmap singleton
 
-    replicate :: Index seq -> Element seq -> seq
-    replicate i = fromList . List.genericReplicate i
-
-    replicateM :: Monad m => Index seq -> m (Element seq) -> m seq
-    replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
-
-    filter :: (Element seq -> Bool) -> seq -> seq
-    filter f = fromList . List.filter f . otoList
-
-    filterM :: Monad m => (Element seq -> m Bool) -> seq -> m seq
-    filterM f = Control.Monad.liftM fromList . filterM f . otoList
-
-    intersperse :: Element seq -> seq -> seq
-    intersperse e = fromList . List.intersperse e . otoList
-
+    -- below functions change type fron the perspective of NonEmpty
     break :: (Element seq -> Bool) -> seq -> (seq, seq)
     break f = (fromList *** fromList) . List.break f . otoList
 
@@ -84,35 +98,32 @@ class (Monoid seq, MonoTraversable seq, Integral (Index seq)) => IsSequence seq 
     drop :: Index seq -> seq -> seq
     drop i = snd . splitAt i
 
-    -- FIXME split :: (Element seq -> Bool) -> seq -> [seq]
-
-    reverse :: seq -> seq
-    reverse = fromList . List.reverse . otoList
-
-    find :: (Element seq -> Bool) -> seq -> Maybe (Element seq)
-    find f = List.find f . otoList
-    
     partition :: (Element seq -> Bool) -> seq -> (seq, seq)
     partition f = (fromList *** fromList) . List.partition f . otoList
     
-    sortBy :: (Element seq -> Element seq -> Ordering) -> seq -> seq
-    sortBy f = fromList . List.sortBy f . otoList
-    
-    cons :: Element seq -> seq -> seq
-    cons e = fromList . (e:) . otoList
-
     uncons :: seq -> Maybe (Element seq, seq)
     uncons = fmap (second fromList) . uncons . otoList
-    
-    snoc :: seq -> Element seq -> seq
-    snoc seq e = fromList (otoList seq `mappend` [e])
-    
+
     unsnoc :: seq -> Maybe (seq, Element seq)
     unsnoc seq =
         case reverse (otoList seq) of
             [] -> Nothing
             x:xs -> Just (fromList (reverse xs), x)
 
+    filter :: (Element seq -> Bool) -> seq -> seq
+    filter f = fromList . List.filter f . otoList
+
+    filterM :: Monad m => (Element seq -> m Bool) -> seq -> m seq
+    filterM f = liftM fromList . filterM f . otoList
+
+    -- replicates are not in SemiSequence to allow for zero
+    replicate :: Index seq -> Element seq -> seq
+    replicate i = fromList . List.genericReplicate i
+
+    replicateM :: Monad m => Index seq -> m (Element seq) -> m seq
+    replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
+
+    -- below functions are not in SemiSequence because they return a List (instead of NonEmpty)
     groupBy :: (Element seq -> Element seq -> Bool) -> seq -> [seq]
     groupBy f = fmap fromList . List.groupBy f . otoList
 
@@ -127,16 +138,63 @@ class (Monoid seq, MonoTraversable seq, Integral (Index seq)) => IsSequence seq 
     permutations :: seq -> [seq]
     permutations = List.map fromList . List.permutations . otoList
 
-instance IsSequence [a] where
+
+defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
+defaultFind f = List.find f . otoList
+
+defaultIntersperse :: IsSequence seq => Element seq -> seq -> seq
+defaultIntersperse e = fromList . List.intersperse e . otoList
+
+defaultReverse :: IsSequence seq => seq -> seq
+defaultReverse = fromList . List.reverse . otoList
+
+defaultSortBy :: IsSequence seq => (Element seq -> Element seq -> Ordering) -> seq -> seq
+defaultSortBy f = fromList . List.sortBy f . otoList
+
+defaultCons :: IsSequence seq => Element seq -> seq -> seq
+defaultCons e = fromList . (e:) . otoList
+
+defaultSnoc :: IsSequence seq => seq -> Element seq -> seq
+defaultSnoc seq e = fromList (otoList seq List.++ [e])
+
+
+-- | like Data.List.head, but not partial
+headMay :: IsSequence seq => seq -> Maybe (Element seq)
+headMay = fmap fst . uncons
+
+-- | like Data.List.last, but not partial
+lastMay :: IsSequence seq => seq -> Maybe (Element seq)
+lastMay = fmap snd . unsnoc
+
+-- | like Data.List.tail, but an input of @mempty@ returns @mempty@
+tailDef :: IsSequence seq => seq -> seq
+tailDef xs = case uncons xs of
+               Nothing -> mempty
+               Just tuple -> snd tuple
+
+-- | like Data.List.init, but an input of @mempty@ returns @mempty@
+initDef :: IsSequence seq => seq -> seq
+initDef xs = case unsnoc xs of
+               Nothing -> mempty
+               Just tuple -> fst tuple
+
+
+
+instance SemiSequence [a] where
     type Index [a] = Int
     singleton = return
+    intersperse = List.intersperse
+    reverse = List.reverse
+    find = List.find
+    sortBy = List.sortBy
+    cons = (:)
+    snoc = defaultSnoc
+
+instance IsSequence [a] where
     fromList = id
     {-# INLINE fromList #-}
-    replicate = List.replicate
-    replicateM = Control.Monad.replicateM
     filter = List.filter
     filterM = Control.Monad.filterM
-    intersperse = List.intersperse
     break = List.break
     span = List.span
     dropWhile = List.dropWhile
@@ -144,13 +202,11 @@ instance IsSequence [a] where
     splitAt = List.splitAt
     take = List.take
     drop = List.drop
-    reverse = List.reverse
-    find = List.find
-    partition = List.partition
-    sortBy = List.sortBy
-    cons = (:)
     uncons [] = Nothing
     uncons (x:xs) = Just (x, xs)
+    partition = List.partition
+    replicate = List.replicate
+    replicateM = Control.Monad.replicateM
     groupBy = List.groupBy
     groupAllOn f (head : tail) =
         (head : matches) : groupAllOn f nonMatches
@@ -158,13 +214,31 @@ instance IsSequence [a] where
         (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllOn _ [] = []
 
-instance IsSequence S.ByteString where
+instance SemiSequence (NE.NonEmpty a) where
+    type Index (NE.NonEmpty a) = Int
+
+    singleton    = (NE.:| [])
+    intersperse  = NE.intersperse
+    reverse      = NE.reverse
+    find         = find
+    cons         = NE.cons
+    snoc xs x    = NE.fromList $ flip snoc x $ NE.toList xs
+    sortBy f     = NE.fromList . List.sortBy f . NE.toList
+
+instance SemiSequence S.ByteString where
     type Index S.ByteString = Int
     singleton = S.singleton
+    intersperse = S.intersperse
+    reverse = S.reverse
+    find = S.find
+    cons = S.cons
+    snoc = S.snoc
+    sortBy = defaultSortBy
+
+instance IsSequence S.ByteString where
     fromList = S.pack
     replicate = S.replicate
     filter = S.filter
-    intersperse = S.intersperse
     break = S.break
     span = S.span
     dropWhile = S.dropWhile
@@ -172,25 +246,27 @@ instance IsSequence S.ByteString where
     splitAt = S.splitAt
     take = S.take
     drop = S.drop
-    reverse = S.reverse
-    find = S.find
     partition = S.partition
-    cons = S.cons
     uncons = S.uncons
-    snoc = S.snoc
     unsnoc s
         | S.null s = Nothing
         | otherwise = Just (S.init s, S.last s)
     groupBy = S.groupBy
-    -- sortBy
 
-instance IsSequence T.Text where
+instance SemiSequence T.Text where
     type Index T.Text = Int
     singleton = T.singleton
+    intersperse = T.intersperse
+    reverse = T.reverse
+    find = T.find
+    cons = T.cons
+    snoc = T.snoc
+    sortBy = defaultSortBy
+
+instance IsSequence T.Text where
     fromList = T.pack
     replicate i c = T.replicate i (T.singleton c)
     filter = T.filter
-    intersperse = T.intersperse
     break = T.break
     span = T.span
     dropWhile = T.dropWhile
@@ -198,25 +274,27 @@ instance IsSequence T.Text where
     splitAt = T.splitAt
     take = T.take
     drop = T.drop
-    reverse = T.reverse
-    find = T.find
     partition = T.partition
-    cons = T.cons
     uncons = T.uncons
-    snoc = T.snoc
     unsnoc t
         | T.null t = Nothing
         | otherwise = Just (T.init t, T.last t)
     groupBy = T.groupBy
-    -- sortBy
 
-instance IsSequence L.ByteString where
+instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
     singleton = L.singleton
+    intersperse = L.intersperse
+    reverse = L.reverse
+    find = L.find
+    cons = L.cons
+    snoc = L.snoc
+    sortBy = defaultSortBy
+
+instance IsSequence L.ByteString where
     fromList = L.pack
     replicate = L.replicate
     filter = L.filter
-    intersperse = L.intersperse
     break = L.break
     span = L.span
     dropWhile = L.dropWhile
@@ -224,25 +302,27 @@ instance IsSequence L.ByteString where
     splitAt = L.splitAt
     take = L.take
     drop = L.drop
-    reverse = L.reverse
-    find = L.find
     partition = L.partition
-    cons = L.cons
     uncons = L.uncons
-    snoc = L.snoc
     unsnoc s
         | L.null s = Nothing
         | otherwise = Just (L.init s, L.last s)
     groupBy = L.groupBy
-    -- sortBy
 
-instance IsSequence TL.Text where
+instance SemiSequence TL.Text where
     type Index TL.Text = Int64
     singleton = TL.singleton
+    intersperse = TL.intersperse
+    reverse = TL.reverse
+    find = TL.find
+    cons = TL.cons
+    snoc = TL.snoc
+    sortBy = defaultSortBy
+
+instance IsSequence TL.Text where
     fromList = TL.pack
     replicate i c = TL.replicate i (TL.singleton c)
     filter = TL.filter
-    intersperse = TL.intersperse
     break = TL.break
     span = TL.span
     dropWhile = TL.dropWhile
@@ -250,28 +330,30 @@ instance IsSequence TL.Text where
     splitAt = TL.splitAt
     take = TL.take
     drop = TL.drop
-    reverse = TL.reverse
-    find = TL.find
     partition = TL.partition
-    cons = TL.cons
     uncons = TL.uncons
-    snoc = TL.snoc
     unsnoc t
         | TL.null t = Nothing
         | otherwise = Just (TL.init t, TL.last t)
     groupBy = TL.groupBy
-    -- sortBy
 
-
-instance IsSequence (Seq.Seq a) where
+instance SemiSequence (Seq.Seq a) where
     type Index (Seq.Seq a) = Int
     singleton = Seq.singleton
+    cons = (Seq.<|)
+    snoc = (Seq.|>)
+    reverse = Seq.reverse
+    sortBy = Seq.sortBy
+
+    intersperse = defaultIntersperse
+    find = defaultFind
+
+instance IsSequence (Seq.Seq a) where
     fromList = Seq.fromList
     replicate = Seq.replicate
     replicateM = Seq.replicateM
     filter = Seq.filter
     --filterM = Seq.filterM
-    --intersperse = Seq.intersperse
     break = Seq.breakl
     span = Seq.spanl
     dropWhile = Seq.dropWhileL
@@ -279,31 +361,34 @@ instance IsSequence (Seq.Seq a) where
     splitAt = Seq.splitAt
     take = Seq.take
     drop = Seq.drop
-    reverse = Seq.reverse
-    --find = Seq.find
     partition = Seq.partition
-    sortBy = Seq.sortBy
-    cons = (Seq.<|)
     uncons s =
         case Seq.viewl s of
             Seq.EmptyL -> Nothing
             x Seq.:< xs -> Just (x, xs)
-    snoc = (Seq.|>)
     unsnoc s =
         case Seq.viewr s of
             Seq.EmptyR -> Nothing
             xs Seq.:> x -> Just (xs, x)
     --groupBy = Seq.groupBy
 
-instance IsSequence (V.Vector a) where
+instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
     singleton = V.singleton
+    reverse = V.reverse
+    find = V.find
+    cons = V.cons
+    snoc = V.snoc
+
+    sortBy = defaultSortBy
+    intersperse = defaultIntersperse
+
+instance IsSequence (V.Vector a) where
     fromList = V.fromList
     replicate = V.replicate
     replicateM = V.replicateM
     filter = V.filter
     filterM = V.filterM
-    --intersperse = V.intersperse
     break = V.break
     span = V.span
     dropWhile = V.dropWhile
@@ -311,29 +396,32 @@ instance IsSequence (V.Vector a) where
     splitAt = V.splitAt
     take = V.take
     drop = V.drop
-    reverse = V.reverse
-    find = V.find
     partition = V.partition
-    --sortBy = V.sortBy
-    cons = V.cons
     uncons v
         | V.null v = Nothing
         | otherwise = Just (V.head v, V.tail v)
-    snoc = V.snoc
     unsnoc v
         | V.null v = Nothing
         | otherwise = Just (V.init v, V.last v)
     --groupBy = V.groupBy
 
-instance U.Unbox a => IsSequence (U.Vector a) where
+instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
     singleton = U.singleton
+
+    intersperse = defaultIntersperse
+    reverse = U.reverse
+    find = U.find
+    cons = U.cons
+    snoc = U.snoc
+    sortBy = defaultSortBy
+
+instance U.Unbox a => IsSequence (U.Vector a) where
     fromList = U.fromList
     replicate = U.replicate
     replicateM = U.replicateM
     filter = U.filter
     filterM = U.filterM
-    --intersperse = U.intersperse
     break = U.break
     span = U.span
     dropWhile = U.dropWhile
@@ -341,29 +429,32 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     splitAt = U.splitAt
     take = U.take
     drop = U.drop
-    reverse = U.reverse
-    find = U.find
     partition = U.partition
-    --sortBy = U.sortBy
-    cons = U.cons
     uncons v
         | U.null v = Nothing
         | otherwise = Just (U.head v, U.tail v)
-    snoc = U.snoc
     unsnoc v
         | U.null v = Nothing
         | otherwise = Just (U.init v, U.last v)
     --groupBy = U.groupBy
 
-instance VS.Storable a => IsSequence (VS.Vector a) where
+instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
     singleton = VS.singleton
+    reverse = VS.reverse
+    find = VS.find
+    cons = VS.cons
+    snoc = VS.snoc
+
+    intersperse = defaultIntersperse
+    sortBy = defaultSortBy
+
+instance VS.Storable a => IsSequence (VS.Vector a) where
     fromList = VS.fromList
     replicate = VS.replicate
     replicateM = VS.replicateM
     filter = VS.filter
     filterM = VS.filterM
-    --intersperse = U.intersperse
     break = VS.break
     span = VS.span
     dropWhile = VS.dropWhile
@@ -371,15 +462,10 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     splitAt = VS.splitAt
     take = VS.take
     drop = VS.drop
-    reverse = VS.reverse
-    find = VS.find
     partition = VS.partition
-    --sortBy = U.sortBy
-    cons = VS.cons
     uncons v
         | VS.null v = Nothing
         | otherwise = Just (VS.head v, VS.tail v)
-    snoc = VS.snoc
     unsnoc v
         | VS.null v = Nothing
         | otherwise = Just (VS.init v, VS.last v)
@@ -492,24 +578,6 @@ instance Ord a => OrdSequence (V.Vector a)
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a)
 instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a)
 
-class (IsSequence l, IsSequence s) => LazySequence l s | l -> s, s -> l where
-    toChunks :: l -> [s]
-    fromChunks :: [s] -> l
-    toStrict :: l -> s
-    fromStrict :: s -> l
-
-instance LazySequence L.ByteString S.ByteString where
-    toChunks = L.toChunks
-    fromChunks = L.fromChunks
-    toStrict = mconcat . L.toChunks
-    fromStrict = L.fromChunks . return
-
-instance LazySequence TL.Text T.Text where
-    toChunks = TL.toChunks
-    fromChunks = TL.fromChunks
-    toStrict = TL.toStrict
-    fromStrict = TL.fromStrict
-
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]
     unwords :: [t] -> t
@@ -521,7 +589,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
 
     breakWord :: t -> (t, t)
     breakWord = fmap (dropWhile isSpace) . break isSpace
-    
+
     breakLine :: t -> (t, t)
     breakLine =
         (killCR *** drop 1) . break (== '\n')
@@ -557,20 +625,6 @@ instance Textual TL.Text where
     toLower = TL.toLower
     toUpper = TL.toUpper
     toCaseFold = TL.toCaseFold
-
-class (Textual t, IsSequence b) => Utf8 t b | t -> b, b -> t where
-    encodeUtf8 :: t -> b
-    decodeUtf8 :: b -> t
-instance (c ~ Char, w ~ Word8) => Utf8 [c] [w] where
-    encodeUtf8 = L.unpack . TL.encodeUtf8 . TL.pack
-    decodeUtf8 = TL.unpack . TL.decodeUtf8With lenientDecode . L.pack
-instance Utf8 T.Text S.ByteString where
-    encodeUtf8 = T.encodeUtf8
-    decodeUtf8 = T.decodeUtf8With lenientDecode
-instance Utf8 TL.Text L.ByteString where
-    encodeUtf8 = TL.encodeUtf8
-    decodeUtf8 = TL.decodeUtf8With lenientDecode
-    
 
 -- | A @map@-like function which doesn't obey the @Functor@ laws,
 -- and/or requires extra constraints on the contained values.

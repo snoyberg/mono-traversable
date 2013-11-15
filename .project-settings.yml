@@ -11,6 +11,8 @@ modules:
     filename: src/Data/Containers.hs
   Data.MonoTraversable:
     filename: src/Data/MonoTraversable.hs
+  Data.NonNull:
+    filename: src/Data/NonNull.hs
   Spec:
     filename: test/Spec.hs
 version: 1
