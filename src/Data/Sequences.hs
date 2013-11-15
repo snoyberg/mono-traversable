@@ -24,10 +24,6 @@ import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
-import GHC.Exts (Constraint)
-import qualified Data.Set as Set
-import qualified Data.HashSet as HashSet
-import Data.Hashable (Hashable)
 import Data.String (IsString)
 import qualified Data.List.NonEmpty as NE
 
@@ -625,21 +621,3 @@ instance Textual TL.Text where
     toLower = TL.toLower
     toUpper = TL.toUpper
     toCaseFold = TL.toCaseFold
-
--- | A @map@-like function which doesn't obey the @Functor@ laws,
--- and/or requires extra constraints on the contained values.
-class LooseMap t where
-    type LooseMapConstraint t e :: Constraint
-    looseMap :: (LooseMapConstraint t e1, LooseMapConstraint t e2) => (e1 -> e2) -> t e1 -> t e2
-instance LooseMap Set.Set where
-    type LooseMapConstraint Set.Set a = Ord a
-    looseMap = Set.map
-instance LooseMap HashSet.HashSet where
-    type LooseMapConstraint HashSet.HashSet a = (Eq a, Hashable a)
-    looseMap = HashSet.map
-instance LooseMap U.Vector where
-    type LooseMapConstraint U.Vector a = U.Unbox a
-    looseMap = U.map
-instance LooseMap VS.Vector where
-    type LooseMapConstraint VS.Vector a = VS.Storable a
-    looseMap = VS.map
