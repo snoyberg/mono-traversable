@@ -1,5 +1,5 @@
 name:                classy-prelude
-version:             0.6.1
+version:             0.7.0
 synopsis:            A typeclass-based Prelude.
 description:         Focuses on using common typeclasses when possible, and creating new ones to avoid name clashing. Exposes many recommended datastructures (Map, ByteString, etc) directly without requiring long import lists and qualified modules.
 homepage:            https://github.com/snoyberg/classy-prelude
@@ -30,7 +30,7 @@ library
                      , monad-control
                      , async                         >= 2.0
                      , deepseq
-                     , mono-traversable
+                     , mono-traversable              >= 0.2
                      , semigroups
                      , vector-instances
                      , old-locale
