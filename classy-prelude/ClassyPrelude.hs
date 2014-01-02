@@ -41,6 +41,8 @@ module ClassyPrelude
     , stdin
     , stdout
     , stderr
+      -- * Lens
+    , module Control.Lens
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -168,6 +170,29 @@ import qualified Data.HashSet as HashSet
 
 import Data.Textual.Encoding
 import Data.Sequences.Lazy
+
+import Control.Lens
+    ( Lens
+    , Lens'
+    , Getter
+    , Setter
+    , Setter'
+    , Field1 (..)
+    , Field2 (..)
+    , Field3 (..)
+    , Field4 (..)
+    , Field5 (..)
+    , Field6 (..)
+    , Field7 (..)
+    , Field8 (..)
+    , Field9 (..)
+    , (^.)
+    , view
+    , (.~)
+    , set
+    , (%~)
+    , over
+    )
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
