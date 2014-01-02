@@ -161,6 +161,7 @@ import Data.Time
     , fromGregorian
     , formatTime
     , parseTime
+    , getCurrentTime
     )
 import System.Locale (defaultTimeLocale)
 
