@@ -1,5 +1,5 @@
 name:                classy-prelude
-version:             0.7.1
+version:             0.7.0
 synopsis:            A typeclass-based Prelude.
 description:         Focuses on using common typeclasses when possible, and creating new ones to avoid name clashing. Exposes many recommended datastructures (Map, ByteString, etc) directly without requiring long import lists and qualified modules.
 homepage:            https://github.com/snoyberg/classy-prelude
@@ -35,7 +35,6 @@ library
                      , vector-instances
                      , old-locale
                      , time
-                     , lens
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
