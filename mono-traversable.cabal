@@ -43,3 +43,7 @@ test-suite test
                      , bytestring
                      , text
                      , hspec
+                     
+source-repository head
+  type: git
+  location: git://github.com/snoyberg/mono-traversable.git
