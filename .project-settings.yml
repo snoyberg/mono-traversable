@@ -4,20 +4,12 @@ module-template: ! 'module MODULE_NAME where
 extensions: {}
 environment: ghc-7.4.2-stable-13.09
 cabal-file: project.cabal
-modules:
-  Data.Sequences:
-    filename: src/Data/Sequences.hs
-  Data.Containers:
-    filename: src/Data/Containers.hs
-  Data.MonoTraversable:
-    filename: src/Data/MonoTraversable.hs
-  Data.NonNull:
-    filename: src/Data/NonNull.hs
-  Spec:
-    filename: test/Spec.hs
 version: 1
 extra-packages: ''
 ghc-args:
 - -Wall
 - -Werror
 - -hide-package=hashmap
+excluded-modules:
+- Setup.hs
+- test/main.hs
