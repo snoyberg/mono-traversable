@@ -32,17 +32,7 @@ And then, the needed instances:
 ```
     
 
-As a very simple example, consider ```Either a```. Already a member of ```MonoFunctor```, it was not included as an instance of either ```MonoFoldable``` or ```MonoTraversable```, since it is not defined as either ```Foldable``` or ```Traversable``` in GHC _7.6_.
-
-However, these instances are [fairly](https://ghc.haskell.org/trac/ghc/browser/base/Data/Foldable.hs#L172) [obvious](https://ghc.haskell.org/trac/ghc/browser/base/Data/Traversable.hs#L182), and as such will be entering [GHC 7.8](https://ghc.haskell.org/trac/ghc/wiki/Building/GettingTheSources). Having them, it is then as simple as adding:
-
-```instance MonoFoldable (Either a b)```
-
-and
-
-```instance MonoTraversable (Either a b)```
-
-in your code, and your ready to use ```Either a``` with the functions defined in this package.
+in your code, and your ready to use ```CustomType a``` with the functions defined in this package.
 
 **Note**: if your type is as _monomorphic container_ without the proper typeclasses, then you will have to provide an implementation. However, this should be fairly simple, as it can be seen [in the code](https://hackage.haskell.org/package/mono-traversable-0.2.0.0/docs/src/Data-MonoTraversable.html#line-234)
 
