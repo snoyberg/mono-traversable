@@ -20,7 +20,7 @@ You just have to declare the proper ```type instance```:
     
     -- type instance Element T.Text = Char  -- already defined
     -- type instance Element [a] = a        -- here for example
-    type instance Element CustomType a = a
+    type instance Element (CustomType a) = a
 ```
 
 And then, the needed instances:
