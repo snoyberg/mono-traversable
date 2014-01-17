@@ -37,7 +37,7 @@ import           Data.Traversable
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
-import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either,
+import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either (..),
                                        replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
@@ -309,6 +309,22 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     oany = VS.any
     onull = VS.null
     olength = VS.length
+instance MonoFoldable (Either a b) where
+    ofoldMap f = ofoldr (mappend . f) mempty
+    ofoldr f b (Right a) = f a b
+    ofoldr _ b (Left _) = b
+    ofoldl' f a (Right b) = f a b
+    ofoldl' _ a (Left _) = a
+    otoList (Left _) = []
+    otoList (Right b) = [b]
+    oall _ (Left _) = True
+    oall f (Right b) = f b
+    oany _ (Left _) = False
+    oany f (Right b) = f b
+    onull (Left _) = True
+    onull (Right _) = False
+    olength (Left _) = 0
+    olength (Right _) = 1
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
@@ -369,6 +385,11 @@ instance U.Unbox a => MonoTraversable (U.Vector a) where
 instance VS.Storable a => MonoTraversable (VS.Vector a) where
     otraverse f = fmap VS.fromList . traverse f . VS.toList
     omapM = VS.mapM
+instance MonoTraversable (Either a b) where
+    otraverse _ (Left a) = pure (Left a)
+    otraverse f (Right b) = fmap Right (f b)
+    omapM _ (Left a) = return (Left a)
+    omapM f (Right b) = liftM Right (f b)
 
 ofor :: (MonoTraversable mono, Applicative f) => mono -> (Element mono -> f (Element mono)) -> f mono
 ofor = flip otraverse
