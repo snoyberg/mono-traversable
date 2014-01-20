@@ -43,6 +43,7 @@ test-suite test
                      , bytestring
                      , text
                      , hspec
+                     , transformers
                      
 source-repository head
   type: git
