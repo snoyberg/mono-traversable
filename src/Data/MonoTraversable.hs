@@ -38,7 +38,13 @@ import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either (..),
-                                       replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num)
+                                       replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
+                                       seq, otherwise)
+import qualified Data.ByteString.Internal as Unsafe
+import qualified Foreign.ForeignPtr.Unsafe as Unsafe
+import Foreign.Ptr (plusPtr)
+import Foreign.ForeignPtr (touchForeignPtr)
+import Foreign.Storable (peek)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
@@ -240,6 +246,17 @@ instance MonoFoldable S.ByteString where
     oany = S.any
     onull = S.null
     olength = S.length
+
+    omapM_ f (Unsafe.PS fptr offset len) = do
+        let start = Unsafe.unsafeForeignPtrToPtr fptr `plusPtr` offset
+            end = start `plusPtr` len
+            loop ptr
+                | ptr >= end = Unsafe.inlinePerformIO (touchForeignPtr fptr) `seq` return ()
+                | otherwise = do
+                    _ <- f (Unsafe.inlinePerformIO (peek ptr))
+                    loop (ptr `plusPtr` 1)
+        loop start
+    {-# INLINE omapM_ #-}
 instance MonoFoldable L.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = L.foldr
@@ -249,6 +266,7 @@ instance MonoFoldable L.ByteString where
     oany = L.any
     onull = L.null
     olength64 = L.length
+    omapM_ f = omapM_ (omapM_ f) . L.toChunks
 instance MonoFoldable T.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr

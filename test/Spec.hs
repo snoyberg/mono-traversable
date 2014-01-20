@@ -5,9 +5,14 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Data.MonoTraversable
 import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
+import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
 import Data.Sequences
-import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, show)
+import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, show,
+                return, asTypeOf, (.))
+import Control.Monad.Trans.Writer
 
 main :: IO ()
 main = hspec $ do
@@ -57,3 +62,11 @@ main = hspec $ do
         test "hello\r\nthere\nworld" "hello" "there\nworld"
         test "hello\n\r\nworld" "hello" "\r\nworld"
         test "" "" ""
+    describe "omapM_" $ do
+        let test typ dummy = prop typ $ \input ->
+                let res = execWriter $ omapM_ (tell . return) (fromList input `asTypeOf` dummy)
+                 in res == input
+        test "strict ByteString" S.empty
+        test "lazy ByteString" L.empty
+        test "strict Text" T.empty
+        test "lazy Text" TL.empty
