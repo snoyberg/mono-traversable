@@ -14,6 +14,7 @@ main = do
     putStrLn "import qualified Data.Conduit.Combinators as CC"
     forM_ y $ \(old, new) -> do
         putStrLn ""
+        putStrLn $ "-- | See 'CC." ++ old ++ "'"
         putStrLn $ new ++ " = CC." ++ old
         putStrLn $ "{-# INLINE " ++ new ++ "#-}"
 
