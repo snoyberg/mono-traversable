@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoImplicitPrelude         #-}
@@ -35,10 +36,12 @@ module Data.Conduit.Combinators
     , dropE
     , dropWhile
     , dropWhileE
-    , CL.fold
+    , fold
+    , foldl
     , foldE
-    , concatMap
-    , concatMapE
+    , foldlE
+    , CL.foldMap
+    , foldMapE
     , all
     , allE
     , any
@@ -91,14 +94,14 @@ module Data.Conduit.Combinators
     , mapME
     , omapME
     , concatMapM
-    , concatMapME
     , filterM
     , filterME
     ) where
 
+import qualified Data.Traversable
 import           Control.Applicative         ((<$>))
 import           Control.Category            (Category (..))
-import           Control.Monad               (unless, when, (>=>))
+import           Control.Monad               (unless, when, (>=>), liftM)
 import           Control.Monad.Base          (MonadBase (liftBase))
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Primitive     (PrimMonad)
@@ -117,7 +120,7 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              otherwise, ($))
+                                              otherwise, ($), Functor (..))
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 
@@ -264,6 +267,17 @@ takeExactly count inner = take count =$= do
     r <- inner
     CL.sinkNull
     return r
+{-# INLINE takeExactly #-}
+
+takeExactlyE :: (Monad m, Seq.IsSequence a)
+             => Seq.Index a
+             -> ConduitM a b m r
+             -> ConduitM a b m r
+takeExactlyE count inner = takeE count =$= do
+    r <- inner
+    CL.sinkNull
+    return r
+{-# INLINE takeExactlyE #-}
 
 takeWhile :: Monad m
           => (a -> Bool)
@@ -413,12 +427,25 @@ takeE =
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE takeE #-}
 
-foldE :: (Monad m, MonoFoldable mono)
-      => (a -> Element mono -> a)
-      -> a
-      -> Consumer mono m a
-foldE f = CL.fold (ofoldl' f)
+fold :: (Monad m, Monoid a)
+     => Consumer a m a
+fold = CL.foldMap id
+{-# INLINE fold #-}
+
+foldE :: (Monad m, MonoFoldable mono, Monoid (Element mono))
+      => Consumer mono m (Element mono)
+foldE = CL.fold (\accum mono -> accum `mappend` ofoldMap id mono) mempty
 {-# INLINE foldE #-}
+
+foldl = CL.fold
+{-# INLINE foldl #-}
+
+foldlE :: (Monad m, MonoFoldable mono)
+       => (a -> Element mono -> a)
+       -> a
+       -> Consumer mono m a
+foldlE f = CL.fold (ofoldl' f)
+{-# INLINE foldlE #-}
 
 foldME :: (Monad m, MonoFoldable mono)
        => (a -> Element mono -> m a)
@@ -426,6 +453,21 @@ foldME :: (Monad m, MonoFoldable mono)
        -> Consumer mono m a
 foldME f = CL.foldM (ofoldlM f)
 {-# INLINE foldME #-}
+
+foldMapE :: (Monad m, MonoFoldable mono, Monoid w)
+         => (Element mono -> w)
+         -> Consumer mono m w
+foldMapE = CL.foldMap . ofoldMap
+{-# INLINE foldMapE #-}
+
+foldMapME :: (Monad m, MonoFoldable mono, Monoid w)
+          => (Element mono -> m w)
+          -> Consumer mono m w
+foldMapME f =
+    CL.foldM go mempty
+  where
+    go = ofoldlM (\accum e -> mappend accum `liftM` f e)
+{-# INLINE foldMapME #-}
 
 allE :: (Monad m, MonoFoldable mono)
      => (Element mono -> Bool)
@@ -457,6 +499,24 @@ notElemE = all . Seq.notElem
 
 mapM_E = CL.mapM_ . omapM_
 
+mapE = CL.map . fmap
+{-# INLINE mapE #-}
+
+mapME = CL.mapM . Data.Traversable.mapM
+{-# INLINE mapME #-}
+
+omapME = CL.mapM . omapM
+{-# INLINE omapME #-}
+
+omapE = CL.map . omap
+{-# INLINE omapE #-}
+
+filterE = CL.map . Seq.filter
+{-# INLINE filterE #-}
+
+filterME = CL.mapM . Seq.filterM
+{-# INLINE filterME #-}
+
 {-
 
 -- FIXME
@@ -472,9 +532,6 @@ concatMapAccumM
 encode
 decode
 withLine
-zipSources
-zipSinks
-Data.Conduit.Lift
 print
 find
 last
