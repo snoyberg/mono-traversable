@@ -1,0 +1,27 @@
+name:                conduit-combinators
+version:             0.1.0.0
+synopsis:            Commonly used conduit functions, for both chunked and unchunked data
+description:         Provides a replacement for Data.Conduit.List, as well as a convenient Conduit module.
+homepage:            https://github.com/fpco/conduit-combinators
+license:             MIT
+license-file:        LICENSE
+author:              Michael snoyman
+maintainer:          michael@snoyman.com
+category:            Data, Conduit
+build-type:          Simple
+cabal-version:       >=1.8
+
+library
+  exposed-modules:     Conduit
+                       Data.Conduit.Combinators
+                       Data.Conduit.Combinators.Unqualified
+  build-depends:       base >= 4 && < 5
+                     , chunked-data
+                     , conduit >= 1.0 && < 1.0.12
+                     , transformers
+                     , transformers-base
+                     , primitive
+                     , mono-traversable >= 0.2 && < 0.3
+                     , vector
+                     , system-fileio
+                     , system-filepath
