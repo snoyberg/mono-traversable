@@ -9,11 +9,11 @@ import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 
 -- | Lazy sequences containing strict chunks of data.
-class (IsSequence l, IsSequence s) => LazySequence l s | l -> s, s -> l where
-    toChunks :: l -> [s]
-    fromChunks :: [s] -> l
-    toStrict :: l -> s
-    fromStrict :: s -> l
+class (IsSequence lazy, IsSequence strict) => LazySequence lazy strict | lazy -> strict, strict -> lazy where
+    toChunks :: lazy -> [strict]
+    fromChunks :: [strict] -> lazy
+    toStrict :: lazy -> strict
+    fromStrict :: strict -> lazy
 
 instance LazySequence L.ByteString S.ByteString where
     toChunks = L.toChunks
