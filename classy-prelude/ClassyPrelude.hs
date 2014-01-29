@@ -138,6 +138,7 @@ import qualified Data.Traversable as Traversable
 import Data.Traversable (Traversable)
 import Data.Foldable (Foldable)
 import Control.DeepSeq (NFData, ($!!))
+import Data.IOData (IOData (..))
 
 import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>))
