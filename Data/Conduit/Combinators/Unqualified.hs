@@ -20,6 +20,7 @@ module Data.Conduit.Combinators.Unqualified
       -- *** I\/O
     , sourceFile
     , sourceHandle
+    , sourceIOHandle
 
       -- ** Consumers
       -- *** Pure
@@ -28,8 +29,8 @@ module Data.Conduit.Combinators.Unqualified
     , dropWhileC
     , dropWhileCE
     , foldC
-    , foldlC
     , foldCE
+    , foldlC
     , foldlCE
     , foldMapC
     , foldMapCE
@@ -61,6 +62,7 @@ module Data.Conduit.Combinators.Unqualified
       -- *** I\/O
     , sinkFile
     , sinkHandle
+    , sinkIOHandle
 
       -- ** Transformers
       -- *** Pure
@@ -79,7 +81,9 @@ module Data.Conduit.Combinators.Unqualified
     , filterC
     , filterCE
     , mapWhileC
+    , conduitVector
 
+-- FIXME need to organized/document below this point.
       -- *** Monadic
     , mapMC
     , mapMCE
@@ -148,240 +152,477 @@ sourceLazy = CC.sourceLazy
 repeatMC = CC.repeatM
 {-# INLINE repeatMC#-}
 
--- | See 'CC.repeatWhileM'
+-- | Repeatedly run the given action and yield all values it produces, until
+-- the provided predicate returns @False@.
+--
+-- Since 1.0.0
 repeatWhileMC = CC.repeatWhileM
 {-# INLINE repeatWhileMC#-}
 
--- | See 'CC.replicateM'
+-- | Perform the given action n times, yielding each result.
+--
+-- Since 1.0.0
 replicateMC = CC.replicateM
 {-# INLINE replicateMC#-}
 
--- | See 'CC.sourceFile'
+-- | Read all data from the given file.
+--
+-- This function automatically opens and closes the file handle, and ensures
+-- exception safety via @MonadResource. It works for all instances of @IOData@,
+-- including @ByteString@ and @Text@.
+--
+-- Since 1.0.0
 sourceFile = CC.sourceFile
 {-# INLINE sourceFile#-}
 
--- | See 'CC.sourceHandle'
+-- | Read all data from the given @Handle@.
+--
+-- Does not close the @Handle@ at any point.
+--
+-- Since 1.0.0
 sourceHandle = CC.sourceHandle
 {-# INLINE sourceHandle#-}
 
--- | See 'CC.drop'
+-- | Open a @Handle@ using the given function and stream data from it.
+--
+-- Automatically closes the file at completion.
+--
+-- Since 1.0.0
+sourceIOHandle = CC.sourceIOHandle
+{-# INLINE sourceIOHandle#-}
+
+-- | Ignore a certain number of values in the stream.
+--
+-- Since 1.0.0
 dropC = CC.drop
 {-# INLINE dropC#-}
 
--- | See 'CC.dropE'
+-- | Drop a certain number of elements from a chunked stream.
+--
+-- Since 1.0.0
 dropCE = CC.dropE
 {-# INLINE dropCE#-}
 
--- | See 'CC.dropWhile'
+-- | Drop all values which match the given predicate.
+--
+-- Since 1.0.0
 dropWhileC = CC.dropWhile
 {-# INLINE dropWhileC#-}
 
--- | See 'CC.dropWhileE'
+-- | Drop all elements in the chunked stream which match the given predicate.
+--
+-- Since 1.0.0
 dropWhileCE = CC.dropWhileE
 {-# INLINE dropWhileCE#-}
 
--- | See 'CC.fold'
+-- | Monoidally combine all values in the stream.
+--
+-- Since 1.0.0
 foldC = CC.fold
 {-# INLINE foldC#-}
 
--- | See 'CC.foldl'
-foldlC = CC.foldl
-{-# INLINE foldlC#-}
-
--- | See 'CC.foldE'
+-- | Monoidally combine all elements in the chunked stream.
+--
+-- Since 1.0.0
 foldCE = CC.foldE
 {-# INLINE foldCE#-}
 
--- | See 'CC.foldlE'
+-- | A strict left fold.
+--
+-- Since 1.0.0
+foldlC = CC.foldl
+{-# INLINE foldlC#-}
+
+-- | A strict left fold on a chunked stream.
+--
+-- Since 1.0.0
 foldlCE = CC.foldlE
 {-# INLINE foldlCE#-}
 
--- | See 'CC.foldMap'
+-- | Apply the provided mapping function and monoidal combine all values.
+--
+-- Since 1.0.0
 foldMapC = CC.foldMap
 {-# INLINE foldMapC#-}
 
--- | See 'CC.foldMapE'
+-- | Apply the provided mapping function and monoidal combine all elements of the chunked stream.
+--
+-- Since 1.0.0
 foldMapCE = CC.foldMapE
 {-# INLINE foldMapCE#-}
 
--- | See 'CC.all'
+-- | Check that all values in the stream return True.
+--
+-- Subject to shortcut logic: at the first False, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
 allC = CC.all
 {-# INLINE allC#-}
 
--- | See 'CC.allE'
+-- | Check that all elements in the chunked stream return True.
+--
+-- Subject to shortcut logic: at the first False, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
 allCE = CC.allE
 {-# INLINE allCE#-}
 
--- | See 'CC.any'
+-- | Check that at least one value in the stream returns True.
+--
+-- Subject to shortcut logic: at the first True, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
 anyC = CC.any
 {-# INLINE anyC#-}
 
--- | See 'CC.anyE'
+-- | Check that at least one element in the chunked stream returns True.
+--
+-- Subject to shortcut logic: at the first True, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
 anyCE = CC.anyE
 {-# INLINE anyCE#-}
 
--- | See 'CC.and'
+-- | Are all values in the stream True?
+--
+-- Consumption stops once the first False is encountered.
+--
+-- Since 1.0.0
 andC = CC.and
 {-# INLINE andC#-}
 
--- | See 'CC.andE'
+-- | Are all elements in the chunked stream True?
+--
+-- Consumption stops once the first False is encountered.
+--
+-- Since 1.0.0
 andCE = CC.andE
 {-# INLINE andCE#-}
 
--- | See 'CC.or'
+-- | Are any values in the stream True?
+--
+-- Consumption stops once the first True is encountered.
+--
+-- Since 1.0.0
 orC = CC.or
 {-# INLINE orC#-}
 
--- | See 'CC.orE'
+-- | Are any elements in the chunked stream True?
+--
+-- Consumption stops once the first True is encountered.
+--
+-- Since 1.0.0
 orCE = CC.orE
 {-# INLINE orCE#-}
 
--- | See 'CC.elem'
+-- | Are any values in the stream equal to the given value?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
 elemC = CC.elem
 {-# INLINE elemC#-}
 
--- | See 'CC.elemE'
+-- | Are any elements in the chunked stream equal to the given element?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
 elemCE = CC.elemE
 {-# INLINE elemCE#-}
 
--- | See 'CC.notElem'
+-- | Are no values in the stream equal to the given value?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
 notElemC = CC.notElem
 {-# INLINE notElemC#-}
 
--- | See 'CC.notElemE'
+-- | Are no elements in the chunked stream equal to the given element?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
 notElemCE = CC.notElemE
 {-# INLINE notElemCE#-}
 
--- | See 'CC.sinkLazy'
+-- | Consume all incoming strict chunks into a lazy sequence.
+-- Note that the entirety of the sequence will be resident at memory.
+--
+-- This can be used to consume a stream of strict ByteStrings into a lazy
+-- ByteString, for example.
+--
+-- Since 1.0.0
 sinkLazy = CC.sinkLazy
 {-# INLINE sinkLazy#-}
 
--- | See 'CC.sinkList'
+-- | Consume all values from the stream and return as a list. Note that this
+-- will pull all values into memory.
+--
+-- Since 1.0.0
 sinkList = CC.sinkList
 {-# INLINE sinkList#-}
 
--- | Sink incoming values into a vector, up until size @maxSize@.
--- Subsequent values will be left in the stream.
+-- | Sink incoming values into a vector, up until size @maxSize@.  Subsequent
+-- values will be left in the stream. If there are less than @maxSize@ values
+-- present, returns a @Vector@ of smaller size.
+--
+-- Note that using this function is more memory efficient than @sinkList@ and
+-- then converting to a @Vector@, as it avoids intermediate list constructors.
+--
+-- Since 1.0.0
 sinkVector = CC.sinkVector
 {-# INLINE sinkVector#-}
 
--- | See 'CC.sinkNull'
+-- | Consume and discard all remaining values in the stream.
+--
+-- Since 1.0.0
 sinkNull = CC.sinkNull
 {-# INLINE sinkNull#-}
 
--- | See 'CC.mapM_'
+-- | Apply the action to all values in the stream.
+--
+-- Since 1.0.0
 mapM_C = CC.mapM_
 {-# INLINE mapM_C#-}
 
--- | See 'CC.mapM_E'
+-- | Apply the action to all elements in the chunked stream.
+--
+-- Since 1.0.0
 mapM_CE = CC.mapM_E
 {-# INLINE mapM_CE#-}
 
--- | See 'CC.foldM'
+-- | A monadic strict left fold.
+--
+-- Since 1.0.0
 foldMC = CC.foldM
 {-# INLINE foldMC#-}
 
--- | See 'CC.foldME'
+-- | A monadic strict left fold on a chunked stream.
+--
+-- Since 1.0.0
 foldMCE = CC.foldME
 {-# INLINE foldMCE#-}
 
--- | See 'CC.foldMapM'
+-- | Apply the provided monadic mapping function and monoidal combine all values.
+--
+-- Since 1.0.0
 foldMapMC = CC.foldMapM
 {-# INLINE foldMapMC#-}
 
--- | See 'CC.foldMapME'
+-- | Apply the provided monadic mapping function and monoidal combine all
+-- elements in the chunked stream.
+--
+-- Since 1.0.0
 foldMapMCE = CC.foldMapME
 {-# INLINE foldMapMCE#-}
 
--- | See 'CC.sinkFile'
+-- | Write all data to the given file.
+--
+-- This function automatically opens and closes the file handle, and ensures
+-- exception safety via @MonadResource. It works for all instances of @IOData@,
+-- including @ByteString@ and @Text@.
+--
+-- Since 1.0.0
 sinkFile = CC.sinkFile
 {-# INLINE sinkFile#-}
 
--- | See 'CC.sinkHandle'
+-- | Write all data to the given @Handle@.
+--
+-- Does not close the @Handle@ at any point.
+--
+-- Since 1.0.0
 sinkHandle = CC.sinkHandle
 {-# INLINE sinkHandle#-}
 
--- | See 'CC.map'
+-- | Open a @Handle@ using the given function and stream data to it.
+--
+-- Automatically closes the file at completion.
+--
+-- Since 1.0.0
+sinkIOHandle = CC.sinkIOHandle
+{-# INLINE sinkIOHandle#-}
+
+-- | Apply a transformation to all values in a stream.
+--
+-- Since 1.0.0
 mapC = CC.map
 {-# INLINE mapC#-}
 
--- | See 'CC.mapE'
+-- | Apply a transformation to all elements in a chunked stream.
+--
+-- Since 1.0.0
 mapCE = CC.mapE
 {-# INLINE mapCE#-}
 
--- | See 'CC.omapE'
+-- | Apply a monomorphic transformation to all elements in a chunked stream.
+--
+-- Unlike @mapE@, this will work on types like @ByteString@ and @Text@ which
+-- are @MonoFunctor@ but not @Functor@.
+--
+-- Since 1.0.0
 omapCE = CC.omapE
 {-# INLINE omapCE#-}
 
--- | Generalizes concatMap, mapMaybe, mapFoldable
+-- | Apply the function to each value in the stream, resulting in a foldable
+-- value (e.g., a list). Then yield each of the individual values in that
+-- foldable value separately.
+--
+-- Generalizes concatMap, mapMaybe, and mapFoldable.
+--
+-- Since 1.0.0
 concatMapC = CC.concatMap
 {-# INLINE concatMapC#-}
 
--- | See 'CC.concatMapE'
+-- | Apply the function to each element in the chunked stream, resulting in a
+-- foldable value (e.g., a list). Then yield each of the individual values in
+-- that foldable value separately.
+--
+-- Generalizes concatMap, mapMaybe, and mapFoldable.
+--
+-- Since 1.0.0
 concatMapCE = CC.concatMapE
 {-# INLINE concatMapCE#-}
 
--- | See 'CC.take'
+-- | Stream up to n number of values downstream.
+--
+-- Note that, if downstream terminates early, not all values will be consumed.
+-- If you want to force /exactly/ the given number of values to be consumed,
+-- see 'takeExactly'.
+--
+-- Since 1.0.0
 takeC = CC.take
 {-# INLINE takeC#-}
 
--- | See 'CC.takeE'
+-- | Stream up to n number of elements downstream in a chunked stream.
+--
+-- Note that, if downstream terminates early, not all values will be consumed.
+-- If you want to force /exactly/ the given number of values to be consumed,
+-- see 'takeExactlyE'.
+--
+-- Since 1.0.0
 takeCE = CC.takeE
 {-# INLINE takeCE#-}
 
--- | See 'CC.takeWhile'
+-- | Stream all values downstream that match the given predicate.
+--
+-- Same caveats regarding downstream termination apply as with 'take'.
+--
+-- Since 1.0.0
 takeWhileC = CC.takeWhile
 {-# INLINE takeWhileC#-}
 
--- | See 'CC.takeWhileE'
+-- | Stream all elements downstream that match the given predicate in a chunked stream.
+--
+-- Same caveats regarding downstream termination apply as with 'takeE'.
+--
+-- Since 1.0.0
 takeWhileCE = CC.takeWhileE
 {-# INLINE takeWhileCE#-}
 
--- | See 'CC.takeExactly'
+-- | Consume precisely the given number of values and feed them downstream.
+--
+-- This function is in contrast to 'take', which will only consume up to the
+-- given number of values, and will terminate early if downstream terminates
+-- early. This function will discard any additional values in the stream if
+-- they are unconsumed.
+--
+-- Note that this function takes a downstream @ConduitM@ as a parameter, as
+-- opposed to working with normal fusion. For more information, see
+-- <http://www.yesodweb.com/blog/2013/10/core-flaw-pipes-conduit>, the section
+-- titled \"pipes and conduit: isolate\".
+--
+-- Since 1.0.0
 takeExactlyC = CC.takeExactly
 {-# INLINE takeExactlyC#-}
 
--- | See 'CC.takeExactlyE'
+-- | Same as 'takeExactly', but for chunked streams.
+--
+-- Since 1.0.0
 takeExactlyCE = CC.takeExactlyE
 {-# INLINE takeExactlyCE#-}
 
--- | See 'CC.concat'
+-- | Flatten out a stream by yielding the values contained in an incoming
+-- @MonoFoldable@ as individually yielded values.
+--
+-- Since 1.0.0
 concatC = CC.concat
 {-# INLINE concatC#-}
 
--- | See 'CC.filter'
+-- | Keep only values in the stream passing a given predicate.
+--
+-- Since 1.0.0
 filterC = CC.filter
 {-# INLINE filterC#-}
 
--- | See 'CC.filterE'
+-- | Keep only elements in the chunked stream passing a given predicate.
+--
+-- Since 1.0.0
 filterCE = CC.filterE
 {-# INLINE filterCE#-}
 
 -- | Map values as long as the result is @Just@.
+--
+-- Since 1.0.0
 mapWhileC = CC.mapWhile
 {-# INLINE mapWhileC#-}
 
--- | See 'CC.mapM'
+-- | Break up a stream of values into vectors of size n. The final vector may
+-- be smaller than n if the total number of values is not a strict multiple of
+-- n. No empty vectors will be yielded.
+--
+-- Since 1.0.0
+conduitVector = CC.conduitVector
+{-# INLINE conduitVector#-}
+
+-- | Apply a monadic transformation to all values in a stream.
+--
+-- If you do not need the transformed values, and instead just want the monadic
+-- side-effects of running the action, see 'mapM_'.
+--
+-- Since 1.0.0
 mapMC = CC.mapM
 {-# INLINE mapMC#-}
 
--- | See 'CC.mapME'
+-- | Apply a monadic transformation to all elements in a chunked stream.
+--
+-- Since 1.0.0
 mapMCE = CC.mapME
 {-# INLINE mapMCE#-}
 
--- | See 'CC.omapME'
+-- | Apply a monadic monomorphic transformation to all elements in a chunked stream.
+--
+-- Unlike @mapME@, this will work on types like @ByteString@ and @Text@ which
+-- are @MonoFunctor@ but not @Functor@.
+--
+-- Since 1.0.0
 omapMCE = CC.omapME
 {-# INLINE omapMCE#-}
 
--- | Generalizes concatMapM, mapMaybeM, mapFoldableM
+-- | Apply the monadic function to each value in the stream, resulting in a
+-- foldable value (e.g., a list). Then yield each of the individual values in
+-- that foldable value separately.
+--
+-- Generalizes concatMapM, mapMaybeM, and mapFoldableM.
+--
+-- Since 1.0.0
 concatMapMC = CC.concatMapM
 {-# INLINE concatMapMC#-}
 
--- | See 'CC.filterM'
+-- | Keep only values in the stream passing a given monadic predicate.
+--
+-- Since 1.0.0
 filterMC = CC.filterM
 {-# INLINE filterMC#-}
 
--- | See 'CC.filterME'
+-- | Keep only elements in the chunked stream passing a given monadic predicate.
+--
+-- Since 1.0.0
 filterMCE = CC.filterME
 {-# INLINE filterMCE#-}
 
@@ -392,6 +633,6 @@ filterMCE = CC.filterME
 --
 -- > iterM f = mapM (\a -> f a >>= \() -> return a)
 --
--- Since 0.5.6
+-- Since 1.0.0
 iterMC = CC.iterM
 {-# INLINE iterMC#-}

@@ -87,7 +87,6 @@ module Data.Conduit.Combinators
     , omapE
     , concatMap
     , concatMapE
--- FIXME need to organized/document below this point.
     , take
     , takeE
     , takeWhile
@@ -95,13 +94,14 @@ module Data.Conduit.Combinators
     , takeExactly
     , takeExactlyE
     , concat
-    , CL.filter
+    , filter
     , filterE
     , mapWhile
     , conduitVector
 
+-- FIXME need to organized/document below this point.
       -- ** Monadic
-    , CL.mapM
+    , mapM
     , mapME
     , omapME
     , concatMapM
@@ -323,8 +323,6 @@ dropWhile f =
         | f x = loop
         | otherwise = leftover x
 {-# INLINE dropWhile #-}
-
--- FIXME need to organized/document below this point.
 
 -- | Drop all elements in the chunked stream which match the given predicate.
 --
@@ -698,6 +696,13 @@ concatMapE :: (Monad m, MonoFoldable mono, Monoid w)
 concatMapE = CL.map . ofoldMap
 {-# INLINE concatMapE #-}
 
+-- | Stream up to n number of values downstream.
+--
+-- Note that, if downstream terminates early, not all values will be consumed.
+-- If you want to force /exactly/ the given number of values to be consumed,
+-- see 'takeExactly'.
+--
+-- Since 1.0.0
 take :: Monad m => Int -> Conduit a m a
 take =
     loop
@@ -707,89 +712,13 @@ take =
         | otherwise = await >>= maybe (return ()) (\i -> yield i >> loop (count - 1))
 {-# INLINE take #-}
 
--- | Generalizes concatMapM, mapMaybeM, mapFoldableM
-concatMapM :: (Monad m, MonoFoldable mono)
-           => (a -> m mono)
-           -> Conduit a m (Element mono)
-concatMapM f = awaitForever (lift . f >=> yieldMany)
-{-# INLINE concatMapM #-}
-
-takeExactly :: Monad m
-            => Int
-            -> ConduitM a b m r
-            -> ConduitM a b m r
-takeExactly count inner = take count =$= do
-    r <- inner
-    CL.sinkNull
-    return r
-{-# INLINE takeExactly #-}
-
-takeExactlyE :: (Monad m, Seq.IsSequence a)
-             => Seq.Index a
-             -> ConduitM a b m r
-             -> ConduitM a b m r
-takeExactlyE count inner = takeE count =$= do
-    r <- inner
-    CL.sinkNull
-    return r
-{-# INLINE takeExactlyE #-}
-
-takeWhile :: Monad m
-          => (a -> Bool)
-          -> Conduit a m a
-takeWhile f =
-    loop
-  where
-    loop = await >>= maybe (return ()) go
-    go x
-        | f x = yield x >> loop
-        | otherwise = leftover x
-{-# INLINE takeWhile #-}
-
-concat :: (Monad m, MonoFoldable mono)
-       => Conduit mono m (Element mono)
-concat = awaitForever yieldMany
-{-# INLINE concat #-}
-
-filterM :: Monad m
-        => (a -> m Bool)
-        -> Conduit a m a
-filterM f =
-    awaitForever go
-  where
-    go x = do
-        b <- lift $ f x
-        when b $ yield x
-{-# INLINE filterM #-}
-
--- | Map values as long as the result is @Just@.
-mapWhile :: Monad m => (a -> Maybe b) -> Conduit a m b
-mapWhile f =
-    loop
-  where
-    loop = await >>= maybe (return ()) go
-    go x =
-        case f x of
-            Just y -> yield y >> loop
-            Nothing -> leftover x
-
-takeWhileE :: (Monad m, Seq.IsSequence seq)
-           => (Element seq -> Bool)
-           -> Conduit seq m seq
-takeWhileE f =
-    loop
-  where
-    loop = await >>= maybe (return ()) go
-
-    go seq = do
-        unless (onull x) $ yield x
-        if onull y
-            then loop
-            else leftover y
-      where
-        (x, y) = Seq.span f seq
-{-# INLINE takeWhileE #-}
-
+-- | Stream up to n number of elements downstream in a chunked stream.
+--
+-- Note that, if downstream terminates early, not all values will be consumed.
+-- If you want to force /exactly/ the given number of values to be consumed,
+-- see 'takeExactlyE'.
+--
+-- Since 1.0.0
 takeE :: (Monad m, Seq.IsSequence seq)
       => Seq.Index seq
       -> Conduit seq m seq
@@ -809,15 +738,185 @@ takeE =
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE takeE #-}
 
-mapME = CL.mapM . Data.Traversable.mapM
-{-# INLINE mapME #-}
+-- | Stream all values downstream that match the given predicate.
+--
+-- Same caveats regarding downstream termination apply as with 'take'.
+--
+-- Since 1.0.0
+takeWhile :: Monad m
+          => (a -> Bool)
+          -> Conduit a m a
+takeWhile f =
+    loop
+  where
+    loop = await >>= maybe (return ()) go
+    go x
+        | f x = yield x >> loop
+        | otherwise = leftover x
+{-# INLINE takeWhile #-}
 
-omapME = CL.mapM . omapM
-{-# INLINE omapME #-}
+-- | Stream all elements downstream that match the given predicate in a chunked stream.
+--
+-- Same caveats regarding downstream termination apply as with 'takeE'.
+--
+-- Since 1.0.0
+takeWhileE :: (Monad m, Seq.IsSequence seq)
+           => (Element seq -> Bool)
+           -> Conduit seq m seq
+takeWhileE f =
+    loop
+  where
+    loop = await >>= maybe (return ()) go
 
+    go seq = do
+        unless (onull x) $ yield x
+        if onull y
+            then loop
+            else leftover y
+      where
+        (x, y) = Seq.span f seq
+{-# INLINE takeWhileE #-}
+
+-- | Consume precisely the given number of values and feed them downstream.
+--
+-- This function is in contrast to 'take', which will only consume up to the
+-- given number of values, and will terminate early if downstream terminates
+-- early. This function will discard any additional values in the stream if
+-- they are unconsumed.
+--
+-- Note that this function takes a downstream @ConduitM@ as a parameter, as
+-- opposed to working with normal fusion. For more information, see
+-- <http://www.yesodweb.com/blog/2013/10/core-flaw-pipes-conduit>, the section
+-- titled \"pipes and conduit: isolate\".
+--
+-- Since 1.0.0
+takeExactly :: Monad m
+            => Int
+            -> ConduitM a b m r
+            -> ConduitM a b m r
+takeExactly count inner = take count =$= do
+    r <- inner
+    CL.sinkNull
+    return r
+{-# INLINE takeExactly #-}
+
+-- | Same as 'takeExactly', but for chunked streams.
+--
+-- Since 1.0.0
+takeExactlyE :: (Monad m, Seq.IsSequence a)
+             => Seq.Index a
+             -> ConduitM a b m r
+             -> ConduitM a b m r
+takeExactlyE count inner = takeE count =$= do
+    r <- inner
+    CL.sinkNull
+    return r
+{-# INLINE takeExactlyE #-}
+
+-- | Flatten out a stream by yielding the values contained in an incoming
+-- @MonoFoldable@ as individually yielded values.
+--
+-- Since 1.0.0
+concat :: (Monad m, MonoFoldable mono)
+       => Conduit mono m (Element mono)
+concat = awaitForever yieldMany
+{-# INLINE concat #-}
+
+-- | Keep only values in the stream passing a given predicate.
+--
+-- Since 1.0.0
+filter = CL.filter
+{-# INLINE filter #-}
+
+-- | Keep only elements in the chunked stream passing a given predicate.
+--
+-- Since 1.0.0
 filterE = CL.map . Seq.filter
 {-# INLINE filterE #-}
 
+-- | Map values as long as the result is @Just@.
+--
+-- Since 1.0.0
+mapWhile :: Monad m => (a -> Maybe b) -> Conduit a m b
+mapWhile f =
+    loop
+  where
+    loop = await >>= maybe (return ()) go
+    go x =
+        case f x of
+            Just y -> yield y >> loop
+            Nothing -> leftover x
+{-# INLINE mapWhile #-}
+
+-- | Break up a stream of values into vectors of size n. The final vector may
+-- be smaller than n if the total number of values is not a strict multiple of
+-- n. No empty vectors will be yielded.
+--
+-- Since 1.0.0
+conduitVector size =
+    loop
+  where
+    loop = do
+        v <- sinkVector size
+        unless (V.null v) $ do
+            yield v
+            loop
+{-# INLINE conduitVector #-}
+
+-- | Apply a monadic transformation to all values in a stream.
+--
+-- If you do not need the transformed values, and instead just want the monadic
+-- side-effects of running the action, see 'mapM_'.
+--
+-- Since 1.0.0
+mapM = CL.mapM
+{-# INLINE mapM #-}
+
+-- | Apply a monadic transformation to all elements in a chunked stream.
+--
+-- Since 1.0.0
+mapME = CL.mapM . Data.Traversable.mapM
+{-# INLINE mapME #-}
+
+-- | Apply a monadic monomorphic transformation to all elements in a chunked stream.
+--
+-- Unlike @mapME@, this will work on types like @ByteString@ and @Text@ which
+-- are @MonoFunctor@ but not @Functor@.
+--
+-- Since 1.0.0
+omapME = CL.mapM . omapM
+{-# INLINE omapME #-}
+
+-- | Apply the monadic function to each value in the stream, resulting in a
+-- foldable value (e.g., a list). Then yield each of the individual values in
+-- that foldable value separately.
+--
+-- Generalizes concatMapM, mapMaybeM, and mapFoldableM.
+--
+-- Since 1.0.0
+concatMapM :: (Monad m, MonoFoldable mono)
+           => (a -> m mono)
+           -> Conduit a m (Element mono)
+concatMapM f = awaitForever (lift . f >=> yieldMany)
+{-# INLINE concatMapM #-}
+
+-- | Keep only values in the stream passing a given monadic predicate.
+--
+-- Since 1.0.0
+filterM :: Monad m
+        => (a -> m Bool)
+        -> Conduit a m a
+filterM f =
+    awaitForever go
+  where
+    go x = do
+        b <- lift $ f x
+        when b $ yield x
+{-# INLINE filterM #-}
+
+-- | Keep only elements in the chunked stream passing a given monadic predicate.
+--
+-- Since 1.0.0
 filterME = CL.mapM . Seq.filterM
 {-# INLINE filterME #-}
 
@@ -828,20 +927,8 @@ filterME = CL.mapM . Seq.filterM
 --
 -- > iterM f = mapM (\a -> f a >>= \() -> return a)
 --
--- Since 0.5.6
+-- Since 1.0.0
 iterM = CL.iterM
-
--- | Break up a stream of values into vectors of size n. The final vector may
--- be smaller than n if the total number of values is not a strict multiple of
--- n. No empty vectors will be yielded.
-conduitVector size =
-    loop
-  where
-    loop = do
-        v <- sinkVector size
-        unless (V.null v) $ do
-            yield v
-            loop
 
 {-
 

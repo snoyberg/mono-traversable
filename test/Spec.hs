@@ -183,6 +183,76 @@ main = hspec $ do
     prop "concatMapE" $ \input ->
         runIdentity (yield input $$ concatMapCE showInt =$ foldC)
         `shouldBe` concatMap showInt input
+    it "take" $
+        runIdentity (yieldMany [1..10] $$ takeC 5 =$ sinkList)
+        `shouldBe` [1..5]
+    it "takeE" $
+        runIdentity (yield ("Hello World" :: Text) $$ takeCE 5 =$ sinkLazy)
+        `shouldBe` "Hello"
+    it "takeWhile" $
+        runIdentity (yieldMany [1..10] $$ takeWhileC (<= 5) =$ sinkList)
+        `shouldBe` [1..5]
+    it "takeWhileE" $
+        runIdentity (yield ("Hello World" :: Text) $$ takeWhileCE (/= 'W') =$ sinkLazy)
+        `shouldBe` "Hello "
+    it "takeExactly" $
+        let src = yieldMany [1..10]
+            sink = do
+                takeExactlyC 5 $ return ()
+                sinkList
+            res = runIdentity $ src $$ sink
+         in res `shouldBe` [6..10]
+    it "takeExactlyE" $
+        let src = yield ("Hello World" :: Text)
+            sink = do
+                takeExactlyCE 5 $ return ()
+                sinkLazy
+            res = runIdentity $ src $$ sink
+         in res `shouldBe` " World"
+    prop "concat" $ \input ->
+        runIdentity (yield (T.pack input) $$ concatC =$ sinkList)
+        `shouldBe` input
+    prop "filter" $ \input ->
+        runIdentity (yieldMany input $$ filterC evenInt =$ sinkList)
+        `shouldBe` filter evenInt input
+    prop "filterE" $ \input ->
+        runIdentity (yield input $$ filterCE evenInt =$ foldC)
+        `shouldBe` filter evenInt input
+    prop "mapWhile" $ \input highest ->
+        let f i
+                | i < highest = Just (i + 2 :: Int)
+                | otherwise = Nothing
+            res = runIdentity $ yieldMany input $$ mapWhileC f =$ sinkList
+            expected = map (+ 2) $ takeWhile (< highest) input
+         in res `shouldBe` expected
+    prop "conduitVector" $ \(take 200 -> input) size' -> do
+        let size = min 30 $ succ $ abs size'
+        res <- yieldMany input $$ conduitVector size =$ sinkList
+        res `shouldSatisfy` all (\v -> V.length v <= size)
+        drop 1 (reverse res) `shouldSatisfy` all (\v -> V.length v == size)
+        V.concat res `shouldBe` V.fromList (input :: [Int])
+    prop "mapM" $ \input ->
+        runIdentity (yieldMany input $$ mapMC (return . succChar) =$ sinkList)
+        `shouldBe` map succChar input
+    prop "mapME" $ \(map V.fromList -> inputs) ->
+        runIdentity (yieldMany inputs $$ mapMCE (return . succChar) =$ foldC)
+        `shouldBe` V.map succChar (V.concat inputs)
+    prop "omapME" $ \(map T.pack -> inputs) ->
+        runIdentity (yieldMany inputs $$ omapMCE (return . succChar) =$ foldC)
+        `shouldBe` T.map succChar (T.concat inputs)
+    prop "concatMapM" $ \input ->
+        runIdentity (yieldMany input $$ concatMapMC (return . showInt) =$ sinkList)
+        `shouldBe` concatMap showInt input
+    prop "filterM" $ \input ->
+        runIdentity (yieldMany input $$ filterMC (return . evenInt) =$ sinkList)
+        `shouldBe` filter evenInt input
+    prop "filterME" $ \input ->
+        runIdentity (yield input $$ filterMCE (return . evenInt) =$ foldC)
+        `shouldBe` filter evenInt input
+    prop "iterM" $ \input -> do
+        (x, y) <- runWriterT $ yieldMany input $$ iterMC (tell . return) =$ sinkList
+        x `shouldBe` (input :: [Int])
+        y `shouldBe` input
 
 evenInt :: Int -> Bool
 evenInt = even
