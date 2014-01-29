@@ -25,3 +25,19 @@ library
                      , vector
                      , system-fileio
                      , system-filepath
+
+test-suite test
+  hs-source-dirs: test
+  main-is:        Spec.hs
+  type:           exitcode-stdio-1.0
+  cpp-options:    -DTEST
+  build-depends:  conduit-combinators
+                , base
+                , hspec >= 1.3
+                , basic-prelude
+                , text
+  ghc-options:    -Wall
+
+source-repository head
+  type:     git
+  location: git://github.com/fpco/conduit-combinators.git

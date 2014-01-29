@@ -13,30 +13,38 @@
 -- E work in the individual elements of a chunk of data, e.g., the bytes of
 -- a ByteString, the Chars of a Text, or the Ints of a Vector Int. Those
 -- without a trailing E work on unchunked streams.
+--
+-- FIXME: discuss overall naming, usage of mono-traversable, etc
+--
+-- Mention take (Conduit) vs drop (Consumer)
 module Data.Conduit.Combinators
     ( -- * Producers
       -- ** Pure
       yieldMany
-    , CL.unfold
-    , CL.enumFromTo
-    , CL.iterate
+    , unfold
+    , enumFromTo
+    , iterate
+    , repeat
     , replicate
     , sourceLazy
 
       -- ** Monadic
-    , CL.iterM
+    , repeatM
+    , repeatWhileM
     , replicateM
 
       -- ** I\/O
     , sourceFile
     , sourceHandle
+    , sourceIOHandle
 
       -- * Consumers
       -- ** Pure
-    , CL.drop
+    , drop
     , dropE
     , dropWhile
     , dropWhileE
+-- FIXME need to organized/document below this point.
     , fold
     , foldl
     , foldE
@@ -97,12 +105,13 @@ module Data.Conduit.Combinators
     , concatMapM
     , filterM
     , filterME
+    , CL.iterM
     ) where
 
 import qualified Data.Traversable
 import           Control.Applicative         ((<$>))
 import           Control.Category            (Category (..))
-import           Control.Monad               (unless, when, (>=>), liftM)
+import           Control.Monad               (unless, when, (>=>), liftM, forever)
 import           Control.Monad.Base          (MonadBase (liftBase))
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Primitive     (PrimMonad)
@@ -125,17 +134,148 @@ import           Prelude                     (Bool (..), Eq (..), Int,
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 
+-- | Yield each of the values contained by the given @MonoFoldable@.
+--
+-- This will work on many data structures, including lists, @ByteString@s, and @Vector@s.
+--
+-- Since 1.0.0
 yieldMany :: (Monad m, MonoFoldable mono)
           => mono
           -> Producer m (Element mono)
 yieldMany = ofoldMap yield
 {-# INLINE yieldMany #-}
 
+-- | Generate a producer from a seed value.
+--
+-- Since 1.0.0
+unfold :: Monad m
+       => (b -> Maybe (a, b))
+       -> b
+       -> Producer m a
+unfold = CL.unfold
+{-# INLINE unfold #-}
+
+-- | Enumerate from a value to a final value, inclusive, via 'succ'.
+--
+-- This is generally more efficient than using @Prelude@\'s @enumFromTo@ and
+-- combining with @sourceList@ since this avoids any intermediate data
+-- structures.
+--
+-- Since 1.0.0
+enumFromTo = CL.enumFromTo
+
+-- | Produces an infinite stream of repeated applications of f to x.
+--
+-- Since 1.0.0
+iterate = CL.iterate
+{-# INLINE iterate #-}
+
+-- | Produce an infinite stream consisting entirely of the given value.
+--
+-- Since 1.0.0
+repeat = iterate id
+{-# INLINE repeat #-}
+
+-- | Produce a finite stream consistent of n copies of the given value.
+--
+-- Since 1.0.0
+replicate :: Monad m
+          => Int
+          -> a
+          -> Producer m a
+replicate count0 a =
+    loop count0
+  where
+    loop count
+        | count <= 0 = return ()
+        | otherwise = yield a >> loop (count - 1)
+{-# INLINE replicate #-}
+
+-- | Generate a producer by yielding each of the strict chunks in a @LazySequence@.
+--
+-- For more information, see 'toChunks'.
+--
+-- Since 1.0.0
 sourceLazy :: (Monad m, LazySequence lazy strict)
            => lazy
            -> Producer m strict
 sourceLazy = yieldMany . toChunks
 {-# INLINE sourceLazy #-}
+
+-- | Repeatedly run the given action and yield all values it produces.
+--
+-- Since 1.0.0
+repeatM :: Monad m
+        => m a
+        -> Producer m a
+repeatM m = forever $ lift m >>= yield
+{-# INLINE repeatM #-}
+
+-- | Repeatedly run the given action and yield all values it produces, until
+-- the provided predicate returns @False@.
+--
+-- Since 1.0.0
+repeatWhileM :: Monad m
+             => m a
+             -> (a -> Bool)
+             -> Producer m a
+repeatWhileM m f =
+    loop
+  where
+    loop = do
+        x <- lift m
+        when (f x) $ yield x >> loop
+
+-- | Perform the given action n times, yielding each result.
+--
+-- Since 1.0.0
+replicateM :: Monad m
+           => Int
+           -> m a
+           -> Producer m a
+replicateM count0 m =
+    loop count0
+  where
+    loop count
+        | count <= 0 = return ()
+        | otherwise = lift m >>= yield >> loop (count - 1)
+{-# INLINE replicateM #-}
+
+-- | Read all data from the given file.
+--
+-- This function automatically opens and closes the file handle, and ensures
+-- exception safety via @MonadResource. It works for all instances of @IOData@,
+-- including @ByteString@ and @Text@.
+--
+-- Since 1.0.0
+sourceFile :: (MonadResource m, IOData a) => FilePath -> Producer m a
+sourceFile fp = sourceIOHandle (F.openFile fp SIO.ReadMode)
+{-# INLINE sourceFile #-}
+
+-- | Read all data from the given @Handle@.
+--
+-- Does not close the @Handle@ at any point.
+--
+-- Since 1.0.0
+sourceHandle :: (MonadIO m, IOData a) => Handle -> Producer m a
+sourceHandle h =
+    loop
+  where
+    loop = do
+        x <- liftIO (hGetChunk h)
+        if onull x
+            then return ()
+            else yield x >> loop
+{-# INLINEABLE sourceHandle #-}
+
+-- | Open a @Handle@ using the given function and stream data from it.
+--
+-- Automatically closes the file at completion.
+--
+-- Since 1.0.0
+sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
+sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
+{-# INLINE sourceIOHandle #-}
 
 sinkLazy :: (Monad m, LazySequence lazy strict)
          => Consumer strict m lazy
@@ -164,25 +304,6 @@ sinkVector maxSize = do
     go 0
 {-# INLINEABLE sinkVector #-}
 
-sourceFile :: (MonadResource m, IOData a) => FilePath -> Producer m a
-sourceFile fp = sourceIOHandle (F.openFile fp SIO.ReadMode)
-{-# INLINE sourceFile #-}
-
-sourceHandle :: (MonadIO m, IOData a) => Handle -> Producer m a
-sourceHandle h =
-    loop
-  where
-    loop = do
-        x <- liftIO (hGetChunk h)
-        if onull x
-            then return ()
-            else yield x >> loop
-{-# INLINEABLE sourceHandle #-}
-
-sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
-sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
-{-# INLINE sourceIOHandle #-}
-
 sinkHandle :: (MonadIO m, IOData a) => Handle -> Consumer a m ()
 sinkHandle = CL.mapM_ . hPut
 {-# INLINE sinkHandle #-}
@@ -191,33 +312,74 @@ sinkIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Consumer a m ()
 sinkIOHandle alloc = bracketP alloc SIO.hClose sinkHandle
 {-# INLINE sinkIOHandle #-}
 
+-- | Ignore a certain number of values in the stream.
+--
+-- Since 1.0.0
+drop :: Monad m
+     => Int
+     -> Consumer a m ()
+drop = CL.drop
+{-# INLINE drop #-}
+
+-- | Drop a certain number of elements from a chunked stream.
+--
+-- Since 1.0.0
+dropE :: (Monad m, Seq.IsSequence seq)
+      => Seq.Index seq
+      -> Consumer seq m ()
+dropE =
+    loop
+  where
+    loop i
+        | i <= 0 = return ()
+        | otherwise = await >>= maybe (return ()) (go i)
+
+    go i seq = do
+        unless (onull y) $ leftover y
+        loop i'
+      where
+        (x, y) = Seq.splitAt i seq
+        i' = i - fromIntegral (olength x)
+{-# INLINEABLE dropE #-}
+
+-- | Drop all values which match the given predicate.
+--
+-- Since 1.0.0
+dropWhile :: Monad m
+          => (a -> Bool)
+          -> Consumer a m ()
+dropWhile f =
+    loop
+  where
+    loop = await >>= maybe (return ()) go
+    go x
+        | f x = loop
+        | otherwise = leftover x
+{-# INLINE dropWhile #-}
+
+-- FIXME need to organized/document below this point.
+
+-- | Drop all elements in the chunked stream which match the given predicate.
+--
+-- Since 1.0.0
+dropWhileE :: (Monad m, Seq.IsSequence seq)
+           => (Element seq -> Bool)
+           -> Consumer seq m ()
+dropWhileE f =
+    loop
+  where
+    loop = await >>= maybe (return ()) go
+
+    go seq
+        | onull x = loop
+        | otherwise = leftover x
+      where
+        x = Seq.dropWhile f seq
+{-# INLINE dropWhileE #-}
+
 sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
 sinkFile fp = sinkIOHandle (F.openFile fp SIO.WriteMode)
 {-# INLINE sinkFile #-}
-
-replicateM :: Monad m
-           => Int
-           -> m a
-           -> Producer m a
-replicateM count0 m =
-    loop count0
-  where
-    loop count
-        | count <= 0 = return ()
-        | otherwise = lift m >>= yield >> loop (count - 1)
-{-# INLINE replicateM #-}
-
-replicate :: Monad m
-          => Int
-          -> a
-          -> Producer m a
-replicate count0 a =
-    loop count0
-  where
-    loop count
-        | count <= 0 = return ()
-        | otherwise = yield a >> loop (count - 1)
-{-# INLINE replicate #-}
 
 -- | Generalizes concatMap, mapMaybe, mapFoldable
 concatMap :: (Monad m, MonoFoldable mono)
@@ -238,18 +400,6 @@ concatMapM :: (Monad m, MonoFoldable mono)
            -> Conduit a m (Element mono)
 concatMapM f = awaitForever (lift . f >=> yieldMany)
 {-# INLINE concatMapM #-}
-
-dropWhile :: Monad m
-          => (a -> Bool)
-          -> Consumer a m ()
-dropWhile f =
-    loop
-  where
-    loop = await >>= maybe (return ()) go
-    go x
-        | f x = loop
-        | otherwise = leftover x
-{-# INLINE dropWhile #-}
 
 take :: Monad m => Int -> Conduit a m a
 take =
@@ -358,39 +508,6 @@ mapWhile f =
         case f x of
             Just y -> yield y >> loop
             Nothing -> leftover x
-
-dropE :: (Monad m, Seq.IsSequence seq)
-      => Seq.Index seq
-      -> Consumer seq m ()
-dropE =
-    loop
-  where
-    loop i
-        | i <= 0 = return ()
-        | otherwise = await >>= maybe (return ()) (go i)
-
-    go i seq = do
-        unless (onull y) $ leftover y
-        loop i'
-      where
-        (x, y) = Seq.splitAt i seq
-        i' = i - fromIntegral (olength x)
-{-# INLINEABLE dropE #-}
-
-dropWhileE :: (Monad m, Seq.IsSequence seq)
-           => (Element seq -> Bool)
-           -> Consumer seq m ()
-dropWhileE f =
-    loop
-  where
-    loop = await >>= maybe (return ()) go
-
-    go seq
-        | onull x = loop
-        | otherwise = leftover x
-      where
-        x = Seq.dropWhile f seq
-{-# INLINE dropWhileE #-}
 
 takeWhileE :: (Monad m, Seq.IsSequence seq)
            => (Element seq -> Bool)
@@ -517,6 +634,16 @@ filterE = CL.map . Seq.filter
 
 filterME = CL.mapM . Seq.filterM
 {-# INLINE filterME #-}
+
+-- | Apply a monadic action on all values in a stream.
+--
+-- This @Conduit@ can be used to perform a monadic side-effect for every
+-- value, whilst passing the value through the @Conduit@ as-is.
+--
+-- > iterM f = mapM (\a -> f a >>= \() -> return a)
+--
+-- Since 0.5.6
+iterM = CL.iterM
 
 {-
 

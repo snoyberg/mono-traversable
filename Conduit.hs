@@ -6,6 +6,9 @@
 -- (or for chunked functions, replacing a trailing E with EC).
 -- This means that the Conduit module can be imported unqualified
 -- without causing naming conflicts.
+--
+-- For more information on the naming scheme and intended usages of the
+-- combinators, please see the "Data.Conduit.Combinators" documentation.
 module Conduit
     ( -- * Core conduit library
       module Data.Conduit
@@ -19,6 +22,8 @@ module Conduit
     , MonadIO (..)
     , MonadTrans (..)
     , MonadBase (..)
+      -- * Pure pipelines
+    , Identity (..)
     ) where
 
 import Data.Conduit
@@ -30,3 +35,4 @@ import Control.Monad.Base (MonadBase (..))
 import Data.Conduit.Lift
 #endif
 import Data.Conduit.Combinators.Unqualified
+import Data.Functor.Identity (Identity (..))

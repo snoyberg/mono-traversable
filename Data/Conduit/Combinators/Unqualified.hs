@@ -8,11 +8,13 @@ module Data.Conduit.Combinators.Unqualified
     , unfoldC
     , enumFromToC
     , iterateC
+    , repeatC
     , replicateC
     , sourceLazy
 
       -- *** Monadic
-    , iterMC
+    , repeatMC
+    , repeatWhileMC
     , replicateMC
 
       -- *** I\/O
@@ -85,37 +87,70 @@ module Data.Conduit.Combinators.Unqualified
     , concatMapMC
     , filterMC
     , filterMCE
+    , iterMC
     ) where
 
 import qualified Data.Conduit.Combinators as CC
 
--- | See 'CC.yieldMany'
+-- | Yield each of the values contained by the given @MonoFoldable@.
+--
+-- This will work on many data structures, including lists, @ByteString@s, and @Vector@s.
+--
+-- Since 1.0.0
 yieldMany = CC.yieldMany
 {-# INLINE yieldMany#-}
 
--- | See 'CC.unfold'
+-- | Generate a producer from a seed value.
+--
+-- Since 1.0.0
 unfoldC = CC.unfold
 {-# INLINE unfoldC#-}
 
--- | See 'CC.enumFromTo'
+-- | Enumerate from a value to a final value, inclusive, via 'succ'.
+--
+-- This is generally more efficient than using @Prelude@\'s @enumFromTo@ and
+-- combining with @sourceList@ since this avoids any intermediate data
+-- structures.
+--
+-- Since 1.0.0
 enumFromToC = CC.enumFromTo
 {-# INLINE enumFromToC#-}
 
--- | See 'CC.iterate'
+-- | Produces an infinite stream of repeated applications of f to x.
+--
+-- Since 1.0.0
 iterateC = CC.iterate
 {-# INLINE iterateC#-}
 
--- | See 'CC.replicate'
+-- | Produce an infinite stream consisting entirely of the given value.
+--
+-- Since 1.0.0
+repeatC = CC.repeat
+{-# INLINE repeatC#-}
+
+-- | Produce a finite stream consistent of n copies of the given value.
+--
+-- Since 1.0.0
 replicateC = CC.replicate
 {-# INLINE replicateC#-}
 
--- | See 'CC.sourceLazy'
+-- | Generate a producer by yielding each of the strict chunks in a @LazySequence@.
+--
+-- For more information, see 'toChunks'.
+--
+-- Since 1.0.0
 sourceLazy = CC.sourceLazy
 {-# INLINE sourceLazy#-}
 
--- | See 'CC.iterM'
-iterMC = CC.iterM
-{-# INLINE iterMC#-}
+-- | Repeatedly run the given action and yield all values it produces.
+--
+-- Since 1.0.0
+repeatMC = CC.repeatM
+{-# INLINE repeatMC#-}
+
+-- | See 'CC.repeatWhileM'
+repeatWhileMC = CC.repeatWhileM
+{-# INLINE repeatWhileMC#-}
 
 -- | See 'CC.replicateM'
 replicateMC = CC.replicateM
@@ -349,3 +384,14 @@ filterMC = CC.filterM
 -- | See 'CC.filterME'
 filterMCE = CC.filterME
 {-# INLINE filterMCE#-}
+
+-- | Apply a monadic action on all values in a stream.
+--
+-- This @Conduit@ can be used to perform a monadic side-effect for every
+-- value, whilst passing the value through the @Conduit@ as-is.
+--
+-- > iterM f = mapM (\a -> f a >>= \() -> return a)
+--
+-- Since 0.5.6
+iterMC = CC.iterM
+{-# INLINE iterMC#-}
