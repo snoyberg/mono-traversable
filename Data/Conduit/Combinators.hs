@@ -67,26 +67,27 @@ module Data.Conduit.Combinators
     , sinkVector
     , CL.sinkNull
 
--- FIXME need to organized/document below this point.
       -- ** Monadic
-    , CL.mapM_
+    , mapM_
     , mapM_E
-    , CL.foldM
+    , foldM
     , foldME
-    , CL.foldMapM
+    , foldMapM
     , foldMapME
 
       -- ** I\/O
     , sinkFile
     , sinkHandle
+    , sinkIOHandle
 
       -- * Transformers
       -- ** Pure
-    , CL.map
+    , map
     , mapE
     , omapE
     , concatMap
     , concatMapE
+-- FIXME need to organized/document below this point.
     , take
     , takeE
     , takeWhile
@@ -278,14 +279,6 @@ sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
 sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
 {-# INLINE sourceIOHandle #-}
 
-sinkHandle :: (MonadIO m, IOData a) => Handle -> Consumer a m ()
-sinkHandle = CL.mapM_ . hPut
-{-# INLINE sinkHandle #-}
-
-sinkIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Consumer a m ()
-sinkIOHandle alloc = bracketP alloc SIO.hClose sinkHandle
-{-# INLINE sinkIOHandle #-}
-
 -- | Ignore a certain number of values in the stream.
 --
 -- Since 1.0.0
@@ -330,6 +323,26 @@ dropWhile f =
         | f x = loop
         | otherwise = leftover x
 {-# INLINE dropWhile #-}
+
+-- FIXME need to organized/document below this point.
+
+-- | Drop all elements in the chunked stream which match the given predicate.
+--
+-- Since 1.0.0
+dropWhileE :: (Monad m, Seq.IsSequence seq)
+           => (Element seq -> Bool)
+           -> Consumer seq m ()
+dropWhileE f =
+    loop
+  where
+    loop = await >>= maybe (return ()) go
+
+    go seq
+        | onull x = loop
+        | otherwise = leftover x
+      where
+        x = Seq.dropWhile f seq
+{-# INLINE dropWhileE #-}
 
 -- | Monoidally combine all values in the stream.
 --
@@ -562,49 +575,128 @@ sinkVector maxSize = do
 sinkNull = CL.sinkNull
 {-# INLINE sinkNull #-}
 
--- FIXME need to organized/document below this point.
-
--- | Drop all elements in the chunked stream which match the given predicate.
+-- | Apply the action to all values in the stream.
 --
 -- Since 1.0.0
-dropWhileE :: (Monad m, Seq.IsSequence seq)
-           => (Element seq -> Bool)
-           -> Consumer seq m ()
-dropWhileE f =
-    loop
+mapM_ = CL.mapM_
+{-# INLINE mapM_ #-}
+
+-- | Apply the action to all elements in the chunked stream.
+--
+-- Since 1.0.0
+mapM_E = CL.mapM_ . omapM_
+{-# INLINE mapM_E #-}
+
+-- | A monadic strict left fold.
+--
+-- Since 1.0.0
+foldM = CL.foldM
+{-# INLINE foldM #-}
+
+-- | A monadic strict left fold on a chunked stream.
+--
+-- Since 1.0.0
+foldME :: (Monad m, MonoFoldable mono)
+       => (a -> Element mono -> m a)
+       -> a
+       -> Consumer mono m a
+foldME f = foldM (ofoldlM f)
+{-# INLINE foldME #-}
+
+-- | Apply the provided monadic mapping function and monoidal combine all values.
+--
+-- Since 1.0.0
+foldMapM = CL.foldMapM
+{-# INLINE foldMapM #-}
+
+-- | Apply the provided monadic mapping function and monoidal combine all
+-- elements in the chunked stream.
+--
+-- Since 1.0.0
+foldMapME :: (Monad m, MonoFoldable mono, Monoid w)
+          => (Element mono -> m w)
+          -> Consumer mono m w
+foldMapME f =
+    CL.foldM go mempty
   where
-    loop = await >>= maybe (return ()) go
+    go = ofoldlM (\accum e -> mappend accum `liftM` f e)
+{-# INLINE foldMapME #-}
 
-    go seq
-        | onull x = loop
-        | otherwise = leftover x
-      where
-        x = Seq.dropWhile f seq
-{-# INLINE dropWhileE #-}
-
+-- | Write all data to the given file.
+--
+-- This function automatically opens and closes the file handle, and ensures
+-- exception safety via @MonadResource. It works for all instances of @IOData@,
+-- including @ByteString@ and @Text@.
+--
+-- Since 1.0.0
 sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
 sinkFile fp = sinkIOHandle (F.openFile fp SIO.WriteMode)
 {-# INLINE sinkFile #-}
 
--- | Generalizes concatMap, mapMaybe, mapFoldable
+-- | Write all data to the given @Handle@.
+--
+-- Does not close the @Handle@ at any point.
+--
+-- Since 1.0.0
+sinkHandle :: (MonadIO m, IOData a) => Handle -> Consumer a m ()
+sinkHandle = CL.mapM_ . hPut
+{-# INLINE sinkHandle #-}
+
+-- | Open a @Handle@ using the given function and stream data to it.
+--
+-- Automatically closes the file at completion.
+--
+-- Since 1.0.0
+sinkIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Consumer a m ()
+sinkIOHandle alloc = bracketP alloc SIO.hClose sinkHandle
+{-# INLINE sinkIOHandle #-}
+
+-- | Apply a transformation to all values in a stream.
+--
+-- Since 1.0.0
+map = CL.map
+{-# INLINE map #-}
+
+-- | Apply a transformation to all elements in a chunked stream.
+--
+-- Since 1.0.0
+mapE = CL.map . fmap
+{-# INLINE mapE #-}
+
+-- | Apply a monomorphic transformation to all elements in a chunked stream.
+--
+-- Unlike @mapE@, this will work on types like @ByteString@ and @Text@ which
+-- are @MonoFunctor@ but not @Functor@.
+--
+-- Since 1.0.0
+omapE = CL.map . omap
+{-# INLINE omapE #-}
+
+-- | Apply the function to each value in the stream, resulting in a foldable
+-- value (e.g., a list). Then yield each of the individual values in that
+-- foldable value separately.
+--
+-- Generalizes concatMap, mapMaybe, and mapFoldable.
+--
+-- Since 1.0.0
 concatMap :: (Monad m, MonoFoldable mono)
           => (a -> mono)
           -> Conduit a m (Element mono)
 concatMap f = awaitForever (yieldMany . f)
 {-# INLINE concatMap #-}
 
+-- | Apply the function to each element in the chunked stream, resulting in a
+-- foldable value (e.g., a list). Then yield each of the individual values in
+-- that foldable value separately.
+--
+-- Generalizes concatMap, mapMaybe, and mapFoldable.
+--
+-- Since 1.0.0
 concatMapE :: (Monad m, MonoFoldable mono, Monoid w)
            => (Element mono -> w)
            -> Conduit mono m w
 concatMapE = CL.map . ofoldMap
 {-# INLINE concatMapE #-}
-
--- | Generalizes concatMapM, mapMaybeM, mapFoldableM
-concatMapM :: (Monad m, MonoFoldable mono)
-           => (a -> m mono)
-           -> Conduit a m (Element mono)
-concatMapM f = awaitForever (lift . f >=> yieldMany)
-{-# INLINE concatMapM #-}
 
 take :: Monad m => Int -> Conduit a m a
 take =
@@ -614,6 +706,13 @@ take =
         | count <= 0 = return ()
         | otherwise = await >>= maybe (return ()) (\i -> yield i >> loop (count - 1))
 {-# INLINE take #-}
+
+-- | Generalizes concatMapM, mapMaybeM, mapFoldableM
+concatMapM :: (Monad m, MonoFoldable mono)
+           => (a -> m mono)
+           -> Conduit a m (Element mono)
+concatMapM f = awaitForever (lift . f >=> yieldMany)
+{-# INLINE concatMapM #-}
 
 takeExactly :: Monad m
             => Int
@@ -710,35 +809,11 @@ takeE =
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE takeE #-}
 
-foldME :: (Monad m, MonoFoldable mono)
-       => (a -> Element mono -> m a)
-       -> a
-       -> Consumer mono m a
-foldME f = CL.foldM (ofoldlM f)
-{-# INLINE foldME #-}
-
-foldMapME :: (Monad m, MonoFoldable mono, Monoid w)
-          => (Element mono -> m w)
-          -> Consumer mono m w
-foldMapME f =
-    CL.foldM go mempty
-  where
-    go = ofoldlM (\accum e -> mappend accum `liftM` f e)
-{-# INLINE foldMapME #-}
-
-mapM_E = CL.mapM_ . omapM_
-
-mapE = CL.map . fmap
-{-# INLINE mapE #-}
-
 mapME = CL.mapM . Data.Traversable.mapM
 {-# INLINE mapME #-}
 
 omapME = CL.mapM . omapM
 {-# INLINE omapME #-}
-
-omapE = CL.map . omap
-{-# INLINE omapE #-}
 
 filterE = CL.map . Seq.filter
 {-# INLINE filterE #-}

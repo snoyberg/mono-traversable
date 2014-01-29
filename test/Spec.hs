@@ -1,15 +1,19 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 import Conduit
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import BasicPrelude
+import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.IORef
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
+import Control.Monad.Trans.Writer
+import qualified Prelude
 
 main :: IO ()
 main = hspec $ do
@@ -138,6 +142,47 @@ main = hspec $ do
             xs = take maxSize xs'
         res <- yieldMany xs' $$ sinkVector maxSize
         res `shouldBe` VS.fromList (xs :: [Int])
+    prop "mapM_" $ \xs ->
+        let res = execWriter $ yieldMany xs $$ mapM_C (tell . return)
+         in res `shouldBe` (xs :: [Int])
+    prop "mapM_E" $ \xs ->
+        let res = execWriter $ yield xs $$ mapM_CE (tell . return)
+         in res `shouldBe` (xs :: [Int])
+    prop "foldM" $ \xs -> do
+        res <- yieldMany xs $$ foldMC addM 0
+        res `shouldBe` sum xs
+    prop "foldME" $ \xs -> do
+        res <- yield xs $$ foldMCE addM 0
+        res `shouldBe` sum xs
+    it "foldMapM" $
+        let src = yieldMany [1..10]
+            res = runIdentity $ src $$ foldMapMC (return . return)
+         in res `shouldBe` [1..10]
+    it "foldMapME" $
+        let src = yield [1..10]
+            res = runIdentity $ src $$ foldMapMCE (return . return)
+         in res `shouldBe` [1..10]
+    it "sinkFile" $ do
+        let contents = "this is some content"
+            fp = "tmp"
+        runResourceT $ yield contents $$ sinkFile fp
+        res <- readFile fp
+        res `shouldBe` contents
+    prop "map" $ \input ->
+        runIdentity (yieldMany input $$ mapC succChar =$ sinkList)
+        `shouldBe` map succChar input
+    prop "mapE" $ \(map V.fromList -> inputs) ->
+        runIdentity (yieldMany inputs $$ mapCE succChar =$ foldC)
+        `shouldBe` V.map succChar (V.concat inputs)
+    prop "omapE" $ \(map T.pack -> inputs) ->
+        runIdentity (yieldMany inputs $$ omapCE succChar =$ foldC)
+        `shouldBe` T.map succChar (T.concat inputs)
+    prop "concatMap" $ \input ->
+        runIdentity (yieldMany input $$ concatMapC showInt =$ sinkList)
+        `shouldBe` concatMap showInt input
+    prop "concatMapE" $ \input ->
+        runIdentity (yield input $$ concatMapCE showInt =$ foldC)
+        `shouldBe` concatMap showInt input
 
 evenInt :: Int -> Bool
 evenInt = even
@@ -147,3 +192,12 @@ elemInt = elem
 
 notElemInt :: Int -> [Int] -> Bool
 notElemInt = notElem
+
+addM :: Monad m => Int -> Int -> m Int
+addM x y = return (x + y)
+
+succChar :: Char -> Char
+succChar = succ
+
+showInt :: Int -> String
+showInt = Prelude.show
