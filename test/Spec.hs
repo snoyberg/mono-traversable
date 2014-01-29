@@ -257,7 +257,6 @@ main = hspec $ do
                 return (x, y)
         res <- src $$ sink
         res `shouldBe` (1, V.fromList $ T.unpack " World")
-    {- FIXME needs further research
     it "takeExactlyE 2" $
         let src = yield ("Hello World" :: Text)
             sink = do
@@ -266,7 +265,6 @@ main = hspec $ do
                 return (1, y)
             res = runIdentity $ src $$ sink
          in res `shouldBe` (1, " World")
-         -}
     prop "concat" $ \input ->
         runIdentity (yield (T.pack input) $$ concatC =$ sinkList)
         `shouldBe` input
