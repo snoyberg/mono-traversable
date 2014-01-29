@@ -3,9 +3,13 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 import Conduit
 import Test.Hspec
+import Test.Hspec.QuickCheck
 import BasicPrelude
 import qualified Data.Text.Lazy as TL
 import Data.IORef
+import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as VU
+import qualified Data.Vector.Storable as VS
 
 main :: IO ()
 main = hspec $ do
@@ -93,3 +97,53 @@ main = hspec $ do
             src = yieldMany $ Identity list
             res = runIdentity $ src $$ foldCE
          in res `shouldBe` concat list
+    it "foldl" $
+        let res = runIdentity $ yieldMany [1..10] $$ foldlC (+) 0
+         in res `shouldBe` sum [1..10]
+    it "foldlE" $
+        let res = runIdentity $ yield [1..10] $$ foldlCE (+) 0
+         in res `shouldBe` sum [1..10]
+    it "foldMap" $
+        let src = yieldMany [1..10]
+            res = runIdentity $ src $$ foldMapC return
+         in res `shouldBe` [1..10]
+    it "foldMapE" $
+        let src = yield [1..10]
+            res = runIdentity $ src $$ foldMapCE return
+         in res `shouldBe` [1..10]
+    prop "all" $ \input -> runIdentity (yieldMany input $$ allC even) `shouldBe` all evenInt input
+    prop "allE" $ \input -> runIdentity (yield input $$ allCE even) `shouldBe` all evenInt input
+    prop "any" $ \input -> runIdentity (yieldMany input $$ anyC even) `shouldBe` any evenInt input
+    prop "anyE" $ \input -> runIdentity (yield input $$ anyCE even) `shouldBe` any evenInt input
+    prop "and" $ \input -> runIdentity (yieldMany input $$ andC) `shouldBe` and input
+    prop "andE" $ \input -> runIdentity (yield input $$ andCE) `shouldBe` and input
+    prop "or" $ \input -> runIdentity (yieldMany input $$ orC) `shouldBe` or input
+    prop "orE" $ \input -> runIdentity (yield input $$ orCE) `shouldBe` or input
+    prop "elem" $ \x xs -> runIdentity (yieldMany xs $$ elemC x) `shouldBe` elemInt x xs
+    prop "elemE" $ \x xs -> runIdentity (yield xs $$ elemCE x) `shouldBe` elemInt x xs
+    prop "notElem" $ \x xs -> runIdentity (yieldMany xs $$ notElemC x) `shouldBe` notElemInt x xs
+    prop "notElemE" $ \x xs -> runIdentity (yield xs $$ notElemCE x) `shouldBe` notElemInt x xs
+    prop "sinkVector regular" $ \xs' -> do
+        let maxSize = 20
+            xs = take maxSize xs'
+        res <- yieldMany xs' $$ sinkVector maxSize
+        res `shouldBe` V.fromList (xs :: [Int])
+    prop "sinkVector unboxed" $ \xs' -> do
+        let maxSize = 20
+            xs = take maxSize xs'
+        res <- yieldMany xs' $$ sinkVector maxSize
+        res `shouldBe` VU.fromList (xs :: [Int])
+    prop "sinkVector storable" $ \xs' -> do
+        let maxSize = 20
+            xs = take maxSize xs'
+        res <- yieldMany xs' $$ sinkVector maxSize
+        res `shouldBe` VS.fromList (xs :: [Int])
+
+evenInt :: Int -> Bool
+evenInt = even
+
+elemInt :: Int -> [Int] -> Bool
+elemInt = elem
+
+notElemInt :: Int -> [Int] -> Bool
+notElemInt = notElem

@@ -46,10 +46,9 @@ module Data.Conduit.Combinators
     , dropWhileE
     , fold
     , foldE
--- FIXME need to organized/document below this point.
     , foldl
     , foldlE
-    , CL.foldMap
+    , foldMap
     , foldMapE
     , all
     , allE
@@ -68,6 +67,7 @@ module Data.Conduit.Combinators
     , sinkVector
     , CL.sinkNull
 
+-- FIXME need to organized/document below this point.
       -- ** Monadic
     , CL.mapM_
     , mapM_E
@@ -97,6 +97,7 @@ module Data.Conduit.Combinators
     , CL.filter
     , filterE
     , mapWhile
+    , conduitVector
 
       -- ** Monadic
     , CL.mapM
@@ -277,33 +278,6 @@ sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
 sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
 {-# INLINE sourceIOHandle #-}
 
-sinkLazy :: (Monad m, LazySequence lazy strict)
-         => Consumer strict m lazy
-sinkLazy = (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
-{-# INLINE sinkLazy #-}
-
-sinkList = CL.consume
-{-# INLINE sinkList #-}
-
--- | Sink incoming values into a vector, up until size @maxSize@.
--- Subsequent values will be left in the stream.
-sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
-           => Int -- ^ maximum allowed size
-           -> Consumer a m (v a)
-sinkVector maxSize = do
-    mv <- liftBase $ VM.new maxSize
-    let go i
-            | i >= maxSize = liftBase $ V.unsafeFreeze mv
-            | otherwise = do
-                mx <- await
-                case mx of
-                    Nothing -> V.slice 0 i <$> liftBase (V.unsafeFreeze mv)
-                    Just x -> do
-                        liftBase $ VM.write mv i x
-                        go (i + 1)
-    go 0
-{-# INLINEABLE sinkVector #-}
-
 sinkHandle :: (MonadIO m, IOData a) => Handle -> Consumer a m ()
 sinkHandle = CL.mapM_ . hPut
 {-# INLINE sinkHandle #-}
@@ -357,8 +331,6 @@ dropWhile f =
         | otherwise = leftover x
 {-# INLINE dropWhile #-}
 
--- FIXME need to organized/document below this point.
-
 -- | Monoidally combine all values in the stream.
 --
 -- Since 1.0.0
@@ -374,6 +346,223 @@ foldE :: (Monad m, MonoFoldable mono, Monoid (Element mono))
       => Consumer mono m (Element mono)
 foldE = CL.fold (\accum mono -> accum `mappend` ofoldMap id mono) mempty
 {-# INLINE foldE #-}
+
+-- | A strict left fold.
+--
+-- Since 1.0.0
+foldl = CL.fold
+{-# INLINE foldl #-}
+
+-- | A strict left fold on a chunked stream.
+--
+-- Since 1.0.0
+foldlE :: (Monad m, MonoFoldable mono)
+       => (a -> Element mono -> a)
+       -> a
+       -> Consumer mono m a
+foldlE f = CL.fold (ofoldl' f)
+{-# INLINE foldlE #-}
+
+-- | Apply the provided mapping function and monoidal combine all values.
+--
+-- Since 1.0.0
+foldMap = CL.foldMap
+{-# INLINE foldMap #-}
+
+-- | Apply the provided mapping function and monoidal combine all elements of the chunked stream.
+--
+-- Since 1.0.0
+foldMapE :: (Monad m, MonoFoldable mono, Monoid w)
+         => (Element mono -> w)
+         -> Consumer mono m w
+foldMapE = CL.foldMap . ofoldMap
+{-# INLINE foldMapE #-}
+
+-- | Check that all values in the stream return True.
+--
+-- Subject to shortcut logic: at the first False, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
+all :: Monad m
+    => (a -> Bool)
+    -> Consumer a m Bool
+all f =
+    loop
+  where
+    loop = await >>= maybe (return True) go
+    go x
+        | f x = loop
+        | otherwise = return False
+{-# INLINE all #-}
+
+-- | Check that all elements in the chunked stream return True.
+--
+-- Subject to shortcut logic: at the first False, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
+allE :: (Monad m, MonoFoldable mono)
+     => (Element mono -> Bool)
+     -> Consumer mono m Bool
+allE = all . oall
+
+-- | Check that at least one value in the stream returns True.
+--
+-- Subject to shortcut logic: at the first True, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
+any :: Monad m
+    => (a -> Bool)
+    -> Consumer a m Bool
+any f =
+    loop
+  where
+    loop = await >>= maybe (return False) go
+    go x
+        | f x = return True
+        | otherwise = loop
+{-# INLINE any #-}
+
+-- | Check that at least one element in the chunked stream returns True.
+--
+-- Subject to shortcut logic: at the first True, consumption of the stream
+-- will stop.
+--
+-- Since 1.0.0
+anyE :: (Monad m, MonoFoldable mono)
+     => (Element mono -> Bool)
+     -> Consumer mono m Bool
+anyE = any . oany
+
+-- | Are all values in the stream True?
+--
+-- Consumption stops once the first False is encountered.
+--
+-- Since 1.0.0
+and :: Monad m => Consumer Bool m Bool
+and = all id
+{-# INLINE and #-}
+
+-- | Are all elements in the chunked stream True?
+--
+-- Consumption stops once the first False is encountered.
+--
+-- Since 1.0.0
+andE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
+     => Consumer mono m Bool
+andE = allE id
+{-# INLINE andE #-}
+
+-- | Are any values in the stream True?
+--
+-- Consumption stops once the first True is encountered.
+--
+-- Since 1.0.0
+or :: Monad m => Consumer Bool m Bool
+or = any id
+{-# INLINE or #-}
+
+-- | Are any elements in the chunked stream True?
+--
+-- Consumption stops once the first True is encountered.
+--
+-- Since 1.0.0
+orE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
+    => Consumer mono m Bool
+orE  = anyE id
+{-# INLINE orE #-}
+
+-- | Are any values in the stream equal to the given value?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
+elem :: (Monad m, Eq a) => a -> Consumer a m Bool
+elem x = any (== x)
+{-# INLINE elem #-}
+
+-- | Are any elements in the chunked stream equal to the given element?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
+elemE :: (Monad m, Seq.EqSequence seq)
+      => Element seq
+      -> Consumer seq m Bool
+elemE = any . Seq.elem
+
+-- | Are no values in the stream equal to the given value?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
+notElem :: (Monad m, Eq a) => a -> Consumer a m Bool
+notElem x = all (/= x)
+{-# INLINE notElem #-}
+
+-- | Are no elements in the chunked stream equal to the given element?
+--
+-- Stops consuming as soon as a match is found.
+--
+-- Since 1.0.0
+notElemE :: (Monad m, Seq.EqSequence seq)
+         => Element seq
+         -> Consumer seq m Bool
+notElemE = all . Seq.notElem
+
+-- | Consume all incoming strict chunks into a lazy sequence.
+-- Note that the entirety of the sequence will be resident at memory.
+--
+-- This can be used to consume a stream of strict ByteStrings into a lazy
+-- ByteString, for example.
+--
+-- Since 1.0.0
+sinkLazy :: (Monad m, LazySequence lazy strict)
+         => Consumer strict m lazy
+sinkLazy = (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
+{-# INLINE sinkLazy #-}
+
+-- | Consume all values from the stream and return as a list. Note that this
+-- will pull all values into memory.
+--
+-- Since 1.0.0
+sinkList = CL.consume
+{-# INLINE sinkList #-}
+
+-- | Sink incoming values into a vector, up until size @maxSize@.  Subsequent
+-- values will be left in the stream. If there are less than @maxSize@ values
+-- present, returns a @Vector@ of smaller size.
+--
+-- Note that using this function is more memory efficient than @sinkList@ and
+-- then converting to a @Vector@, as it avoids intermediate list constructors.
+--
+-- Since 1.0.0
+sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+           => Int -- ^ maximum allowed size
+           -> Consumer a m (v a)
+sinkVector maxSize = do
+    mv <- liftBase $ VM.new maxSize
+    let go i
+            | i >= maxSize = liftBase $ V.unsafeFreeze mv
+            | otherwise = do
+                mx <- await
+                case mx of
+                    Nothing -> V.slice 0 i <$> liftBase (V.unsafeFreeze mv)
+                    Just x -> do
+                        liftBase $ VM.write mv i x
+                        go (i + 1)
+    go 0
+{-# INLINEABLE sinkVector #-}
+
+-- | Consume and discard all remaining values in the stream.
+--
+-- Since 1.0.0
+sinkNull = CL.sinkNull
+{-# INLINE sinkNull #-}
+
+-- FIXME need to organized/document below this point.
 
 -- | Drop all elements in the chunked stream which match the given predicate.
 --
@@ -474,46 +663,6 @@ filterM f =
         when b $ yield x
 {-# INLINE filterM #-}
 
-all :: Monad m
-    => (a -> Bool)
-    -> Consumer a m Bool
-all f =
-    loop
-  where
-    loop = await >>= maybe (return True) go
-    go x
-        | f x = loop
-        | otherwise = return False
-{-# INLINE all #-}
-
-any :: Monad m
-    => (a -> Bool)
-    -> Consumer a m Bool
-any f =
-    loop
-  where
-    loop = await >>= maybe (return False) go
-    go x
-        | f x = return True
-        | otherwise = loop
-{-# INLINE any #-}
-
-and :: Monad m => Consumer Bool m Bool
-and = all id
-{-# INLINE and #-}
-
-or :: Monad m => Consumer Bool m Bool
-or = any id
-{-# INLINE or #-}
-
-elem :: (Monad m, Eq a) => a -> Consumer a m Bool
-elem x = any (== x)
-{-# INLINE elem #-}
-
-notElem :: (Monad m, Eq a) => a -> Consumer a m Bool
-notElem x = all (/= x)
-{-# INLINE notElem #-}
-
 -- | Map values as long as the result is @Just@.
 mapWhile :: Monad m => (a -> Maybe b) -> Conduit a m b
 mapWhile f =
@@ -561,28 +710,12 @@ takeE =
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE takeE #-}
 
-foldl = CL.fold
-{-# INLINE foldl #-}
-
-foldlE :: (Monad m, MonoFoldable mono)
-       => (a -> Element mono -> a)
-       -> a
-       -> Consumer mono m a
-foldlE f = CL.fold (ofoldl' f)
-{-# INLINE foldlE #-}
-
 foldME :: (Monad m, MonoFoldable mono)
        => (a -> Element mono -> m a)
        -> a
        -> Consumer mono m a
 foldME f = CL.foldM (ofoldlM f)
 {-# INLINE foldME #-}
-
-foldMapE :: (Monad m, MonoFoldable mono, Monoid w)
-         => (Element mono -> w)
-         -> Consumer mono m w
-foldMapE = CL.foldMap . ofoldMap
-{-# INLINE foldMapE #-}
 
 foldMapME :: (Monad m, MonoFoldable mono, Monoid w)
           => (Element mono -> m w)
@@ -592,34 +725,6 @@ foldMapME f =
   where
     go = ofoldlM (\accum e -> mappend accum `liftM` f e)
 {-# INLINE foldMapME #-}
-
-allE :: (Monad m, MonoFoldable mono)
-     => (Element mono -> Bool)
-     -> Consumer mono m Bool
-allE = all . oall
-
-anyE :: (Monad m, MonoFoldable mono)
-     => (Element mono -> Bool)
-     -> Consumer mono m Bool
-anyE = any . oany
-
-andE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
-     => Consumer mono m Bool
-andE = allE id
-
-orE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
-    => Consumer mono m Bool
-orE  = anyE id
-
-elemE :: (Monad m, Seq.EqSequence seq)
-      => Element seq
-      -> Consumer seq m Bool
-elemE = any . Seq.elem
-
-notElemE :: (Monad m, Seq.EqSequence seq)
-         => Element seq
-         -> Consumer seq m Bool
-notElemE = all . Seq.notElem
 
 mapM_E = CL.mapM_ . omapM_
 
@@ -650,6 +755,18 @@ filterME = CL.mapM . Seq.filterM
 --
 -- Since 0.5.6
 iterM = CL.iterM
+
+-- | Break up a stream of values into vectors of size n. The final vector may
+-- be smaller than n if the total number of values is not a strict multiple of
+-- n. No empty vectors will be yielded.
+conduitVector size =
+    loop
+  where
+    loop = do
+        v <- sinkVector size
+        unless (V.null v) $ do
+            yield v
+            loop
 
 {-
 
