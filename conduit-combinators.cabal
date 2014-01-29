@@ -14,10 +14,10 @@ cabal-version:       >=1.8
 library
   exposed-modules:     Conduit
                        Data.Conduit.Combinators
-                       Data.Conduit.Combinators.Unqualified
+  other-modules:       Data.Conduit.Combinators.Unqualified
   build-depends:       base >= 4 && < 5
                      , chunked-data
-                     , conduit >= 1.0 && < 1.0.12
+                     , conduit >= 1.0.12
                      , transformers
                      , transformers-base
                      , primitive

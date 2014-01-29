@@ -7,15 +7,26 @@
 -- This means that the Conduit module can be imported unqualified
 -- without causing naming conflicts.
 module Conduit
-    ( module X
+    ( -- * Core conduit library
+      module Data.Conduit
+    , module Data.Conduit.Util
+#if MIN_VERSION_conduit(1, 0, 11)
+    , module Data.Conduit.Lift
+#endif
+      -- * Commonly used combinators
+    , module Data.Conduit.Combinators.Unqualified
+      -- * Monadic lifting
+    , MonadIO (..)
+    , MonadTrans (..)
+    , MonadBase (..)
     ) where
 
-import Data.Conduit as X
-import Data.Conduit.Util as X hiding (zip)
-import qualified Data.Conduit.Combinators as CC
-import Control.Monad.IO.Class as X (MonadIO (..))
-import Control.Monad.Trans.Class as X (MonadTrans (..))
-import Data.Conduit.Combinators.Unqualified as X
+import Data.Conduit
+import Data.Conduit.Util hiding (zip)
+import Control.Monad.IO.Class (MonadIO (..))
+import Control.Monad.Trans.Class (MonadTrans (..))
+import Control.Monad.Base (MonadBase (..))
 #if MIN_VERSION_conduit(1, 0, 11)
-import Data.Conduit.Lift as X
+import Data.Conduit.Lift
 #endif
+import Data.Conduit.Combinators.Unqualified
