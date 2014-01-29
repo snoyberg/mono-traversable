@@ -83,3 +83,13 @@ main = hspec $ do
     it "dropWhileE" $
         runIdentity (yield ("Hello World" :: Text) $$ (dropWhileCE (/= 'W') >> sinkLazy))
         `shouldBe` "World"
+    it "fold" $
+        let list = [[1..10], [11..20]]
+            src = yieldMany list
+            res = runIdentity $ src $$ foldC
+         in res `shouldBe` concat list
+    it "foldE" $
+        let list = [[1..10], [11..20]]
+            src = yieldMany $ Identity list
+            res = runIdentity $ src $$ foldCE
+         in res `shouldBe` concat list

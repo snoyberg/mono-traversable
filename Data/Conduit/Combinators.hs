@@ -44,10 +44,10 @@ module Data.Conduit.Combinators
     , dropE
     , dropWhile
     , dropWhileE
--- FIXME need to organized/document below this point.
     , fold
-    , foldl
     , foldE
+-- FIXME need to organized/document below this point.
+    , foldl
     , foldlE
     , CL.foldMap
     , foldMapE
@@ -359,6 +359,22 @@ dropWhile f =
 
 -- FIXME need to organized/document below this point.
 
+-- | Monoidally combine all values in the stream.
+--
+-- Since 1.0.0
+fold :: (Monad m, Monoid a)
+     => Consumer a m a
+fold = CL.foldMap id
+{-# INLINE fold #-}
+
+-- | Monoidally combine all elements in the chunked stream.
+--
+-- Since 1.0.0
+foldE :: (Monad m, MonoFoldable mono, Monoid (Element mono))
+      => Consumer mono m (Element mono)
+foldE = CL.fold (\accum mono -> accum `mappend` ofoldMap id mono) mempty
+{-# INLINE foldE #-}
+
 -- | Drop all elements in the chunked stream which match the given predicate.
 --
 -- Since 1.0.0
@@ -544,16 +560,6 @@ takeE =
         (x, y) = Seq.splitAt i seq
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE takeE #-}
-
-fold :: (Monad m, Monoid a)
-     => Consumer a m a
-fold = CL.foldMap id
-{-# INLINE fold #-}
-
-foldE :: (Monad m, MonoFoldable mono, Monoid (Element mono))
-      => Consumer mono m (Element mono)
-foldE = CL.fold (\accum mono -> accum `mappend` ofoldMap id mono) mempty
-{-# INLINE foldE #-}
 
 foldl = CL.fold
 {-# INLINE foldl #-}
