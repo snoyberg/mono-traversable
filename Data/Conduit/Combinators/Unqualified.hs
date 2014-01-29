@@ -225,7 +225,8 @@ sinkLazy = CC.sinkLazy
 sinkList = CC.sinkList
 {-# INLINE sinkList#-}
 
--- | See 'CC.sinkVector'
+-- | Sink incoming values into a vector, up until size @maxSize@.
+-- Subsequent values will be left in the stream.
 sinkVector = CC.sinkVector
 {-# INLINE sinkVector#-}
 
@@ -277,7 +278,7 @@ mapCE = CC.mapE
 omapCE = CC.omapE
 {-# INLINE omapCE#-}
 
--- | See 'CC.concatMap'
+-- | Generalizes concatMap, mapMaybe, mapFoldable
 concatMapC = CC.concatMap
 {-# INLINE concatMapC#-}
 
@@ -321,7 +322,7 @@ filterC = CC.filter
 filterCE = CC.filterE
 {-# INLINE filterCE#-}
 
--- | See 'CC.mapWhile'
+-- | Map values as long as the result is @Just@.
 mapWhileC = CC.mapWhile
 {-# INLINE mapWhileC#-}
 
@@ -337,7 +338,7 @@ mapMCE = CC.mapME
 omapMCE = CC.omapME
 {-# INLINE omapMCE#-}
 
--- | See 'CC.concatMapM'
+-- | Generalizes concatMapM, mapMaybeM, mapFoldableM
 concatMapMC = CC.concatMapM
 {-# INLINE concatMapMC#-}
 
