@@ -65,7 +65,7 @@ module Data.Conduit.Combinators
     , sinkLazy
     , sinkList
     , sinkVector
-    , CL.sinkNull
+    , sinkNull
 
       -- ** Monadic
     , mapM_
@@ -107,7 +107,7 @@ module Data.Conduit.Combinators
     , concatMapM
     , filterM
     , filterME
-    , CL.iterM
+    , iterM
     ) where
 
 import qualified Data.Traversable
@@ -132,7 +132,7 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              otherwise, ($), Functor (..))
+                                              ($), Functor (..))
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 
@@ -188,9 +188,9 @@ replicate :: Monad m
 replicate count0 a =
     loop count0
   where
-    loop count
-        | count <= 0 = return ()
-        | otherwise = yield a >> loop (count - 1)
+    loop count = if count <= 0
+        then return ()
+        else yield a >> loop (count - 1)
 {-# INLINE replicate #-}
 
 -- | Generate a producer by yielding each of the strict chunks in a @LazySequence@.
@@ -238,9 +238,9 @@ replicateM :: Monad m
 replicateM count0 m =
     loop count0
   where
-    loop count
-        | count <= 0 = return ()
-        | otherwise = lift m >>= yield >> loop (count - 1)
+    loop count = if count <= 0
+        then return ()
+        else lift m >>= yield >> loop (count - 1)
 {-# INLINE replicateM #-}
 
 -- | Read all data from the given file.
@@ -285,7 +285,11 @@ sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
 drop :: Monad m
      => Int
      -> Consumer a m ()
-drop = CL.drop
+drop =
+    loop
+  where
+    loop i | i <= 0 = return ()
+    loop count = await >>= maybe (return ()) (\_ -> loop (count - 1))
 {-# INLINE drop #-}
 
 -- | Drop a certain number of elements from a chunked stream.
@@ -297,9 +301,9 @@ dropE :: (Monad m, Seq.IsSequence seq)
 dropE =
     loop
   where
-    loop i
-        | i <= 0 = return ()
-        | otherwise = await >>= maybe (return ()) (go i)
+    loop i = if i <= 0
+        then return ()
+        else await >>= maybe (return ()) (go i)
 
     go i seq = do
         unless (onull y) $ leftover y
@@ -319,9 +323,7 @@ dropWhile f =
     loop
   where
     loop = await >>= maybe (return ()) go
-    go x
-        | f x = loop
-        | otherwise = leftover x
+    go x = if f x then loop else leftover x
 {-# INLINE dropWhile #-}
 
 -- | Drop all elements in the chunked stream which match the given predicate.
@@ -335,9 +337,8 @@ dropWhileE f =
   where
     loop = await >>= maybe (return ()) go
 
-    go seq
-        | onull x = loop
-        | otherwise = leftover x
+    go seq =
+        if onull x then loop else leftover x
       where
         x = Seq.dropWhile f seq
 {-# INLINE dropWhileE #-}
@@ -402,9 +403,7 @@ all f =
     loop
   where
     loop = await >>= maybe (return True) go
-    go x
-        | f x = loop
-        | otherwise = return False
+    go x = if f x then loop else return False
 {-# INLINE all #-}
 
 -- | Check that all elements in the chunked stream return True.
@@ -431,9 +430,7 @@ any f =
     loop
   where
     loop = await >>= maybe (return False) go
-    go x
-        | f x = return True
-        | otherwise = loop
+    go x = if f x then return True else loop
 {-# INLINE any #-}
 
 -- | Check that at least one element in the chunked stream returns True.
@@ -555,15 +552,14 @@ sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
            -> Consumer a m (v a)
 sinkVector maxSize = do
     mv <- liftBase $ VM.new maxSize
-    let go i
-            | i >= maxSize = liftBase $ V.unsafeFreeze mv
-            | otherwise = do
-                mx <- await
-                case mx of
-                    Nothing -> V.slice 0 i <$> liftBase (V.unsafeFreeze mv)
-                    Just x -> do
-                        liftBase $ VM.write mv i x
-                        go (i + 1)
+    let go i | i >= maxSize = liftBase $ V.unsafeFreeze mv
+        go i = do
+            mx <- await
+            case mx of
+                Nothing -> V.slice 0 i <$> liftBase (V.unsafeFreeze mv)
+                Just x -> do
+                    liftBase $ VM.write mv i x
+                    go (i + 1)
     go 0
 {-# INLINEABLE sinkVector #-}
 
@@ -707,9 +703,9 @@ take :: Monad m => Int -> Conduit a m a
 take =
     loop
   where
-    loop count
-        | count <= 0 = return ()
-        | otherwise = await >>= maybe (return ()) (\i -> yield i >> loop (count - 1))
+    loop count = if count <= 0
+        then return ()
+        else await >>= maybe (return ()) (\i -> yield i >> loop (count - 1))
 {-# INLINE take #-}
 
 -- | Stream up to n number of elements downstream in a chunked stream.
@@ -725,9 +721,9 @@ takeE :: (Monad m, Seq.IsSequence seq)
 takeE =
     loop
   where
-    loop i
-        | i <= 0 = return ()
-        | otherwise = await >>= maybe (return ()) (go i)
+    loop i = if i <= 0
+        then return ()
+        else await >>= maybe (return ()) (go i)
 
     go i seq = do
         unless (onull x) $ yield x
@@ -750,9 +746,9 @@ takeWhile f =
     loop
   where
     loop = await >>= maybe (return ()) go
-    go x
-        | f x = yield x >> loop
-        | otherwise = leftover x
+    go x = if f x
+        then yield x >> loop
+        else leftover x
 {-# INLINE takeWhile #-}
 
 -- | Stream all elements downstream that match the given predicate in a chunked stream.

@@ -14,6 +14,7 @@ import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
 import Control.Monad.Trans.Writer
 import qualified Prelude
+import qualified System.IO as IO
 
 main :: IO ()
 main = hspec $ do
@@ -74,23 +75,36 @@ main = hspec $ do
         res <- src $$ sinkList
         res `shouldBe` [1..10]
     it "sourceFile" $ do
-        let contents = "this is some content"
+        let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         res <- runResourceT $ sourceFile fp $$ sinkLazy
         res `shouldBe` TL.fromStrict contents
-    it "drop" $
-        runIdentity (yieldMany [1..10] $$ (dropC 5 >> sinkList))
-        `shouldBe` [6..10]
-    it "dropE" $
-        runIdentity (yield ("Hello World" :: Text) $$ (dropCE 5 >> sinkLazy))
-        `shouldBe` " World"
-    it "dropWhile" $
-        runIdentity (yieldMany [1..10] $$ (dropWhileC (<= 5) >> sinkList))
-        `shouldBe` [6..10]
-    it "dropWhileE" $
-        runIdentity (yield ("Hello World" :: Text) $$ (dropWhileCE (/= 'W') >> sinkLazy))
-        `shouldBe` "World"
+    it "sourceHandle" $ do
+        let contents = concat $ replicate 10000 $ "this is some content\n"
+            fp = "tmp"
+        writeFile fp contents
+        res <- IO.withBinaryFile "tmp" IO.ReadMode $ \h -> sourceHandle h $$ sinkLazy
+        res `shouldBe` TL.fromStrict contents
+    it "sourceIOHandle" $ do
+        let contents = concat $ replicate 10000 $ "this is some content\n"
+            fp = "tmp"
+        writeFile fp contents
+        let open = IO.openBinaryFile "tmp" IO.ReadMode
+        res <- runResourceT $ sourceIOHandle open $$ sinkLazy
+        res `shouldBe` TL.fromStrict contents
+    prop "drop" $ \(T.pack -> input) count ->
+        runIdentity (yieldMany input $$ (dropC count >>= \() -> sinkList))
+        `shouldBe` T.unpack (T.drop count input)
+    prop "dropE" $ \(T.pack -> input) ->
+        runIdentity (yield input $$ (dropCE 5 >>= \() -> foldC))
+        `shouldBe` T.drop 5 input
+    prop "dropWhile" $ \(T.pack -> input) sep ->
+        runIdentity (yieldMany input $$ (dropWhileC (<= sep) >>= \() -> sinkList))
+        `shouldBe` T.unpack (T.dropWhile (<= sep) input)
+    prop "dropWhileE" $ \(T.pack -> input) sep ->
+        runIdentity (yield input $$ (dropWhileCE (<= sep) >>= \() -> foldC))
+        `shouldBe` T.dropWhile (<= sep) input
     it "fold" $
         let list = [[1..10], [11..20]]
             src = yieldMany list
@@ -142,6 +156,11 @@ main = hspec $ do
             xs = take maxSize xs'
         res <- yieldMany xs' $$ sinkVector maxSize
         res `shouldBe` VS.fromList (xs :: [Int])
+    prop "sinkNull" $ \xs toSkip -> do
+        res <- yieldMany xs $$ do
+            takeC toSkip =$ sinkNull
+            sinkList
+        res `shouldBe` drop toSkip (xs :: [Int])
     prop "mapM_" $ \xs ->
         let res = execWriter $ yieldMany xs $$ mapM_C (tell . return)
          in res `shouldBe` (xs :: [Int])
@@ -163,9 +182,22 @@ main = hspec $ do
             res = runIdentity $ src $$ foldMapMCE (return . return)
          in res `shouldBe` [1..10]
     it "sinkFile" $ do
-        let contents = "this is some content"
+        let contents = concat $ replicate 1000 $ "this is some content\n"
             fp = "tmp"
         runResourceT $ yield contents $$ sinkFile fp
+        res <- readFile fp
+        res `shouldBe` contents
+    it "sinkHandle" $ do
+        let contents = concat $ replicate 1000 $ "this is some content\n"
+            fp = "tmp"
+        IO.withBinaryFile "tmp" IO.WriteMode $ \h -> yield contents $$ sinkHandle h
+        res <- readFile fp
+        res `shouldBe` contents
+    it "sinkIOHandle" $ do
+        let contents = concat $ replicate 1000 $ "this is some content\n"
+            fp = "tmp"
+            open = IO.openBinaryFile "tmp" IO.WriteMode
+        runResourceT $ yield contents $$ sinkIOHandle open
         res <- readFile fp
         res `shouldBe` contents
     prop "map" $ \input ->
@@ -183,32 +215,58 @@ main = hspec $ do
     prop "concatMapE" $ \input ->
         runIdentity (yield input $$ concatMapCE showInt =$ foldC)
         `shouldBe` concatMap showInt input
-    it "take" $
-        runIdentity (yieldMany [1..10] $$ takeC 5 =$ sinkList)
-        `shouldBe` [1..5]
-    it "takeE" $
-        runIdentity (yield ("Hello World" :: Text) $$ takeCE 5 =$ sinkLazy)
-        `shouldBe` "Hello"
-    it "takeWhile" $
-        runIdentity (yieldMany [1..10] $$ takeWhileC (<= 5) =$ sinkList)
-        `shouldBe` [1..5]
-    it "takeWhileE" $
-        runIdentity (yield ("Hello World" :: Text) $$ takeWhileCE (/= 'W') =$ sinkLazy)
-        `shouldBe` "Hello "
+    prop "take" $ \(T.pack -> input) count ->
+        runIdentity (yieldMany input $$ (takeC count >>= \() -> mempty) =$ sinkList)
+        `shouldBe` T.unpack (T.take count input)
+    prop "takeE" $ \(T.pack -> input) count ->
+        runIdentity (yield input $$ (takeCE count >>= \() -> mempty) =$ foldC)
+        `shouldBe` T.take count input
+    prop "takeWhile" $ \(T.pack -> input) sep ->
+        runIdentity (yieldMany input $$ do
+            x <- (takeWhileC (<= sep) >>= \() -> mempty) =$ sinkList
+            y <- sinkList
+            return (x, y))
+        `shouldBe` span (<= sep) (T.unpack input)
+    prop "takeWhileE" $ \(T.pack -> input) sep ->
+        runIdentity (yield input $$ do
+            x <- (takeWhileCE (<= sep) >>= \() -> mempty) =$ foldC
+            y <- foldC
+            return (x, y))
+        `shouldBe` T.span (<= sep) input
     it "takeExactly" $
         let src = yieldMany [1..10]
             sink = do
-                takeExactlyC 5 $ return ()
-                sinkList
+                x <- takeExactlyC 5 $ return 1
+                y <- sinkList
+                return (x, y)
             res = runIdentity $ src $$ sink
-         in res `shouldBe` [6..10]
+         in res `shouldBe` (1, [6..10])
     it "takeExactlyE" $
         let src = yield ("Hello World" :: Text)
             sink = do
-                takeExactlyCE 5 $ return ()
-                sinkLazy
+                takeExactlyCE 5 (mempty :: Sink Text Identity ())
+                y <- sinkLazy
+                return y
             res = runIdentity $ src $$ sink
          in res `shouldBe` " World"
+    it "takeExactlyE Vector" $ do
+        let src = yield (V.fromList $ T.unpack "Hello World")
+            sink = do
+                x <- takeExactlyCE 5 $ return 1
+                y <- foldC
+                return (x, y)
+        res <- src $$ sink
+        res `shouldBe` (1, V.fromList $ T.unpack " World")
+    {- FIXME needs further research
+    it "takeExactlyE 2" $
+        let src = yield ("Hello World" :: Text)
+            sink = do
+                x <- takeExactlyCE 5 $ return 1
+                y <- sinkLazy
+                return (1, y)
+            res = runIdentity $ src $$ sink
+         in res `shouldBe` (1, " World")
+         -}
     prop "concat" $ \input ->
         runIdentity (yield (T.pack input) $$ concatC =$ sinkList)
         `shouldBe` input
@@ -218,12 +276,16 @@ main = hspec $ do
     prop "filterE" $ \input ->
         runIdentity (yield input $$ filterCE evenInt =$ foldC)
         `shouldBe` filter evenInt input
-    prop "mapWhile" $ \input highest ->
-        let f i
-                | i < highest = Just (i + 2 :: Int)
-                | otherwise = Nothing
-            res = runIdentity $ yieldMany input $$ mapWhileC f =$ sinkList
-            expected = map (+ 2) $ takeWhile (< highest) input
+    prop "mapWhile" $ \input (min 20 -> highest) ->
+        let f i =
+                if i < highest
+                    then Just (i + 2 :: Int)
+                    else Nothing
+            res = runIdentity $ yieldMany input $$ do
+                x <- (mapWhileC f >>= \() -> mempty) =$ sinkList
+                y <- sinkList
+                return (x, y)
+            expected = (map (+ 2) $ takeWhile (< highest) input, dropWhile (< highest) input)
          in res `shouldBe` expected
     prop "conduitVector" $ \(take 200 -> input) size' -> do
         let size = min 30 $ succ $ abs size'
