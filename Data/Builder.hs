@@ -14,6 +14,8 @@ module Data.Builder
     , textToBuilder
     ) where
 
+import Data.Monoid (Monoid)
+
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TB
@@ -30,7 +32,7 @@ type TextBuilder = TB.Builder
 type BlazeBuilder = BB.Builder
 
 -- | Since 0.1.0.0
-class Builder builder lazy | builder -> lazy, lazy -> builder where
+class Monoid builder => Builder builder lazy | builder -> lazy, lazy -> builder where
     -- | Since 0.1.0.0
     builderToLazy :: builder -> lazy
 
