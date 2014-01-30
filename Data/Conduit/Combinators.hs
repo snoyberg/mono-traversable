@@ -129,6 +129,8 @@ module Data.Conduit.Combinators
     , iterM
     ) where
 
+-- BEGIN IMPORTS
+
 import Data.Builder
 import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
@@ -156,6 +158,8 @@ import           Prelude                     (Bool (..), Eq (..), Int,
                                               ($), Functor (..))
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
+
+-- END IMPORTS
 
 -- | Yield each of the values contained by the given @MonoFoldable@.
 --
@@ -199,7 +203,7 @@ iterate = CL.iterate
 repeat = iterate id
 {-# INLINE repeat #-}
 
--- | Produce a finite stream consistent of n copies of the given value.
+-- | Produce a finite stream consisting of n copies of the given value.
 --
 -- Since 1.0.0
 replicate :: Monad m
