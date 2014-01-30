@@ -272,9 +272,18 @@ main = hspec $ do
             sink = do
                 x <- takeExactlyCE 5 $ return 1
                 y <- sinkLazy
-                return (1, y)
+                return (x, y)
             res = runIdentity $ src $$ sink
-         in res `shouldBe` (1, " World")
+            -- FIXME type signature on next line is necessary in GHC 7.6.3 to
+            -- avoid a crash:
+            --
+            -- test: internal error: ARR_WORDS object entered!
+            --     (GHC version 7.6.3 for x86_64_unknown_linux)
+            --     Please report this as a GHC bug:  http://www.haskell.org/ghc/reportabug
+            -- Aborted (core dumped)
+            --
+            -- Report upstream when packages are released
+         in res `shouldBe` (1, " World" :: LText)
     prop "concat" $ \input ->
         runIdentity (yield (T.pack input) $$ concatC =$ sinkList)
         `shouldBe` input
