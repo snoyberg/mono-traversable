@@ -51,6 +51,8 @@ parseDocs (x0:xs0)
     loop2 docs front (x:xs)
         | '=' `elem` x && not (" => " `isInfixOf` x) = do
             when (null name) $ error $ "null name in loop2: " ++ show (docs, front [], x)
+            let sig = front []
+            when (null sig) $ error $ "Missing type signature on " ++ name
             tell [(name, (docs, front []))]
             parseDocs xs
         | otherwise = loop2 docs (front . (x:)) xs

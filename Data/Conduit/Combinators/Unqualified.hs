@@ -147,7 +147,7 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..))
+                                              ($), Functor (..), Enum)
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 
@@ -182,18 +182,21 @@ unfoldC = CC.unfold
 -- structures.
 --
 -- Since 1.0.0
+enumFromToC :: (Monad m, Enum a, Eq a) => a -> a -> Producer m a
 enumFromToC = CC.enumFromTo
 {-# INLINE enumFromToC #-}
 
 -- | Produces an infinite stream of repeated applications of f to x.
 --
 -- Since 1.0.0
+iterateC :: Monad m => (a -> a) -> a -> Producer m a
 iterateC = CC.iterate
 {-# INLINE iterateC #-}
 
 -- | Produce an infinite stream consisting entirely of the given value.
 --
 -- Since 1.0.0
+repeatC :: Monad m => a -> Producer m a
 repeatC = CC.repeat
 {-# INLINE repeatC #-}
 
@@ -332,6 +335,7 @@ foldCE = CC.foldE
 -- | A strict left fold.
 --
 -- Since 1.0.0
+foldlC :: Monad m => (a -> b -> a) -> a -> Consumer b m a
 foldlC = CC.foldl
 {-# INLINE foldlC #-}
 
@@ -505,6 +509,7 @@ sinkLazy = CC.sinkLazy
 -- will pull all values into memory.
 --
 -- Since 1.0.0
+sinkList :: Monad m => Consumer a m [a]
 sinkList = CC.sinkList
 {-# INLINE sinkList #-}
 
@@ -527,6 +532,8 @@ sinkVector = CC.sinkVector
 -- Defined as: @foldMap toBuilder@.
 --
 -- Since 1.0.0
+sinkBuilder :: (Monad m, Monoid builder, ToBuilder a builder)
+            => Consumer a m builder
 sinkBuilder = CC.sinkBuilder
 {-# INLINE sinkBuilder #-}
 
@@ -542,78 +549,92 @@ sinkBuilder = CC.sinkBuilder
 -- * Some buffer copying may occur in this version.
 --
 -- Since 1.0.0
+sinkLazyBuilder :: (Monad m, Monoid builder, ToBuilder a builder, Builder builder lazy)
+                => Consumer a m lazy
 sinkLazyBuilder = CC.sinkLazyBuilder
 {-# INLINE sinkLazyBuilder #-}
 
 -- | Consume and discard all remaining values in the stream.
 --
 -- Since 1.0.0
+sinkNull :: Monad m => Consumer a m ()
 sinkNull = CC.sinkNull
 {-# INLINE sinkNull #-}
 
 -- | Same as @await@, but discards any leading 'onull' values.
 --
 -- Since 1.0.0
+awaitNonNull :: (Monad m, NonNull.NonNull b, a ~ NonNull.Nullable b) => Consumer a m (Maybe b)
 awaitNonNull = CC.awaitNonNull
 {-# INLINE awaitNonNull #-}
 
 -- | View the next value in the stream without consuming it.
 --
 -- Since 1.0.0
+peekC :: Monad m => Consumer a m (Maybe a)
 peekC = CC.peek
 {-# INLINE peekC #-}
 
 -- | View the next element in the chunked stream without consuming it.
 --
 -- Since 1.0.0
+peekCE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
 peekCE = CC.peekE
 {-# INLINE peekCE #-}
 
 -- | Retrieve the last value in the stream, if present.
 --
 -- Since 1.0.0
+lastC :: Monad m => Consumer a m (Maybe a)
 lastC = CC.last
 {-# INLINE lastC #-}
 
 -- | Retrieve the last element in the chunked stream, if present.
 --
 -- Since 1.0.0
+lastCE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
 lastCE = CC.lastE
 {-# INLINE lastCE #-}
 
 -- | Count how many values are in the stream.
 --
 -- Since 1.0.0
+lengthC :: (Monad m, Num len) => Consumer a m len
 lengthC = CC.length
 {-# INLINE lengthC #-}
 
 -- | Count how many elements are in the chunked stream.
 --
 -- Since 1.0.0
+lengthCE :: (Monad m, Num len, MonoFoldable mono) => Consumer mono m len
 lengthCE = CC.lengthE
 {-# INLINE lengthCE #-}
 
 -- | Get the largest value in the stream, if present.
 --
 -- Since 1.0.0
+maximumC :: (Monad m, Ord a) => Consumer a m (Maybe a)
 maximumC = CC.maximum
 {-# INLINE maximumC #-}
 
 -- | Get the largest element in the chunked stream, if present.
 --
 -- Since 1.0.0
+maximumCE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
 maximumCE = CC.maximumE
 {-# INLINE maximumCE #-}
 
 -- | Get the smallest value in the stream, if present.
 --
 -- Since 1.0.0
+minimumC :: (Monad m, Ord a) => Consumer a m (Maybe a)
 minimumC = CC.minimum
 {-# INLINE minimumC #-}
 
 -- | Get the smallest element in the chunked stream, if present.
 --
 -- Since 1.0.0
+minimumCE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
 minimumCE = CC.minimumE
 {-# INLINE minimumCE #-}
 
@@ -622,6 +643,7 @@ minimumCE = CC.minimumE
 -- This function does not modify the stream.
 --
 -- Since 1.0.0
+nullC :: Monad m => Consumer a m Bool
 nullC = CC.null
 {-# INLINE nullC #-}
 
@@ -639,42 +661,49 @@ nullCE = CC.nullE
 -- | Get the sum of all values in the stream.
 --
 -- Since 1.0.0
+sumC :: (Monad m, Num a) => Consumer a m a
 sumC = CC.sum
 {-# INLINE sumC #-}
 
 -- | Get the sum of all elements in the chunked stream.
 --
 -- Since 1.0.0
+sumCE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m (Element mono)
 sumCE = CC.sumE
 {-# INLINE sumCE #-}
 
 -- | Get the product of all values in the stream.
 --
 -- Since 1.0.0
+productC :: (Monad m, Num a) => Consumer a m a
 productC = CC.product
 {-# INLINE productC #-}
 
 -- | Get the product of all elements in the chunked stream.
 --
 -- Since 1.0.0
+productCE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m (Element mono)
 productCE = CC.productE
 {-# INLINE productCE #-}
 
 -- | Apply the action to all values in the stream.
 --
 -- Since 1.0.0
+mapM_C :: Monad m => (a -> m ()) -> Consumer a m ()
 mapM_C = CC.mapM_
 {-# INLINE mapM_C #-}
 
 -- | Apply the action to all elements in the chunked stream.
 --
 -- Since 1.0.0
+mapM_CE :: (Monad m, MonoFoldable mono) => (Element mono -> m ()) -> Consumer mono m ()
 mapM_CE = CC.mapM_E
 {-# INLINE mapM_CE #-}
 
 -- | A monadic strict left fold.
 --
 -- Since 1.0.0
+foldMC :: Monad m => (a -> b -> m a) -> a -> Consumer b m a
 foldMC = CC.foldM
 {-# INLINE foldMC #-}
 
@@ -691,6 +720,7 @@ foldMCE = CC.foldME
 -- | Apply the provided monadic mapping function and monoidal combine all values.
 --
 -- Since 1.0.0
+foldMapMC :: (Monad m, Monoid w) => (a -> m w) -> Consumer a m w
 foldMapMC = CC.foldMapM
 {-# INLINE foldMapMC #-}
 
@@ -736,12 +766,14 @@ sinkIOHandle = CC.sinkIOHandle
 -- | Apply a transformation to all values in a stream.
 --
 -- Since 1.0.0
+mapC :: Monad m => (a -> b) -> Conduit a m b
 mapC = CC.map
 {-# INLINE mapC #-}
 
 -- | Apply a transformation to all elements in a chunked stream.
 --
 -- Since 1.0.0
+mapCE :: (Monad m, Functor f) => (a -> b) -> Conduit (f a) m (f b)
 mapCE = CC.mapE
 {-# INLINE mapCE #-}
 
@@ -751,6 +783,7 @@ mapCE = CC.mapE
 -- are @MonoFunctor@ but not @Functor@.
 --
 -- Since 1.0.0
+omapCE :: (Monad m, MonoFunctor mono) => (Element mono -> Element mono) -> Conduit mono m mono
 omapCE = CC.omapE
 {-# INLINE omapCE #-}
 
@@ -868,12 +901,14 @@ concatC = CC.concat
 -- | Keep only values in the stream passing a given predicate.
 --
 -- Since 1.0.0
+filterC :: Monad m => (a -> Bool) -> Conduit a m a
 filterC = CC.filter
 {-# INLINE filterC #-}
 
 -- | Keep only elements in the chunked stream passing a given predicate.
 --
 -- Since 1.0.0
+filterCE :: (Seq.IsSequence seq, Monad m) => (Element seq -> Bool) -> Conduit seq m seq
 filterCE = CC.filterE
 {-# INLINE filterCE #-}
 
@@ -889,6 +924,9 @@ mapWhileC = CC.mapWhile
 -- n. No empty vectors will be yielded.
 --
 -- Since 1.0.0
+conduitVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+              => Int -- ^ maximum allowed size
+              -> Conduit a m (v a)
 conduitVector = CC.conduitVector
 {-# INLINE conduitVector #-}
 
@@ -898,12 +936,14 @@ conduitVector = CC.conduitVector
 -- side-effects of running the action, see 'mapM_'.
 --
 -- Since 1.0.0
+mapMC :: Monad m => (a -> m b) -> Conduit a m b
 mapMC = CC.mapM
 {-# INLINE mapMC #-}
 
 -- | Apply a monadic transformation to all elements in a chunked stream.
 --
 -- Since 1.0.0
+mapMCE :: (Monad m, Data.Traversable.Traversable f) => (a -> m b) -> Conduit (f a) m (f b)
 mapMCE = CC.mapME
 {-# INLINE mapMCE #-}
 
@@ -913,6 +953,9 @@ mapMCE = CC.mapME
 -- are @MonoFunctor@ but not @Functor@.
 --
 -- Since 1.0.0
+omapMCE :: (Monad m, MonoTraversable mono)
+       => (Element mono -> m (Element mono))
+       -> Conduit mono m mono
 omapMCE = CC.omapME
 {-# INLINE omapMCE #-}
 
@@ -941,6 +984,7 @@ filterMC = CC.filterM
 -- | Keep only elements in the chunked stream passing a given monadic predicate.
 --
 -- Since 1.0.0
+filterMCE :: (Monad m, Seq.IsSequence seq) => (Element seq -> m Bool) -> Conduit seq m seq
 filterMCE = CC.filterME
 {-# INLINE filterMCE #-}
 
@@ -952,5 +996,6 @@ filterMCE = CC.filterME
 -- > iterM f = mapM (\a -> f a >>= \() -> return a)
 --
 -- Since 1.0.0
+iterMC :: Monad m => (a -> m ()) -> Conduit a m a
 iterMC = CC.iterM
 {-# INLINE iterMC #-}

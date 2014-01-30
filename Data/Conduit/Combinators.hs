@@ -118,7 +118,6 @@ module Data.Conduit.Combinators
     , mapWhile
     , conduitVector
 
--- FIXME need to organized/document below this point.
       -- ** Monadic
     , mapM
     , mapME
@@ -155,7 +154,7 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..))
+                                              ($), Functor (..), Enum)
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 
@@ -189,17 +188,20 @@ unfold = CL.unfold
 -- structures.
 --
 -- Since 1.0.0
+enumFromTo :: (Monad m, Enum a, Eq a) => a -> a -> Producer m a
 enumFromTo = CL.enumFromTo
 
 -- | Produces an infinite stream of repeated applications of f to x.
 --
 -- Since 1.0.0
+iterate :: Monad m => (a -> a) -> a -> Producer m a
 iterate = CL.iterate
 {-# INLINE iterate #-}
 
 -- | Produce an infinite stream consisting entirely of the given value.
 --
 -- Since 1.0.0
+repeat :: Monad m => a -> Producer m a
 repeat = iterate id
 {-# INLINE repeat #-}
 
@@ -387,6 +389,7 @@ foldE = CL.fold (\accum mono -> accum `mappend` ofoldMap id mono) mempty
 -- | A strict left fold.
 --
 -- Since 1.0.0
+foldl :: Monad m => (a -> b -> a) -> a -> Consumer b m a
 foldl = CL.fold
 {-# INLINE foldl #-}
 
@@ -564,6 +567,7 @@ sinkLazy = (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
 -- will pull all values into memory.
 --
 -- Since 1.0.0
+sinkList :: Monad m => Consumer a m [a]
 sinkList = CL.consume
 {-# INLINE sinkList #-}
 
@@ -596,6 +600,8 @@ sinkVector maxSize = do
 -- Defined as: @foldMap toBuilder@.
 --
 -- Since 1.0.0
+sinkBuilder :: (Monad m, Monoid builder, ToBuilder a builder)
+            => Consumer a m builder
 sinkBuilder = foldMap toBuilder
 {-# INLINE sinkBuilder #-}
 
@@ -611,18 +617,22 @@ sinkBuilder = foldMap toBuilder
 -- * Some buffer copying may occur in this version.
 --
 -- Since 1.0.0
+sinkLazyBuilder :: (Monad m, Monoid builder, ToBuilder a builder, Builder builder lazy)
+                => Consumer a m lazy
 sinkLazyBuilder = fmap builderToLazy sinkBuilder
 {-# INLINE sinkLazyBuilder #-}
 
 -- | Consume and discard all remaining values in the stream.
 --
 -- Since 1.0.0
+sinkNull :: Monad m => Consumer a m ()
 sinkNull = CL.sinkNull
 {-# INLINE sinkNull #-}
 
 -- | Same as @await@, but discards any leading 'onull' values.
 --
 -- Since 1.0.0
+awaitNonNull :: (Monad m, NonNull.NonNull b, a ~ NonNull.Nullable b) => Consumer a m (Maybe b)
 awaitNonNull =
     go
   where
@@ -634,12 +644,14 @@ awaitNonNull =
 -- | View the next value in the stream without consuming it.
 --
 -- Since 1.0.0
+peek :: Monad m => Consumer a m (Maybe a)
 peek = CL.peek
 {-# INLINE peek #-}
 
 -- | View the next element in the chunked stream without consuming it.
 --
 -- Since 1.0.0
+peekE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
 peekE =
     loop
   where
@@ -655,6 +667,7 @@ peekE =
 -- | Retrieve the last value in the stream, if present.
 --
 -- Since 1.0.0
+last :: Monad m => Consumer a m (Maybe a)
 last =
     await >>= maybe (return Nothing) loop
   where
@@ -664,28 +677,32 @@ last =
 -- | Retrieve the last element in the chunked stream, if present.
 --
 -- Since 1.0.0
+lastE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
 lastE =
-    awaitNonNull >>= maybe (return Nothing) (loop . NonNull.last . asNotEmpty)
+    awaitNonNull >>= maybe (return Nothing) (loop . NonNull.last . NonNull.asNotEmpty)
   where
 
-    loop prev = awaitNonNull >>= maybe (return $ Just prev) (loop . NonNull.last . asNotEmpty)
+    loop prev = awaitNonNull >>= maybe (return $ Just prev) (loop . NonNull.last . NonNull.asNotEmpty)
 {-# INLINE lastE #-}
 
 -- | Count how many values are in the stream.
 --
 -- Since 1.0.0
+length :: (Monad m, Num len) => Consumer a m len
 length = foldl (\x _ -> x + 1) 0
 {-# INLINE length #-}
 
 -- | Count how many elements are in the chunked stream.
 --
 -- Since 1.0.0
-lengthE = foldl (\x y -> x + olength y) 0
+lengthE :: (Monad m, Num len, MonoFoldable mono) => Consumer mono m len
+lengthE = foldl (\x y -> x + fromIntegral (olength y)) 0
 {-# INLINE lengthE #-}
 
 -- | Get the largest value in the stream, if present.
 --
 -- Since 1.0.0
+maximum :: (Monad m, Ord a) => Consumer a m (Maybe a)
 maximum =
     await >>= maybe (return Nothing) loop
   where
@@ -695,6 +712,7 @@ maximum =
 -- | Get the largest element in the chunked stream, if present.
 --
 -- Since 1.0.0
+maximumE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
 maximumE =
     start
   where
@@ -702,16 +720,14 @@ maximumE =
     start' x =
         case NonNull.fromNullable x of
             Nothing -> start
-            Just y -> loop $ NonNull.maximum $ asNotEmpty y
+            Just y -> loop $ NonNull.maximum $ NonNull.asNotEmpty y
     loop prev = await >>= maybe (return $ Just prev) (loop . ofoldl' max prev)
 {-# INLINE maximumE #-}
-
-asNotEmpty :: NonNull.NotEmpty a -> NonNull.NotEmpty a
-asNotEmpty = id
 
 -- | Get the smallest value in the stream, if present.
 --
 -- Since 1.0.0
+minimum :: (Monad m, Ord a) => Consumer a m (Maybe a)
 minimum =
     await >>= maybe (return Nothing) loop
   where
@@ -721,6 +737,7 @@ minimum =
 -- | Get the smallest element in the chunked stream, if present.
 --
 -- Since 1.0.0
+minimumE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
 minimumE =
     start
   where
@@ -728,7 +745,7 @@ minimumE =
     start' x =
         case NonNull.fromNullable x of
             Nothing -> start
-            Just y -> loop $ NonNull.minimum $ asNotEmpty y
+            Just y -> loop $ NonNull.minimum $ NonNull.asNotEmpty y
     loop prev = await >>= maybe (return $ Just prev) (loop . ofoldl' min prev)
 {-# INLINE minimumE #-}
 
@@ -737,6 +754,7 @@ minimumE =
 -- This function does not modify the stream.
 --
 -- Since 1.0.0
+null :: Monad m => Consumer a m Bool
 null = (maybe True (\_ -> False)) `fmap` peek
 {-# INLINE null #-}
 
@@ -758,42 +776,49 @@ nullE =
 -- | Get the sum of all values in the stream.
 --
 -- Since 1.0.0
+sum :: (Monad m, Num a) => Consumer a m a
 sum = foldl (+) 0
 {-# INLINE sum #-}
 
 -- | Get the sum of all elements in the chunked stream.
 --
 -- Since 1.0.0
+sumE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m (Element mono)
 sumE = foldlE (+) 0
 {-# INLINE sumE #-}
 
 -- | Get the product of all values in the stream.
 --
 -- Since 1.0.0
+product :: (Monad m, Num a) => Consumer a m a
 product = foldl (*) 1
 {-# INLINE product #-}
 
 -- | Get the product of all elements in the chunked stream.
 --
 -- Since 1.0.0
+productE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m (Element mono)
 productE = foldlE (*) 1
 {-# INLINE productE #-}
 
 -- | Apply the action to all values in the stream.
 --
 -- Since 1.0.0
+mapM_ :: Monad m => (a -> m ()) -> Consumer a m ()
 mapM_ = CL.mapM_
 {-# INLINE mapM_ #-}
 
 -- | Apply the action to all elements in the chunked stream.
 --
 -- Since 1.0.0
+mapM_E :: (Monad m, MonoFoldable mono) => (Element mono -> m ()) -> Consumer mono m ()
 mapM_E = CL.mapM_ . omapM_
 {-# INLINE mapM_E #-}
 
 -- | A monadic strict left fold.
 --
 -- Since 1.0.0
+foldM :: Monad m => (a -> b -> m a) -> a -> Consumer b m a
 foldM = CL.foldM
 {-# INLINE foldM #-}
 
@@ -810,6 +835,7 @@ foldME f = foldM (ofoldlM f)
 -- | Apply the provided monadic mapping function and monoidal combine all values.
 --
 -- Since 1.0.0
+foldMapM :: (Monad m, Monoid w) => (a -> m w) -> Consumer a m w
 foldMapM = CL.foldMapM
 {-# INLINE foldMapM #-}
 
@@ -858,12 +884,14 @@ sinkIOHandle alloc = bracketP alloc SIO.hClose sinkHandle
 -- | Apply a transformation to all values in a stream.
 --
 -- Since 1.0.0
+map :: Monad m => (a -> b) -> Conduit a m b
 map = CL.map
 {-# INLINE map #-}
 
 -- | Apply a transformation to all elements in a chunked stream.
 --
 -- Since 1.0.0
+mapE :: (Monad m, Functor f) => (a -> b) -> Conduit (f a) m (f b)
 mapE = CL.map . fmap
 {-# INLINE mapE #-}
 
@@ -873,6 +901,7 @@ mapE = CL.map . fmap
 -- are @MonoFunctor@ but not @Functor@.
 --
 -- Since 1.0.0
+omapE :: (Monad m, MonoFunctor mono) => (Element mono -> Element mono) -> Conduit mono m mono
 omapE = CL.map . omap
 {-# INLINE omapE #-}
 
@@ -1031,12 +1060,14 @@ concat = awaitForever yieldMany
 -- | Keep only values in the stream passing a given predicate.
 --
 -- Since 1.0.0
+filter :: Monad m => (a -> Bool) -> Conduit a m a
 filter = CL.filter
 {-# INLINE filter #-}
 
 -- | Keep only elements in the chunked stream passing a given predicate.
 --
 -- Since 1.0.0
+filterE :: (Seq.IsSequence seq, Monad m) => (Element seq -> Bool) -> Conduit seq m seq
 filterE = CL.map . Seq.filter
 {-# INLINE filterE #-}
 
@@ -1059,6 +1090,9 @@ mapWhile f =
 -- n. No empty vectors will be yielded.
 --
 -- Since 1.0.0
+conduitVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+              => Int -- ^ maximum allowed size
+              -> Conduit a m (v a)
 conduitVector size =
     loop
   where
@@ -1075,12 +1109,14 @@ conduitVector size =
 -- side-effects of running the action, see 'mapM_'.
 --
 -- Since 1.0.0
+mapM :: Monad m => (a -> m b) -> Conduit a m b
 mapM = CL.mapM
 {-# INLINE mapM #-}
 
 -- | Apply a monadic transformation to all elements in a chunked stream.
 --
 -- Since 1.0.0
+mapME :: (Monad m, Data.Traversable.Traversable f) => (a -> m b) -> Conduit (f a) m (f b)
 mapME = CL.mapM . Data.Traversable.mapM
 {-# INLINE mapME #-}
 
@@ -1090,6 +1126,9 @@ mapME = CL.mapM . Data.Traversable.mapM
 -- are @MonoFunctor@ but not @Functor@.
 --
 -- Since 1.0.0
+omapME :: (Monad m, MonoTraversable mono)
+       => (Element mono -> m (Element mono))
+       -> Conduit mono m mono
 omapME = CL.mapM . omapM
 {-# INLINE omapME #-}
 
@@ -1123,6 +1162,7 @@ filterM f =
 -- | Keep only elements in the chunked stream passing a given monadic predicate.
 --
 -- Since 1.0.0
+filterME :: (Monad m, Seq.IsSequence seq) => (Element seq -> m Bool) -> Conduit seq m seq
 filterME = CL.mapM . Seq.filterM
 {-# INLINE filterME #-}
 
@@ -1134,6 +1174,7 @@ filterME = CL.mapM . Seq.filterM
 -- > iterM f = mapM (\a -> f a >>= \() -> return a)
 --
 -- Since 1.0.0
+iterM :: Monad m => (a -> m ()) -> Conduit a m a
 iterM = CL.iterM
 
 {-
