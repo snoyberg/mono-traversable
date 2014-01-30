@@ -1,5 +1,6 @@
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 -- | Abstraction for different kinds of builders.
 --
@@ -29,25 +30,18 @@ type TextBuilder = TB.Builder
 type BlazeBuilder = BB.Builder
 
 -- | Since 0.1.0.0
-class Builder builder where
+class Builder builder lazy | builder -> lazy, lazy -> builder where
     -- | Since 0.1.0.0
-    type BuilderLazy builder
-
-    -- | Since 0.1.0.0
-    builderToLazy :: builder -> BuilderLazy builder
+    builderToLazy :: builder -> lazy
 
     -- | Since 0.1.0.0
     flushBuilder :: builder
 
-instance Builder TB.Builder where
-    type BuilderLazy TB.Builder = TL.Text
-
+instance Builder TB.Builder TL.Text where
     builderToLazy = TB.toLazyText
     flushBuilder = TB.flush
 
-instance Builder BB.Builder where
-    type BuilderLazy BB.Builder = L.ByteString
-
+instance Builder BB.Builder L.ByteString where
     builderToLazy = BB.toLazyByteString
     flushBuilder = BB.flush
 
