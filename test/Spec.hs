@@ -19,6 +19,9 @@ import Data.Builder
 import Data.Sequences.Lazy
 import Data.Textual.Encoding
 import qualified Data.NonNull as NN
+import System.IO.Silently (hCapture)
+import GHC.IO.Handle (hDuplicateTo)
+import qualified Data.ByteString as S
 
 main :: IO ()
 main = hspec $ do
@@ -97,6 +100,12 @@ main = hspec $ do
         let open = IO.openBinaryFile "tmp" IO.ReadMode
         res <- runResourceT $ sourceIOHandle open $$ sinkLazy
         res `shouldBe` TL.fromStrict contents
+    prop "stdin" $ \(S.pack -> content) -> do
+        S.writeFile "tmp" content
+        IO.withBinaryFile "tmp" IO.ReadMode $ \h -> do
+            hDuplicateTo h IO.stdin
+            x <- stdinC $$ foldC
+            x `shouldBe` content
     prop "drop" $ \(T.pack -> input) count ->
         runIdentity (yieldMany input $$ (dropC count >>= \() -> sinkList))
         `shouldBe` T.unpack (T.drop count input)
@@ -209,8 +218,8 @@ main = hspec $ do
         runIdentity (yieldMany xs $$ nullC)
         `shouldBe` null (xs :: [Int])
     prop "nullE" $ \xs ->
-        runIdentity (yieldMany xs $$ nullCE)
-        `shouldBe` null (concat xs :: [Int])
+        runIdentity (yieldMany xs $$ ((,) <$> nullCE <*> foldC))
+        `shouldBe` (null (concat xs :: [Int]), concat xs)
     prop "sum" $ \xs ->
         runIdentity (yieldMany xs $$ sumC)
         `shouldBe` sum (xs :: [Int])
@@ -262,6 +271,18 @@ main = hspec $ do
         runResourceT $ yield contents $$ sinkIOHandle open
         res <- readFile fp
         res `shouldBe` contents
+    prop "print" $ \vals -> do
+        let expected = Prelude.unlines $ map showInt vals
+        (actual, ()) <- hCapture [IO.stdout] $ yieldMany vals $$ printC
+        actual `shouldBe` expected
+    prop "stdout" $ \vals -> do
+        let expected = concat vals
+        (actual, ()) <- hCapture [IO.stdout] $ yieldMany vals $$ stdoutC
+        actual `shouldBe` expected
+    prop "stderr" $ \vals -> do
+        let expected = concat vals
+        (actual, ()) <- hCapture [IO.stderr] $ yieldMany vals $$ stderrC
+        actual `shouldBe` expected
     prop "map" $ \input ->
         runIdentity (yieldMany input $$ mapC succChar =$ sinkList)
         `shouldBe` map succChar input
@@ -362,6 +383,14 @@ main = hspec $ do
         res `shouldSatisfy` all (\v -> V.length v <= size)
         drop 1 (reverse res) `shouldSatisfy` all (\v -> V.length v == size)
         V.concat res `shouldBe` V.fromList (input :: [Int])
+    prop "scanl" $ \input seed ->
+        let f a b = a + b :: Int
+            res = runIdentity $ yieldMany input $$ scanlC f seed =$ sinkList
+         in res `shouldBe` scanl f seed input
+    it "concatMapAccum" $
+        let f a accum = (a + accum, [a, accum])
+            res = runIdentity $ yieldMany [1..3] $$ concatMapAccumC f 0 =$ sinkList
+         in res `shouldBe` [1, 0, 2, 1, 3, 3]
     prop "mapM" $ \input ->
         runIdentity (yieldMany input $$ mapMC (return . succChar) =$ sinkList)
         `shouldBe` map succChar input
@@ -384,6 +413,31 @@ main = hspec $ do
         (x, y) <- runWriterT $ yieldMany input $$ iterMC (tell . return) =$ sinkList
         x `shouldBe` (input :: [Int])
         y `shouldBe` input
+    prop "scanlM" $ \input seed ->
+        let f a b = a + b :: Int
+            fm a b = return $ a + b
+            res = runIdentity $ yieldMany input $$ scanlMC fm seed =$ sinkList
+         in res `shouldBe` scanl f seed input
+    it "concatMapAccumM" $
+        let f a accum = return (a + accum, [a, accum])
+            res = runIdentity $ yieldMany [1..3] $$ concatMapAccumMC f 0 =$ sinkList
+         in res `shouldBe` [1, 0, 2, 1, 3, 3]
+    prop "encode UTF8" $ \(map T.pack -> inputs) -> do
+        let expected = encodeUtf8 $ fromChunks inputs
+        actual <- yieldMany inputs
+               $$ encodeUtf8C
+               =$ sinkLazy
+        actual `shouldBe` expected
+    prop "encode/decode UTF8" $ \(map T.pack -> inputs) (min 50 . max 1 . abs -> chunkSize) -> do
+        let expected = fromChunks inputs
+        actual <- yieldMany inputs
+               $$ encodeUtf8C
+               =$ concatC
+               =$ conduitVector chunkSize
+               =$ mapC (S.pack . V.toList)
+               =$ decodeUtf8C
+               =$ sinkLazy
+        actual `shouldBe` expected
 
 evenInt :: Int -> Bool
 evenInt = even

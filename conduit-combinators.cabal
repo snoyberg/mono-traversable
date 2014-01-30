@@ -25,6 +25,8 @@ library
                      , vector
                      , system-fileio
                      , system-filepath
+                     , text
+                     , bytestring
 
 test-suite test
   hs-source-dirs: test
@@ -40,6 +42,8 @@ test-suite test
                 , transformers
                 , chunked-data
                 , mono-traversable
+                , silently
+                , bytestring
   ghc-options:    -Wall
 
 source-repository head

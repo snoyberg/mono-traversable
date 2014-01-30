@@ -26,6 +26,7 @@ module Data.Conduit.Combinators.Unqualified
     , sourceFile
     , sourceHandle
     , sourceIOHandle
+    , stdinC
 
       -- ** Consumers
       -- *** Pure
@@ -87,6 +88,9 @@ module Data.Conduit.Combinators.Unqualified
     , sinkFile
     , sinkHandle
     , sinkIOHandle
+    , printC
+    , stdoutC
+    , stderrC
 
       -- ** Transformers
       -- *** Pure
@@ -106,8 +110,9 @@ module Data.Conduit.Combinators.Unqualified
     , filterCE
     , mapWhileC
     , conduitVector
+    , scanlC
+    , concatMapAccumC
 
--- FIXME need to organized/document below this point.
       -- *** Monadic
     , mapMC
     , mapMCE
@@ -116,6 +121,12 @@ module Data.Conduit.Combinators.Unqualified
     , filterMC
     , filterMCE
     , iterMC
+    , scanlMC
+    , concatMapAccumMC
+
+      -- *** Textual
+    , encodeUtf8C
+    , decodeUtf8C
     ) where
 
 -- BEGIN IMPORTS
@@ -147,9 +158,14 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum)
+                                              ($), Functor (..), Enum, seq, Show)
+import qualified Prelude
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
+import qualified Data.Textual.Encoding as DTE
+import qualified Data.Conduit.Text as CT
+import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 
 -- END IMPORTS
@@ -279,6 +295,13 @@ sourceHandle = CC.sourceHandle
 sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
 sourceIOHandle = CC.sourceIOHandle
 {-# INLINE sourceIOHandle #-}
+
+-- | @sourceHandle@ applied to @stdin@.
+--
+-- Since 1.0.0
+stdinC :: (MonadIO m, IOData a) => Producer m a
+stdinC = CC.stdin
+{-# INLINE stdinC #-}
 
 -- | Ignore a certain number of values in the stream.
 --
@@ -763,6 +786,27 @@ sinkIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Consumer a m ()
 sinkIOHandle = CC.sinkIOHandle
 {-# INLINE sinkIOHandle #-}
 
+-- | Print all incoming values to stdout.
+--
+-- Since 1.0.0
+printC :: (Show a, MonadIO m) => Consumer a m ()
+printC = CC.print
+{-# INLINE printC #-}
+
+-- | @sinkHandle@ applied to @stdout@.
+--
+-- Since 1.0.0
+stdoutC :: (MonadIO m, IOData a) => Consumer a m ()
+stdoutC = CC.stdout
+{-# INLINE stdoutC #-}
+
+-- | @sinkHandle@ applied to @stderr@.
+--
+-- Since 1.0.0
+stderrC :: (MonadIO m, IOData a) => Consumer a m ()
+stderrC = CC.stderr
+{-# INLINE stderrC #-}
+
 -- | Apply a transformation to all values in a stream.
 --
 -- Since 1.0.0
@@ -930,6 +974,20 @@ conduitVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
 conduitVector = CC.conduitVector
 {-# INLINE conduitVector #-}
 
+-- | Analog of 'Prelude.scanl' for lists.
+--
+-- Since 1.0.6
+scanlC :: Monad m => (a -> b -> a) -> a -> Conduit b m a
+scanlC = CC.scanl
+{-# INLINE scanlC #-}
+
+-- | 'concatMap' with an accumulator.
+--
+-- Since 1.0.0
+concatMapAccumC :: Monad m => (a -> accum -> (accum, [b])) -> accum -> Conduit a m b
+concatMapAccumC = CC.concatMapAccum
+{-# INLINE concatMapAccumC #-}
+
 -- | Apply a monadic transformation to all values in a stream.
 --
 -- If you do not need the transformed values, and instead just want the monadic
@@ -999,3 +1057,31 @@ filterMCE = CC.filterME
 iterMC :: Monad m => (a -> m ()) -> Conduit a m a
 iterMC = CC.iterM
 {-# INLINE iterMC #-}
+
+-- | Analog of 'Prelude.scanl' for lists, monadic.
+--
+-- Since 1.0.6
+scanlMC :: Monad m => (a -> b -> m a) -> a -> Conduit b m a
+scanlMC = CC.scanlM
+{-# INLINE scanlMC #-}
+
+-- | 'concatMapM' with an accumulator.
+--
+-- Since 1.0.0
+concatMapAccumMC :: Monad m => (a -> accum -> m (accum, [b])) -> accum -> Conduit a m b
+concatMapAccumMC = CC.concatMapAccumM
+{-# INLINE concatMapAccumMC #-}
+
+-- | Encode a stream of text as UTF8.
+--
+-- Since 1.0.0
+encodeUtf8C :: (Monad m, DTE.Utf8 text binary) => Conduit text m binary
+encodeUtf8C = CC.encodeUtf8
+{-# INLINE encodeUtf8C #-}
+
+-- | Decode a stream of binary data as UTF8.
+--
+-- Since 1.0.0
+decodeUtf8C :: MonadThrow m => Conduit ByteString m Text
+decodeUtf8C = CC.decodeUtf8
+{-# INLINE decodeUtf8C #-}

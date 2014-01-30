@@ -37,6 +37,7 @@ module Data.Conduit.Combinators
     , sourceFile
     , sourceHandle
     , sourceIOHandle
+    , stdin
 
       -- * Consumers
       -- ** Pure
@@ -98,6 +99,9 @@ module Data.Conduit.Combinators
     , sinkFile
     , sinkHandle
     , sinkIOHandle
+    , print
+    , stdout
+    , stderr
 
       -- * Transformers
       -- ** Pure
@@ -117,6 +121,8 @@ module Data.Conduit.Combinators
     , filterE
     , mapWhile
     , conduitVector
+    , scanl
+    , concatMapAccum
 
       -- ** Monadic
     , mapM
@@ -126,6 +132,12 @@ module Data.Conduit.Combinators
     , filterM
     , filterME
     , iterM
+    , scanlM
+    , concatMapAccumM
+
+      -- ** Textual
+    , encodeUtf8
+    , decodeUtf8
     ) where
 
 -- BEGIN IMPORTS
@@ -154,9 +166,14 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum)
+                                              ($), Functor (..), Enum, seq, Show)
+import qualified Prelude
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
+import qualified Data.Textual.Encoding as DTE
+import qualified Data.Conduit.Text as CT
+import Data.ByteString (ByteString)
+import Data.Text (Text)
 
 -- END IMPORTS
 
@@ -305,6 +322,12 @@ sourceHandle h =
 sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
 sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
 {-# INLINE sourceIOHandle #-}
+
+-- | @sourceHandle@ applied to @stdin@.
+--
+-- Since 1.0.0
+stdin :: (MonadIO m, IOData a) => Producer m a
+stdin = sourceHandle SIO.stdin
 
 -- | Ignore a certain number of values in the stream.
 --
@@ -863,6 +886,24 @@ sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
 sinkFile fp = sinkIOHandle (F.openFile fp SIO.WriteMode)
 {-# INLINE sinkFile #-}
 
+-- | Print all incoming values to stdout.
+--
+-- Since 1.0.0
+print :: (Show a, MonadIO m) => Consumer a m ()
+print = mapM_ (liftIO . Prelude.print)
+
+-- | @sinkHandle@ applied to @stdout@.
+--
+-- Since 1.0.0
+stdout :: (MonadIO m, IOData a) => Consumer a m ()
+stdout = sinkHandle SIO.stdout
+
+-- | @sinkHandle@ applied to @stderr@.
+--
+-- Since 1.0.0
+stderr :: (MonadIO m, IOData a) => Consumer a m ()
+stderr = sinkHandle SIO.stderr
+
 -- | Write all data to the given @Handle@.
 --
 -- Does not close the @Handle@ at any point.
@@ -1103,6 +1144,29 @@ conduitVector size =
             loop
 {-# INLINE conduitVector #-}
 
+-- | Analog of 'Prelude.scanl' for lists.
+--
+-- Since 1.0.6
+scanl :: Monad m => (a -> b -> a) -> a -> Conduit b m a
+scanl f =
+    loop
+  where
+    loop seed =
+        await >>= maybe (yield seed) go
+      where
+        go b = do
+            let seed' = f seed b
+            seed' `seq` yield seed
+            loop seed'
+{-# INLINE scanl #-}
+
+-- | 'concatMap' with an accumulator.
+--
+-- Since 1.0.0
+concatMapAccum :: Monad m => (a -> accum -> (accum, [b])) -> accum -> Conduit a m b
+concatMapAccum = CL.concatMapAccum
+{-# INLINE concatMapAccum #-}
+
 -- | Apply a monadic transformation to all values in a stream.
 --
 -- If you do not need the transformed values, and instead just want the monadic
@@ -1177,21 +1241,49 @@ filterME = CL.mapM . Seq.filterM
 iterM :: Monad m => (a -> m ()) -> Conduit a m a
 iterM = CL.iterM
 
+-- | Analog of 'Prelude.scanl' for lists, monadic.
+--
+-- Since 1.0.6
+scanlM :: Monad m => (a -> b -> m a) -> a -> Conduit b m a
+scanlM f =
+    loop
+  where
+    loop seed =
+        await >>= maybe (yield seed) go
+      where
+        go b = do
+            seed' <- lift $ f seed b
+            seed' `seq` yield seed
+            loop seed'
+{-# INLINE scanlM #-}
+
+-- | 'concatMapM' with an accumulator.
+--
+-- Since 1.0.0
+concatMapAccumM :: Monad m => (a -> accum -> m (accum, [b])) -> accum -> Conduit a m b
+concatMapAccumM = CL.concatMapAccumM
+{-# INLINE concatMapAccumM #-}
+
+-- | Encode a stream of text as UTF8.
+--
+-- Since 1.0.0
+encodeUtf8 :: (Monad m, DTE.Utf8 text binary) => Conduit text m binary
+encodeUtf8 = map DTE.encodeUtf8
+
+-- | Decode a stream of binary data as UTF8.
+--
+-- Since 1.0.0
+decodeUtf8 :: MonadThrow m => Conduit ByteString m Text
+decodeUtf8 = CT.decode CT.utf8
+
 {-
 
 -- FIXME
 
 lines
 unlines
-concatMapAccum
-scanl
 groupBy
-scanlM
-concatMapAccumM
-encode
-decode
 withLine
-print
 find
 foldLines
 intercalate
