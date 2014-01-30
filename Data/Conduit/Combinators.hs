@@ -86,6 +86,7 @@ module Data.Conduit.Combinators
     , sumE
     , product
     , productE
+    , find
 
       -- ** Monadic
     , mapM_
@@ -138,6 +139,12 @@ module Data.Conduit.Combinators
       -- ** Textual
     , encodeUtf8
     , decodeUtf8
+    , line
+    , lineAscii
+    , unlines
+    , unlinesAscii
+    , linesUnbounded
+    , linesUnboundedAscii
     ) where
 
 -- BEGIN IMPORTS
@@ -166,7 +173,8 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum, seq, Show)
+                                              ($), Functor (..), Enum, seq, Show, Char)
+import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
@@ -824,6 +832,16 @@ productE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m 
 productE = foldlE (*) 1
 {-# INLINE productE #-}
 
+-- | Find the first matching value.
+--
+-- Since 1.0.0
+find :: Monad m => (a -> Bool) -> Consumer a m (Maybe a)
+find f =
+    loop
+  where
+    loop = await >>= maybe (return Nothing) go
+    go x = if f x then return (Just x) else loop
+
 -- | Apply the action to all values in the stream.
 --
 -- Since 1.0.0
@@ -1276,16 +1294,121 @@ encodeUtf8 = map DTE.encodeUtf8
 decodeUtf8 :: MonadThrow m => Conduit ByteString m Text
 decodeUtf8 = CT.decode CT.utf8
 
+-- | Stream in the entirety of a single line.
+--
+-- Like @takeExactly@, this will consume the entirety of the line regardless of
+-- the behavior of the inner Conduit.
+--
+-- Since 1.0.0
+line :: (Monad m, Seq.IsSequence seq, Element seq ~ Char)
+     => ConduitM seq o m r
+     -> ConduitM seq o m r
+line inner = do
+    loop =$= do
+        x <- inner
+        sinkNull
+        return x
+  where
+    loop = await >>= omapM_ go
+    go t =
+        if onull y
+            then yield x >> loop
+            else do
+                unless (onull x) $ yield x
+                let y' = Seq.drop 1 y
+                unless (onull y') $ leftover y'
+      where
+        (x, y) = Seq.break (== '\n') t
+{-# INLINE line #-}
+
+-- | Same as 'line', but operates on ASCII/binary data.
+--
+-- Since 1.0.0
+lineAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
+          => ConduitM seq o m r
+          -> ConduitM seq o m r
+lineAscii inner =
+    loop =$= do
+        x <- inner
+        sinkNull
+        return x
+  where
+    loop = await >>= omapM_ go
+    go t =
+        if onull y
+            then yield x >> loop
+            else do
+                unless (onull x) $ yield x
+                let y' = Seq.drop 1 y
+                unless (onull y') $ leftover y'
+      where
+        (x, y) = Seq.break (== 10) t
+{-# INLINE lineAscii #-}
+
+-- | Insert a newline character after each incoming chunk of data.
+--
+-- Since 1.0.0
+unlines :: (Monad m, Seq.IsSequence seq, Element seq ~ Char) => Conduit seq m seq
+unlines = concatMap (:[Seq.singleton '\n'])
+{-# INLINE unlines #-}
+
+-- | Same as 'unlines', but operates on ASCII/binary data.
+--
+-- Since 1.0.0
+unlinesAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8) => Conduit seq m seq
+unlinesAscii = concatMap (:[Seq.singleton 10])
+{-# INLINE unlinesAscii #-}
+
+-- | Convert a stream of arbitrarily-chunked textual data into a stream of data
+-- where each chunk represents a single line. Note that, if you have
+-- unknown/untrusted input, this function is /unsafe/, since it would allow an
+-- attacker to form lines of massive length and exhaust memory.
+--
+-- Since 1.0.0
+linesUnbounded :: (Monad m, Seq.IsSequence seq, Element seq ~ Char)
+               => Conduit seq m seq
+linesUnbounded =
+    start
+  where
+    start = await >>= maybe (return ()) loop
+
+    loop t =
+        if onull y
+            then do
+                mt <- await
+                case mt of
+                    Nothing -> unless (onull t) $ yield t
+                    Just t' -> loop (t `mappend` t')
+            else yield x >> loop (Seq.drop 1 y)
+      where
+        (x, y) = Seq.break (== '\n') t
+
+-- | Same as 'linesUnbounded', but for ASCII/binary data.
+--
+-- Since 1.0.0
+linesUnboundedAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
+                    => Conduit seq m seq
+linesUnboundedAscii =
+    start
+  where
+    start = await >>= maybe (return ()) loop
+
+    loop t =
+        if onull y
+            then do
+                mt <- await
+                case mt of
+                    Nothing -> unless (onull t) $ yield t
+                    Just t' -> loop (t `mappend` t')
+            else yield x >> loop (Seq.drop 1 y)
+      where
+        (x, y) = Seq.break (== 10) t
+
 {-
 
 -- FIXME
 
-lines
-unlines
 groupBy
-withLine
-find
-foldLines
 intercalate
 split
 splitWith

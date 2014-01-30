@@ -75,6 +75,7 @@ module Data.Conduit.Combinators.Unqualified
     , sumCE
     , productC
     , productCE
+    , findC
 
       -- *** Monadic
     , mapM_C
@@ -127,6 +128,12 @@ module Data.Conduit.Combinators.Unqualified
       -- *** Textual
     , encodeUtf8C
     , decodeUtf8C
+    , lineC
+    , lineAsciiC
+    , unlinesC
+    , unlinesAsciiC
+    , linesUnboundedC
+    , linesUnboundedAsciiC
     ) where
 
 -- BEGIN IMPORTS
@@ -158,7 +165,8 @@ import           Filesystem.Path             (FilePath)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum, seq, Show)
+                                              ($), Functor (..), Enum, seq, Show, Char)
+import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
@@ -709,6 +717,13 @@ productCE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m
 productCE = CC.productE
 {-# INLINE productCE #-}
 
+-- | Find the first matching value.
+--
+-- Since 1.0.0
+findC :: Monad m => (a -> Bool) -> Consumer a m (Maybe a)
+findC = CC.find
+{-# INLINE findC #-}
+
 -- | Apply the action to all values in the stream.
 --
 -- Since 1.0.0
@@ -1085,3 +1100,57 @@ encodeUtf8C = CC.encodeUtf8
 decodeUtf8C :: MonadThrow m => Conduit ByteString m Text
 decodeUtf8C = CC.decodeUtf8
 {-# INLINE decodeUtf8C #-}
+
+-- | Stream in the entirety of a single line.
+--
+-- Like @takeExactly@, this will consume the entirety of the line regardless of
+-- the behavior of the inner Conduit.
+--
+-- Since 1.0.0
+lineC :: (Monad m, Seq.IsSequence seq, Element seq ~ Char)
+     => ConduitM seq o m r
+     -> ConduitM seq o m r
+lineC = CC.line
+{-# INLINE lineC #-}
+
+-- | Same as 'line', but operates on ASCII/binary data.
+--
+-- Since 1.0.0
+lineAsciiC :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
+          => ConduitM seq o m r
+          -> ConduitM seq o m r
+lineAsciiC = CC.lineAscii
+{-# INLINE lineAsciiC #-}
+
+-- | Insert a newline character after each incoming chunk of data.
+--
+-- Since 1.0.0
+unlinesC :: (Monad m, Seq.IsSequence seq, Element seq ~ Char) => Conduit seq m seq
+unlinesC = CC.unlines
+{-# INLINE unlinesC #-}
+
+-- | Same as 'unlines', but operates on ASCII/binary data.
+--
+-- Since 1.0.0
+unlinesAsciiC :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8) => Conduit seq m seq
+unlinesAsciiC = CC.unlinesAscii
+{-# INLINE unlinesAsciiC #-}
+
+-- | Convert a stream of arbitrarily-chunked textual data into a stream of data
+-- where each chunk represents a single line. Note that, if you have
+-- unknown/untrusted input, this function is /unsafe/, since it would allow an
+-- attacker to form lines of massive length and exhaust memory.
+--
+-- Since 1.0.0
+linesUnboundedC :: (Monad m, Seq.IsSequence seq, Element seq ~ Char)
+               => Conduit seq m seq
+linesUnboundedC = CC.linesUnbounded
+{-# INLINE linesUnboundedC #-}
+
+-- | Same as 'linesUnbounded', but for ASCII/binary data.
+--
+-- Since 1.0.0
+linesUnboundedAsciiC :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
+                    => Conduit seq m seq
+linesUnboundedAsciiC = CC.linesUnboundedAscii
+{-# INLINE linesUnboundedAsciiC #-}

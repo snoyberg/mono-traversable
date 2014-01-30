@@ -22,6 +22,7 @@ import qualified Data.NonNull as NN
 import System.IO.Silently (hCapture)
 import GHC.IO.Handle (hDuplicateTo)
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Char8 as S8
 
 main :: IO ()
 main = hspec $ do
@@ -232,6 +233,9 @@ main = hspec $ do
     prop "productE" $ \xs ->
         runIdentity (yieldMany xs $$ productCE)
         `shouldBe` product (concat xs :: [Int])
+    prop "find" $ \x xs ->
+        runIdentity (yieldMany xs $$ findC (< x))
+        `shouldBe` find (< x) (xs :: [Int])
     prop "mapM_" $ \xs ->
         let res = execWriter $ yieldMany xs $$ mapM_C (tell . return)
          in res `shouldBe` (xs :: [Int])
@@ -438,6 +442,40 @@ main = hspec $ do
                =$ decodeUtf8C
                =$ sinkLazy
         actual `shouldBe` expected
+    prop "line" $ \(map T.pack -> input) size ->
+        let src = yieldMany input
+            sink = do
+                x <- lineC $ takeCE size =$ foldC
+                y <- foldC
+                return (x, y)
+            res = runIdentity $ src $$ sink
+            expected =
+                let (x, y) = T.break (== '\n') (T.concat input)
+                 in (T.take size x, T.drop 1 y)
+         in res `shouldBe` expected
+    prop "lineAscii" $ \(map S.pack -> input) size ->
+        let src = yieldMany input
+            sink = do
+                x <- lineAsciiC $ takeCE size =$ foldC
+                y <- foldC
+                return (x, y)
+            res = runIdentity $ src $$ sink
+            expected =
+                let (x, y) = S.break (== 10) (S.concat input)
+                 in (S.take size x, S.drop 1 y)
+         in res `shouldBe` expected
+    prop "unlines" $ \(map T.pack -> input) ->
+        runIdentity (yieldMany input $$ unlinesC =$ foldC)
+        `shouldBe` T.unlines input
+    prop "unlinesAscii" $ \(map S.pack -> input) ->
+        runIdentity (yieldMany input $$ unlinesAsciiC =$ foldC)
+        `shouldBe` S8.unlines input
+    prop "linesUnbounded" $ \(map T.pack -> input) ->
+        runIdentity (yieldMany input $$ (linesUnboundedC >>= \() -> mempty) =$ sinkList)
+        `shouldBe` T.lines (T.concat input)
+    prop "linesUnboundedAscii" $ \(map S.pack -> input) ->
+        runIdentity (yieldMany input $$ (linesUnboundedAsciiC >>= \() -> mempty) =$ sinkList)
+        `shouldBe` S8.lines (S.concat input)
 
 evenInt :: Int -> Bool
 evenInt = even
