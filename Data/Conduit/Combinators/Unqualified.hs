@@ -113,6 +113,7 @@ module Data.Conduit.Combinators.Unqualified
     , conduitVector
     , scanlC
     , concatMapAccumC
+    , intersperseC
 
       -- *** Monadic
     , mapMC
@@ -1002,6 +1003,13 @@ scanlC = CC.scanl
 concatMapAccumC :: Monad m => (a -> accum -> (accum, [b])) -> accum -> Conduit a m b
 concatMapAccumC = CC.concatMapAccum
 {-# INLINE concatMapAccumC #-}
+
+-- | Insert the given value between each two values in the stream.
+--
+-- Since 1.0.0
+intersperseC :: Monad m => a -> Conduit a m a
+intersperseC = CC.intersperse
+{-# INLINE intersperseC #-}
 
 -- | Apply a monadic transformation to all values in a stream.
 --

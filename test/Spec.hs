@@ -395,6 +395,9 @@ main = hspec $ do
         let f a accum = (a + accum, [a, accum])
             res = runIdentity $ yieldMany [1..3] $$ concatMapAccumC f 0 =$ sinkList
          in res `shouldBe` [1, 0, 2, 1, 3, 3]
+    prop "intersperse" $ \xs x ->
+        runIdentity (yieldMany xs $$ intersperseC x =$ sinkList)
+        `shouldBe` intersperse (x :: Int) xs
     prop "mapM" $ \input ->
         runIdentity (yieldMany input $$ mapMC (return . succChar) =$ sinkList)
         `shouldBe` map succChar input

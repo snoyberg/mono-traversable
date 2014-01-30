@@ -124,6 +124,7 @@ module Data.Conduit.Combinators
     , conduitVector
     , scanl
     , concatMapAccum
+    , intersperse
 
       -- ** Monadic
     , mapM
@@ -1185,6 +1186,16 @@ concatMapAccum :: Monad m => (a -> accum -> (accum, [b])) -> accum -> Conduit a 
 concatMapAccum = CL.concatMapAccum
 {-# INLINE concatMapAccum #-}
 
+-- | Insert the given value between each two values in the stream.
+--
+-- Since 1.0.0
+intersperse :: Monad m => a -> Conduit a m a
+intersperse x =
+    await >>= omapM_ go
+  where
+    go y = yield y >> concatMap (\z -> [x, z])
+{-# INLINE intersperse #-}
+
 -- | Apply a monadic transformation to all values in a stream.
 --
 -- If you do not need the transformed values, and instead just want the monadic
@@ -1403,14 +1414,3 @@ linesUnboundedAscii =
             else yield x >> loop (Seq.drop 1 y)
       where
         (x, y) = Seq.break (== 10) t
-
-{-
-
--- FIXME
-
-groupBy
-intercalate
-split
-splitWith
-
--}
