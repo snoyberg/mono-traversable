@@ -38,6 +38,7 @@ test-suite test
                 , text
                 , vector
                 , transformers
+                , chunked-data
   ghc-options:    -Wall
 
 source-repository head

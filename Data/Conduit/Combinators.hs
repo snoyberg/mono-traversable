@@ -65,6 +65,8 @@ module Data.Conduit.Combinators
     , sinkLazy
     , sinkList
     , sinkVector
+    , sinkBuilder
+    , sinkLazyBuilder
     , sinkNull
 
       -- ** Monadic
@@ -110,6 +112,7 @@ module Data.Conduit.Combinators
     , iterM
     ) where
 
+import Data.Builder
 import qualified Data.Traversable
 import           Control.Applicative         ((<$>))
 import           Control.Category            (Category (..))
@@ -378,6 +381,9 @@ foldlE f = CL.fold (ofoldl' f)
 -- | Apply the provided mapping function and monoidal combine all values.
 --
 -- Since 1.0.0
+foldMap :: (Monad m, Monoid b)
+        => (a -> b)
+        -> Consumer a m b
 foldMap = CL.foldMap
 {-# INLINE foldMap #-}
 
@@ -562,6 +568,29 @@ sinkVector maxSize = do
                     go (i + 1)
     go 0
 {-# INLINEABLE sinkVector #-}
+
+-- | Convert incoming values to a builder and fold together all builder values.
+--
+-- Defined as: @foldMap toBuilder@.
+--
+-- Since 1.0.0
+sinkBuilder = foldMap toBuilder
+{-# INLINE sinkBuilder #-}
+
+-- | Same as @sinkBuilder@, but afterwards convert the builder to its lazy
+-- representation.
+--
+-- Alternatively, this could be considered an alternative to @sinkLazy@, with
+-- the following differences:
+--
+-- * This function will allow multiple input types, not just the strict version
+-- of the lazy structure.
+--
+-- * Some buffer copying may occur in this version.
+--
+-- Since 1.0.0
+sinkLazyBuilder = fmap builderToLazy sinkBuilder
+{-# INLINE sinkLazyBuilder #-}
 
 -- | Consume and discard all remaining values in the stream.
 --
@@ -950,8 +979,6 @@ minimum
 null
 sum
 product
-omap
-omapM
 foldLines
 intercalate
 split

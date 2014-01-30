@@ -49,6 +49,8 @@ module Data.Conduit.Combinators.Unqualified
     , sinkLazy
     , sinkList
     , sinkVector
+    , sinkBuilder
+    , sinkLazyBuilder
     , sinkNull
 
       -- *** Monadic
@@ -378,6 +380,29 @@ sinkList = CC.sinkList
 -- Since 1.0.0
 sinkVector = CC.sinkVector
 {-# INLINE sinkVector#-}
+
+-- | Convert incoming values to a builder and fold together all builder values.
+--
+-- Defined as: @foldMap toBuilder@.
+--
+-- Since 1.0.0
+sinkBuilder = CC.sinkBuilder
+{-# INLINE sinkBuilder#-}
+
+-- | Same as @sinkBuilder@, but afterwards convert the builder to its lazy
+-- representation.
+--
+-- Alternatively, this could be considered an alternative to @sinkLazy@, with
+-- the following differences:
+--
+-- * This function will allow multiple input types, not just the strict version
+-- of the lazy structure.
+--
+-- * Some buffer copying may occur in this version.
+--
+-- Since 1.0.0
+sinkLazyBuilder = CC.sinkLazyBuilder
+{-# INLINE sinkLazyBuilder#-}
 
 -- | Consume and discard all remaining values in the stream.
 --

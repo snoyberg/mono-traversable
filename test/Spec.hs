@@ -5,7 +5,7 @@
 import Conduit
 import Test.Hspec
 import Test.Hspec.QuickCheck
-import BasicPrelude
+import BasicPrelude hiding (encodeUtf8)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.IORef
@@ -15,6 +15,9 @@ import qualified Data.Vector.Storable as VS
 import Control.Monad.Trans.Writer
 import qualified Prelude
 import qualified System.IO as IO
+import Data.Builder
+import Data.Sequences.Lazy
+import Data.Textual.Encoding
 
 main :: IO ()
 main = hspec $ do
@@ -156,6 +159,13 @@ main = hspec $ do
             xs = take maxSize xs'
         res <- yieldMany xs' $$ sinkVector maxSize
         res `shouldBe` VS.fromList (xs :: [Int])
+    prop "sinkBuilder" $ \(map T.pack -> inputs) ->
+        let builder = runIdentity (yieldMany inputs $$ sinkBuilder) :: TextBuilder
+            ltext = builderToLazy builder
+         in ltext `shouldBe` fromChunks inputs
+    prop "sinkLazyBuilder" $ \(map T.pack -> inputs) ->
+        let lbs = runIdentity (yieldMany inputs $$ sinkLazyBuilder)
+         in lbs `shouldBe` encodeUtf8 (fromChunks inputs)
     prop "sinkNull" $ \xs toSkip -> do
         res <- yieldMany xs $$ do
             takeC toSkip =$ sinkNull
