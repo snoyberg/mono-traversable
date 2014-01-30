@@ -21,6 +21,7 @@ import qualified Prelude
 import Control.Monad.Trans.Writer
 import qualified Data.NonNull as NN
 import qualified Data.List.NonEmpty as NE
+import qualified Data.Semigroup as SG
 
 main :: IO ()
 main = hspec $ do
@@ -104,6 +105,15 @@ main = hspec $ do
                 prop "minimumBy" $ \x xs ->
                     let nn = reverse $ forceTyp $ NN.ncons x (fromList xs `asTypeOf` dummy)
                      in NN.minimumBy compare nn `shouldBe` Prelude.minimum (x:xs)
+                prop "ofoldMap1" $ \x xs ->
+                    let nn = forceTyp $ NN.ncons x (fromList xs `asTypeOf` dummy)
+                     in SG.getMax (NN.ofoldMap1 SG.Max nn) `shouldBe` Prelude.maximum (x:xs)
+                prop "ofoldr1" $ \x xs ->
+                    let nn = forceTyp $ NN.ncons x (fromList xs `asTypeOf` dummy)
+                     in NN.ofoldr1 (Prelude.min) nn `shouldBe` Prelude.minimum (x:xs)
+                prop "ofoldl1'" $ \x xs ->
+                    let nn = forceTyp $ NN.ncons x (fromList xs `asTypeOf` dummy)
+                     in NN.ofoldl1' (Prelude.min) nn `shouldBe` Prelude.minimum (x:xs)
 
             test :: (OrdSequence typ, Arbitrary (Element typ), Show (Element typ), Show typ, Eq typ, Eq (Element typ))
                  => String -> typ -> Spec

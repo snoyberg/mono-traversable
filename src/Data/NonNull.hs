@@ -24,7 +24,10 @@ module Data.NonNull (
   , init
   , NotEmpty
   , asNotEmpty
-  , MonoFoldable1(..)
+  , ofoldMap1
+  , ofold1
+  , ofoldr1
+  , ofoldl1'
   , maximum
   , maximumBy
   , minimum
@@ -39,7 +42,6 @@ import Control.Exception.Base (Exception, throw)
 import Data.Semigroup
 import qualified Data.Monoid as Monoid
 import Data.Data
-import Data.Maybe (fromMaybe)
 import qualified Data.List.NonEmpty as NE
 
 data NullError = NullError String deriving (Show, Typeable)
@@ -236,39 +238,26 @@ infixr 5 <|
 (<|) = cons
 
 
--- | fold operations that assume one or more elements
--- Guaranteed to be safe on a NonNull
-class (NonNull seq, MonoFoldable (Nullable seq)) => MonoFoldable1 seq where
-  ofoldMap1 :: Semigroup m => (Element seq -> m) -> seq -> m
-  ofoldMap1 f = maybe (error "Data.NonNull.foldMap1 (MonoFoldable1)") id . getOption . ofoldMap (Option . Just . f) . toNullable
+ofoldMap1 :: (NonNull seq, Semigroup m) => (Element seq -> m) -> seq -> m
+ofoldMap1 f = partialOfoldMap1 f . toNullable
+{-# INLINE ofoldMap1 #-}
 
-  -- ofold1 :: (Semigroup m ~ Element seq) => seq -> Element seq
-  -- ofold1 = ofoldMap1 id
+ofold1 :: (NonNull seq, Semigroup (Element seq)) => seq -> Element seq
+ofold1 = ofoldMap1 id
+{-# INLINE ofold1 #-}
 
-  -- @'foldr1' f = 'Prelude.foldr1' f . 'otoList'@
-  ofoldr1 :: (Element seq -> Element seq -> Element seq) -> seq -> Element seq
-  ofoldr1 f = fromMaybe (error "Data.NonNull.foldr1 (MonoFoldable1): empty structure") .
-                  (ofoldr mf Nothing) . toNullable
-    where
-      mf x Nothing = Just x
-      mf x (Just y) = Just (f x y)
+-- @'foldr1' f = 'Prelude.foldr1' f . 'otoList'@
+ofoldr1 :: NonNull seq => (Element seq -> Element seq -> Element seq) -> seq -> Element seq
+ofoldr1 f = partialOfoldr1 f . toNullable
+{-# INLINE ofoldr1 #-}
 
-  -- | A variant of 'ofoldl\'' that has no base case,
-  -- and thus may only be applied to non-empty structures.
-  --
-  -- @'foldl1\'' f = 'Prelude.foldl1' f . 'otoList'@
-  ofoldl1' :: (Element seq -> Element seq -> Element seq) -> seq -> Element seq
-  ofoldl1' f = fromMaybe (error "ofoldl1': empty structure") .
-                  (ofoldl' mf Nothing) . toNullable
-    where
-      mf Nothing y = Just y
-      mf (Just x) y = Just (f x y)
-
-
-instance MonoFoldable1 (NE.NonEmpty a)
--- normally we favor defaulting, should we be using it here?
-instance (MonoFoldable mono, IsSequence mono) => MonoFoldable1 (NotEmpty mono)
-
+-- | A variant of 'ofoldl\'' that has no base case,
+-- and thus may only be applied to non-empty structures.
+--
+-- @'foldl1\'' f = 'Prelude.foldl1' f . 'otoList'@
+ofoldl1' :: NonNull seq => (Element seq -> Element seq -> Element seq) -> seq -> Element seq
+ofoldl1' f = partialOfoldl1' f . toNullable
+{-# INLINE ofoldl1' #-}
 
 -- | like Data.List, but not partial on a NonNull
 maximum :: (OrdSequence (Nullable seq), NonNull seq) => seq -> Element seq
@@ -284,8 +273,10 @@ minimum = partialMinimum . toNullable
 maximumBy :: (OrdSequence (Nullable seq), NonNull seq)
           => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
 maximumBy cmp = partialMaximumBy cmp . toNullable
+{-# INLINE maximumBy #-}
 
 -- | like Data.List, but not partial on a NonNull
 minimumBy :: (OrdSequence (Nullable seq), NonNull seq)
           => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
 minimumBy cmp = partialMinimumBy cmp . toNullable
+{-# INLINE minimumBy #-}
