@@ -18,14 +18,21 @@
 -- Please send your feedback.
 module Data.NonNull (
     NonNull(..)
-  , SafeSequence(..)
+  , head
+  , tail
+  , last
+  , init
   , NotEmpty
+  , asNotEmpty
   , MonoFoldable1(..)
-  , OrdNonNull(..)
+  , maximum
+  , maximumBy
+  , minimum
+  , minimumBy
   , (<|)
 ) where
 
-import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate)
+import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate, maximum, minimum)
 import Data.MonoTraversable
 import Data.Sequences
 import Control.Exception.Base (Exception, throw)
@@ -34,16 +41,6 @@ import qualified Data.Monoid as Monoid
 import Data.Data
 import Data.Maybe (fromMaybe)
 import qualified Data.List.NonEmpty as NE
-import qualified Data.Foldable as F
-
-import qualified Data.ByteString as S
-import qualified Data.ByteString.Lazy as L
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
-import qualified Data.Vector as V
-import qualified Data.Vector.Unboxed as U
-import qualified Data.Vector.Storable as VS
-import qualified Data.Sequence as Seq
 
 data NullError = NullError String deriving (Show, Typeable)
 instance Exception NullError
@@ -128,17 +125,25 @@ maybeToNullable Nothing   = mempty
 maybeToNullable (Just xs) = toNullable xs
 -}
 
--- | SafeSequence contains functions that would be partial on a 'Nullable'
-class SafeSequence seq where
-    -- | like Data.List, but not partial on a NonEmpty
-    head :: seq -> Element seq
-    -- | like Data.List, but not partial on a NonEmpty
-    tail :: seq -> Nullable seq
-    -- | like Data.List, but not partial on a NonEmpty
-    last :: seq -> Element seq
-    -- | like Data.List, but not partial on a NonEmpty
-    init :: seq -> Nullable seq
+-- | like Data.List, but not partial on a NonEmpty
+head :: NonNull seq => seq -> Element seq
+head = partialHead . toNullable
+{-# INLINE head #-}
 
+-- | like Data.List, but not partial on a NonEmpty
+tail :: NonNull seq => seq -> Nullable seq
+tail = partialTail . toNullable
+{-# INLINE tail #-}
+
+-- | like Data.List, but not partial on a NonEmpty
+last :: NonNull seq => seq -> Element seq
+last = partialLast . toNullable
+{-# INLINE last #-}
+
+-- | like Data.List, but not partial on a NonEmpty
+init :: NonNull seq => seq -> Nullable seq
+init = partialInit . toNullable
+{-# INLINE init #-}
 
 
 
@@ -165,12 +170,6 @@ instance NonNull (NE.NonEmpty a) where
         unfold countdown | countdown < 1 = (x, Nothing)
                          | otherwise     = (x, Just (countdown - 1))
 
-instance SafeSequence (NE.NonEmpty a) where
-    head = NE.head
-    tail = NE.tail
-    last = NE.last
-    init = NE.init
-
 
 -- | a newtype wrapper indicating there are 1 or more elements
 -- unwrap with 'toNullable'
@@ -180,6 +179,13 @@ type instance Element (NotEmpty seq) = Element seq
 deriving instance MonoFunctor seq => MonoFunctor (NotEmpty seq)
 deriving instance MonoFoldable seq => MonoFoldable (NotEmpty seq)
 deriving instance MonoTraversable seq => MonoTraversable (NotEmpty seq)
+
+-- | Helper functions for type inferences.
+--
+-- Since 0.3.0
+asNotEmpty :: NotEmpty a -> NotEmpty a
+asNotEmpty = id
+{-# INLINE asNotEmpty #-}
 
 instance Monoid seq => Semigroup (NotEmpty seq) where
   x <> y  = NotEmpty (fromNotEmpty x `Monoid.mappend` fromNotEmpty y)
@@ -223,55 +229,6 @@ instance IsSequence seq => NonNull (NotEmpty seq) where
     nfilter f = filter f . toNullable
     nfilterM f = filterM f . toNullable
 
-
-instance SafeSequence (NotEmpty (Seq.Seq a)) where
-    head = flip Seq.index 1 . fromNotEmpty
-    last (NotEmpty xs) = Seq.index xs (Seq.length xs - 1)
-    tail = Seq.drop 1 . fromNotEmpty
-    init (NotEmpty xs) = Seq.take (Seq.length xs - 1) xs
-
-instance SafeSequence (NotEmpty (V.Vector a)) where
-    head = V.head . fromNotEmpty
-    tail = V.tail . fromNotEmpty
-    last = V.last . fromNotEmpty
-    init = V.init . fromNotEmpty
-
-instance U.Unbox a => SafeSequence (NotEmpty (U.Vector a)) where
-    head = U.head . fromNotEmpty
-    tail = U.tail . fromNotEmpty
-    last = U.last . fromNotEmpty
-    init = U.init . fromNotEmpty
-
-instance VS.Storable a => SafeSequence (NotEmpty (VS.Vector a)) where
-    head = VS.head . fromNotEmpty
-    tail = VS.tail . fromNotEmpty
-    last = VS.last . fromNotEmpty
-    init = VS.init . fromNotEmpty
-
-instance SafeSequence (NotEmpty S.ByteString) where
-    head = S.head . fromNotEmpty
-    tail = S.tail . fromNotEmpty
-    last = S.last . fromNotEmpty
-    init = S.init . fromNotEmpty
-
-instance SafeSequence (NotEmpty T.Text) where
-    head = T.head . fromNotEmpty
-    tail = T.tail . fromNotEmpty
-    last = T.last . fromNotEmpty
-    init = T.init . fromNotEmpty
-
-instance SafeSequence (NotEmpty L.ByteString) where
-    head = L.head . fromNotEmpty
-    tail = L.tail . fromNotEmpty
-    last = L.last . fromNotEmpty
-    init = L.init . fromNotEmpty
-
-instance SafeSequence (NotEmpty TL.Text) where
-    head = TL.head . fromNotEmpty
-    tail = TL.tail . fromNotEmpty
-    last = TL.last . fromNotEmpty
-    init = TL.init . fromNotEmpty
-
 infixr 5 <|
 
 -- | Prepend an element to a NonNull
@@ -313,42 +270,22 @@ instance MonoFoldable1 (NE.NonEmpty a)
 instance (MonoFoldable mono, IsSequence mono) => MonoFoldable1 (NotEmpty mono)
 
 
-class (MonoFoldable1 seq, OrdSequence (Nullable seq)) => OrdNonNull seq where
-    -- | like Data.List, but not partial on a NonNull
-    maximum :: seq -> Element seq
-    default maximum :: (MonoFoldable1 seq) => seq -> Element seq
-    maximum = ofoldr1 max
+-- | like Data.List, but not partial on a NonNull
+maximum :: (OrdSequence (Nullable seq), NonNull seq) => seq -> Element seq
+maximum = partialMaximum . toNullable
+{-# INLINE maximum #-}
 
-    -- | like Data.List, but not partial on a NonNull
-    minimum :: seq -> Element seq
-    default minimum :: (MonoFoldable1 seq, Element (Nullable seq) ~ Element seq) => seq -> Element seq
-    minimum = ofoldr1 min
+-- | like Data.List, but not partial on a NonNull
+minimum :: (OrdSequence (Nullable seq), NonNull seq) => seq -> Element seq
+minimum = partialMinimum . toNullable
+{-# INLINE minimum #-}
 
-    -- | like Data.List, but not partial on a NonNull
-    maximumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    default maximumBy :: (MonoFoldable1 seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    maximumBy cmp = ofoldr1 max'
-      where max' x y = case cmp x y of
-                            GT -> x
-                            _  -> y
+-- | like Data.List, but not partial on a NonNull
+maximumBy :: (OrdSequence (Nullable seq), NonNull seq)
+          => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+maximumBy cmp = partialMaximumBy cmp . toNullable
 
-    -- | like Data.List, but not partial on a NonNull
-    minimumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    default minimumBy :: (MonoFoldable1 seq) => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    minimumBy cmp = ofoldr1 min'
-      where min' x y = case cmp x y of
-                            GT -> y
-                            _  -> x
-
-instance Ord a => OrdNonNull (NE.NonEmpty a) where
-    maximum = F.maximum
-    minimum = F.minimum
-    maximumBy = F.maximumBy
-    minimumBy = F.minimumBy
-
-instance Ord a => OrdNonNull (NotEmpty (Seq.Seq a))
-instance Ord a => OrdNonNull (NotEmpty (V.Vector a))
-instance OrdNonNull (NotEmpty (S.ByteString))
-instance OrdNonNull (NotEmpty (L.ByteString))
-instance OrdNonNull (NotEmpty (T.Text))
-instance OrdNonNull (NotEmpty (TL.Text))
+-- | like Data.List, but not partial on a NonNull
+minimumBy :: (OrdSequence (Nullable seq), NonNull seq)
+          => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+minimumBy cmp = partialMinimumBy cmp . toNullable

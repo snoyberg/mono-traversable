@@ -232,6 +232,7 @@ class MonoFoldable mono where
     
     oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m b) -> m ()
     oforM_ = flip omapM_
+    {-# INLINE oforM_ #-}
     
     ofoldlM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
     ofoldlM f z0 xs = ofoldr f' return xs z0
@@ -267,6 +268,7 @@ instance MonoFoldable L.ByteString where
     onull = L.null
     olength64 = L.length
     omapM_ f = omapM_ (omapM_ f) . L.toChunks
+    {-# INLINE omapM_ #-}
 instance MonoFoldable T.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr
