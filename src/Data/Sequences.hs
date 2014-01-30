@@ -603,6 +603,8 @@ class (EqSequence seq, Ord (Element seq)) => OrdSequence seq where
     sort :: seq -> seq
     sort = fromList . List.sort . otoList
 
+    -- FIXME theoretically, the next four functions should be part of something
+    -- like OrdMonoFoldable, since ordering is irrelevant
     partialMaximum :: seq -> Element seq
     partialMaximum = List.maximum . otoList
 
