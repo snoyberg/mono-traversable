@@ -21,7 +21,7 @@ library
                      , transformers
                      , transformers-base
                      , primitive
-                     , mono-traversable >= 0.2 && < 0.3
+                     , mono-traversable >= 0.3 && < 0.4
                      , vector
                      , system-fileio
                      , system-filepath
@@ -39,6 +39,7 @@ test-suite test
                 , vector
                 , transformers
                 , chunked-data
+                , mono-traversable
   ghc-options:    -Wall
 
 source-repository head

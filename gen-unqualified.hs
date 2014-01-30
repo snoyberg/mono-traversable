@@ -56,7 +56,7 @@ process l
     (lead, rest) = span (`elem` " ,") l
 
 tweak orig
-    | any (`isPrefixOf` orig) (words "yield source sink conduit") = orig
+    | any (`isPrefixOf` orig) (words "await yield source sink conduit") = orig
     | otherwise =
         case reverse orig of
             'E':orig' -> reverse orig' ++ "CE"

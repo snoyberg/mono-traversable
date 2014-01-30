@@ -18,6 +18,7 @@ import qualified System.IO as IO
 import Data.Builder
 import Data.Sequences.Lazy
 import Data.Textual.Encoding
+import qualified Data.NonNull as NN
 
 main :: IO ()
 main = hspec $ do
@@ -171,6 +172,57 @@ main = hspec $ do
             takeC toSkip =$ sinkNull
             sinkList
         res `shouldBe` drop toSkip (xs :: [Int])
+    prop "awaitNonNull" $ \xs ->
+        fmap (NN.toNullable .NN.asNotEmpty) (runIdentity $ yieldMany xs $$ awaitNonNull)
+        `shouldBe` listToMaybe (filter (not . null) (xs :: [[Int]]))
+    prop "peek" $ \xs ->
+        runIdentity (yieldMany xs $$ ((,) <$> peekC <*> sinkList))
+        `shouldBe` (listToMaybe xs, xs :: [Int])
+    prop "peekE" $ \xs ->
+        runIdentity (yieldMany xs $$ ((,) <$> peekCE <*> foldC))
+        `shouldBe` (listToMaybe $ concat xs, concat xs :: [Int])
+    prop "last" $ \xs ->
+        runIdentity (yieldMany xs $$ lastC)
+        `shouldBe` listToMaybe (reverse (xs :: [Int]))
+    prop "lastE" $ \xs ->
+        runIdentity (yieldMany xs $$ lastCE)
+        `shouldBe` listToMaybe (reverse (concat xs :: [Int]))
+    prop "length" $ \xs ->
+        runIdentity (yieldMany xs $$ lengthC)
+        `shouldBe` length (xs :: [Int])
+    prop "lengthE" $ \xs ->
+        runIdentity (yieldMany xs $$ lengthCE)
+        `shouldBe` length (concat xs :: [Int])
+    prop "maximum" $ \xs ->
+        runIdentity (yieldMany xs $$ maximumC)
+        `shouldBe` (if null (xs :: [Int]) then Nothing else Just (maximum xs))
+    prop "maximumE" $ \xs ->
+        runIdentity (yieldMany xs $$ maximumCE)
+        `shouldBe` (if null (concat xs :: [Int]) then Nothing else Just (maximum $ concat xs))
+    prop "minimum" $ \xs ->
+        runIdentity (yieldMany xs $$ minimumC)
+        `shouldBe` (if null (xs :: [Int]) then Nothing else Just (minimum xs))
+    prop "minimumE" $ \xs ->
+        runIdentity (yieldMany xs $$ minimumCE)
+        `shouldBe` (if null (concat xs :: [Int]) then Nothing else Just (minimum $ concat xs))
+    prop "null" $ \xs ->
+        runIdentity (yieldMany xs $$ nullC)
+        `shouldBe` null (xs :: [Int])
+    prop "nullE" $ \xs ->
+        runIdentity (yieldMany xs $$ nullCE)
+        `shouldBe` null (concat xs :: [Int])
+    prop "sum" $ \xs ->
+        runIdentity (yieldMany xs $$ sumC)
+        `shouldBe` sum (xs :: [Int])
+    prop "sumE" $ \xs ->
+        runIdentity (yieldMany xs $$ sumCE)
+        `shouldBe` sum (concat xs :: [Int])
+    prop "product" $ \xs ->
+        runIdentity (yieldMany xs $$ productC)
+        `shouldBe` product (xs :: [Int])
+    prop "productE" $ \xs ->
+        runIdentity (yieldMany xs $$ productCE)
+        `shouldBe` product (concat xs :: [Int])
     prop "mapM_" $ \xs ->
         let res = execWriter $ yieldMany xs $$ mapM_C (tell . return)
          in res `shouldBe` (xs :: [Int])

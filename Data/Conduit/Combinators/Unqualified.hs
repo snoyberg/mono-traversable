@@ -52,6 +52,23 @@ module Data.Conduit.Combinators.Unqualified
     , sinkBuilder
     , sinkLazyBuilder
     , sinkNull
+    , awaitNonNull
+    , peekC
+    , peekCE
+    , lastC
+    , lastCE
+    , lengthC
+    , lengthCE
+    , maximumC
+    , maximumCE
+    , minimumC
+    , minimumCE
+    , nullC
+    , nullCE
+    , sumC
+    , sumCE
+    , productC
+    , productCE
 
       -- *** Monadic
     , mapM_C
@@ -409,6 +426,113 @@ sinkLazyBuilder = CC.sinkLazyBuilder
 -- Since 1.0.0
 sinkNull = CC.sinkNull
 {-# INLINE sinkNull#-}
+
+-- | Same as @await@, but discards any leading 'onull' values.
+--
+-- Since 1.0.0
+awaitNonNull = CC.awaitNonNull
+{-# INLINE awaitNonNull#-}
+
+-- | View the next value in the stream without consuming it.
+--
+-- Since 1.0.0
+peekC = CC.peek
+{-# INLINE peekC#-}
+
+-- | View the next element in the chunked stream without consuming it.
+--
+-- Since 1.0.0
+peekCE = CC.peekE
+{-# INLINE peekCE#-}
+
+-- | Retrieve the last value in the stream, if present.
+--
+-- Since 1.0.0
+lastC = CC.last
+{-# INLINE lastC#-}
+
+-- | Retrieve the last element in the chunked stream, if present.
+--
+-- Since 1.0.0
+lastCE = CC.lastE
+{-# INLINE lastCE#-}
+
+-- | Count how many values are in the stream.
+--
+-- Since 1.0.0
+lengthC = CC.length
+{-# INLINE lengthC#-}
+
+-- | Count how many elements are in the chunked stream.
+--
+-- Since 1.0.0
+lengthCE = CC.lengthE
+{-# INLINE lengthCE#-}
+
+-- | Get the largest value in the stream, if present.
+--
+-- Since 1.0.0
+maximumC = CC.maximum
+{-# INLINE maximumC#-}
+
+-- | Get the largest element in the chunked stream, if present.
+--
+-- Since 1.0.0
+maximumCE = CC.maximumE
+{-# INLINE maximumCE#-}
+
+-- | Get the smallest value in the stream, if present.
+--
+-- Since 1.0.0
+minimumC = CC.minimum
+{-# INLINE minimumC#-}
+
+-- | Get the smallest element in the chunked stream, if present.
+--
+-- Since 1.0.0
+minimumCE = CC.minimumE
+{-# INLINE minimumCE#-}
+
+-- | True if there are no values in the stream.
+--
+-- This function does not modify the stream.
+--
+-- Since 1.0.0
+nullC = CC.null
+{-# INLINE nullC#-}
+
+-- | True if there are no elements in the chunked stream.
+--
+-- This function may remove empty leading chunks from the stream, but otherwise
+-- will not modify it.
+--
+-- Since 1.0.0
+nullCE = CC.nullE
+{-# INLINE nullCE#-}
+
+-- | Get the sum of all values in the stream.
+--
+-- Since 1.0.0
+sumC = CC.sum
+{-# INLINE sumC#-}
+
+-- | Get the sum of all elements in the chunked stream.
+--
+-- Since 1.0.0
+sumCE = CC.sumE
+{-# INLINE sumCE#-}
+
+-- | Get the product of all values in the stream.
+--
+-- Since 1.0.0
+productC = CC.product
+{-# INLINE productC#-}
+
+-- | Get the product of all elements in the chunked stream.
+--
+-- Since 1.0.0
+productCE = CC.productE
+{-# INLINE productCE#-}
 
 -- | Apply the action to all values in the stream.
 --

@@ -68,6 +68,23 @@ module Data.Conduit.Combinators
     , sinkBuilder
     , sinkLazyBuilder
     , sinkNull
+    , awaitNonNull
+    , peek
+    , peekE
+    , last
+    , lastE
+    , length
+    , lengthE
+    , maximum
+    , maximumE
+    , minimum
+    , minimumE
+    , null
+    , nullE
+    , sum
+    , sumE
+    , product
+    , productE
 
       -- ** Monadic
     , mapM_
@@ -113,6 +130,7 @@ module Data.Conduit.Combinators
     ) where
 
 import Data.Builder
+import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
 import           Control.Applicative         ((<$>))
 import           Control.Category            (Category (..))
@@ -598,6 +616,165 @@ sinkLazyBuilder = fmap builderToLazy sinkBuilder
 sinkNull = CL.sinkNull
 {-# INLINE sinkNull #-}
 
+-- | Same as @await@, but discards any leading 'onull' values.
+--
+-- Since 1.0.0
+awaitNonNull =
+    go
+  where
+    go = await >>= maybe (return Nothing) go'
+
+    go' = maybe go (return . Just) . NonNull.fromNullable
+{-# INLINE awaitNonNull #-}
+
+-- | View the next value in the stream without consuming it.
+--
+-- Since 1.0.0
+peek = CL.peek
+{-# INLINE peek #-}
+
+-- | View the next element in the chunked stream without consuming it.
+--
+-- Since 1.0.0
+peekE =
+    loop
+  where
+    loop = await >>= maybe (return Nothing) go
+    go x =
+        case Seq.headMay x of
+            Nothing -> loop
+            Just y -> do
+                leftover x
+                return $ Just y
+{-# INLINE peekE #-}
+
+-- | Retrieve the last value in the stream, if present.
+--
+-- Since 1.0.0
+last =
+    await >>= maybe (return Nothing) loop
+  where
+    loop prev = await >>= maybe (return $ Just prev) loop
+{-# INLINE last #-}
+
+-- | Retrieve the last element in the chunked stream, if present.
+--
+-- Since 1.0.0
+lastE =
+    awaitNonNull >>= maybe (return Nothing) (loop . NonNull.last . asNotEmpty)
+  where
+
+    loop prev = awaitNonNull >>= maybe (return $ Just prev) (loop . NonNull.last . asNotEmpty)
+{-# INLINE lastE #-}
+
+-- | Count how many values are in the stream.
+--
+-- Since 1.0.0
+length = foldl (\x _ -> x + 1) 0
+{-# INLINE length #-}
+
+-- | Count how many elements are in the chunked stream.
+--
+-- Since 1.0.0
+lengthE = foldl (\x y -> x + olength y) 0
+{-# INLINE lengthE #-}
+
+-- | Get the largest value in the stream, if present.
+--
+-- Since 1.0.0
+maximum =
+    await >>= maybe (return Nothing) loop
+  where
+    loop prev = await >>= maybe (return $ Just prev) (loop . max prev)
+{-# INLINE maximum #-}
+
+-- | Get the largest element in the chunked stream, if present.
+--
+-- Since 1.0.0
+maximumE =
+    start
+  where
+    start = await >>= maybe (return Nothing) start'
+    start' x =
+        case NonNull.fromNullable x of
+            Nothing -> start
+            Just y -> loop $ NonNull.maximum $ asNotEmpty y
+    loop prev = await >>= maybe (return $ Just prev) (loop . ofoldl' max prev)
+{-# INLINE maximumE #-}
+
+asNotEmpty :: NonNull.NotEmpty a -> NonNull.NotEmpty a
+asNotEmpty = id
+
+-- | Get the smallest value in the stream, if present.
+--
+-- Since 1.0.0
+minimum =
+    await >>= maybe (return Nothing) loop
+  where
+    loop prev = await >>= maybe (return $ Just prev) (loop . min prev)
+{-# INLINE minimum #-}
+
+-- | Get the smallest element in the chunked stream, if present.
+--
+-- Since 1.0.0
+minimumE =
+    start
+  where
+    start = await >>= maybe (return Nothing) start'
+    start' x =
+        case NonNull.fromNullable x of
+            Nothing -> start
+            Just y -> loop $ NonNull.minimum $ asNotEmpty y
+    loop prev = await >>= maybe (return $ Just prev) (loop . ofoldl' min prev)
+{-# INLINE minimumE #-}
+
+-- | True if there are no values in the stream.
+--
+-- This function does not modify the stream.
+--
+-- Since 1.0.0
+null = (maybe True (\_ -> False)) `fmap` peek
+{-# INLINE null #-}
+
+-- | True if there are no elements in the chunked stream.
+--
+-- This function may remove empty leading chunks from the stream, but otherwise
+-- will not modify it.
+--
+-- Since 1.0.0
+nullE :: (Monad m, MonoFoldable mono)
+      => Consumer mono m Bool
+nullE =
+    go
+  where
+    go = await >>= maybe (return True) go'
+    go' x = if onull x then go else leftover x >> return False
+{-# INLINE nullE #-}
+
+-- | Get the sum of all values in the stream.
+--
+-- Since 1.0.0
+sum = foldl (+) 0
+{-# INLINE sum #-}
+
+-- | Get the sum of all elements in the chunked stream.
+--
+-- Since 1.0.0
+sumE = foldlE (+) 0
+{-# INLINE sumE #-}
+
+-- | Get the product of all values in the stream.
+--
+-- Since 1.0.0
+product = foldl (*) 1
+{-# INLINE product #-}
+
+-- | Get the product of all elements in the chunked stream.
+--
+-- Since 1.0.0
+productE = foldlE (*) 1
+{-# INLINE productE #-}
+
 -- | Apply the action to all values in the stream.
 --
 -- Since 1.0.0
@@ -961,7 +1138,6 @@ iterM = CL.iterM
 
 lines
 unlines
-peek
 concatMapAccum
 scanl
 groupBy
@@ -972,13 +1148,6 @@ decode
 withLine
 print
 find
-last
-length
-maximum
-minimum
-null
-sum
-product
 foldLines
 intercalate
 split
