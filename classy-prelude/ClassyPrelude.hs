@@ -36,6 +36,7 @@ module ClassyPrelude
     , module Data.Sequences.Lazy
     , module Data.Textual.Encoding
     , module Data.Containers
+    , module Data.Builder
       -- * I\/O
     , Handle
     , stdin
@@ -147,6 +148,7 @@ import qualified Data.Char as Char
 import Data.Sequences
 import Data.MonoTraversable
 import Data.Containers
+import Data.Builder
 import qualified Filesystem.Path.CurrentOS as F
 import System.IO (Handle, stdin, stdout, stderr, hClose)
 
