@@ -13,6 +13,7 @@ import Data.Sequences
 import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, show,
                 return, asTypeOf, (.))
 import Control.Monad.Trans.Writer
+import qualified Data.NonNull as NN
 
 main :: IO ()
 main = hspec $ do
@@ -66,6 +67,24 @@ main = hspec $ do
         let test typ dummy = prop typ $ \input ->
                 let res = execWriter $ omapM_ (tell . return) (fromList input `asTypeOf` dummy)
                  in res == input
+        test "strict ByteString" S.empty
+        test "lazy ByteString" L.empty
+        test "strict Text" T.empty
+        test "lazy Text" TL.empty
+    describe "SafeSequence" $ do
+        let test typ dummy = describe typ $ do
+                prop "head" $ \x xs ->
+                    let nn = NN.asNotEmpty $ NN.ncons x (fromList xs `asTypeOf` dummy)
+                     in NN.head nn `shouldBe` x
+                prop "tail" $ \x xs ->
+                    let nn = NN.asNotEmpty $ NN.ncons x (fromList xs `asTypeOf` dummy)
+                     in NN.tail nn `shouldBe` fromList xs
+                prop "last" $ \x xs ->
+                    let nn = reverse $ NN.asNotEmpty $ NN.ncons x (fromList xs `asTypeOf` dummy)
+                     in NN.last nn `shouldBe` x
+                prop "init" $ \x xs ->
+                    let nn = reverse $ NN.asNotEmpty $ NN.ncons x (fromList xs `asTypeOf` dummy)
+                     in NN.init nn `shouldBe` reverse (fromList xs)
         test "strict ByteString" S.empty
         test "lazy ByteString" L.empty
         test "strict Text" T.empty
