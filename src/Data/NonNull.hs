@@ -8,14 +8,10 @@
 -- | Warning, this is Experimental!
 --
 -- Data.NonNull attempts to extend the concepts from
--- 'Data.List.NonEmpty' to any 'IsSequence'.
+-- 'Data.List.NonEmpty' to any 'MonoFoldable'.
 --
--- 'NonNull' is for a sequence with 1 or more elements.
--- 'Stream' is for a 'NonNull' that supports efficient
--- modification of the front of the sequence.
---
--- This code is experimental and likely to change dramatically and future versions.
--- Please send your feedback.
+-- 'NonNull' is a typeclass for a container with 1 or more elements.
+-- 'Data.List.NonEmpty' and 'NotEmpty a' are members of the typeclass
 module Data.NonNull (
     NonNull(..)
   , fromNonEmpty
@@ -215,7 +211,7 @@ instance SemiSequence seq => SemiSequence (NotEmpty seq) where
 
 
 -- normally we favor defaulting, should we use it here?
--- this re-uses IsSequence functions and IsSequence uses defaulting
+-- this re-uses MonoFoldable functions and MonoFoldable uses defaulting
 instance MonoFoldable seq => NonNull (NotEmpty seq) where
     type Nullable (NotEmpty seq) = seq
 
