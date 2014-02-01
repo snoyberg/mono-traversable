@@ -579,12 +579,9 @@ instance Ord a => OrdSequence [a] where
 instance OrdSequence S.ByteString where
     sort = S.sort
 
-instance OrdSequence L.ByteString where
-
-instance OrdSequence T.Text where
-
-instance OrdSequence TL.Text where
-
+instance OrdSequence L.ByteString
+instance OrdSequence T.Text
+instance OrdSequence TL.Text
 instance Ord a => OrdSequence (Seq.Seq a)
 
 instance Ord a => OrdSequence (V.Vector a) where
