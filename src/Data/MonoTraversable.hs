@@ -240,19 +240,28 @@ class MonoFoldable mono where
     ofoldlM f z0 xs = ofoldr f' return xs z0
       where f' x k z = f z x >>= k
 
-    partialOfoldMap1 :: Semigroup m => (Element mono -> m) -> mono -> m
-    partialOfoldMap1 f = maybe (Prelude.error "Data.MonoTraversable.partialOoldMap1") id
+    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
+    -- throw an exception. See "Data.NonNull" for a total version of this
+    -- function.
+    ofoldMap1Ex :: Semigroup m => (Element mono -> m) -> mono -> m
+    ofoldMap1Ex f = maybe (Prelude.error "Data.MonoTraversable.ofoldMap1Ex") id
                        . getOption . ofoldMap (Option . Just . f)
 
-    partialOfoldr1 :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
-    default partialOfoldr1 :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
+    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
+    -- throw an exception. See "Data.NonNull" for a total version of this
+    -- function.
+    ofoldr1Ex :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
+    default ofoldr1Ex :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                            => (a -> a -> a) -> mono -> a
-    partialOfoldr1 = F.foldr1
+    ofoldr1Ex = F.foldr1
 
-    partialOfoldl1' :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
-    default partialOfoldl1' :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
+    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
+    -- throw an exception. See "Data.NonNull" for a total version of this
+    -- function.
+    ofoldl1Ex' :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
+    default ofoldl1Ex' :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                             => (a -> a -> a) -> mono -> a
-    partialOfoldl1' = F.foldl1
+    ofoldl1Ex' = F.foldl1
 
 instance MonoFoldable S.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
@@ -274,8 +283,8 @@ instance MonoFoldable S.ByteString where
                     loop (ptr `plusPtr` 1)
         loop start
     {-# INLINE omapM_ #-}
-    partialOfoldr1 = S.foldr1
-    partialOfoldl1' = S.foldl1'
+    ofoldr1Ex = S.foldr1
+    ofoldl1Ex' = S.foldl1'
 instance MonoFoldable L.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = L.foldr
@@ -287,8 +296,8 @@ instance MonoFoldable L.ByteString where
     olength64 = L.length
     omapM_ f = omapM_ (omapM_ f) . L.toChunks
     {-# INLINE omapM_ #-}
-    partialOfoldr1 = L.foldr1
-    partialOfoldl1' = L.foldl1'
+    ofoldr1Ex = L.foldr1
+    ofoldl1Ex' = L.foldl1'
 instance MonoFoldable T.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr
@@ -298,8 +307,8 @@ instance MonoFoldable T.Text where
     oany = T.any
     onull = T.null
     olength = T.length
-    partialOfoldr1 = T.foldr1
-    partialOfoldl1' = T.foldl1'
+    ofoldr1Ex = T.foldr1
+    ofoldl1Ex' = T.foldl1'
 instance MonoFoldable TL.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = TL.foldr
@@ -309,8 +318,8 @@ instance MonoFoldable TL.Text where
     oany = TL.any
     onull = TL.null
     olength64 = TL.length
-    partialOfoldr1 = TL.foldr1
-    partialOfoldl1' = TL.foldl1'
+    ofoldr1Ex = TL.foldr1
+    ofoldl1Ex' = TL.foldl1'
 instance MonoFoldable IntSet where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = IntSet.foldr
@@ -318,8 +327,8 @@ instance MonoFoldable IntSet where
     otoList = IntSet.toList
     onull = IntSet.null
     olength = IntSet.size
-    partialOfoldr1 f = partialOfoldr1 f . IntSet.toList
-    partialOfoldl1' f = partialOfoldl1' f . IntSet.toList
+    ofoldr1Ex f = ofoldr1Ex f . IntSet.toList
+    ofoldl1Ex' f = ofoldl1Ex' f . IntSet.toList
 instance MonoFoldable [a] where
     otoList = id
     {-# INLINE otoList #-}
@@ -346,8 +355,8 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     oany = U.any
     onull = U.null
     olength = U.length
-    partialOfoldr1 = U.foldr1
-    partialOfoldl1' = U.foldl1'
+    ofoldr1Ex = U.foldr1
+    ofoldl1Ex' = U.foldl1'
 instance VS.Storable a => MonoFoldable (VS.Vector a) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = VS.foldr
@@ -357,8 +366,8 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     oany = VS.any
     onull = VS.null
     olength = VS.length
-    partialOfoldr1 = VS.foldr1
-    partialOfoldl1' = VS.foldl1'
+    ofoldr1Ex = VS.foldr1
+    ofoldl1Ex' = VS.foldl1'
 instance MonoFoldable (Either a b) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr f b (Right a) = f a b
@@ -375,10 +384,10 @@ instance MonoFoldable (Either a b) where
     onull (Right _) = False
     olength (Left _) = 0
     olength (Right _) = 1
-    partialOfoldr1 _ (Left _) = Prelude.error "partialOFoldr1 on Either"
-    partialOfoldr1 _ (Right x) = x
-    partialOfoldl1' _ (Left _) = Prelude.error "partialOFoldl1' on Either"
-    partialOfoldl1' _ (Right x) = x
+    ofoldr1Ex _ (Left _) = Prelude.error "ofoldr1Ex on Either"
+    ofoldr1Ex _ (Right x) = x
+    ofoldl1Ex' _ (Left _) = Prelude.error "ofoldl1Ex' on Either"
+    ofoldl1Ex' _ (Right x) = x
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono

@@ -148,22 +148,22 @@ maybeToNullable (Just xs) = toNullable xs
 
 -- | like Data.List, but not partial on a NonEmpty
 head :: (IsSequence (Nullable seq), NonNull seq) => seq -> Element seq
-head = partialHead . toNullable
+head = headEx . toNullable
 {-# INLINE head #-}
 
 -- | like Data.List, but not partial on a NonEmpty
 tail :: (IsSequence (Nullable seq), NonNull seq) => seq -> Nullable seq
-tail = partialTail . toNullable
+tail = tailEx . toNullable
 {-# INLINE tail #-}
 
 -- | like Data.List, but not partial on a NonEmpty
 last :: (IsSequence (Nullable seq), NonNull seq) => seq -> Element seq
-last = partialLast . toNullable
+last = lastEx . toNullable
 {-# INLINE last #-}
 
 -- | like Data.List, but not partial on a NonEmpty
 init :: (IsSequence (Nullable seq), NonNull seq) => seq -> Nullable seq
-init = partialInit . toNullable
+init = initEx . toNullable
 {-# INLINE init #-}
 
 
@@ -236,7 +236,7 @@ x <| y = ncons x (toNullable y)
 
 
 ofoldMap1 :: (NonNull seq, Semigroup m) => (Element seq -> m) -> seq -> m
-ofoldMap1 f = partialOfoldMap1 f . toNullable
+ofoldMap1 f = ofoldMap1Ex f . toNullable
 {-# INLINE ofoldMap1 #-}
 
 ofold1 :: (NonNull seq, Semigroup (Element seq)) => seq -> Element seq
@@ -245,7 +245,7 @@ ofold1 = ofoldMap1 id
 
 -- @'foldr1' f = 'Prelude.foldr1' f . 'otoList'@
 ofoldr1 :: NonNull seq => (Element seq -> Element seq -> Element seq) -> seq -> Element seq
-ofoldr1 f = partialOfoldr1 f . toNullable
+ofoldr1 f = ofoldr1Ex f . toNullable
 {-# INLINE ofoldr1 #-}
 
 -- | A variant of 'ofoldl\'' that has no base case,
@@ -253,27 +253,27 @@ ofoldr1 f = partialOfoldr1 f . toNullable
 --
 -- @'foldl1\'' f = 'Prelude.foldl1' f . 'otoList'@
 ofoldl1' :: NonNull seq => (Element seq -> Element seq -> Element seq) -> seq -> Element seq
-ofoldl1' f = partialOfoldl1' f . toNullable
+ofoldl1' f = ofoldl1Ex' f . toNullable
 {-# INLINE ofoldl1' #-}
 
 -- | like Data.List, but not partial on a NonNull
 maximum :: (OrdSequence (Nullable seq), NonNull seq) => seq -> Element seq
-maximum = partialMaximum . toNullable
+maximum = maximumEx . toNullable
 {-# INLINE maximum #-}
 
 -- | like Data.List, but not partial on a NonNull
 minimum :: (OrdSequence (Nullable seq), NonNull seq) => seq -> Element seq
-minimum = partialMinimum . toNullable
+minimum = minimumEx . toNullable
 {-# INLINE minimum #-}
 
 -- | like Data.List, but not partial on a NonNull
 maximumBy :: (OrdSequence (Nullable seq), NonNull seq)
           => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-maximumBy cmp = partialMaximumBy cmp . toNullable
+maximumBy cmp = maximumByEx cmp . toNullable
 {-# INLINE maximumBy #-}
 
 -- | like Data.List, but not partial on a NonNull
 minimumBy :: (OrdSequence (Nullable seq), NonNull seq)
           => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-minimumBy cmp = partialMinimumBy cmp . toNullable
+minimumBy cmp = minimumByEx cmp . toNullable
 {-# INLINE minimumBy #-}

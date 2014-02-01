@@ -134,17 +134,17 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
     permutations :: seq -> [seq]
     permutations = List.map fromList . List.permutations . otoList
 
-    partialHead :: seq -> Element seq
-    partialHead = fst . maybe (error "Data.Sequences.partialHead") id . uncons
+    headEx :: seq -> Element seq
+    headEx = fst . maybe (error "Data.Sequences.headEx") id . uncons
 
-    partialTail :: seq -> seq
-    partialTail = snd . maybe (error "Data.Sequences.partialTail") id . uncons
+    tailEx :: seq -> seq
+    tailEx = snd . maybe (error "Data.Sequences.tailEx") id . uncons
 
-    partialLast :: seq -> Element seq
-    partialLast = snd . maybe (error "Data.Sequences.partialLast") id . unsnoc
+    lastEx :: seq -> Element seq
+    lastEx = snd . maybe (error "Data.Sequences.lastEx") id . unsnoc
 
-    partialInit :: seq -> seq
-    partialInit = fst . maybe (error "Data.Sequences.partialInit") id . unsnoc
+    initEx :: seq -> seq
+    initEx = fst . maybe (error "Data.Sequences.initEx") id . unsnoc
 
 defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
 defaultFind f = List.find f . otoList
@@ -259,10 +259,10 @@ instance IsSequence S.ByteString where
         | S.null s = Nothing
         | otherwise = Just (S.init s, S.last s)
     groupBy = S.groupBy
-    partialHead = S.head
-    partialTail = S.tail
-    partialLast = S.last
-    partialInit = S.init
+    headEx = S.head
+    tailEx = S.tail
+    lastEx = S.last
+    initEx = S.init
 
 instance SemiSequence T.Text where
     type Index T.Text = Int
@@ -291,10 +291,10 @@ instance IsSequence T.Text where
         | T.null t = Nothing
         | otherwise = Just (T.init t, T.last t)
     groupBy = T.groupBy
-    partialHead = T.head
-    partialTail = T.tail
-    partialLast = T.last
-    partialInit = T.init
+    headEx = T.head
+    tailEx = T.tail
+    lastEx = T.last
+    initEx = T.init
 
 instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
@@ -323,10 +323,10 @@ instance IsSequence L.ByteString where
         | L.null s = Nothing
         | otherwise = Just (L.init s, L.last s)
     groupBy = L.groupBy
-    partialHead = L.head
-    partialTail = L.tail
-    partialLast = L.last
-    partialInit = L.init
+    headEx = L.head
+    tailEx = L.tail
+    lastEx = L.last
+    initEx = L.init
 
 instance SemiSequence TL.Text where
     type Index TL.Text = Int64
@@ -355,10 +355,10 @@ instance IsSequence TL.Text where
         | TL.null t = Nothing
         | otherwise = Just (TL.init t, TL.last t)
     groupBy = TL.groupBy
-    partialHead = TL.head
-    partialTail = TL.tail
-    partialLast = TL.last
-    partialInit = TL.init
+    headEx = TL.head
+    tailEx = TL.tail
+    lastEx = TL.last
+    initEx = TL.init
 
 instance SemiSequence (Seq.Seq a) where
     type Index (Seq.Seq a) = Int
@@ -394,10 +394,10 @@ instance IsSequence (Seq.Seq a) where
             Seq.EmptyR -> Nothing
             xs Seq.:> x -> Just (xs, x)
     --groupBy = Seq.groupBy
-    partialHead = flip Seq.index 1
-    partialLast xs = Seq.index xs (Seq.length xs - 1)
-    partialTail = Seq.drop 1
-    partialInit xs = Seq.take (Seq.length xs - 1) xs
+    headEx = flip Seq.index 1
+    lastEx xs = Seq.index xs (Seq.length xs - 1)
+    tailEx = Seq.drop 1
+    initEx xs = Seq.take (Seq.length xs - 1) xs
 
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
@@ -431,10 +431,10 @@ instance IsSequence (V.Vector a) where
         | V.null v = Nothing
         | otherwise = Just (V.init v, V.last v)
     --groupBy = V.groupBy
-    partialHead = V.head
-    partialTail = V.tail
-    partialLast = V.last
-    partialInit = V.init
+    headEx = V.head
+    tailEx = V.tail
+    lastEx = V.last
+    initEx = V.init
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
@@ -468,10 +468,10 @@ instance U.Unbox a => IsSequence (U.Vector a) where
         | U.null v = Nothing
         | otherwise = Just (U.init v, U.last v)
     --groupBy = U.groupBy
-    partialHead = U.head
-    partialTail = U.tail
-    partialLast = U.last
-    partialInit = U.init
+    headEx = U.head
+    tailEx = U.tail
+    lastEx = U.last
+    initEx = U.init
 
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
@@ -505,10 +505,10 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
         | VS.null v = Nothing
         | otherwise = Just (VS.init v, VS.last v)
     --groupBy = U.groupBy
-    partialHead = VS.head
-    partialTail = VS.tail
-    partialLast = VS.last
-    partialInit = VS.init
+    headEx = VS.head
+    tailEx = VS.tail
+    lastEx = VS.last
+    initEx = VS.init
 
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     stripPrefix :: seq -> seq -> Maybe seq
@@ -605,57 +605,57 @@ class (EqSequence seq, Ord (Element seq)) => OrdSequence seq where
 
     -- FIXME theoretically, the next four functions should be part of something
     -- like OrdMonoFoldable, since ordering is irrelevant
-    partialMaximum :: seq -> Element seq
-    partialMaximum = List.maximum . otoList
+    maximumEx :: seq -> Element seq
+    maximumEx = List.maximum . otoList
 
-    partialMaximumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    partialMaximumBy f = List.maximumBy f . otoList
+    maximumByEx :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    maximumByEx f = List.maximumBy f . otoList
 
-    partialMinimum :: seq -> Element seq
-    partialMinimum = List.minimum . otoList
+    minimumEx :: seq -> Element seq
+    minimumEx = List.minimum . otoList
 
-    partialMinimumBy :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    partialMinimumBy f = List.minimumBy f . otoList
+    minimumByEx :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
+    minimumByEx f = List.minimumBy f . otoList
 
 instance Ord a => OrdSequence [a] where
     sort = List.sort
 
 instance OrdSequence S.ByteString where
     sort = S.sort
-    partialMaximum   = S.maximum
-    partialMinimum   = S.minimum
+    maximumEx   = S.maximum
+    minimumEx   = S.minimum
 
 instance OrdSequence L.ByteString where
-    partialMaximum   = L.maximum
-    partialMinimum   = L.minimum
+    maximumEx   = L.maximum
+    minimumEx   = L.minimum
 
 instance OrdSequence T.Text where
-    partialMaximum   = T.maximum
-    partialMinimum   = T.minimum
+    maximumEx   = T.maximum
+    minimumEx   = T.minimum
 
 instance OrdSequence TL.Text where
-    partialMaximum   = TL.maximum
-    partialMinimum   = TL.minimum
+    maximumEx   = TL.maximum
+    minimumEx   = TL.minimum
 
 instance Ord a => OrdSequence (Seq.Seq a)
 
 instance Ord a => OrdSequence (V.Vector a) where
-    partialMaximum   = V.maximum
-    partialMaximumBy = V.maximumBy
-    partialMinimum   = V.minimum
-    partialMinimumBy = V.minimumBy
+    maximumEx   = V.maximum
+    maximumByEx = V.maximumBy
+    minimumEx   = V.minimum
+    minimumByEx = V.minimumBy
 
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a) where
-    partialMaximum   = U.maximum
-    partialMaximumBy = U.maximumBy
-    partialMinimum   = U.minimum
-    partialMinimumBy = U.minimumBy
+    maximumEx   = U.maximum
+    maximumByEx = U.maximumBy
+    minimumEx   = U.minimum
+    minimumByEx = U.minimumBy
 
 instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a) where
-    partialMaximum   = VS.maximum
-    partialMaximumBy = VS.maximumBy
-    partialMinimum   = VS.minimum
-    partialMinimumBy = VS.minimumBy
+    maximumEx   = VS.maximum
+    maximumByEx = VS.maximumBy
+    minimumEx   = VS.minimum
+    minimumByEx = VS.minimumBy
 
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]
