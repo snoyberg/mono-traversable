@@ -39,7 +39,7 @@ import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe (..), Either (..),
                                        replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
-                                       seq, otherwise, maybe, Ord)
+                                       seq, otherwise, maybe, Ord, (-))
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
@@ -49,6 +49,7 @@ import Foreign.Storable (peek)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
+import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
 import Data.Semigroup (Option)
@@ -264,6 +265,12 @@ class MonoFoldable mono where
                             => (a -> a -> a) -> mono -> a
     ofoldl1Ex' = F.foldl1
 
+    headEx :: mono -> Element mono
+    headEx = ofoldr1Ex const
+
+    lastEx :: mono -> Element mono
+    lastEx = ofoldl1Ex' (flip const)
+
 instance MonoFoldable S.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = S.foldr
@@ -286,6 +293,8 @@ instance MonoFoldable S.ByteString where
     {-# INLINE omapM_ #-}
     ofoldr1Ex = S.foldr1
     ofoldl1Ex' = S.foldl1'
+    headEx = S.head
+    lastEx = S.last
 instance MonoFoldable L.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = L.foldr
@@ -299,6 +308,8 @@ instance MonoFoldable L.ByteString where
     {-# INLINE omapM_ #-}
     ofoldr1Ex = L.foldr1
     ofoldl1Ex' = L.foldl1'
+    headEx = L.head
+    lastEx = L.last
 instance MonoFoldable T.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr
@@ -310,6 +321,8 @@ instance MonoFoldable T.Text where
     olength = T.length
     ofoldr1Ex = T.foldr1
     ofoldl1Ex' = T.foldl1'
+    headEx = T.head
+    lastEx = T.last
 instance MonoFoldable TL.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = TL.foldr
@@ -321,6 +334,8 @@ instance MonoFoldable TL.Text where
     olength64 = TL.length
     ofoldr1Ex = TL.foldr1
     ofoldl1Ex' = TL.foldl1'
+    headEx = TL.head
+    lastEx = TL.last
 instance MonoFoldable IntSet where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = IntSet.foldr
@@ -335,7 +350,9 @@ instance MonoFoldable [a] where
     {-# INLINE otoList #-}
 instance MonoFoldable (Maybe a)
 instance MonoFoldable (Tree a)
-instance MonoFoldable (Seq a)
+instance MonoFoldable (Seq a) where
+    headEx = flip Seq.index 1
+    lastEx xs = Seq.index xs (Seq.length xs - 1)
 instance MonoFoldable (ViewL a)
 instance MonoFoldable (ViewR a)
 instance MonoFoldable (IntMap a)
@@ -354,6 +371,8 @@ instance MonoFoldable (Vector a) where
     olength = V.length
     ofoldr1Ex = V.foldr1
     ofoldl1Ex' = V.foldl1'
+    headEx = V.head
+    lastEx = V.last
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
 instance U.Unbox a => MonoFoldable (U.Vector a) where
@@ -367,6 +386,8 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     olength = U.length
     ofoldr1Ex = U.foldr1
     ofoldl1Ex' = U.foldl1'
+    headEx = U.head
+    lastEx = U.last
 instance VS.Storable a => MonoFoldable (VS.Vector a) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = VS.foldr
@@ -378,6 +399,8 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     olength = VS.length
     ofoldr1Ex = VS.foldr1
     ofoldl1Ex' = VS.foldl1'
+    headEx = VS.head
+    lastEx = VS.last
 instance MonoFoldable (Either a b) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr f b (Right a) = f a b
@@ -398,6 +421,18 @@ instance MonoFoldable (Either a b) where
     ofoldr1Ex _ (Right x) = x
     ofoldl1Ex' _ (Left _) = Prelude.error "ofoldl1Ex' on Either"
     ofoldl1Ex' _ (Right x) = x
+
+-- | like Data.List.head, but not partial
+headMay :: MonoFoldable mono => mono -> Maybe (Element mono)
+headMay mono
+    | onull mono = Nothing
+    | otherwise = Just (headEx mono)
+
+-- | like Data.List.last, but not partial
+lastMay :: MonoFoldable mono => mono -> Maybe (Element mono)
+lastMay mono
+    | onull mono = Nothing
+    | otherwise = Just (lastEx mono)
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
@@ -499,29 +534,29 @@ instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
     minimumByEx = VS.minimumBy
 instance Ord b => MonoFoldableOrd (Either a b) where
 
-maximumMaybe :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
-maximumMaybe mono
+maximumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+maximumMay mono
     | onull mono = Nothing
     | otherwise = Just (maximumEx mono)
 
-maximumByMaybe :: MonoFoldableOrd mono
-               => (Element mono -> Element mono -> Ordering)
-               -> mono
-               -> Maybe (Element mono)
-maximumByMaybe f mono
+maximumByMay :: MonoFoldableOrd mono
+             => (Element mono -> Element mono -> Ordering)
+             -> mono
+             -> Maybe (Element mono)
+maximumByMay f mono
     | onull mono = Nothing
     | otherwise = Just (maximumByEx f mono)
 
-minimumMaybe :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
-minimumMaybe mono
+minimumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+minimumMay mono
     | onull mono = Nothing
     | otherwise = Just (minimumEx mono)
 
-minimumByMaybe :: MonoFoldableOrd mono
-               => (Element mono -> Element mono -> Ordering)
-               -> mono
-               -> Maybe (Element mono)
-minimumByMaybe f mono
+minimumByMay :: MonoFoldableOrd mono
+             => (Element mono -> Element mono -> Ordering)
+             -> mono
+             -> Maybe (Element mono)
+minimumByMay f mono
     | onull mono = Nothing
     | otherwise = Just (minimumByEx f mono)
 

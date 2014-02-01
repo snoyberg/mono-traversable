@@ -134,14 +134,8 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
     permutations :: seq -> [seq]
     permutations = List.map fromList . List.permutations . otoList
 
-    headEx :: seq -> Element seq
-    headEx = fst . maybe (error "Data.Sequences.headEx") id . uncons
-
     tailEx :: seq -> seq
     tailEx = snd . maybe (error "Data.Sequences.tailEx") id . uncons
-
-    lastEx :: seq -> Element seq
-    lastEx = snd . maybe (error "Data.Sequences.lastEx") id . unsnoc
 
     initEx :: seq -> seq
     initEx = fst . maybe (error "Data.Sequences.initEx") id . unsnoc
@@ -164,14 +158,6 @@ defaultCons e = fromList . (e:) . otoList
 defaultSnoc :: IsSequence seq => seq -> Element seq -> seq
 defaultSnoc seq e = fromList (otoList seq List.++ [e])
 
-
--- | like Data.List.head, but not partial
-headMay :: IsSequence seq => seq -> Maybe (Element seq)
-headMay = fmap fst . uncons
-
--- | like Data.List.last, but not partial
-lastMay :: IsSequence seq => seq -> Maybe (Element seq)
-lastMay = fmap snd . unsnoc
 
 -- | like Data.List.tail, but an input of @mempty@ returns @mempty@
 tailDef :: IsSequence seq => seq -> seq
@@ -259,9 +245,7 @@ instance IsSequence S.ByteString where
         | S.null s = Nothing
         | otherwise = Just (S.init s, S.last s)
     groupBy = S.groupBy
-    headEx = S.head
     tailEx = S.tail
-    lastEx = S.last
     initEx = S.init
 
 instance SemiSequence T.Text where
@@ -291,9 +275,7 @@ instance IsSequence T.Text where
         | T.null t = Nothing
         | otherwise = Just (T.init t, T.last t)
     groupBy = T.groupBy
-    headEx = T.head
     tailEx = T.tail
-    lastEx = T.last
     initEx = T.init
 
 instance SemiSequence L.ByteString where
@@ -323,9 +305,7 @@ instance IsSequence L.ByteString where
         | L.null s = Nothing
         | otherwise = Just (L.init s, L.last s)
     groupBy = L.groupBy
-    headEx = L.head
     tailEx = L.tail
-    lastEx = L.last
     initEx = L.init
 
 instance SemiSequence TL.Text where
@@ -355,9 +335,7 @@ instance IsSequence TL.Text where
         | TL.null t = Nothing
         | otherwise = Just (TL.init t, TL.last t)
     groupBy = TL.groupBy
-    headEx = TL.head
     tailEx = TL.tail
-    lastEx = TL.last
     initEx = TL.init
 
 instance SemiSequence (Seq.Seq a) where
@@ -394,8 +372,6 @@ instance IsSequence (Seq.Seq a) where
             Seq.EmptyR -> Nothing
             xs Seq.:> x -> Just (xs, x)
     --groupBy = Seq.groupBy
-    headEx = flip Seq.index 1
-    lastEx xs = Seq.index xs (Seq.length xs - 1)
     tailEx = Seq.drop 1
     initEx xs = Seq.take (Seq.length xs - 1) xs
 
@@ -431,9 +407,7 @@ instance IsSequence (V.Vector a) where
         | V.null v = Nothing
         | otherwise = Just (V.init v, V.last v)
     --groupBy = V.groupBy
-    headEx = V.head
     tailEx = V.tail
-    lastEx = V.last
     initEx = V.init
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
@@ -468,9 +442,7 @@ instance U.Unbox a => IsSequence (U.Vector a) where
         | U.null v = Nothing
         | otherwise = Just (U.init v, U.last v)
     --groupBy = U.groupBy
-    headEx = U.head
     tailEx = U.tail
-    lastEx = U.last
     initEx = U.init
 
 instance VS.Storable a => SemiSequence (VS.Vector a) where
@@ -505,9 +477,7 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
         | VS.null v = Nothing
         | otherwise = Just (VS.init v, VS.last v)
     --groupBy = U.groupBy
-    headEx = VS.head
     tailEx = VS.tail
-    lastEx = VS.last
     initEx = VS.init
 
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
@@ -599,7 +569,7 @@ instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 
-class (EqSequence seq, Ord (Element seq), MonoFoldableOrd seq) => OrdSequence seq where
+class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
     sort :: seq -> seq
     sort = fromList . List.sort . otoList
 

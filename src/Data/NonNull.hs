@@ -147,7 +147,7 @@ maybeToNullable (Just xs) = toNullable xs
 -}
 
 -- | like Data.List, but not partial on a NonEmpty
-head :: (IsSequence (Nullable seq), NonNull seq) => seq -> Element seq
+head :: (MonoFoldable (Nullable seq), NonNull seq) => seq -> Element seq
 head = headEx . toNullable
 {-# INLINE head #-}
 
@@ -157,7 +157,7 @@ tail = tailEx . toNullable
 {-# INLINE tail #-}
 
 -- | like Data.List, but not partial on a NonEmpty
-last :: (IsSequence (Nullable seq), NonNull seq) => seq -> Element seq
+last :: (MonoFoldable (Nullable seq), NonNull seq) => seq -> Element seq
 last = lastEx . toNullable
 {-# INLINE last #-}
 
