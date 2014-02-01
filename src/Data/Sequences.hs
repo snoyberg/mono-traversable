@@ -599,63 +599,32 @@ instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 
-class (EqSequence seq, Ord (Element seq)) => OrdSequence seq where
+class (EqSequence seq, Ord (Element seq), MonoFoldableOrd seq) => OrdSequence seq where
     sort :: seq -> seq
     sort = fromList . List.sort . otoList
-
-    -- FIXME theoretically, the next four functions should be part of something
-    -- like OrdMonoFoldable, since ordering is irrelevant
-    maximumEx :: seq -> Element seq
-    maximumEx = List.maximum . otoList
-
-    maximumByEx :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    maximumByEx f = List.maximumBy f . otoList
-
-    minimumEx :: seq -> Element seq
-    minimumEx = List.minimum . otoList
-
-    minimumByEx :: (Element seq -> Element seq -> Ordering) -> seq -> Element seq
-    minimumByEx f = List.minimumBy f . otoList
 
 instance Ord a => OrdSequence [a] where
     sort = List.sort
 
 instance OrdSequence S.ByteString where
     sort = S.sort
-    maximumEx   = S.maximum
-    minimumEx   = S.minimum
 
 instance OrdSequence L.ByteString where
-    maximumEx   = L.maximum
-    minimumEx   = L.minimum
 
 instance OrdSequence T.Text where
-    maximumEx   = T.maximum
-    minimumEx   = T.minimum
 
 instance OrdSequence TL.Text where
-    maximumEx   = TL.maximum
-    minimumEx   = TL.minimum
 
 instance Ord a => OrdSequence (Seq.Seq a)
 
 instance Ord a => OrdSequence (V.Vector a) where
-    maximumEx   = V.maximum
-    maximumByEx = V.maximumBy
-    minimumEx   = V.minimum
-    minimumByEx = V.minimumBy
+    -- FIXME more efficient sort
 
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a) where
-    maximumEx   = U.maximum
-    maximumByEx = U.maximumBy
-    minimumEx   = U.minimum
-    minimumByEx = U.minimumBy
+    -- FIXME more efficient sort
 
 instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a) where
-    maximumEx   = VS.maximum
-    maximumByEx = VS.maximumBy
-    minimumEx   = VS.minimum
-    minimumByEx = VS.minimumBy
+    -- FIXME more efficient sort
 
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]

@@ -39,7 +39,7 @@ import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe (..), Either (..),
                                        replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
-                                       seq, otherwise, maybe)
+                                       seq, otherwise, maybe, Ord)
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
@@ -76,6 +76,7 @@ import Data.Functor.Product (Product)
 import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
 import Data.HashSet (HashSet)
+import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
@@ -343,7 +344,16 @@ instance MonoFoldable (NonEmpty a)
 instance MonoFoldable (Identity a)
 instance MonoFoldable (Map k v)
 instance MonoFoldable (HashMap k v)
-instance MonoFoldable (Vector a)
+instance MonoFoldable (Vector a) where
+    ofoldr = V.foldr
+    ofoldl' = V.foldl'
+    otoList = V.toList
+    oall = V.all
+    oany = V.any
+    onull = V.null
+    olength = V.length
+    ofoldr1Ex = V.foldr1
+    ofoldl1Ex' = V.foldl1'
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
 instance U.Unbox a => MonoFoldable (U.Vector a) where
@@ -409,6 +419,111 @@ instance MonoFoldableMonoid T.Text where
     oconcatMap = T.concatMap
 instance MonoFoldableMonoid TL.Text where
     oconcatMap = TL.concatMap
+
+-- | A typeclass for @MonoFoldable@s containing elements which are an instance
+-- of @Ord@.
+class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
+    maximumEx :: mono -> Element mono
+    maximumEx = maximumByEx compare
+
+    maximumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
+    maximumByEx f =
+        ofoldl1Ex' go
+      where
+        go x y =
+            case f x y of
+                LT -> y
+                _  -> x
+
+    minimumEx :: mono -> Element mono
+    minimumEx = minimumByEx compare
+
+    minimumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
+    minimumByEx f =
+        ofoldl1Ex' go
+      where
+        go x y =
+            case f x y of
+                GT -> y
+                _  -> x
+
+instance MonoFoldableOrd S.ByteString where
+    maximumEx = S.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = S.minimum
+    {-# INLINE minimumEx #-}
+instance MonoFoldableOrd L.ByteString where
+    maximumEx = L.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = L.minimum
+    {-# INLINE minimumEx #-}
+instance MonoFoldableOrd T.Text where
+    maximumEx = T.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = T.minimum
+    {-# INLINE minimumEx #-}
+instance MonoFoldableOrd TL.Text where
+    maximumEx = TL.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = TL.minimum
+    {-# INLINE minimumEx #-}
+instance Ord a => MonoFoldableOrd IntSet
+instance Ord a => MonoFoldableOrd [a]
+instance Ord a => MonoFoldableOrd (Maybe a)
+instance Ord a => MonoFoldableOrd (Tree a)
+instance Ord a => MonoFoldableOrd (Seq a)
+instance Ord a => MonoFoldableOrd (ViewL a)
+instance Ord a => MonoFoldableOrd (ViewR a)
+instance Ord a => MonoFoldableOrd (IntMap a)
+instance Ord a => MonoFoldableOrd (Option a)
+instance Ord a => MonoFoldableOrd (NonEmpty a)
+instance Ord a => MonoFoldableOrd (Identity a)
+instance Ord v => MonoFoldableOrd (Map k v)
+instance Ord v => MonoFoldableOrd (HashMap k v)
+instance Ord a => MonoFoldableOrd (Vector a) where
+    maximumEx   = V.maximum
+    maximumByEx = V.maximumBy
+    minimumEx   = V.minimum
+    minimumByEx = V.minimumBy
+instance Ord e => MonoFoldableOrd (Set e)
+instance Ord e => MonoFoldableOrd (HashSet e)
+instance (U.Unbox a, Ord a) => MonoFoldableOrd (U.Vector a) where
+    maximumEx   = U.maximum
+    maximumByEx = U.maximumBy
+    minimumEx   = U.minimum
+    minimumByEx = U.minimumBy
+instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
+    maximumEx   = VS.maximum
+    maximumByEx = VS.maximumBy
+    minimumEx   = VS.minimum
+    minimumByEx = VS.minimumBy
+instance Ord b => MonoFoldableOrd (Either a b) where
+
+maximumMaybe :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+maximumMaybe mono
+    | onull mono = Nothing
+    | otherwise = Just (maximumEx mono)
+
+maximumByMaybe :: MonoFoldableOrd mono
+               => (Element mono -> Element mono -> Ordering)
+               -> mono
+               -> Maybe (Element mono)
+maximumByMaybe f mono
+    | onull mono = Nothing
+    | otherwise = Just (maximumByEx f mono)
+
+minimumMaybe :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+minimumMaybe mono
+    | onull mono = Nothing
+    | otherwise = Just (minimumEx mono)
+
+minimumByMaybe :: MonoFoldableOrd mono
+               => (Element mono -> Element mono -> Ordering)
+               -> mono
+               -> Maybe (Element mono)
+minimumByMaybe f mono
+    | onull mono = Nothing
+    | otherwise = Just (minimumByEx f mono)
 
 class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
     otraverse :: Applicative f => (Element mono -> f (Element mono)) -> mono -> f mono

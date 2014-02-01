@@ -257,23 +257,23 @@ ofoldl1' f = ofoldl1Ex' f . toNullable
 {-# INLINE ofoldl1' #-}
 
 -- | like Data.List, but not partial on a NonNull
-maximum :: (OrdSequence (Nullable seq), NonNull seq) => seq -> Element seq
+maximum :: (MonoFoldableOrd (Nullable seq), NonNull seq) => seq -> Element seq
 maximum = maximumEx . toNullable
 {-# INLINE maximum #-}
 
 -- | like Data.List, but not partial on a NonNull
-minimum :: (OrdSequence (Nullable seq), NonNull seq) => seq -> Element seq
+minimum :: (MonoFoldableOrd (Nullable seq), NonNull seq) => seq -> Element seq
 minimum = minimumEx . toNullable
 {-# INLINE minimum #-}
 
 -- | like Data.List, but not partial on a NonNull
-maximumBy :: (OrdSequence (Nullable seq), NonNull seq)
+maximumBy :: (MonoFoldableOrd (Nullable seq), NonNull seq)
           => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
 maximumBy cmp = maximumByEx cmp . toNullable
 {-# INLINE maximumBy #-}
 
 -- | like Data.List, but not partial on a NonNull
-minimumBy :: (OrdSequence (Nullable seq), NonNull seq)
+minimumBy :: (MonoFoldableOrd (Nullable seq), NonNull seq)
           => (Element seq -> Element seq -> Ordering) -> seq -> Element seq
 minimumBy cmp = minimumByEx cmp . toNullable
 {-# INLINE minimumBy #-}
