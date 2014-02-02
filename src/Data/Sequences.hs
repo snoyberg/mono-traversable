@@ -27,6 +27,8 @@ import qualified Data.Vector.Storable as VS
 import Data.String (IsString)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.ByteString.Unsafe as SU
+import Data.GrowingAppend
+import Data.Vector.Instances ()
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 -- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
@@ -43,9 +45,8 @@ import qualified Data.ByteString.Unsafe as SU
 -- This exists on 'NonNull' as 'nfilter'
 --
 -- 'filter' and other such functions are placed in 'IsSequence'
-class (Integral (Index seq)) => SemiSequence seq where
+class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
     type Index seq
-    singleton :: Element seq -> seq
 
     intersperse :: Element seq -> seq -> seq
 
@@ -68,6 +69,8 @@ class (Integral (Index seq)) => SemiSequence seq where
 -- > fromList (x <> y) = fromList x <> fromList y
 -- > otoList (fromList x <> fromList y) = x <> y
 class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq where
+    singleton :: Element seq -> seq
+
     fromList :: [Element seq] -> seq
     -- this definition creates the Monoid constraint
     -- However, all the instances define their own fromList
@@ -191,7 +194,6 @@ initDef xs = case unsnoc xs of
 
 instance SemiSequence [a] where
     type Index [a] = Int
-    singleton = return
     intersperse = List.intersperse
     reverse = List.reverse
     find = List.find
@@ -200,6 +202,7 @@ instance SemiSequence [a] where
     snoc = defaultSnoc
 
 instance IsSequence [a] where
+    singleton = return
     fromList = id
     {-# INLINE fromList #-}
     filter = List.filter
@@ -226,7 +229,6 @@ instance IsSequence [a] where
 instance SemiSequence (NE.NonEmpty a) where
     type Index (NE.NonEmpty a) = Int
 
-    singleton    = (NE.:| [])
     intersperse  = NE.intersperse
     reverse      = NE.reverse
     find         = find
@@ -236,7 +238,6 @@ instance SemiSequence (NE.NonEmpty a) where
 
 instance SemiSequence S.ByteString where
     type Index S.ByteString = Int
-    singleton = S.singleton
     intersperse = S.intersperse
     reverse = S.reverse
     find = S.find
@@ -245,6 +246,7 @@ instance SemiSequence S.ByteString where
     sortBy = defaultSortBy
 
 instance IsSequence S.ByteString where
+    singleton = S.singleton
     fromList = S.pack
     replicate = S.replicate
     filter = S.filter
@@ -269,7 +271,6 @@ instance IsSequence S.ByteString where
 
 instance SemiSequence T.Text where
     type Index T.Text = Int
-    singleton = T.singleton
     intersperse = T.intersperse
     reverse = T.reverse
     find = T.find
@@ -278,6 +279,7 @@ instance SemiSequence T.Text where
     sortBy = defaultSortBy
 
 instance IsSequence T.Text where
+    singleton = T.singleton
     fromList = T.pack
     replicate i c = T.replicate i (T.singleton c)
     filter = T.filter
@@ -299,7 +301,6 @@ instance IsSequence T.Text where
 
 instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
-    singleton = L.singleton
     intersperse = L.intersperse
     reverse = L.reverse
     find = L.find
@@ -308,6 +309,7 @@ instance SemiSequence L.ByteString where
     sortBy = defaultSortBy
 
 instance IsSequence L.ByteString where
+    singleton = L.singleton
     fromList = L.pack
     replicate = L.replicate
     filter = L.filter
@@ -329,7 +331,6 @@ instance IsSequence L.ByteString where
 
 instance SemiSequence TL.Text where
     type Index TL.Text = Int64
-    singleton = TL.singleton
     intersperse = TL.intersperse
     reverse = TL.reverse
     find = TL.find
@@ -338,6 +339,7 @@ instance SemiSequence TL.Text where
     sortBy = defaultSortBy
 
 instance IsSequence TL.Text where
+    singleton = TL.singleton
     fromList = TL.pack
     replicate i c = TL.replicate i (TL.singleton c)
     filter = TL.filter
@@ -359,7 +361,6 @@ instance IsSequence TL.Text where
 
 instance SemiSequence (Seq.Seq a) where
     type Index (Seq.Seq a) = Int
-    singleton = Seq.singleton
     cons = (Seq.<|)
     snoc = (Seq.|>)
     reverse = Seq.reverse
@@ -369,6 +370,7 @@ instance SemiSequence (Seq.Seq a) where
     find = defaultFind
 
 instance IsSequence (Seq.Seq a) where
+    singleton = Seq.singleton
     fromList = Seq.fromList
     replicate = Seq.replicate
     replicateM = Seq.replicateM
@@ -396,7 +398,6 @@ instance IsSequence (Seq.Seq a) where
 
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
-    singleton = V.singleton
     reverse = V.reverse
     find = V.find
     cons = V.cons
@@ -406,6 +407,7 @@ instance SemiSequence (V.Vector a) where
     intersperse = defaultIntersperse
 
 instance IsSequence (V.Vector a) where
+    singleton = V.singleton
     fromList = V.fromList
     replicate = V.replicate
     replicateM = V.replicateM
@@ -435,7 +437,6 @@ instance IsSequence (V.Vector a) where
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
-    singleton = U.singleton
 
     intersperse = defaultIntersperse
     reverse = U.reverse
@@ -445,6 +446,7 @@ instance U.Unbox a => SemiSequence (U.Vector a) where
     sortBy = defaultSortBy
 
 instance U.Unbox a => IsSequence (U.Vector a) where
+    singleton = U.singleton
     fromList = U.fromList
     replicate = U.replicate
     replicateM = U.replicateM
@@ -474,7 +476,6 @@ instance U.Unbox a => IsSequence (U.Vector a) where
 
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
-    singleton = VS.singleton
     reverse = VS.reverse
     find = VS.find
     cons = VS.cons
@@ -484,6 +485,7 @@ instance VS.Storable a => SemiSequence (VS.Vector a) where
     sortBy = defaultSortBy
 
 instance VS.Storable a => IsSequence (VS.Vector a) where
+    singleton = VS.singleton
     fromList = VS.fromList
     replicate = VS.replicate
     replicateM = VS.replicateM
