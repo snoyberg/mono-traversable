@@ -47,6 +47,8 @@ test-suite test
                      , vector
                      , QuickCheck
                      , semigroups
+                     , containers
+                     , unordered-containers
                      
 source-repository head
   type: git

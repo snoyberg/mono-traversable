@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns #-}
 module Spec where
 
 import Test.Hspec
@@ -16,12 +17,18 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import Data.Sequences
 import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, show,
-                return, asTypeOf, (.), Show, id)
+                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip)
 import qualified Prelude
 import Control.Monad.Trans.Writer
 import qualified Data.NonNull as NN
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Semigroup as SG
+import qualified Data.Map as Map
+import qualified Data.IntMap as IntMap
+import qualified Data.HashMap.Strict as HashMap
+import Data.Containers
+import qualified Data.IntSet as IntSet
+import Control.Arrow (first, second)
 
 main :: IO ()
 main = hspec $ do
@@ -127,3 +134,112 @@ main = hspec $ do
         test "storable Vector" (VS.empty :: VS.Vector Int)
         test "list" ([5 :: Int])
         test' (id :: NE.NonEmpty Int -> NE.NonEmpty Int) "NonEmpty" ([] :: [Int])
+
+    describe "Containers" $ do
+        let test typ dummy xlookup xinsert xdelete = describe typ $ do
+                prop "difference" $ \(filterDups -> xs) (filterDups -> ys) -> do
+                    let m1 = mapFromList xs `difference` mapFromList ys
+                        m2 = mapFromList (xs `difference` ys) `asTypeOf` dummy
+                    m1 `shouldBe` m2
+                prop "lookup" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList xs
+                        v1 = lookup k m
+                        v2 = lookup k (xs :: [(Int, Int)])
+                        v3 = xlookup k m
+                    v1 `shouldBe` v2
+                    v1 `shouldBe` v3
+                prop "insert" $ \(fixK -> k) v (filterDups -> xs) -> do
+                    let m = mapFromList (xs :: [(Int, Int)])
+                        m1 = insertMap k v m
+                        m2 = mapFromList (insertMap k v xs)
+                        m3 = xinsert k v m
+                    m1 `shouldBe` m2
+                    m1 `shouldBe` m3
+                prop "delete" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList (xs :: [(Int, Int)]) `asTypeOf` dummy
+                        m1 = deleteMap k m
+                        m2 = mapFromList (deleteMap k xs)
+                        m3 = xdelete k m
+                    m1 `shouldBe` m2
+                    m1 `shouldBe` m3
+                prop "singletonMap" $ \(fixK -> k) v -> do
+                    singletonMap k v `shouldBe` (mapFromList [(k, v)] `asTypeOf` dummy)
+                prop "findWithDefault" $ \(fixK -> k) v (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                    findWithDefault v k m `shouldBe` findWithDefault v k xs
+                prop "insertWith" $ \(fixK -> k) v (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                        f = (+)
+                    insertWith f k v m `shouldBe` mapFromList (insertWith f k v xs)
+                prop "insertWithKey" $ \(fixK -> k) v (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                        f x y z = x + y + z
+                    insertWithKey f k v m `shouldBe` mapFromList (insertWithKey f k v xs)
+                prop "insertLookupWithKey" $ \(fixK -> k) v (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                        f x y z = x + y + z
+                    insertLookupWithKey f k v m `shouldBe`
+                        second mapFromList (insertLookupWithKey f k v xs)
+                prop "adjustMap" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                    adjustMap succ k m `shouldBe` mapFromList (adjustMap succ k xs)
+                prop "adjustWithKey" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                    adjustWithKey (+) k m `shouldBe` mapFromList (adjustWithKey (+) k xs)
+                prop "updateMap" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                        f i = if i < 0 then Nothing else Just $ i * 2
+                    updateMap f k m `shouldBe` mapFromList (updateMap f k xs)
+                prop "updateWithKey" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                        f k i = if i < 0 then Nothing else Just $ i * k
+                    updateWithKey f k m `shouldBe` mapFromList (updateWithKey f k xs)
+                prop "updateLookupWithKey" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                        f k i = if i < 0 then Nothing else Just $ i * k
+                    updateLookupWithKey f k m `shouldBe` second mapFromList (updateLookupWithKey f k xs)
+                prop "alter" $ \(fixK -> k) (filterDups -> xs) -> do
+                    let m = mapFromList xs `asTypeOf` dummy
+                        f Nothing = Just (-1)
+                        f (Just i) = if i < 0 then Nothing else Just (i * 2)
+                    lookup k (alterMap f k m) `shouldBe` f (lookup k m)
+                prop "unionWith" $ \(filterDups -> xs) (filterDups -> ys) -> do
+                    let m1 = unionWith (+)
+                                (mapFromList xs `asTypeOf` dummy)
+                                (mapFromList ys `asTypeOf` dummy)
+                        m2 = mapFromList (unionWith (+) xs ys)
+                    m1 `shouldBe` m2
+                prop "unionWithKey" $ \(filterDups -> xs) (filterDups -> ys) -> do
+                    let f k x y = k + x + y
+                        m1 = unionWithKey f
+                                (mapFromList xs `asTypeOf` dummy)
+                                (mapFromList ys `asTypeOf` dummy)
+                        m2 = mapFromList (unionWithKey f xs ys)
+                    m1 `shouldBe` m2
+                prop "unionsWith" $ \(map filterDups -> xss) -> do
+                    let ms = map mapFromList xss `asTypeOf` [dummy]
+                    unionsWith (+) ms `shouldBe` mapFromList (unionsWith (+) xss)
+                prop "mapWithKey" $ \(filterDups -> xs) -> do
+                    let m1 = mapWithKey (+) (mapFromList xs) `asTypeOf` dummy
+                        m2 = mapFromList $ mapWithKey (+) xs
+                    m1 `shouldBe` m2
+                prop "mapKeysWith" $ \(filterDups -> xs) -> do
+                    let m1 = mapKeysWith (+) f (mapFromList xs) `asTypeOf` dummy
+                        m2 = mapFromList $ mapKeysWith (+) f xs
+                        f = flip mod 5
+                    m1 `shouldBe` m2
+            filterDups :: [(Int, v)] -> [(Int, v)]
+            filterDups =
+                loop IntSet.empty . map (first (`mod` 20))
+              where
+                loop _ [] = []
+                loop used ((k, v):rest)
+                    | k `member` used = loop used rest
+                    | Prelude.otherwise = (k, v) : loop (insertSet k used) rest
+
+            fixK :: Int -> Int
+            fixK = flip mod 20
+
+        test "Data.Map" Map.empty Map.lookup Map.insert Map.delete
+        test "Data.IntMap" IntMap.empty IntMap.lookup IntMap.insert IntMap.delete
+        test "Data.HashMap" HashMap.empty HashMap.lookup HashMap.insert HashMap.delete
