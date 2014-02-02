@@ -82,6 +82,7 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
 import Data.Semigroup (Semigroup, Option (..))
+import qualified Data.ByteString.Unsafe as SU
 
 type family Element mono
 type instance Element S.ByteString = Word8
@@ -271,6 +272,12 @@ class MonoFoldable mono where
     lastEx :: mono -> Element mono
     lastEx = ofoldl1Ex' (flip const)
 
+    unsafeHead :: mono -> Element mono
+    unsafeHead = headEx
+
+    unsafeLast :: mono -> Element mono
+    unsafeLast = lastEx
+
 instance MonoFoldable S.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = S.foldr
@@ -295,6 +302,7 @@ instance MonoFoldable S.ByteString where
     ofoldl1Ex' = S.foldl1'
     headEx = S.head
     lastEx = S.last
+    unsafeHead = SU.unsafeHead
 instance MonoFoldable L.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = L.foldr
@@ -373,6 +381,8 @@ instance MonoFoldable (Vector a) where
     ofoldl1Ex' = V.foldl1'
     headEx = V.head
     lastEx = V.last
+    unsafeHead = V.unsafeHead
+    unsafeLast = V.unsafeLast
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
 instance U.Unbox a => MonoFoldable (U.Vector a) where
@@ -388,6 +398,8 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     ofoldl1Ex' = U.foldl1'
     headEx = U.head
     lastEx = U.last
+    unsafeHead = U.unsafeHead
+    unsafeLast = U.unsafeLast
 instance VS.Storable a => MonoFoldable (VS.Vector a) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = VS.foldr
@@ -401,6 +413,8 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     ofoldl1Ex' = VS.foldl1'
     headEx = VS.head
     lastEx = VS.last
+    unsafeHead = VS.unsafeHead
+    unsafeLast = VS.unsafeLast
 instance MonoFoldable (Either a b) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr f b (Right a) = f a b

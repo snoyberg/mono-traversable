@@ -26,6 +26,7 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import Data.String (IsString)
 import qualified Data.List.NonEmpty as NE
+import qualified Data.ByteString.Unsafe as SU
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 -- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
@@ -140,6 +141,12 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
     initEx :: seq -> seq
     initEx = fst . maybe (error "Data.Sequences.initEx") id . unsnoc
 
+    unsafeTail :: seq -> seq
+    unsafeTail = tailEx
+
+    unsafeInit :: seq -> seq
+    unsafeInit = initEx
+
 defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
 defaultFind f = List.find f . otoList
 
@@ -247,6 +254,7 @@ instance IsSequence S.ByteString where
     groupBy = S.groupBy
     tailEx = S.tail
     initEx = S.init
+    unsafeTail = SU.unsafeTail
 
 instance SemiSequence T.Text where
     type Index T.Text = Int
@@ -409,6 +417,8 @@ instance IsSequence (V.Vector a) where
     --groupBy = V.groupBy
     tailEx = V.tail
     initEx = V.init
+    unsafeTail = V.unsafeTail
+    unsafeInit = V.unsafeInit
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
@@ -444,6 +454,8 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     --groupBy = U.groupBy
     tailEx = U.tail
     initEx = U.init
+    unsafeTail = U.unsafeTail
+    unsafeInit = U.unsafeInit
 
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
@@ -479,6 +491,8 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     --groupBy = U.groupBy
     tailEx = VS.tail
     initEx = VS.init
+    unsafeTail = VS.unsafeTail
+    unsafeInit = VS.unsafeInit
 
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     stripPrefix :: seq -> seq -> Maybe seq
