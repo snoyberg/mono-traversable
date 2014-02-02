@@ -11,7 +11,7 @@ import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral, ($), flip)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral, ($), flip, maybe, error)
 import Data.Char (Char, isSpace)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
@@ -134,6 +134,11 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
     permutations :: seq -> [seq]
     permutations = List.map fromList . List.permutations . otoList
 
+    tailEx :: seq -> seq
+    tailEx = snd . maybe (error "Data.Sequences.tailEx") id . uncons
+
+    initEx :: seq -> seq
+    initEx = fst . maybe (error "Data.Sequences.initEx") id . unsnoc
 
 defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
 defaultFind f = List.find f . otoList
@@ -153,14 +158,6 @@ defaultCons e = fromList . (e:) . otoList
 defaultSnoc :: IsSequence seq => seq -> Element seq -> seq
 defaultSnoc seq e = fromList (otoList seq List.++ [e])
 
-
--- | like Data.List.head, but not partial
-headMay :: IsSequence seq => seq -> Maybe (Element seq)
-headMay = fmap fst . uncons
-
--- | like Data.List.last, but not partial
-lastMay :: IsSequence seq => seq -> Maybe (Element seq)
-lastMay = fmap snd . unsnoc
 
 -- | like Data.List.tail, but an input of @mempty@ returns @mempty@
 tailDef :: IsSequence seq => seq -> seq
@@ -248,6 +245,8 @@ instance IsSequence S.ByteString where
         | S.null s = Nothing
         | otherwise = Just (S.init s, S.last s)
     groupBy = S.groupBy
+    tailEx = S.tail
+    initEx = S.init
 
 instance SemiSequence T.Text where
     type Index T.Text = Int
@@ -276,6 +275,8 @@ instance IsSequence T.Text where
         | T.null t = Nothing
         | otherwise = Just (T.init t, T.last t)
     groupBy = T.groupBy
+    tailEx = T.tail
+    initEx = T.init
 
 instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
@@ -304,6 +305,8 @@ instance IsSequence L.ByteString where
         | L.null s = Nothing
         | otherwise = Just (L.init s, L.last s)
     groupBy = L.groupBy
+    tailEx = L.tail
+    initEx = L.init
 
 instance SemiSequence TL.Text where
     type Index TL.Text = Int64
@@ -332,6 +335,8 @@ instance IsSequence TL.Text where
         | TL.null t = Nothing
         | otherwise = Just (TL.init t, TL.last t)
     groupBy = TL.groupBy
+    tailEx = TL.tail
+    initEx = TL.init
 
 instance SemiSequence (Seq.Seq a) where
     type Index (Seq.Seq a) = Int
@@ -367,6 +372,8 @@ instance IsSequence (Seq.Seq a) where
             Seq.EmptyR -> Nothing
             xs Seq.:> x -> Just (xs, x)
     --groupBy = Seq.groupBy
+    tailEx = Seq.drop 1
+    initEx xs = Seq.take (Seq.length xs - 1) xs
 
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
@@ -400,6 +407,8 @@ instance IsSequence (V.Vector a) where
         | V.null v = Nothing
         | otherwise = Just (V.init v, V.last v)
     --groupBy = V.groupBy
+    tailEx = V.tail
+    initEx = V.init
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
@@ -433,6 +442,8 @@ instance U.Unbox a => IsSequence (U.Vector a) where
         | U.null v = Nothing
         | otherwise = Just (U.init v, U.last v)
     --groupBy = U.groupBy
+    tailEx = U.tail
+    initEx = U.init
 
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
@@ -466,6 +477,8 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
         | VS.null v = Nothing
         | otherwise = Just (VS.init v, VS.last v)
     --groupBy = U.groupBy
+    tailEx = VS.tail
+    initEx = VS.init
 
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     stripPrefix :: seq -> seq -> Maybe seq
@@ -556,7 +569,7 @@ instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 
-class (EqSequence seq, Ord (Element seq)) => OrdSequence seq where
+class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
     sort :: seq -> seq
     sort = fromList . List.sort . otoList
 
@@ -570,9 +583,15 @@ instance OrdSequence L.ByteString
 instance OrdSequence T.Text
 instance OrdSequence TL.Text
 instance Ord a => OrdSequence (Seq.Seq a)
-instance Ord a => OrdSequence (V.Vector a)
-instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a)
-instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a)
+
+instance Ord a => OrdSequence (V.Vector a) where
+    -- FIXME more efficient sort
+
+instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a) where
+    -- FIXME more efficient sort
+
+instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a) where
+    -- FIXME more efficient sort
 
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]

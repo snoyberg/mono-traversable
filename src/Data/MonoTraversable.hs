@@ -37,9 +37,10 @@ import           Data.Traversable
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
-import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe, Either (..),
+import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe (..), Either (..),
                                        replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
-                                       seq, otherwise)
+                                       seq, otherwise, maybe, Ord, (-))
+import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
 import Foreign.Ptr (plusPtr)
@@ -48,6 +49,7 @@ import Foreign.Storable (peek)
 import Control.Arrow (Arrow)
 import Data.Tree (Tree)
 import Data.Sequence (Seq, ViewL, ViewR)
+import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
 import Data.Semigroup (Option)
@@ -75,9 +77,11 @@ import Data.Functor.Product (Product)
 import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
 import Data.HashSet (HashSet)
+import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
+import Data.Semigroup (Semigroup, Option (..))
 
 type family Element mono
 type instance Element S.ByteString = Word8
@@ -232,11 +236,41 @@ class MonoFoldable mono where
     
     oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m b) -> m ()
     oforM_ = flip omapM_
+    {-# INLINE oforM_ #-}
     
     ofoldlM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
     ofoldlM f z0 xs = ofoldr f' return xs z0
       where f' x k z = f z x >>= k
-    
+
+    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
+    -- throw an exception. See "Data.NonNull" for a total version of this
+    -- function.
+    ofoldMap1Ex :: Semigroup m => (Element mono -> m) -> mono -> m
+    ofoldMap1Ex f = maybe (Prelude.error "Data.MonoTraversable.ofoldMap1Ex") id
+                       . getOption . ofoldMap (Option . Just . f)
+
+    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
+    -- throw an exception. See "Data.NonNull" for a total version of this
+    -- function.
+    ofoldr1Ex :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
+    default ofoldr1Ex :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
+                           => (a -> a -> a) -> mono -> a
+    ofoldr1Ex = F.foldr1
+
+    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
+    -- throw an exception. See "Data.NonNull" for a total version of this
+    -- function.
+    ofoldl1Ex' :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
+    default ofoldl1Ex' :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
+                            => (a -> a -> a) -> mono -> a
+    ofoldl1Ex' = F.foldl1
+
+    headEx :: mono -> Element mono
+    headEx = ofoldr1Ex const
+
+    lastEx :: mono -> Element mono
+    lastEx = ofoldl1Ex' (flip const)
+
 instance MonoFoldable S.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = S.foldr
@@ -257,6 +291,10 @@ instance MonoFoldable S.ByteString where
                     loop (ptr `plusPtr` 1)
         loop start
     {-# INLINE omapM_ #-}
+    ofoldr1Ex = S.foldr1
+    ofoldl1Ex' = S.foldl1'
+    headEx = S.head
+    lastEx = S.last
 instance MonoFoldable L.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = L.foldr
@@ -267,6 +305,11 @@ instance MonoFoldable L.ByteString where
     onull = L.null
     olength64 = L.length
     omapM_ f = omapM_ (omapM_ f) . L.toChunks
+    {-# INLINE omapM_ #-}
+    ofoldr1Ex = L.foldr1
+    ofoldl1Ex' = L.foldl1'
+    headEx = L.head
+    lastEx = L.last
 instance MonoFoldable T.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr
@@ -276,6 +319,10 @@ instance MonoFoldable T.Text where
     oany = T.any
     onull = T.null
     olength = T.length
+    ofoldr1Ex = T.foldr1
+    ofoldl1Ex' = T.foldl1'
+    headEx = T.head
+    lastEx = T.last
 instance MonoFoldable TL.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = TL.foldr
@@ -285,6 +332,10 @@ instance MonoFoldable TL.Text where
     oany = TL.any
     onull = TL.null
     olength64 = TL.length
+    ofoldr1Ex = TL.foldr1
+    ofoldl1Ex' = TL.foldl1'
+    headEx = TL.head
+    lastEx = TL.last
 instance MonoFoldable IntSet where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = IntSet.foldr
@@ -292,12 +343,16 @@ instance MonoFoldable IntSet where
     otoList = IntSet.toList
     onull = IntSet.null
     olength = IntSet.size
+    ofoldr1Ex f = ofoldr1Ex f . IntSet.toList
+    ofoldl1Ex' f = ofoldl1Ex' f . IntSet.toList
 instance MonoFoldable [a] where
     otoList = id
     {-# INLINE otoList #-}
 instance MonoFoldable (Maybe a)
 instance MonoFoldable (Tree a)
-instance MonoFoldable (Seq a)
+instance MonoFoldable (Seq a) where
+    headEx = flip Seq.index 1
+    lastEx xs = Seq.index xs (Seq.length xs - 1)
 instance MonoFoldable (ViewL a)
 instance MonoFoldable (ViewR a)
 instance MonoFoldable (IntMap a)
@@ -306,7 +361,18 @@ instance MonoFoldable (NonEmpty a)
 instance MonoFoldable (Identity a)
 instance MonoFoldable (Map k v)
 instance MonoFoldable (HashMap k v)
-instance MonoFoldable (Vector a)
+instance MonoFoldable (Vector a) where
+    ofoldr = V.foldr
+    ofoldl' = V.foldl'
+    otoList = V.toList
+    oall = V.all
+    oany = V.any
+    onull = V.null
+    olength = V.length
+    ofoldr1Ex = V.foldr1
+    ofoldl1Ex' = V.foldl1'
+    headEx = V.head
+    lastEx = V.last
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
 instance U.Unbox a => MonoFoldable (U.Vector a) where
@@ -318,6 +384,10 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     oany = U.any
     onull = U.null
     olength = U.length
+    ofoldr1Ex = U.foldr1
+    ofoldl1Ex' = U.foldl1'
+    headEx = U.head
+    lastEx = U.last
 instance VS.Storable a => MonoFoldable (VS.Vector a) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = VS.foldr
@@ -327,6 +397,10 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     oany = VS.any
     onull = VS.null
     olength = VS.length
+    ofoldr1Ex = VS.foldr1
+    ofoldl1Ex' = VS.foldl1'
+    headEx = VS.head
+    lastEx = VS.last
 instance MonoFoldable (Either a b) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr f b (Right a) = f a b
@@ -343,6 +417,22 @@ instance MonoFoldable (Either a b) where
     onull (Right _) = False
     olength (Left _) = 0
     olength (Right _) = 1
+    ofoldr1Ex _ (Left _) = Prelude.error "ofoldr1Ex on Either"
+    ofoldr1Ex _ (Right x) = x
+    ofoldl1Ex' _ (Left _) = Prelude.error "ofoldl1Ex' on Either"
+    ofoldl1Ex' _ (Right x) = x
+
+-- | like Data.List.head, but not partial
+headMay :: MonoFoldable mono => mono -> Maybe (Element mono)
+headMay mono
+    | onull mono = Nothing
+    | otherwise = Just (headEx mono)
+
+-- | like Data.List.last, but not partial
+lastMay :: MonoFoldable mono => mono -> Maybe (Element mono)
+lastMay mono
+    | onull mono = Nothing
+    | otherwise = Just (lastEx mono)
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
@@ -364,6 +454,111 @@ instance MonoFoldableMonoid T.Text where
     oconcatMap = T.concatMap
 instance MonoFoldableMonoid TL.Text where
     oconcatMap = TL.concatMap
+
+-- | A typeclass for @MonoFoldable@s containing elements which are an instance
+-- of @Ord@.
+class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
+    maximumEx :: mono -> Element mono
+    maximumEx = maximumByEx compare
+
+    maximumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
+    maximumByEx f =
+        ofoldl1Ex' go
+      where
+        go x y =
+            case f x y of
+                LT -> y
+                _  -> x
+
+    minimumEx :: mono -> Element mono
+    minimumEx = minimumByEx compare
+
+    minimumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
+    minimumByEx f =
+        ofoldl1Ex' go
+      where
+        go x y =
+            case f x y of
+                GT -> y
+                _  -> x
+
+instance MonoFoldableOrd S.ByteString where
+    maximumEx = S.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = S.minimum
+    {-# INLINE minimumEx #-}
+instance MonoFoldableOrd L.ByteString where
+    maximumEx = L.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = L.minimum
+    {-# INLINE minimumEx #-}
+instance MonoFoldableOrd T.Text where
+    maximumEx = T.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = T.minimum
+    {-# INLINE minimumEx #-}
+instance MonoFoldableOrd TL.Text where
+    maximumEx = TL.maximum
+    {-# INLINE maximumEx #-}
+    minimumEx = TL.minimum
+    {-# INLINE minimumEx #-}
+instance Ord a => MonoFoldableOrd IntSet
+instance Ord a => MonoFoldableOrd [a]
+instance Ord a => MonoFoldableOrd (Maybe a)
+instance Ord a => MonoFoldableOrd (Tree a)
+instance Ord a => MonoFoldableOrd (Seq a)
+instance Ord a => MonoFoldableOrd (ViewL a)
+instance Ord a => MonoFoldableOrd (ViewR a)
+instance Ord a => MonoFoldableOrd (IntMap a)
+instance Ord a => MonoFoldableOrd (Option a)
+instance Ord a => MonoFoldableOrd (NonEmpty a)
+instance Ord a => MonoFoldableOrd (Identity a)
+instance Ord v => MonoFoldableOrd (Map k v)
+instance Ord v => MonoFoldableOrd (HashMap k v)
+instance Ord a => MonoFoldableOrd (Vector a) where
+    maximumEx   = V.maximum
+    maximumByEx = V.maximumBy
+    minimumEx   = V.minimum
+    minimumByEx = V.minimumBy
+instance Ord e => MonoFoldableOrd (Set e)
+instance Ord e => MonoFoldableOrd (HashSet e)
+instance (U.Unbox a, Ord a) => MonoFoldableOrd (U.Vector a) where
+    maximumEx   = U.maximum
+    maximumByEx = U.maximumBy
+    minimumEx   = U.minimum
+    minimumByEx = U.minimumBy
+instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
+    maximumEx   = VS.maximum
+    maximumByEx = VS.maximumBy
+    minimumEx   = VS.minimum
+    minimumByEx = VS.minimumBy
+instance Ord b => MonoFoldableOrd (Either a b) where
+
+maximumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+maximumMay mono
+    | onull mono = Nothing
+    | otherwise = Just (maximumEx mono)
+
+maximumByMay :: MonoFoldableOrd mono
+             => (Element mono -> Element mono -> Ordering)
+             -> mono
+             -> Maybe (Element mono)
+maximumByMay f mono
+    | onull mono = Nothing
+    | otherwise = Just (maximumByEx f mono)
+
+minimumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+minimumMay mono
+    | onull mono = Nothing
+    | otherwise = Just (minimumEx mono)
+
+minimumByMay :: MonoFoldableOrd mono
+             => (Element mono -> Element mono -> Ordering)
+             -> mono
+             -> Maybe (Element mono)
+minimumByMay f mono
+    | onull mono = Nothing
+    | otherwise = Just (minimumByEx f mono)
 
 class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
     otraverse :: Applicative f => (Element mono -> f (Element mono)) -> mono -> f mono
