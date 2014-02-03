@@ -89,11 +89,20 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
     splitAt :: Index seq -> seq -> (seq, seq)
     splitAt i = (fromList *** fromList) . List.genericSplitAt i . otoList
 
+    unsafeSplitAt :: Index seq -> seq -> (seq, seq)
+    unsafeSplitAt i seq = (unsafeTake i seq, unsafeDrop i seq)
+
     take :: Index seq -> seq -> seq
     take i = fst . splitAt i
 
+    unsafeTake :: Index seq -> seq -> seq
+    unsafeTake = take
+
     drop :: Index seq -> seq -> seq
     drop i = snd . splitAt i
+
+    unsafeDrop :: Index seq -> seq -> seq
+    unsafeDrop = drop
 
     partition :: (Element seq -> Bool) -> seq -> (seq, seq)
     partition f = (fromList *** fromList) . List.partition f . otoList
@@ -245,7 +254,9 @@ instance IsSequence S.ByteString where
     takeWhile = S.takeWhile
     splitAt = S.splitAt
     take = S.take
+    unsafeTake = SU.unsafeTake
     drop = S.drop
+    unsafeDrop = SU.unsafeDrop
     partition = S.partition
     uncons = S.uncons
     unsnoc s
@@ -407,6 +418,8 @@ instance IsSequence (V.Vector a) where
     splitAt = V.splitAt
     take = V.take
     drop = V.drop
+    unsafeTake = V.unsafeTake
+    unsafeDrop = V.unsafeDrop
     partition = V.partition
     uncons v
         | V.null v = Nothing
@@ -444,6 +457,8 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     splitAt = U.splitAt
     take = U.take
     drop = U.drop
+    unsafeTake = U.unsafeTake
+    unsafeDrop = U.unsafeDrop
     partition = U.partition
     uncons v
         | U.null v = Nothing
@@ -481,6 +496,8 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     splitAt = VS.splitAt
     take = VS.take
     drop = VS.drop
+    unsafeTake = VS.unsafeTake
+    unsafeDrop = VS.unsafeDrop
     partition = VS.partition
     uncons v
         | VS.null v = Nothing
