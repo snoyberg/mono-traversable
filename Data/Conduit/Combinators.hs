@@ -689,7 +689,7 @@ peekE =
   where
     loop = await >>= maybe (return Nothing) go
     go x =
-        case Seq.headMay x of
+        case headMay x of
             Nothing -> loop
             Just y -> do
                 leftover x
