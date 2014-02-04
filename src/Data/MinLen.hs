@@ -13,6 +13,7 @@ module Data.MinLen
     , toMinLen
     , mlcons
     , mlappend
+    , mlunion
     , head
     , last
     , tail

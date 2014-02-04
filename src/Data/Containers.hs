@@ -362,7 +362,9 @@ instance IsMap (IntMap.IntMap value) where
     unionWithKey = IntMap.unionWithKey
     unionsWith = IntMap.unionsWith
     mapWithKey = IntMap.mapWithKey
+#if MIN_VERSION_containers(0, 5, 0)
     mapKeysWith = IntMap.mapKeysWith
+#endif
 
 instance Eq key => IsMap [(key, value)] where
     type MapValue [(key, value)] = value

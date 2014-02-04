@@ -456,7 +456,7 @@ osum = getSum . ofoldMap Sum
 oproduct :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
 oproduct = Data.Monoid.getProduct . ofoldMap Data.Monoid.Product
 
-class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where
+class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where -- FIXME is this really just MonoMonad?
     oconcatMap :: (Element mono -> mono) -> mono -> mono
     oconcatMap = ofoldMap
 instance (MonoFoldable (t a), Monoid (t a)) => MonoFoldableMonoid (t a) -- FIXME
@@ -516,7 +516,7 @@ instance MonoFoldableOrd TL.Text where
     {-# INLINE maximumEx #-}
     minimumEx = TL.minimum
     {-# INLINE minimumEx #-}
-instance Ord a => MonoFoldableOrd IntSet
+instance MonoFoldableOrd IntSet
 instance Ord a => MonoFoldableOrd [a]
 instance Ord a => MonoFoldableOrd (Maybe a)
 instance Ord a => MonoFoldableOrd (Tree a)
