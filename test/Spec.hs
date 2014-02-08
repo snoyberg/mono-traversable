@@ -185,6 +185,9 @@ main = hspec $ do
     prop "awaitNonNull" $ \xs ->
         fmap (NN.toNullable .NN.asNotEmpty) (runIdentity $ yieldMany xs $$ awaitNonNull)
         `shouldBe` listToMaybe (filter (not . null) (xs :: [[Int]]))
+    prop "headE" $ \xs ->
+        runIdentity (yieldMany xs $$ ((,) <$> headCE <*> foldC))
+        `shouldBe` (listToMaybe $ concat xs, drop 1 $ concat xs :: [Int])
     prop "peek" $ \xs ->
         runIdentity (yieldMany xs $$ ((,) <$> peekC <*> sinkList))
         `shouldBe` (listToMaybe xs, xs :: [Int])

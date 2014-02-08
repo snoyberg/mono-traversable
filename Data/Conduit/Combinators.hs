@@ -70,6 +70,7 @@ module Data.Conduit.Combinators
     , sinkLazyBuilder
     , sinkNull
     , awaitNonNull
+    , headE
     , peek
     , peekE
     , last
@@ -673,6 +674,22 @@ awaitNonNull =
     go' = maybe go (return . Just) . NonNull.fromNullable
 {-# INLINE awaitNonNull #-}
 
+-- | Get the next element in the chunked stream.
+--
+-- Since 1.0.0
+headE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
+headE =
+    loop
+  where
+    loop = await >>= maybe (return Nothing) go
+    go x =
+        case Seq.uncons x of
+            Nothing -> loop
+            Just (y, z) -> do
+                unless (onull z) $ leftover z
+                return $ Just y
+{-# INLINE headE #-}
+
 -- | View the next value in the stream without consuming it.
 --
 -- Since 1.0.0
@@ -683,7 +700,7 @@ peek = CL.peek
 -- | View the next element in the chunked stream without consuming it.
 --
 -- Since 1.0.0
-peekE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
+peekE :: (Monad m, MonoFoldable mono) => Consumer mono m (Maybe (Element mono))
 peekE =
     loop
   where

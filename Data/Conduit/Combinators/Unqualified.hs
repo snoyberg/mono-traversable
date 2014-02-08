@@ -59,6 +59,7 @@ module Data.Conduit.Combinators.Unqualified
     , sinkLazyBuilder
     , sinkNull
     , awaitNonNull
+    , headCE
     , peekC
     , peekCE
     , lastC
@@ -600,6 +601,13 @@ awaitNonNull :: (Monad m, NonNull.NonNull b, a ~ NonNull.Nullable b) => Consumer
 awaitNonNull = CC.awaitNonNull
 {-# INLINE awaitNonNull #-}
 
+-- | Get the next element in the chunked stream.
+--
+-- Since 1.0.0
+headCE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
+headCE = CC.headE
+{-# INLINE headCE #-}
+
 -- | View the next value in the stream without consuming it.
 --
 -- Since 1.0.0
@@ -610,7 +618,7 @@ peekC = CC.peek
 -- | View the next element in the chunked stream without consuming it.
 --
 -- Since 1.0.0
-peekCE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
+peekCE :: (Monad m, MonoFoldable mono) => Consumer mono m (Maybe (Element mono))
 peekCE = CC.peekE
 {-# INLINE peekCE #-}
 
