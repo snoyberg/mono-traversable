@@ -16,6 +16,7 @@ library
                        Data.Textual.Encoding
                        Data.Sequences.Lazy
                        Data.Builder
+                       Data.ChunkedZip
   build-depends:       base >= 4 && < 5
                      , transformers
                      , bytestring
@@ -23,3 +24,6 @@ library
                      , text >= 0.11
                      , system-filepath
                      , blaze-builder
+                     , containers
+                     , vector
+                     , semigroups
