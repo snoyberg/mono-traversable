@@ -143,7 +143,7 @@ import Data.IOData (IOData (..))
 
 import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>))
-import ClassyPrelude.Classes
+import Data.ChunkedZip
 import qualified Data.Char as Char
 import Data.Sequences
 import Data.MonoTraversable
