@@ -53,6 +53,8 @@ class ToBuilder value builder where
     toBuilder :: value -> builder
 
 -- Text
+instance ToBuilder TB.Builder TB.Builder where
+    toBuilder = id
 instance ToBuilder T.Text TB.Builder where
     toBuilder = TB.fromText
 instance ToBuilder TL.Text TB.Builder where
@@ -63,6 +65,8 @@ instance (a ~ Char) => ToBuilder [a] TB.Builder where
     toBuilder = TB.fromString
 
 -- Blaze
+instance ToBuilder BB.Builder BB.Builder where
+    toBuilder = id
 instance ToBuilder T.Text BB.Builder where
     toBuilder = BB.fromText
 instance ToBuilder TL.Text BB.Builder where
