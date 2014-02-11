@@ -101,6 +101,36 @@ instance Eq key => SetContainer [(key, value)] where
                 Just _ -> loop rest
     intersection = List.intersectBy ((==) `on` fst)
 
+-- | A guaranteed-polymorphic @Map@, which allows for more polymorphic versions
+-- of functions.
+class PolyMap map where
+    differenceMap :: map value1 -> map value2 -> map value1
+    {-
+    differenceWithMap :: (value1 -> value2 -> Maybe value1)
+                      -> map value1 -> map value2 -> map value1
+    -}
+    intersectionMap :: map value1 -> map value2 -> map value1
+    intersectionWithMap :: (value1 -> value2 -> value3)
+                        -> map value1 -> map value2 -> map value3
+
+instance Ord key => PolyMap (Map.Map key) where
+    differenceMap = Map.difference
+    --differenceWithMap = Map.differenceWith
+    intersectionMap = Map.intersection
+    intersectionWithMap = Map.intersectionWith
+
+instance (Eq key, Hashable key) => PolyMap (HashMap.HashMap key) where
+    differenceMap = HashMap.difference
+    --differenceWithMap = HashMap.differenceWith
+    intersectionMap = HashMap.intersection
+    intersectionWithMap = HashMap.intersectionWith
+
+instance PolyMap IntMap.IntMap where
+    differenceMap = IntMap.difference
+    --differenceWithMap = IntMap.differenceWith
+    intersectionMap = IntMap.intersection
+    intersectionWithMap = IntMap.intersectionWith
+
 class (MonoTraversable map, SetContainer map) => IsMap map where
     -- | In some cases, @MapValue@ and @Element@ will be different, e.g., the
     -- @IsMap@ instance of associated lists.
