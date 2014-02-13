@@ -360,6 +360,13 @@ fpToString = F.encodeString
 fpFromString :: String -> FilePath
 fpFromString = F.decodeString
 
+-- | This translation is not correct for a (unix) filename
+-- which can contain arbitrary (non-unicode) bytes.
+-- If you control or otherwise understand the filenames
+-- it is safe.
+-- But if you are doing a find on arbitrary files
+-- you could come across files with non-unicode characters
+-- and this function throws away non-unicode characters.
 fpToText :: FilePath -> Text
 fpToText = either id id . F.toText
 
