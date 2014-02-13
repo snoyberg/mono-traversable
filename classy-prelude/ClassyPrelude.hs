@@ -360,13 +360,36 @@ fpToString = F.encodeString
 fpFromString :: String -> FilePath
 fpFromString = F.decodeString
 
--- | This translation is not correct for a (unix) filename
--- which can contain arbitrary (non-unicode) bytes.
+-- | Translates a FilePath to a Text
+-- Warns if there are non-unicode
+-- sequences in the file name
+fpToTextWarn :: MonadIO m => FilePath -> m Text
+fpToTextWarn fp = case F.toText fp of
+    Right ok -> return ok
+    Left bad -> do
+        putStrLn $ "non-unicode filenam: " ++ encodeString fp
+        return bad
+
+-- | Translates a FilePath to a Text
+-- Throws an exception if there are non-unicode
+-- sequences in the file name
+--
+-- Use this to assert that you know
+-- a filename will translate properly into a Text
+-- If you created the filename, this should be the case.
+fpToTextEx :: FilePath -> Text
+fpToTextEx fp = either (const $ error errorMsg) id . F.toText
+  where
+    errorMsg = "fpToTextEx: non-unicode filepath: " ++ encodeString fp
+
+-- | Translates a FilePath to a Text
+-- This translation is not correct for a (unix) filename
+-- which can contain arbitrary (non-unicode) bytes: those bytes will be discarded
+--
+-- This means you cannot translate the Text back to the original file name.
+--
 -- If you control or otherwise understand the filenames
--- it is safe.
--- But if you are doing a find on arbitrary files
--- you could come across files with non-unicode characters
--- and this function throws away non-unicode characters.
+-- and believe them to be unicode valid consider using 'fpToTextEx' or 'fpToTextWarn'
 fpToText :: FilePath -> Text
 fpToText = either id id . F.toText
 
