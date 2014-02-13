@@ -100,6 +100,8 @@ module ClassyPrelude
     , fpFromString
     , fpToText
     , fpFromText
+    , fpToTextWarn
+    , fpToTextEx
       -- ** Exceptions
     , module Control.Exception.Enclosed
       -- ** Force types
@@ -367,7 +369,7 @@ fpToTextWarn :: MonadIO m => FilePath -> m Text
 fpToTextWarn fp = case F.toText fp of
     Right ok -> return ok
     Left bad -> do
-        putStrLn $ "non-unicode filenam: " ++ encodeString fp
+        putStrLn $ pack $ "non-unicode filepath: " ++ F.encodeString fp
         return bad
 
 -- | Translates a FilePath to a Text
@@ -378,9 +380,9 @@ fpToTextWarn fp = case F.toText fp of
 -- a filename will translate properly into a Text
 -- If you created the filename, this should be the case.
 fpToTextEx :: FilePath -> Text
-fpToTextEx fp = either (const $ error errorMsg) id . F.toText
+fpToTextEx fp = either (const $ error errorMsg) id $ F.toText fp
   where
-    errorMsg = "fpToTextEx: non-unicode filepath: " ++ encodeString fp
+    errorMsg = "fpToTextEx: non-unicode filepath: " ++ F.encodeString fp
 
 -- | Translates a FilePath to a Text
 -- This translation is not correct for a (unix) filename
