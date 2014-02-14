@@ -200,45 +200,45 @@ class MonoFoldable mono where
     ofoldr :: (Element mono -> b -> b) -> b -> mono -> b
     default ofoldr :: (t a ~ mono, a ~ Element (t a), F.Foldable t) => (Element mono -> b -> b) -> b -> mono -> b
     ofoldr = F.foldr
-    
+
     ofoldl' :: (a -> Element mono -> a) -> a -> mono -> a
     default ofoldl' :: (t b ~ mono, b ~ Element (t b), F.Foldable t) => (a -> Element mono -> a) -> a -> mono -> a
     ofoldl' = F.foldl'
 
     otoList :: mono -> [Element mono]
     otoList t = build (\ mono n -> ofoldr mono n t)
-    
+
     oall :: (Element mono -> Bool) -> mono -> Bool
     oall f = getAll . ofoldMap (All . f)
-    
+
     oany :: (Element mono -> Bool) -> mono -> Bool
     oany f = getAny . ofoldMap (Any . f)
-    
+
     onull :: mono -> Bool
     onull = oall (const False)
-    
+
     olength :: mono -> Int
     olength = ofoldl' (\i _ -> i + 1) 0
-    
+
     olength64 :: mono -> Int64
     olength64 = ofoldl' (\i _ -> i + 1) 0
-    
+
     ocompareLength :: Integral i => mono -> i -> Ordering
     ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
 
     otraverse_ :: (MonoFoldable mono, Applicative f) => (Element mono -> f b) -> mono -> f ()
     otraverse_ f = ofoldr ((*>) . f) (pure ())
-    
+
     ofor_ :: (MonoFoldable mono, Applicative f) => mono -> (Element mono -> f b) -> f ()
     ofor_ = flip otraverse_
-    
+
     omapM_ :: (MonoFoldable mono, Monad m) => (Element mono -> m b) -> mono -> m ()
     omapM_ f = ofoldr ((>>) . f) (return ())
-    
+
     oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m b) -> m ()
     oforM_ = flip omapM_
     {-# INLINE oforM_ #-}
-    
+
     ofoldlM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
     ofoldlM f z0 xs = ofoldr f' return xs z0
       where f' x k z = f z x >>= k
