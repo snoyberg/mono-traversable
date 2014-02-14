@@ -356,7 +356,10 @@ instance MonoFoldable IntSet where
 instance MonoFoldable [a] where
     otoList = id
     {-# INLINE otoList #-}
-instance MonoFoldable (Maybe a)
+instance MonoFoldable (Maybe a) where
+    omapM_ _ Nothing = return ()
+    omapM_ f (Just x) = f x >> return ()
+    {-# INLINE omapM_ #-}
 instance MonoFoldable (Tree a)
 instance MonoFoldable (Seq a) where
     headEx = flip Seq.index 1
