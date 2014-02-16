@@ -43,17 +43,20 @@ in your code, and your ready to use ```CustomType a``` with the functions define
 mono-traversable versuse lens Traversal
 ---------------------------------------
 lens is a huge package with a lot of functionality.
-One piece of functionality it exposes is Traversal which can also be used to deal with monomorphic containers.
+One piece of functionality it exposes is Fold and Traversal which can also be used to deal with monomorphic containers.
 
-You could prefer mono-traversable to using a Traversable because
+You could prefer mono-traversable to using this part of lens because
 
-* There is really no new API to learn. If you know Foldable, you can use MonoFoldable just as easily.
+* There is really no new API to learn. If you know Foldable, you can use MonoFoldable just as easily
+* mono-traversable's typeclass based approach means many methods are included in the class but can easily be given specialised optimized implementations
 * You don't need to explicitly pass around the Traversal
 
 The last point is also a point of inflexibility and points to a use case where you could prefer using a lens Traversal.
 mono-traversable treats ByteString as a sequence of bytes.
 If you want to treat it as both bytes and characters, mono-traversable would require a newtype wrapper around ByteString,
 whereas a lens traversal would just use a different traversal function.
+
+
 
 
 [![Build Status](https://secure.travis-ci.org/snoyberg/mono-traversable.png)](http://travis-ci.org/snoyberg/mono-traversable)
