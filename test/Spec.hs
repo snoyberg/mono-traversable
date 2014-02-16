@@ -58,6 +58,19 @@ main = hspec $ do
     describe "groupAll" $ do
         it "list" $ groupAll ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
         it "Text" $ groupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
+    describe "unsnoc" $ do
+        let test name dummy = prop name $ \xs ->
+                let seq' = fromList xs `asTypeOf` dummy
+                 in case (unsnoc seq', onull seq', onull xs) of
+                        (Nothing, True, True) -> return ()
+                        (Just (y, z), False, False) -> do
+                            (y SG.<> singleton z) `shouldBe` seq'
+                            snoc y z `shouldBe` seq'
+                            otoList (snoc y z) `shouldBe` xs
+                        x -> Prelude.error $ show x
+        test "list" ([] :: [Int])
+        test "Text" ("" :: Text)
+        test "lazy ByteString" L.empty
     describe "groupAllOn" $ do
         it "list" $ groupAllOn (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
     describe "breakWord" $ do
