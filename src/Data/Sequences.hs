@@ -18,7 +18,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Control.Category
-import Control.Arrow ((***), second)
+import Control.Arrow ((***), first, second)
 import Control.Monad (liftM)
 import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
@@ -111,10 +111,7 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
     uncons = fmap (second fromList) . uncons . otoList
 
     unsnoc :: seq -> Maybe (seq, Element seq)
-    unsnoc seq =
-        case reverse (otoList seq) of
-            [] -> Nothing
-            x:xs -> Just (fromList (reverse xs), x)
+    unsnoc = fmap (first fromList) . unsnoc . otoList
 
     filter :: (Element seq -> Bool) -> seq -> seq
     filter f = fromList . List.filter f . otoList
@@ -213,6 +210,12 @@ instance IsSequence [a] where
     drop = List.drop
     uncons [] = Nothing
     uncons (x:xs) = Just (x, xs)
+    unsnoc [] = Nothing
+    unsnoc (x0:xs0) =
+        Just (loop id x0 xs0)
+      where
+        loop front x [] = (front [], x)
+        loop front x (y:z) = loop (front . (x:)) y z
     partition = List.partition
     replicate = List.replicate
     replicateM = Control.Monad.replicateM
