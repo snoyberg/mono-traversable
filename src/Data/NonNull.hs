@@ -8,10 +8,10 @@
 -- | Warning, this is Experimental!
 --
 -- Data.NonNull attempts to extend the concepts from
--- 'Data.List.NonEmpty' to any 'MonoFoldable'.
+-- "Data.List.NonEmpty" to any 'MonoFoldable'.
 --
 -- 'NonNull' is a typeclass for a container with 1 or more elements.
--- 'Data.List.NonEmpty' and 'NotEmpty a' are members of the typeclass
+-- "Data.List.NonEmpty" and 'NotEmpty a' are members of the typeclass
 module Data.NonNull (
     NonNull(..)
   , fromNonEmpty
