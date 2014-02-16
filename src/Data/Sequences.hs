@@ -82,7 +82,7 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
 
     dropWhile :: (Element seq -> Bool) -> seq -> seq
     dropWhile f = fromList . List.dropWhile f . otoList
-    
+
     takeWhile :: (Element seq -> Bool) -> seq -> seq
     takeWhile f = fromList . List.takeWhile f . otoList
 
@@ -106,7 +106,7 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
 
     partition :: (Element seq -> Bool) -> seq -> (seq, seq)
     partition f = (fromList *** fromList) . List.partition f . otoList
-    
+
     uncons :: seq -> Maybe (Element seq, seq)
     uncons = fmap (second fromList) . uncons . otoList
 
@@ -133,7 +133,7 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
     groupBy :: (Element seq -> Element seq -> Bool) -> seq -> [seq]
     groupBy f = fmap fromList . List.groupBy f . otoList
 
-    -- | Similar to standard 'groupBy', but operates on the whole collection, 
+    -- | Similar to standard 'groupBy', but operates on the whole collection,
     -- not just the consecutive items.
     groupAllOn :: Eq b => (Element seq -> b) -> seq -> [seq]
     groupAllOn f = fmap fromList . groupAllOn f . otoList
@@ -514,10 +514,10 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     stripPrefix :: seq -> seq -> Maybe seq
     stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
-    
+
     isPrefixOf :: seq -> seq -> Bool
     isPrefixOf x y = otoList x `isPrefixOf` otoList y
-    
+
     stripSuffix :: seq -> seq -> Maybe seq
     stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
 
@@ -529,8 +529,8 @@ class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
 
     group :: seq -> [seq]
     group = groupBy (==)
-    
-    -- | Similar to standard 'group', but operates on the whole collection, 
+
+    -- | Similar to standard 'group', but operates on the whole collection,
     -- not just the consecutive items.
     groupAll :: seq -> [seq]
     groupAll = groupAllOn id
