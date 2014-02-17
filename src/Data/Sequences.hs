@@ -152,39 +152,70 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq wher
 
     unsafeInit :: seq -> seq
     unsafeInit = initEx
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
 defaultFind f = List.find f . otoList
+{-# INLINE defaultFind #-}
 
 defaultIntersperse :: IsSequence seq => Element seq -> seq -> seq
 defaultIntersperse e = fromList . List.intersperse e . otoList
+{-# INLINE defaultIntersperse #-}
 
 defaultReverse :: IsSequence seq => seq -> seq
 defaultReverse = fromList . List.reverse . otoList
+{-# INLINE defaultReverse #-}
 
 defaultSortBy :: IsSequence seq => (Element seq -> Element seq -> Ordering) -> seq -> seq
 defaultSortBy f = fromList . List.sortBy f . otoList
+{-# INLINE defaultSortBy #-}
 
 defaultCons :: IsSequence seq => Element seq -> seq -> seq
 defaultCons e = fromList . (e:) . otoList
+{-# INLINE defaultCons #-}
 
 defaultSnoc :: IsSequence seq => seq -> Element seq -> seq
 defaultSnoc seq e = fromList (otoList seq List.++ [e])
-
+{-# INLINE defaultSnoc #-}
 
 -- | like Data.List.tail, but an input of @mempty@ returns @mempty@
 tailDef :: IsSequence seq => seq -> seq
 tailDef xs = case uncons xs of
                Nothing -> mempty
                Just tuple -> snd tuple
+{-# INLINE tailDef #-}
 
 -- | like Data.List.init, but an input of @mempty@ returns @mempty@
 initDef :: IsSequence seq => seq -> seq
 initDef xs = case unsnoc xs of
                Nothing -> mempty
                Just tuple -> fst tuple
-
-
+{-# INLINE initDef #-}
 
 instance SemiSequence [a] where
     type Index [a] = Int
@@ -195,10 +226,16 @@ instance SemiSequence [a] where
     sortBy = List.sortBy
     cons = (:)
     snoc = defaultSnoc
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance IsSequence [a] where
     fromList = id
-    {-# INLINE fromList #-}
     filter = List.filter
     filterM = Control.Monad.filterM
     break = List.break
@@ -225,6 +262,32 @@ instance IsSequence [a] where
       where
         (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllOn _ [] = []
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance SemiSequence (NE.NonEmpty a) where
     type Index (NE.NonEmpty a) = Int
@@ -236,6 +299,13 @@ instance SemiSequence (NE.NonEmpty a) where
     cons         = NE.cons
     snoc xs x    = NE.fromList $ flip snoc x $ NE.toList xs
     sortBy f     = NE.fromList . List.sortBy f . NE.toList
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance SemiSequence S.ByteString where
     type Index S.ByteString = Int
@@ -246,6 +316,13 @@ instance SemiSequence S.ByteString where
     cons = S.cons
     snoc = S.snoc
     sortBy = defaultSortBy
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance IsSequence S.ByteString where
     fromList = S.pack
@@ -269,6 +346,32 @@ instance IsSequence S.ByteString where
     tailEx = S.tail
     initEx = S.init
     unsafeTail = SU.unsafeTail
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance SemiSequence T.Text where
     type Index T.Text = Int
@@ -279,6 +382,13 @@ instance SemiSequence T.Text where
     cons = T.cons
     snoc = T.snoc
     sortBy = defaultSortBy
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance IsSequence T.Text where
     fromList = T.pack
@@ -299,6 +409,32 @@ instance IsSequence T.Text where
     groupBy = T.groupBy
     tailEx = T.tail
     initEx = T.init
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
@@ -309,6 +445,13 @@ instance SemiSequence L.ByteString where
     cons = L.cons
     snoc = L.snoc
     sortBy = defaultSortBy
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance IsSequence L.ByteString where
     fromList = L.pack
@@ -329,6 +472,32 @@ instance IsSequence L.ByteString where
     groupBy = L.groupBy
     tailEx = L.tail
     initEx = L.init
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance SemiSequence TL.Text where
     type Index TL.Text = Int64
@@ -339,6 +508,13 @@ instance SemiSequence TL.Text where
     cons = TL.cons
     snoc = TL.snoc
     sortBy = defaultSortBy
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance IsSequence TL.Text where
     fromList = TL.pack
@@ -359,6 +535,32 @@ instance IsSequence TL.Text where
     groupBy = TL.groupBy
     tailEx = TL.tail
     initEx = TL.init
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance SemiSequence (Seq.Seq a) where
     type Index (Seq.Seq a) = Int
@@ -370,6 +572,13 @@ instance SemiSequence (Seq.Seq a) where
 
     intersperse = defaultIntersperse
     find = defaultFind
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance IsSequence (Seq.Seq a) where
     fromList = Seq.fromList
@@ -396,6 +605,32 @@ instance IsSequence (Seq.Seq a) where
     --groupBy = Seq.groupBy
     tailEx = Seq.drop 1
     initEx xs = Seq.take (Seq.length xs - 1) xs
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
@@ -407,6 +642,13 @@ instance SemiSequence (V.Vector a) where
 
     sortBy = defaultSortBy
     intersperse = defaultIntersperse
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance IsSequence (V.Vector a) where
     fromList = V.fromList
@@ -435,6 +677,32 @@ instance IsSequence (V.Vector a) where
     initEx = V.init
     unsafeTail = V.unsafeTail
     unsafeInit = V.unsafeInit
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
@@ -446,6 +714,13 @@ instance U.Unbox a => SemiSequence (U.Vector a) where
     cons = U.cons
     snoc = U.snoc
     sortBy = defaultSortBy
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance U.Unbox a => IsSequence (U.Vector a) where
     fromList = U.fromList
@@ -474,6 +749,32 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     initEx = U.init
     unsafeTail = U.unsafeTail
     unsafeInit = U.unsafeInit
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
@@ -485,6 +786,13 @@ instance VS.Storable a => SemiSequence (VS.Vector a) where
 
     intersperse = defaultIntersperse
     sortBy = defaultSortBy
+    {-# INLINE singleton #-}
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
 
 instance VS.Storable a => IsSequence (VS.Vector a) where
     fromList = VS.fromList
@@ -513,6 +821,32 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     initEx = VS.init
     unsafeTail = VS.unsafeTail
     unsafeInit = VS.unsafeInit
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE unsafeSplitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
+    {-# INLINE groupAllOn #-}
+    {-# INLINE subsequences #-}
+    {-# INLINE permutations #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
 
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     stripPrefix :: seq -> seq -> Maybe seq
@@ -543,6 +877,15 @@ class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
 
     notElem :: Element seq -> seq -> Bool
     notElem e = List.notElem e . otoList
+    {-# INLINE stripPrefix #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE stripSuffix #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
+    {-# INLINE group #-}
+    {-# INLINE groupAll #-}
+    {-# INLINE elem #-}
+    {-# INLINE notElem #-}
 
 instance Eq a => EqSequence [a] where
     stripPrefix = List.stripPrefix
@@ -553,6 +896,15 @@ instance Eq a => EqSequence [a] where
     group = List.group
     elem = List.elem
     notElem = List.notElem
+    {-# INLINE stripPrefix #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE stripSuffix #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
+    {-# INLINE group #-}
+    {-# INLINE groupAll #-}
+    {-# INLINE elem #-}
+    {-# INLINE notElem #-}
 
 instance EqSequence S.ByteString where
     stripPrefix x y
@@ -567,6 +919,15 @@ instance EqSequence S.ByteString where
     group = S.group
     elem = S.elem
     notElem = S.notElem
+    {-# INLINE stripPrefix #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE stripSuffix #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
+    {-# INLINE group #-}
+    {-# INLINE groupAll #-}
+    {-# INLINE elem #-}
+    {-# INLINE notElem #-}
 
 instance EqSequence L.ByteString where
     stripPrefix x y
@@ -581,6 +942,15 @@ instance EqSequence L.ByteString where
     group = L.group
     elem = L.elem
     notElem = L.notElem
+    {-# INLINE stripPrefix #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE stripSuffix #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
+    {-# INLINE group #-}
+    {-# INLINE groupAll #-}
+    {-# INLINE elem #-}
+    {-# INLINE notElem #-}
 
 instance EqSequence T.Text where
     stripPrefix = T.stripPrefix
@@ -589,6 +959,15 @@ instance EqSequence T.Text where
     isSuffixOf = T.isSuffixOf
     isInfixOf = T.isInfixOf
     group = T.group
+    {-# INLINE stripPrefix #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE stripSuffix #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
+    {-# INLINE group #-}
+    {-# INLINE groupAll #-}
+    {-# INLINE elem #-}
+    {-# INLINE notElem #-}
 
 instance EqSequence TL.Text where
     stripPrefix = TL.stripPrefix
@@ -597,6 +976,15 @@ instance EqSequence TL.Text where
     isSuffixOf = TL.isSuffixOf
     isInfixOf = TL.isInfixOf
     group = TL.group
+    {-# INLINE stripPrefix #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE stripSuffix #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
+    {-# INLINE group #-}
+    {-# INLINE groupAll #-}
+    {-# INLINE elem #-}
+    {-# INLINE notElem #-}
 
 instance Eq a => EqSequence (Seq.Seq a)
 instance Eq a => EqSequence (V.Vector a)
@@ -606,12 +994,15 @@ instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
     sort :: seq -> seq
     sort = fromList . List.sort . otoList
+    {-# INLINE sort #-}
 
 instance Ord a => OrdSequence [a] where
     sort = List.sort
+    {-# INLINE sort #-}
 
 instance OrdSequence S.ByteString where
     sort = S.sort
+    {-# INLINE sort #-}
 
 instance OrdSequence L.ByteString
 instance OrdSequence T.Text
@@ -638,6 +1029,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
 
     breakWord :: t -> (t, t)
     breakWord = fmap (dropWhile isSpace) . break isSpace
+    {-# INLINE breakWord #-}
 
     breakLine :: t -> (t, t)
     breakLine =
@@ -656,6 +1048,13 @@ instance (c ~ Char) => Textual [c] where
     toLower = TL.unpack . TL.toLower . TL.pack
     toUpper = TL.unpack . TL.toUpper . TL.pack
     toCaseFold = TL.unpack . TL.toCaseFold . TL.pack
+    {-# INLINE words #-}
+    {-# INLINE unwords #-}
+    {-# INLINE lines #-}
+    {-# INLINE unlines #-}
+    {-# INLINE toLower #-}
+    {-# INLINE toUpper #-}
+    {-# INLINE toCaseFold #-}
 
 instance Textual T.Text where
     words = T.words
@@ -665,6 +1064,13 @@ instance Textual T.Text where
     toLower = T.toLower
     toUpper = T.toUpper
     toCaseFold = T.toCaseFold
+    {-# INLINE words #-}
+    {-# INLINE unwords #-}
+    {-# INLINE lines #-}
+    {-# INLINE unlines #-}
+    {-# INLINE toLower #-}
+    {-# INLINE toUpper #-}
+    {-# INLINE toCaseFold #-}
 
 instance Textual TL.Text where
     words = TL.words
@@ -674,3 +1080,10 @@ instance Textual TL.Text where
     toLower = TL.toLower
     toUpper = TL.toUpper
     toCaseFold = TL.toCaseFold
+    {-# INLINE words #-}
+    {-# INLINE unwords #-}
+    {-# INLINE lines #-}
+    {-# INLINE unlines #-}
+    {-# INLINE toLower #-}
+    {-# INLINE toUpper #-}
+    {-# INLINE toCaseFold #-}

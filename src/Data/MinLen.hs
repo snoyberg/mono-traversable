@@ -68,24 +68,32 @@ toMinLen mono =
 
 mlcons :: IsSequence seq => Element seq -> MinLen nat seq -> MinLen (Succ nat) seq
 mlcons e (MinLen seq) = MinLen (cons e seq)
+{-# INLINE mlcons #-}
 
 mlappend :: IsSequence seq => MinLen x seq -> MinLen y seq -> MinLen (AddNat x y) seq
 mlappend (MinLen x) (MinLen y) = MinLen (x `mappend` y)
+{-# INLINE mlappend #-}
 
 head :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
 head = headEx . unMinLen
+{-# INLINE head #-}
 
 last :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
 last = lastEx . unMinLen
+{-# INLINE last #-}
 
 tail :: IsSequence seq => MinLen (Succ nat) seq -> MinLen nat seq
 tail = MinLen . tailEx . unMinLen
+{-# INLINE tail #-}
 
 init :: IsSequence seq => MinLen (Succ nat) seq -> MinLen nat seq
 init = MinLen . initEx . unMinLen
+{-# INLINE init #-}
 
 instance GrowingAppend mono => Semigroup (MinLen nat mono) where
     MinLen x <> MinLen y = MinLen (x <> y)
+    {-# INLINE (<>) #-}
 
 mlunion :: GrowingAppend mono => MinLen x mono -> MinLen y mono -> MinLen (MaxNat x y) mono
 mlunion (MinLen x) (MinLen y) = MinLen (x <> y)
+{-# INLINE mlunion #-}

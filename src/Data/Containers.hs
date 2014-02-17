@@ -41,56 +41,89 @@ class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set)) => Se
 instance Ord k => SetContainer (Map.Map k v) where
     type ContainerKey (Map.Map k v) = k
     member = Map.member
+    {-# INLINE member #-}
     notMember = Map.notMember
+    {-# INLINE notMember #-}
     union = Map.union
+    {-# INLINE union #-}
     difference = Map.difference
+    {-# INLINE difference #-}
     intersection = Map.intersection
+    {-# INLINE intersection #-}
 
 instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) where
     type ContainerKey (HashMap.HashMap key value) = key
     member = HashMap.member
+    {-# INLINE member #-}
     notMember k = not . HashMap.member k
+    {-# INLINE notMember #-}
     union = HashMap.union
+    {-# INLINE union #-}
     difference = HashMap.difference
+    {-# INLINE difference #-}
     intersection = HashMap.intersection
+    {-# INLINE intersection #-}
 
 instance SetContainer (IntMap.IntMap value) where
     type ContainerKey (IntMap.IntMap value) = Int
     member = IntMap.member
+    {-# INLINE member #-}
     notMember = IntMap.notMember
+    {-# INLINE notMember #-}
     union = IntMap.union
+    {-# INLINE union #-}
     difference = IntMap.difference
+    {-# INLINE difference #-}
     intersection = IntMap.intersection
+    {-# INLINE intersection #-}
 
 instance Ord element => SetContainer (Set.Set element) where
     type ContainerKey (Set.Set element) = element
     member = Set.member
+    {-# INLINE member #-}
     notMember = Set.notMember
+    {-# INLINE notMember #-}
     union = Set.union
+    {-# INLINE union #-}
     difference = Set.difference
+    {-# INLINE difference #-}
     intersection = Set.intersection
+    {-# INLINE intersection #-}
 
 instance (Eq element, Hashable element) => SetContainer (HashSet.HashSet element) where
     type ContainerKey (HashSet.HashSet element) = element
     member = HashSet.member
+    {-# INLINE member #-}
     notMember e = not . HashSet.member e
+    {-# INLINE notMember #-}
     union = HashSet.union
+    {-# INLINE union #-}
     difference = HashSet.difference
+    {-# INLINE difference #-}
     intersection = HashSet.intersection
+    {-# INLINE intersection #-}
 
 instance SetContainer IntSet.IntSet where
     type ContainerKey IntSet.IntSet = Int
     member = IntSet.member
+    {-# INLINE member #-}
     notMember = IntSet.notMember
+    {-# INLINE notMember #-}
     union = IntSet.union
+    {-# INLINE union #-}
     difference = IntSet.difference
+    {-# INLINE difference #-}
     intersection = IntSet.intersection
+    {-# INLINE intersection #-}
 
 instance Eq key => SetContainer [(key, value)] where
     type ContainerKey [(key, value)] = key
     member k = List.any ((== k) . fst)
+    {-# INLINE member #-}
     notMember k = not . member k
+    {-# INLINE notMember #-}
     union = List.unionBy ((==) `on` fst)
+    {-# INLINE union #-}
     x `difference` y =
         loop x
       where
@@ -100,6 +133,7 @@ instance Eq key => SetContainer [(key, value)] where
                 Nothing -> (k, v) : loop rest
                 Just _ -> loop rest
     intersection = List.intersectBy ((==) `on` fst)
+    {-# INLINE intersection #-}
 
 -- | A guaranteed-polymorphic @Map@, which allows for more polymorphic versions
 -- of functions.
@@ -115,21 +149,30 @@ class PolyMap map where
 
 instance Ord key => PolyMap (Map.Map key) where
     differenceMap = Map.difference
+    {-# INLINE differenceMap #-}
     --differenceWithMap = Map.differenceWith
     intersectionMap = Map.intersection
+    {-# INLINE intersectionMap #-}
     intersectionWithMap = Map.intersectionWith
+    {-# INLINE intersectionWithMap #-}
 
 instance (Eq key, Hashable key) => PolyMap (HashMap.HashMap key) where
     differenceMap = HashMap.difference
+    {-# INLINE differenceMap #-}
     --differenceWithMap = HashMap.differenceWith
     intersectionMap = HashMap.intersection
+    {-# INLINE intersectionMap #-}
     intersectionWithMap = HashMap.intersectionWith
+    {-# INLINE intersectionWithMap #-}
 
 instance PolyMap IntMap.IntMap where
     differenceMap = IntMap.difference
+    {-# INLINE differenceMap #-}
     --differenceWithMap = IntMap.differenceWith
     intersectionMap = IntMap.intersection
+    {-# INLINE intersectionMap #-}
     intersectionWithMap = IntMap.intersectionWith
+    {-# INLINE intersectionWithMap #-}
 
 class (MonoTraversable map, SetContainer map) => IsMap map where
     -- | In some cases, @MapValue@ and @Element@ will be different, e.g., the
@@ -322,48 +365,78 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
 instance Ord key => IsMap (Map.Map key value) where
     type MapValue (Map.Map key value) = value
     lookup = Map.lookup
+    {-# INLINE lookup #-}
     insertMap = Map.insert
+    {-# INLINE insertMap #-}
     deleteMap = Map.delete
+    {-# INLINE deleteMap #-}
     singletonMap = Map.singleton
+    {-# INLINE singletonMap #-}
     mapFromList = Map.fromList
+    {-# INLINE mapFromList #-}
     mapToList = Map.toList
+    {-# INLINE mapToList #-}
 
     findWithDefault = Map.findWithDefault
+    {-# INLINE findWithDefault #-}
     insertWith = Map.insertWith
+    {-# INLINE insertWith #-}
     insertWithKey = Map.insertWithKey
+    {-# INLINE insertWithKey #-}
     insertLookupWithKey = Map.insertLookupWithKey
+    {-# INLINE insertLookupWithKey #-}
     adjustMap = Map.adjust
+    {-# INLINE adjustMap #-}
     adjustWithKey = Map.adjustWithKey
+    {-# INLINE adjustWithKey #-}
     updateMap = Map.update
+    {-# INLINE updateMap #-}
     updateWithKey = Map.updateWithKey
+    {-# INLINE updateWithKey #-}
     updateLookupWithKey = Map.updateLookupWithKey
+    {-# INLINE updateLookupWithKey #-}
     alterMap = Map.alter
+    {-# INLINE alterMap #-}
     unionWith = Map.unionWith
+    {-# INLINE unionWith #-}
     unionWithKey = Map.unionWithKey
+    {-# INLINE unionWithKey #-}
     unionsWith = Map.unionsWith
+    {-# INLINE unionsWith #-}
     mapWithKey = Map.mapWithKey
+    {-# INLINE mapWithKey #-}
     mapKeysWith = Map.mapKeysWith
+    {-# INLINE mapKeysWith #-}
 
 instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
     type MapValue (HashMap.HashMap key value) = value
     lookup = HashMap.lookup
+    {-# INLINE lookup #-}
     insertMap = HashMap.insert
+    {-# INLINE insertMap #-}
     deleteMap = HashMap.delete
+    {-# INLINE deleteMap #-}
     singletonMap = HashMap.singleton
+    {-# INLINE singletonMap #-}
     mapFromList = HashMap.fromList
+    {-# INLINE mapFromList #-}
     mapToList = HashMap.toList
+    {-# INLINE mapToList #-}
 
     --findWithDefault = HashMap.findWithDefault
     insertWith = HashMap.insertWith
+    {-# INLINE insertWith #-}
     --insertWithKey = HashMap.insertWithKey
     --insertLookupWithKey = HashMap.insertLookupWithKey
     adjustMap = HashMap.adjust
+    {-# INLINE adjustMap #-}
     --adjustWithKey = HashMap.adjustWithKey
     --updateMap = HashMap.update
     --updateWithKey = HashMap.updateWithKey
     --updateLookupWithKey = HashMap.updateLookupWithKey
     --alterMap = HashMap.alter
     unionWith = HashMap.unionWith
+    {-# INLINE unionWith #-}
     --unionWithKey = HashMap.unionWithKey
     --unionsWith = HashMap.unionsWith
     --mapWithKey = HashMap.mapWithKey
@@ -372,38 +445,64 @@ instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
 instance IsMap (IntMap.IntMap value) where
     type MapValue (IntMap.IntMap value) = value
     lookup = IntMap.lookup
+    {-# INLINE lookup #-}
     insertMap = IntMap.insert
+    {-# INLINE insertMap #-}
     deleteMap = IntMap.delete
+    {-# INLINE deleteMap #-}
     singletonMap = IntMap.singleton
+    {-# INLINE singletonMap #-}
     mapFromList = IntMap.fromList
+    {-# INLINE mapFromList #-}
     mapToList = IntMap.toList
+    {-# INLINE mapToList #-}
 
     findWithDefault = IntMap.findWithDefault
+    {-# INLINE findWithDefault #-}
     insertWith = IntMap.insertWith
+    {-# INLINE insertWith #-}
     insertWithKey = IntMap.insertWithKey
+    {-# INLINE insertWithKey #-}
     insertLookupWithKey = IntMap.insertLookupWithKey
+    {-# INLINE insertLookupWithKey #-}
     adjustMap = IntMap.adjust
+    {-# INLINE adjustMap #-}
     adjustWithKey = IntMap.adjustWithKey
+    {-# INLINE adjustWithKey #-}
     updateMap = IntMap.update
+    {-# INLINE updateMap #-}
     updateWithKey = IntMap.updateWithKey
+    {-# INLINE updateWithKey #-}
     --updateLookupWithKey = IntMap.updateLookupWithKey
     alterMap = IntMap.alter
+    {-# INLINE alterMap #-}
     unionWith = IntMap.unionWith
+    {-# INLINE unionWith #-}
     unionWithKey = IntMap.unionWithKey
+    {-# INLINE unionWithKey #-}
     unionsWith = IntMap.unionsWith
+    {-# INLINE unionsWith #-}
     mapWithKey = IntMap.mapWithKey
+    {-# INLINE mapWithKey #-}
 #if MIN_VERSION_containers(0, 5, 0)
     mapKeysWith = IntMap.mapKeysWith
+    {-# INLINE mapKeysWith #-}
 #endif
 
 instance Eq key => IsMap [(key, value)] where
     type MapValue [(key, value)] = value
     lookup = List.lookup
+    {-# INLINE lookup #-}
     insertMap k v = ((k, v):) . deleteMap k
+    {-# INLINE insertMap #-}
     deleteMap k = List.filter ((/= k) . fst)
+    {-# INLINE deleteMap #-}
     singletonMap k v = [(k, v)]
+    {-# INLINE singletonMap #-}
     mapFromList = id
+    {-# INLINE mapFromList #-}
     mapToList = id
+    {-# INLINE mapToList #-}
 
 class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
     insertSet :: Element set -> set -> set
@@ -414,24 +513,39 @@ class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
 
 instance Ord element => IsSet (Set.Set element) where
     insertSet = Set.insert
+    {-# INLINE insertSet #-}
     deleteSet = Set.delete
+    {-# INLINE deleteSet #-}
     singletonSet = Set.singleton
+    {-# INLINE singletonSet #-}
     setFromList = Set.fromList
+    {-# INLINE setFromList #-}
     setToList = Set.toList
+    {-# INLINE setToList #-}
 
 instance (Eq element, Hashable element) => IsSet (HashSet.HashSet element) where
     insertSet = HashSet.insert
+    {-# INLINE insertSet #-}
     deleteSet = HashSet.delete
+    {-# INLINE deleteSet #-}
     singletonSet = HashSet.singleton
+    {-# INLINE singletonSet #-}
     setFromList = HashSet.fromList
+    {-# INLINE setFromList #-}
     setToList = HashSet.toList
+    {-# INLINE setToList #-}
 
 instance IsSet IntSet.IntSet where
     insertSet = IntSet.insert
+    {-# INLINE insertSet #-}
     deleteSet = IntSet.delete
+    {-# INLINE deleteSet #-}
     singletonSet = IntSet.singleton
+    {-# INLINE singletonSet #-}
     setFromList = IntSet.fromList
+    {-# INLINE setFromList #-}
     setToList = IntSet.toList
+    {-# INLINE setToList #-}
 
 
 -- | zip operations on MonoFunctors.
@@ -445,15 +559,27 @@ instance MonoZip ByteString.ByteString where
     ozip     = ByteString.zip
     ounzip   = ByteString.unzip
     ozipWith f xs = ByteString.pack . ByteString.zipWith f xs
+    {-# INLINE ozip #-}
+    {-# INLINE ounzip #-}
+    {-# INLINE ozipWith #-}
 instance MonoZip LByteString.ByteString where
     ozip     = LByteString.zip
     ounzip   = LByteString.unzip
     ozipWith f xs = LByteString.pack . LByteString.zipWith f xs
+    {-# INLINE ozip #-}
+    {-# INLINE ounzip #-}
+    {-# INLINE ozipWith #-}
 instance MonoZip Text.Text where
     ozip     = Text.zip
     ounzip   = (Text.pack *** Text.pack) . List.unzip
     ozipWith = Text.zipWith
+    {-# INLINE ozip #-}
+    {-# INLINE ounzip #-}
+    {-# INLINE ozipWith #-}
 instance MonoZip LText.Text where
     ozip     = LText.zip
     ounzip   = (LText.pack *** LText.pack) . List.unzip
     ozipWith = LText.zipWith
+    {-# INLINE ozip #-}
+    {-# INLINE ounzip #-}
+    {-# INLINE ozipWith #-}
