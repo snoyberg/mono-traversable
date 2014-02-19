@@ -46,6 +46,7 @@ import Data.Semigroup
 import qualified Data.Monoid as Monoid
 import Data.Data
 import qualified Data.List.NonEmpty as NE
+import Control.Monad (liftM)
 
 data NullError = NullError String deriving (Show, Typeable)
 instance Exception NullError
@@ -183,7 +184,9 @@ newtype NotEmpty seq = NotEmpty { fromNotEmpty :: seq }
 type instance Element (NotEmpty seq) = Element seq
 deriving instance MonoFunctor seq => MonoFunctor (NotEmpty seq)
 deriving instance MonoFoldable seq => MonoFoldable (NotEmpty seq)
-deriving instance MonoTraversable seq => MonoTraversable (NotEmpty seq)
+instance MonoTraversable seq => MonoTraversable (NotEmpty seq) where
+    otraverse f = fmap NotEmpty . otraverse f . fromNotEmpty
+    omapM f = liftM NotEmpty . omapM f . fromNotEmpty
 
 -- | Helper functions for type inferences.
 --
