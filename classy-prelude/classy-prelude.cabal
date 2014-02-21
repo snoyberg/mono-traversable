@@ -24,7 +24,7 @@ library
                      , unordered-containers
                      , hashable
                      , lifted-base                   >= 0.2
-                     , mono-traversable              >= 0.2
+                     , mono-traversable              >= 0.3
                      , semigroups
                      , vector-instances
                      , old-locale
