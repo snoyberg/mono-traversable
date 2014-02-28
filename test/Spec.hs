@@ -17,7 +17,7 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import Data.Sequences
 import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, show,
-                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip)
+                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, seq)
 import qualified Prelude
 import Control.Monad.Trans.Writer
 import qualified Data.NonNull as NN
@@ -37,6 +37,24 @@ main = hspec $ do
         it "non-empty list" $ onull [()] `shouldBe` False
         it "empty text" $ onull ("" :: Text) `shouldBe` True
         it "non-empty text" $ onull ("foo" :: Text) `shouldBe` False
+    describe "osum" $ do
+        it "list" $ do
+            let x = 1
+                y = 10000000 :: Int
+                list = [x..y]
+            osum list `shouldBe` ((x + y) * (y - x + 1) `div` 2)
+    describe "oproduct" $ do
+        it "list" $ do
+            let x = 1
+                y = 10000000 :: Int
+                list = [x..y]
+                fact n =
+                    go 1 1
+                  where
+                    go i j
+                        | i `seq` j `seq` j >= n = i
+                        | otherwise = go (i * j) (j + 1)
+            oproduct list `shouldBe` fact y `div` (fact (x - 1))
     describe "clength" $ do
         prop "list" $ \i' ->
             let x = replicate i () :: [()]

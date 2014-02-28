@@ -29,8 +29,7 @@ import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Foldable        as F
 import           Data.Functor
-import           Data.Monoid (Monoid (..), Any (..), All (..), Sum (..))
-import qualified Data.Monoid
+import           Data.Monoid (Monoid (..), Any (..), All (..))
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
@@ -39,7 +38,7 @@ import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe (..), Either (..),
                                        replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
-                                       seq, otherwise, maybe, Ord, (-))
+                                       seq, otherwise, maybe, Ord, (-), (*))
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
@@ -608,12 +607,12 @@ lastMay mono
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
 osum :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
-osum = getSum . ofoldMap Sum
+osum = ofoldl' (+) 0
 {-# INLINE osum #-}
 
 -- | The 'product' function computes the product of the numbers of a structure.
 oproduct :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
-oproduct = Data.Monoid.getProduct . ofoldMap Data.Monoid.Product
+oproduct = ofoldl' (*) 1
 {-# INLINE oproduct #-}
 
 class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where -- FIXME is this really just MonoMonad?
