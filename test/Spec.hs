@@ -29,6 +29,7 @@ import qualified Data.HashMap.Strict as HashMap
 import Data.Containers
 import qualified Data.IntSet as IntSet
 import Control.Arrow (first, second)
+import qualified Control.Foldl as Foldl
 
 main :: IO ()
 main = hspec $ do
@@ -274,3 +275,13 @@ main = hspec $ do
         test "Data.Map" Map.empty Map.lookup Map.insert Map.delete
         test "Data.IntMap" IntMap.empty IntMap.lookup IntMap.insert IntMap.delete
         test "Data.HashMap" HashMap.empty HashMap.lookup HashMap.insert HashMap.delete
+
+    describe "foldl integration" $ do
+        prop "vector" $ \xs -> do
+            x1 <- Foldl.foldM Foldl.vector (xs :: [Int])
+            x2 <- Foldl.impurely ofoldMUnwrap Foldl.vector xs
+            x2 `shouldBe` (x1 :: V.Vector Int)
+        prop "length" $ \xs -> do
+            let x1 = Foldl.fold Foldl.length (xs :: [Int])
+                x2 = Foldl.purely ofoldlUnwrap Foldl.length xs
+            x2 `shouldBe` x1

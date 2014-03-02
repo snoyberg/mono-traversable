@@ -824,3 +824,27 @@ ofor = flip otraverse
 oforM :: (MonoTraversable mono, Monad f) => mono -> (Element mono -> f (Element mono)) -> f mono
 oforM = flip omapM
 {-# INLINE oforM #-}
+
+-- | A strict left fold, together with an unwrap function.
+--
+-- This is convenient when the accumulator value is not the same as the final
+-- expected type. It is provided mainly for integration with the @foldl@
+-- package, to be used in conjunction with @purely@.
+--
+-- Since 0.3.1
+ofoldlUnwrap :: MonoFoldable mono
+             => (x -> Element mono -> x) -> x -> (x -> b) -> mono -> b
+ofoldlUnwrap f x unwrap mono = unwrap (ofoldl' f x mono)
+
+-- | A monadic strict left fold, together with an unwrap function.
+--
+-- Similar to @foldlUnwrap@, but allows monadic actions. To be used with
+-- @impurely@ from @foldl@.
+--
+-- Since 0.3.1
+ofoldMUnwrap :: (Monad m, MonoFoldable mono)
+             => (x -> Element mono -> m x) -> m x -> (x -> m b) -> mono -> m b
+ofoldMUnwrap f mx unwrap mono = do
+    x <- mx
+    x' <- ofoldlM f x mono
+    unwrap x'
