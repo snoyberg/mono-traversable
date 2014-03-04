@@ -95,11 +95,11 @@ instance SemiSequence seq => SemiSequence (MinLen nat seq) where
     sortBy f      = fmap $ sortBy f
 
 instance MonoPointed mono => MonoPointed (MinLen Zero mono) where
-    opure = MinLen . opure
-    {-# INLINE opure #-}
+    opoint = MinLen . opoint
+    {-# INLINE opoint #-}
 instance MonoPointed mono => MonoPointed (MinLen (Succ Zero) mono) where
-    opure = MinLen . opure
-    {-# INLINE opure #-}
+    opoint = MinLen . opoint
+    {-# INLINE opoint #-}
 
 natProxy :: TypeNat nat => MinLen nat mono -> nat
 natProxy _ = typeNat

@@ -63,7 +63,7 @@ class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
     snoc :: seq -> Element seq -> seq
 
 singleton :: IsSequence seq => Element seq -> seq
-singleton = opure
+singleton = opoint
 {-# INLINE singleton #-}
 
 -- | Sequence Laws:

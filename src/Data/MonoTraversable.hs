@@ -621,6 +621,7 @@ oproduct = ofoldl' (*) 1
 class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where -- FIXME is this really just MonoMonad?
     oconcatMap :: (Element mono -> mono) -> mono -> mono
     oconcatMap = ofoldMap
+    {-# INLINE oconcatMap #-}
 instance (MonoFoldable (t a), Monoid (t a)) => MonoFoldableMonoid (t a) -- FIXME
 instance MonoFoldableMonoid S.ByteString where
     oconcatMap = S.concatMap
@@ -854,57 +855,57 @@ ofoldMUnwrap f mx unwrap mono = do
 
 -- | Instances must obey the laws:
 --
--- * @otoList . mconcat . map opure == id@
+-- * @otoList . mconcat . map opoint == id@
 class MonoPointed mono where
-    opure :: Element mono -> mono
+    opoint :: Element mono -> mono
 instance MonoPointed S.ByteString where
-    opure = S.singleton
-    {-# INLINE opure #-}
+    opoint = S.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed L.ByteString where
-    opure = L.singleton
-    {-# INLINE opure #-}
+    opoint = L.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed T.Text where
-    opure = T.singleton
-    {-# INLINE opure #-}
+    opoint = T.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed TL.Text where
-    opure = TL.singleton
-    {-# INLINE opure #-}
+    opoint = TL.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed IntSet.IntSet where
-    opure = IntSet.singleton
-    {-# INLINE opure #-}
+    opoint = IntSet.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed [a] where
-    opure = (:[])
-    {-# INLINE opure #-}
+    opoint = (:[])
+    {-# INLINE opoint #-}
 instance MonoPointed (Maybe a) where
-    opure = Just
-    {-# INLINE opure #-}
+    opoint = Just
+    {-# INLINE opoint #-}
 instance MonoPointed (Seq a) where
-    opure = Seq.singleton
-    {-# INLINE opure #-}
+    opoint = Seq.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed (Option a) where
-    opure = Option . Just
-    {-# INLINE opure #-}
+    opoint = Option . Just
+    {-# INLINE opoint #-}
 instance MonoPointed (NonEmpty a) where
-    opure = (:| [])
-    {-# INLINE opure #-}
+    opoint = (:| [])
+    {-# INLINE opoint #-}
 instance MonoPointed (Identity a) where
-    opure = Identity
-    {-# INLINE opure #-}
+    opoint = Identity
+    {-# INLINE opoint #-}
 instance MonoPointed (Vector a) where
-    opure = V.singleton
-    {-# INLINE opure #-}
+    opoint = V.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed (Set a) where
-    opure = Set.singleton
-    {-# INLINE opure #-}
+    opoint = Set.singleton
+    {-# INLINE opoint #-}
 instance Hashable a => MonoPointed (HashSet a) where
-    opure = HashSet.singleton
-    {-# INLINE opure #-}
+    opoint = HashSet.singleton
+    {-# INLINE opoint #-}
 instance U.Unbox a => MonoPointed (U.Vector a) where
-    opure = U.singleton
-    {-# INLINE opure #-}
+    opoint = U.singleton
+    {-# INLINE opoint #-}
 instance VS.Storable a => MonoPointed (VS.Vector a) where
-    opure = VS.singleton
-    {-# INLINE opure #-}
+    opoint = VS.singleton
+    {-# INLINE opoint #-}
 instance MonoPointed (Either a b) where
-    opure = Right
-    {-# INLINE opure #-}
+    opoint = Right
+    {-# INLINE opoint #-}
