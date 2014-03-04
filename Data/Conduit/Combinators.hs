@@ -66,6 +66,7 @@ module Data.Conduit.Combinators
     , sinkLazy
     , sinkList
     , sinkVector
+    , sinkVectorN
     , sinkBuilder
     , sinkLazyBuilder
     , sinkNull
@@ -604,6 +605,32 @@ sinkList :: Monad m => Consumer a m [a]
 sinkList = CL.consume
 {-# INLINE sinkList #-}
 
+-- | Sink incoming values into a vector, growing the vector as necessary to fit
+-- more elements.
+--
+-- Note that using this function is more memory efficient than @sinkList@ and
+-- then converting to a @Vector@, as it avoids intermediate list constructors.
+--
+-- Since 1.0.0
+sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+           => Consumer a m (v a)
+sinkVector = do
+    let initSize = 10
+    mv0 <- liftBase $ VM.new initSize
+    let go maxSize i mv | i >= maxSize = do
+            let newMax = maxSize + 10
+            mv' <- liftBase $ VM.grow mv newMax
+            go newMax i mv'
+        go maxSize i mv = do
+            mx <- await
+            case mx of
+                Nothing -> V.slice 0 i <$> liftBase (V.unsafeFreeze mv)
+                Just x -> do
+                    liftBase $ VM.write mv i x
+                    go maxSize (i + 1) mv
+    go initSize 0 mv0
+{-# INLINEABLE sinkVector #-}
+
 -- | Sink incoming values into a vector, up until size @maxSize@.  Subsequent
 -- values will be left in the stream. If there are less than @maxSize@ values
 -- present, returns a @Vector@ of smaller size.
@@ -612,10 +639,10 @@ sinkList = CL.consume
 -- then converting to a @Vector@, as it avoids intermediate list constructors.
 --
 -- Since 1.0.0
-sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
-           => Int -- ^ maximum allowed size
-           -> Consumer a m (v a)
-sinkVector maxSize = do
+sinkVectorN :: (MonadBase base m, V.Vector v a, PrimMonad base)
+            => Int -- ^ maximum allowed size
+            -> Consumer a m (v a)
+sinkVectorN maxSize = do
     mv <- liftBase $ VM.new maxSize
     let go i | i >= maxSize = liftBase $ V.unsafeFreeze mv
         go i = do
@@ -626,7 +653,7 @@ sinkVector maxSize = do
                     liftBase $ VM.write mv i x
                     go (i + 1)
     go 0
-{-# INLINEABLE sinkVector #-}
+{-# INLINEABLE sinkVectorN #-}
 
 -- | Convert incoming values to a builder and fold together all builder values.
 --
@@ -1174,7 +1201,7 @@ conduitVector size =
     loop
   where
     loop = do
-        v <- sinkVector size
+        v <- sinkVectorN size
         unless (V.null v) $ do
             yield v
             loop

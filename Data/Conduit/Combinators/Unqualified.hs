@@ -55,6 +55,7 @@ module Data.Conduit.Combinators.Unqualified
     , sinkLazy
     , sinkList
     , sinkVector
+    , sinkVectorN
     , sinkBuilder
     , sinkLazyBuilder
     , sinkNull
@@ -546,6 +547,18 @@ sinkList :: Monad m => Consumer a m [a]
 sinkList = CC.sinkList
 {-# INLINE sinkList #-}
 
+-- | Sink incoming values into a vector, growing the vector as necessary to fit
+-- more elements.
+--
+-- Note that using this function is more memory efficient than @sinkList@ and
+-- then converting to a @Vector@, as it avoids intermediate list constructors.
+--
+-- Since 1.0.0
+sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+           => Consumer a m (v a)
+sinkVector = CC.sinkVector
+{-# INLINE sinkVector #-}
+
 -- | Sink incoming values into a vector, up until size @maxSize@.  Subsequent
 -- values will be left in the stream. If there are less than @maxSize@ values
 -- present, returns a @Vector@ of smaller size.
@@ -554,11 +567,11 @@ sinkList = CC.sinkList
 -- then converting to a @Vector@, as it avoids intermediate list constructors.
 --
 -- Since 1.0.0
-sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
-           => Int -- ^ maximum allowed size
-           -> Consumer a m (v a)
-sinkVector = CC.sinkVector
-{-# INLINE sinkVector #-}
+sinkVectorN :: (MonadBase base m, V.Vector v a, PrimMonad base)
+            => Int -- ^ maximum allowed size
+            -> Consumer a m (v a)
+sinkVectorN = CC.sinkVectorN
+{-# INLINE sinkVectorN #-}
 
 -- | Convert incoming values to a builder and fold together all builder values.
 --

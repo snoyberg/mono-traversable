@@ -155,20 +155,29 @@ main = hspec $ do
     prop "elemE" $ \x xs -> runIdentity (yield xs $$ elemCE x) `shouldBe` elemInt x xs
     prop "notElem" $ \x xs -> runIdentity (yieldMany xs $$ notElemC x) `shouldBe` notElemInt x xs
     prop "notElemE" $ \x xs -> runIdentity (yield xs $$ notElemCE x) `shouldBe` notElemInt x xs
-    prop "sinkVector regular" $ \xs' -> do
-        let maxSize = 20
-            xs = take maxSize xs'
-        res <- yieldMany xs' $$ sinkVector maxSize
+    prop "sinkVector regular" $ \xs -> do
+        res <- yieldMany xs $$ sinkVector
         res `shouldBe` V.fromList (xs :: [Int])
-    prop "sinkVector unboxed" $ \xs' -> do
-        let maxSize = 20
-            xs = take maxSize xs'
-        res <- yieldMany xs' $$ sinkVector maxSize
+    prop "sinkVector unboxed" $ \xs -> do
+        res <- yieldMany xs $$ sinkVector
         res `shouldBe` VU.fromList (xs :: [Int])
-    prop "sinkVector storable" $ \xs' -> do
+    prop "sinkVector storable" $ \xs -> do
+        res <- yieldMany xs $$ sinkVector
+        res `shouldBe` VS.fromList (xs :: [Int])
+    prop "sinkVectorN regular" $ \xs' -> do
         let maxSize = 20
             xs = take maxSize xs'
-        res <- yieldMany xs' $$ sinkVector maxSize
+        res <- yieldMany xs' $$ sinkVectorN maxSize
+        res `shouldBe` V.fromList (xs :: [Int])
+    prop "sinkVectorN unboxed" $ \xs' -> do
+        let maxSize = 20
+            xs = take maxSize xs'
+        res <- yieldMany xs' $$ sinkVectorN maxSize
+        res `shouldBe` VU.fromList (xs :: [Int])
+    prop "sinkVectorN storable" $ \xs' -> do
+        let maxSize = 20
+            xs = take maxSize xs'
+        res <- yieldMany xs' $$ sinkVectorN maxSize
         res `shouldBe` VS.fromList (xs :: [Int])
     prop "sinkBuilder" $ \(map T.pack -> inputs) ->
         let builder = runIdentity (yieldMany inputs $$ sinkBuilder) :: TextBuilder
