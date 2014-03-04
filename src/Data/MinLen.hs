@@ -116,15 +116,19 @@ unsafeToMinLen = MinLen
 
 mlcons :: IsSequence seq => Element seq -> MinLen nat seq -> MinLen (Succ nat) seq
 mlcons e (MinLen seq) = MinLen (cons e seq)
+{-# INLINE mlcons #-}
 
 mlappend :: IsSequence seq => MinLen x seq -> MinLen y seq -> MinLen (AddNat x y) seq
 mlappend (MinLen x) (MinLen y) = MinLen (x `mappend` y)
+{-# INLINE mlappend #-}
 
 head :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
 head = headEx . unMinLen
+{-# INLINE head #-}
 
 last :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
 last = lastEx . unMinLen
+{-# INLINE last #-}
 
 tailML :: IsSequence seq => MinLen (Succ nat) seq -> MinLen nat seq
 tailML = MinLen . tailEx . unMinLen

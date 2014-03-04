@@ -17,7 +17,7 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import Data.Sequences
 import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, show,
-                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip)
+                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, seq)
 import qualified Prelude
 import Control.Monad.Trans.Writer
 import qualified Data.NonNull as NN
@@ -29,6 +29,7 @@ import qualified Data.HashMap.Strict as HashMap
 import Data.Containers
 import qualified Data.IntSet as IntSet
 import Control.Arrow (first, second)
+import qualified Control.Foldl as Foldl
 
 main :: IO ()
 main = hspec $ do
@@ -37,6 +38,24 @@ main = hspec $ do
         it "non-empty list" $ onull [()] `shouldBe` False
         it "empty text" $ onull ("" :: Text) `shouldBe` True
         it "non-empty text" $ onull ("foo" :: Text) `shouldBe` False
+    describe "osum" $ do
+        it "list" $ do
+            let x = 1
+                y = 10000000 :: Int
+                list = [x..y]
+            osum list `shouldBe` ((x + y) * (y - x + 1) `div` 2)
+    describe "oproduct" $ do
+        it "list" $ do
+            let x = 1
+                y = 10000000 :: Int
+                list = [x..y]
+                fact n =
+                    go 1 1
+                  where
+                    go i j
+                        | i `seq` j `seq` j >= n = i
+                        | otherwise = go (i * j) (j + 1)
+            oproduct list `shouldBe` fact y `div` (fact (x - 1))
     describe "clength" $ do
         prop "list" $ \i' ->
             let x = replicate i () :: [()]
@@ -58,6 +77,19 @@ main = hspec $ do
     describe "groupAll" $ do
         it "list" $ groupAll ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
         it "Text" $ groupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
+    describe "unsnoc" $ do
+        let test name dummy = prop name $ \xs ->
+                let seq' = fromList xs `asTypeOf` dummy
+                 in case (unsnoc seq', onull seq', onull xs) of
+                        (Nothing, True, True) -> return ()
+                        (Just (y, z), False, False) -> do
+                            (y SG.<> singleton z) `shouldBe` seq'
+                            snoc y z `shouldBe` seq'
+                            otoList (snoc y z) `shouldBe` xs
+                        x -> Prelude.error $ show x
+        test "list" ([] :: [Int])
+        test "Text" ("" :: Text)
+        test "lazy ByteString" L.empty
     describe "groupAllOn" $ do
         it "list" $ groupAllOn (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
     describe "breakWord" $ do
@@ -243,3 +275,13 @@ main = hspec $ do
         test "Data.Map" Map.empty Map.lookup Map.insert Map.delete
         test "Data.IntMap" IntMap.empty IntMap.lookup IntMap.insert IntMap.delete
         test "Data.HashMap" HashMap.empty HashMap.lookup HashMap.insert HashMap.delete
+
+    describe "foldl integration" $ do
+        prop "vector" $ \xs -> do
+            x1 <- Foldl.foldM Foldl.vector (xs :: [Int])
+            x2 <- Foldl.impurely ofoldMUnwrap Foldl.vector xs
+            x2 `shouldBe` (x1 :: V.Vector Int)
+        prop "length" $ \xs -> do
+            let x1 = Foldl.fold Foldl.length (xs :: [Int])
+                x2 = Foldl.purely ofoldlUnwrap Foldl.length xs
+            x2 `shouldBe` x1
