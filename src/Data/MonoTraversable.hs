@@ -52,8 +52,8 @@ import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
 import Data.Semigroup (Option)
-import Data.List.NonEmpty (NonEmpty)
-import Data.Functor.Identity (Identity)
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.Functor.Identity (Identity (Identity))
 import Data.Map (Map)
 import Data.HashMap.Strict (HashMap)
 import Data.Vector (Vector)
@@ -75,7 +75,10 @@ import Data.Functor.Compose (Compose)
 import Data.Functor.Product (Product)
 import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
+import Data.Hashable (Hashable)
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
@@ -848,3 +851,60 @@ ofoldMUnwrap f mx unwrap mono = do
     x <- mx
     x' <- ofoldlM f x mono
     unwrap x'
+
+-- | Instances must obey the laws:
+--
+-- * @otoList . mconcat . map opure == id@
+class MonoPointed mono where
+    opure :: Element mono -> mono
+instance MonoPointed S.ByteString where
+    opure = S.singleton
+    {-# INLINE opure #-}
+instance MonoPointed L.ByteString where
+    opure = L.singleton
+    {-# INLINE opure #-}
+instance MonoPointed T.Text where
+    opure = T.singleton
+    {-# INLINE opure #-}
+instance MonoPointed TL.Text where
+    opure = TL.singleton
+    {-# INLINE opure #-}
+instance MonoPointed IntSet.IntSet where
+    opure = IntSet.singleton
+    {-# INLINE opure #-}
+instance MonoPointed [a] where
+    opure = (:[])
+    {-# INLINE opure #-}
+instance MonoPointed (Maybe a) where
+    opure = Just
+    {-# INLINE opure #-}
+instance MonoPointed (Seq a) where
+    opure = Seq.singleton
+    {-# INLINE opure #-}
+instance MonoPointed (Option a) where
+    opure = Option . Just
+    {-# INLINE opure #-}
+instance MonoPointed (NonEmpty a) where
+    opure = (:| [])
+    {-# INLINE opure #-}
+instance MonoPointed (Identity a) where
+    opure = Identity
+    {-# INLINE opure #-}
+instance MonoPointed (Vector a) where
+    opure = V.singleton
+    {-# INLINE opure #-}
+instance MonoPointed (Set a) where
+    opure = Set.singleton
+    {-# INLINE opure #-}
+instance Hashable a => MonoPointed (HashSet a) where
+    opure = HashSet.singleton
+    {-# INLINE opure #-}
+instance U.Unbox a => MonoPointed (U.Vector a) where
+    opure = U.singleton
+    {-# INLINE opure #-}
+instance VS.Storable a => MonoPointed (VS.Vector a) where
+    opure = VS.singleton
+    {-# INLINE opure #-}
+instance MonoPointed (Either a b) where
+    opure = Right
+    {-# INLINE opure #-}

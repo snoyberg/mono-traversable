@@ -6,6 +6,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Data.MinLen
     ( -- * Type level naturals
       Zero (..)
@@ -92,6 +93,13 @@ instance SemiSequence seq => SemiSequence (MinLen nat seq) where
     cons x        = fmap $ cons x
     snoc xs x     = fmap (flip snoc x) xs
     sortBy f      = fmap $ sortBy f
+
+instance MonoPointed mono => MonoPointed (MinLen Zero mono) where
+    opure = MinLen . opure
+    {-# INLINE opure #-}
+instance MonoPointed mono => MonoPointed (MinLen (Succ Zero) mono) where
+    opure = MinLen . opure
+    {-# INLINE opure #-}
 
 natProxy :: TypeNat nat => MinLen nat mono -> nat
 natProxy _ = typeNat

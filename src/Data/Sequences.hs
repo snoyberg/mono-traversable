@@ -62,15 +62,16 @@ class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
 
     snoc :: seq -> Element seq -> seq
 
+singleton :: IsSequence seq => Element seq -> seq
+singleton = opure
+{-# INLINE singleton #-}
 
 -- | Sequence Laws:
 --
 -- > fromList . otoList = id
 -- > fromList (x <> y) = fromList x <> fromList y
 -- > otoList (fromList x <> fromList y) = x <> y
-class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq where
-    singleton :: Element seq -> seq
-
+class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => IsSequence seq where
     fromList :: [Element seq] -> seq
     -- this definition creates the Monoid constraint
     -- However, all the instances define their own fromList
@@ -236,8 +237,6 @@ instance SemiSequence [a] where
     {-# INLINE snoc #-}
 
 instance IsSequence [a] where
-    singleton = return
-    {-# INLINE singleton #-}
     fromList = id
     filter = List.filter
     filterM = Control.Monad.filterM
@@ -324,8 +323,6 @@ instance SemiSequence S.ByteString where
     {-# INLINE snoc #-}
 
 instance IsSequence S.ByteString where
-    singleton = S.singleton
-    {-# INLINE singleton #-}
     fromList = S.pack
     replicate = S.replicate
     filter = S.filter
@@ -390,8 +387,6 @@ instance SemiSequence T.Text where
     {-# INLINE snoc #-}
 
 instance IsSequence T.Text where
-    singleton = T.singleton
-    {-# INLINE singleton #-}
     fromList = T.pack
     replicate i c = T.replicate i (T.singleton c)
     filter = T.filter
@@ -453,8 +448,6 @@ instance SemiSequence L.ByteString where
     {-# INLINE snoc #-}
 
 instance IsSequence L.ByteString where
-    singleton = L.singleton
-    {-# INLINE singleton #-}
     fromList = L.pack
     replicate = L.replicate
     filter = L.filter
@@ -516,8 +509,6 @@ instance SemiSequence TL.Text where
     {-# INLINE snoc #-}
 
 instance IsSequence TL.Text where
-    singleton = TL.singleton
-    {-# INLINE singleton #-}
     fromList = TL.pack
     replicate i c = TL.replicate i (TL.singleton c)
     filter = TL.filter
@@ -580,8 +571,6 @@ instance SemiSequence (Seq.Seq a) where
     {-# INLINE snoc #-}
 
 instance IsSequence (Seq.Seq a) where
-    singleton = Seq.singleton
-    {-# INLINE singleton #-}
     fromList = Seq.fromList
     replicate = Seq.replicate
     replicateM = Seq.replicateM
@@ -650,8 +639,6 @@ instance SemiSequence (V.Vector a) where
     {-# INLINE snoc #-}
 
 instance IsSequence (V.Vector a) where
-    singleton = V.singleton
-    {-# INLINE singleton #-}
     fromList = V.fromList
     replicate = V.replicate
     replicateM = V.replicateM
@@ -722,8 +709,6 @@ instance U.Unbox a => SemiSequence (U.Vector a) where
     {-# INLINE snoc #-}
 
 instance U.Unbox a => IsSequence (U.Vector a) where
-    singleton = U.singleton
-    {-# INLINE singleton #-}
     fromList = U.fromList
     replicate = U.replicate
     replicateM = U.replicateM
@@ -794,8 +779,6 @@ instance VS.Storable a => SemiSequence (VS.Vector a) where
     {-# INLINE snoc #-}
 
 instance VS.Storable a => IsSequence (VS.Vector a) where
-    singleton = VS.singleton
-    {-# INLINE singleton #-}
     fromList = VS.fromList
     replicate = VS.replicate
     replicateM = VS.replicateM
