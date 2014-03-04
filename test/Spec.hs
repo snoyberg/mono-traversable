@@ -156,7 +156,7 @@ main = hspec $ do
 
             test :: (OrdSequence typ, Arbitrary (Element typ), Show (Element typ), Show typ, Eq typ, Eq (Element typ))
                  => String -> typ -> Spec
-            test = test' NN.asNotEmpty
+            test = test' id
         test "strict ByteString" S.empty
         test "lazy ByteString" L.empty
         test "strict Text" T.empty
@@ -165,7 +165,7 @@ main = hspec $ do
         test "unboxed Vector" (U.empty :: U.Vector Int)
         test "storable Vector" (VS.empty :: VS.Vector Int)
         test "list" ([5 :: Int])
-        test' (id :: NE.NonEmpty Int -> NE.NonEmpty Int) "NonEmpty" ([] :: [Int])
+        -- test' (id :: NE.NonEmpty Int -> NE.NonEmpty Int) "NonEmpty" ([] :: [Int])
 
     describe "Containers" $ do
         let test typ dummy xlookup xinsert xdelete = describe typ $ do

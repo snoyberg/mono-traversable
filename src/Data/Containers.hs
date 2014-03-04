@@ -30,8 +30,9 @@ import qualified Data.Text as Text
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.ByteString as ByteString
 import Control.Arrow ((***))
+import Data.GrowingAppend
 
-class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set)) => SetContainer set where
+class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), GrowingAppend set) => SetContainer set where
     type ContainerKey set
     member :: ContainerKey set -> set -> Bool
     notMember ::  ContainerKey set -> set -> Bool

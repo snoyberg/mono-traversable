@@ -27,6 +27,8 @@ import qualified Data.Vector.Storable as VS
 import Data.String (IsString)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.ByteString.Unsafe as SU
+import Data.GrowingAppend
+import Data.Vector.Instances ()
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 -- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
@@ -43,9 +45,8 @@ import qualified Data.ByteString.Unsafe as SU
 -- This exists on 'NonNull' as 'nfilter'
 --
 -- 'filter' and other such functions are placed in 'IsSequence'
-class (Integral (Index seq)) => SemiSequence seq where
+class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
     type Index seq
-    singleton :: Element seq -> seq
 
     intersperse :: Element seq -> seq -> seq
 
@@ -61,13 +62,16 @@ class (Integral (Index seq)) => SemiSequence seq where
 
     snoc :: seq -> Element seq -> seq
 
+singleton :: IsSequence seq => Element seq -> seq
+singleton = opoint
+{-# INLINE singleton #-}
 
 -- | Sequence Laws:
 --
 -- > fromList . otoList = id
 -- > fromList (x <> y) = fromList x <> fromList y
 -- > otoList (fromList x <> fromList y) = x <> y
-class (Monoid seq, MonoTraversable seq, SemiSequence seq) => IsSequence seq where
+class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => IsSequence seq where
     fromList :: [Element seq] -> seq
     -- this definition creates the Monoid constraint
     -- However, all the instances define their own fromList
@@ -219,14 +223,12 @@ initDef xs = case unsnoc xs of
 
 instance SemiSequence [a] where
     type Index [a] = Int
-    singleton = return
     intersperse = List.intersperse
     reverse = List.reverse
     find = List.find
     sortBy = List.sortBy
     cons = (:)
     snoc = defaultSnoc
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -292,14 +294,12 @@ instance IsSequence [a] where
 instance SemiSequence (NE.NonEmpty a) where
     type Index (NE.NonEmpty a) = Int
 
-    singleton    = (NE.:| [])
     intersperse  = NE.intersperse
     reverse      = NE.reverse
     find         = find
     cons         = NE.cons
     snoc xs x    = NE.fromList $ flip snoc x $ NE.toList xs
     sortBy f     = NE.fromList . List.sortBy f . NE.toList
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -309,14 +309,12 @@ instance SemiSequence (NE.NonEmpty a) where
 
 instance SemiSequence S.ByteString where
     type Index S.ByteString = Int
-    singleton = S.singleton
     intersperse = S.intersperse
     reverse = S.reverse
     find = S.find
     cons = S.cons
     snoc = S.snoc
     sortBy = defaultSortBy
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -375,14 +373,12 @@ instance IsSequence S.ByteString where
 
 instance SemiSequence T.Text where
     type Index T.Text = Int
-    singleton = T.singleton
     intersperse = T.intersperse
     reverse = T.reverse
     find = T.find
     cons = T.cons
     snoc = T.snoc
     sortBy = defaultSortBy
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -438,14 +434,12 @@ instance IsSequence T.Text where
 
 instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
-    singleton = L.singleton
     intersperse = L.intersperse
     reverse = L.reverse
     find = L.find
     cons = L.cons
     snoc = L.snoc
     sortBy = defaultSortBy
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -501,14 +495,12 @@ instance IsSequence L.ByteString where
 
 instance SemiSequence TL.Text where
     type Index TL.Text = Int64
-    singleton = TL.singleton
     intersperse = TL.intersperse
     reverse = TL.reverse
     find = TL.find
     cons = TL.cons
     snoc = TL.snoc
     sortBy = defaultSortBy
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -564,7 +556,6 @@ instance IsSequence TL.Text where
 
 instance SemiSequence (Seq.Seq a) where
     type Index (Seq.Seq a) = Int
-    singleton = Seq.singleton
     cons = (Seq.<|)
     snoc = (Seq.|>)
     reverse = Seq.reverse
@@ -572,7 +563,6 @@ instance SemiSequence (Seq.Seq a) where
 
     intersperse = defaultIntersperse
     find = defaultFind
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -634,7 +624,6 @@ instance IsSequence (Seq.Seq a) where
 
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
-    singleton = V.singleton
     reverse = V.reverse
     find = V.find
     cons = V.cons
@@ -642,7 +631,6 @@ instance SemiSequence (V.Vector a) where
 
     sortBy = defaultSortBy
     intersperse = defaultIntersperse
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -706,7 +694,6 @@ instance IsSequence (V.Vector a) where
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
-    singleton = U.singleton
 
     intersperse = defaultIntersperse
     reverse = U.reverse
@@ -714,7 +701,6 @@ instance U.Unbox a => SemiSequence (U.Vector a) where
     cons = U.cons
     snoc = U.snoc
     sortBy = defaultSortBy
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -778,7 +764,6 @@ instance U.Unbox a => IsSequence (U.Vector a) where
 
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
-    singleton = VS.singleton
     reverse = VS.reverse
     find = VS.find
     cons = VS.cons
@@ -786,7 +771,6 @@ instance VS.Storable a => SemiSequence (VS.Vector a) where
 
     intersperse = defaultIntersperse
     sortBy = defaultSortBy
-    {-# INLINE singleton #-}
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}

@@ -52,8 +52,8 @@ import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
 import Data.Semigroup (Option)
-import Data.List.NonEmpty (NonEmpty)
-import Data.Functor.Identity (Identity)
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.Functor.Identity (Identity (Identity))
 import Data.Map (Map)
 import Data.HashMap.Strict (HashMap)
 import Data.Vector (Vector)
@@ -75,7 +75,10 @@ import Data.Functor.Compose (Compose)
 import Data.Functor.Product (Product)
 import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
+import Data.Hashable (Hashable)
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
@@ -618,6 +621,7 @@ oproduct = ofoldl' (*) 1
 class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where -- FIXME is this really just MonoMonad?
     oconcatMap :: (Element mono -> mono) -> mono -> mono
     oconcatMap = ofoldMap
+    {-# INLINE oconcatMap #-}
 instance (MonoFoldable (t a), Monoid (t a)) => MonoFoldableMonoid (t a) -- FIXME
 instance MonoFoldableMonoid S.ByteString where
     oconcatMap = S.concatMap
@@ -848,3 +852,60 @@ ofoldMUnwrap f mx unwrap mono = do
     x <- mx
     x' <- ofoldlM f x mono
     unwrap x'
+
+-- | Instances must obey the laws:
+--
+-- * @otoList . mconcat . map opoint == id@
+class MonoPointed mono where
+    opoint :: Element mono -> mono
+instance MonoPointed S.ByteString where
+    opoint = S.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed L.ByteString where
+    opoint = L.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed T.Text where
+    opoint = T.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed TL.Text where
+    opoint = TL.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed IntSet.IntSet where
+    opoint = IntSet.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed [a] where
+    opoint = (:[])
+    {-# INLINE opoint #-}
+instance MonoPointed (Maybe a) where
+    opoint = Just
+    {-# INLINE opoint #-}
+instance MonoPointed (Seq a) where
+    opoint = Seq.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed (Option a) where
+    opoint = Option . Just
+    {-# INLINE opoint #-}
+instance MonoPointed (NonEmpty a) where
+    opoint = (:| [])
+    {-# INLINE opoint #-}
+instance MonoPointed (Identity a) where
+    opoint = Identity
+    {-# INLINE opoint #-}
+instance MonoPointed (Vector a) where
+    opoint = V.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed (Set a) where
+    opoint = Set.singleton
+    {-# INLINE opoint #-}
+instance Hashable a => MonoPointed (HashSet a) where
+    opoint = HashSet.singleton
+    {-# INLINE opoint #-}
+instance U.Unbox a => MonoPointed (U.Vector a) where
+    opoint = U.singleton
+    {-# INLINE opoint #-}
+instance VS.Storable a => MonoPointed (VS.Vector a) where
+    opoint = VS.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed (Either a b) where
+    opoint = Right
+    {-# INLINE opoint #-}
