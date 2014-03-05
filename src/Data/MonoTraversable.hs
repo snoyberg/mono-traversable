@@ -85,6 +85,8 @@ import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
 import Data.Semigroup (Semigroup, Option (..))
 import qualified Data.ByteString.Unsafe as SU
+import Data.DList (DList)
+import qualified Data.DList as DL
 
 type family Element mono
 type instance Element S.ByteString = Word8
@@ -97,6 +99,7 @@ type instance Element (ZipList a) = a
 type instance Element (Maybe a) = a
 type instance Element (Tree a) = a
 type instance Element (Seq a) = a
+type instance Element (DList a) = a
 type instance Element (ViewL a) = a
 type instance Element (ViewR a) = a
 type instance Element (IntMap a) = a
@@ -161,6 +164,7 @@ instance MonoFunctor (ZipList a)
 instance MonoFunctor (Maybe a)
 instance MonoFunctor (Tree a)
 instance MonoFunctor (Seq a)
+instance MonoFunctor (DList a)
 instance MonoFunctor (ViewL a)
 instance MonoFunctor (ViewR a)
 instance MonoFunctor (IntMap a)
@@ -501,6 +505,12 @@ instance MonoFoldable (Vector a) where
     {-# INLINE unsafeHead #-}
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
+instance MonoFoldable (DList a) where
+    otoList = DL.toList
+    headEx = DL.head
+    {-# INLINE otoList #-}
+    {-# INLINE headEx #-}
+
 instance U.Unbox a => MonoFoldable (U.Vector a) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = U.foldr
@@ -799,6 +809,9 @@ instance MonoTraversable (ViewR a)
 instance MonoTraversable (IntMap a)
 instance MonoTraversable (Option a)
 instance MonoTraversable (NonEmpty a)
+instance MonoTraversable (DList a) where
+     otraverse f = fmap DL.fromList . traverse f . DL.toList
+     omapM f = liftM DL.fromList . mapM f . DL.toList
 instance MonoTraversable (Identity a)
 instance MonoTraversable (Map k v)
 instance MonoTraversable (HashMap k v)
@@ -896,6 +909,9 @@ instance MonoPointed (Vector a) where
     {-# INLINE opoint #-}
 instance MonoPointed (Set a) where
     opoint = Set.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed (DList a) where
+    opoint = DL.singleton
     {-# INLINE opoint #-}
 instance Hashable a => MonoPointed (HashSet a) where
     opoint = HashSet.singleton
