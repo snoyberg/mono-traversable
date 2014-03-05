@@ -19,6 +19,7 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import qualified Data.IntSet as IntSet
 import qualified Data.IntMap as IntMap
+import qualified Data.DList as DList
 
 -- | olength (x <> y) >= olength x + olength y
 class (Semigroup mono, MonoFoldable mono) => GrowingAppend mono
@@ -39,3 +40,4 @@ instance Ord v => GrowingAppend (Set.Set v)
 instance (Eq v, Hashable v) => GrowingAppend (HashSet.HashSet v)
 instance GrowingAppend IntSet.IntSet
 instance GrowingAppend (IntMap.IntMap v)
+instance GrowingAppend (DList.DList a)
