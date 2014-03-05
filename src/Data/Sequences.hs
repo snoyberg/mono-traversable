@@ -626,12 +626,11 @@ instance IsSequence (Seq.Seq a) where
 instance SemiSequence (DList.DList a) where
     type Index (DList.DList a) = Int
     cons = DList.cons
-    snoc = DList.cons
+    snoc = DList.snoc
 
     reverse = defaultReverse
     sortBy = defaultSortBy
     intersperse = defaultIntersperse
-    find = defaultFind
     find = defaultFind
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
