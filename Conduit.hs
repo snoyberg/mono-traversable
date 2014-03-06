@@ -3,7 +3,7 @@
 -- This re-exports functions from many commonly used modules.
 -- When there is a conflict with standard functions, functions
 -- in this module are disambiguated by adding a trailing C
--- (or for chunked functions, replacing a trailing E with EC).
+-- (or for chunked functions, replacing a trailing E with CE).
 -- This means that the Conduit module can be imported unqualified
 -- without causing naming conflicts.
 --
