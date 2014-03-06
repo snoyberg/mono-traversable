@@ -692,7 +692,7 @@ sinkNull = CL.sinkNull
 -- | Same as @await@, but discards any leading 'onull' values.
 --
 -- Since 1.0.0
-awaitNonNull :: (Monad m, NonNull.NonNull b, a ~ NonNull.Nullable b) => Consumer a m (Maybe b)
+awaitNonNull :: (Monad m, MonoFoldable a) => Consumer a m (Maybe (NonNull.NonNull a))
 awaitNonNull =
     go
   where
@@ -755,10 +755,10 @@ last =
 -- Since 1.0.0
 lastE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
 lastE =
-    awaitNonNull >>= maybe (return Nothing) (loop . NonNull.last . NonNull.asNotEmpty)
+    awaitNonNull >>= maybe (return Nothing) (loop . NonNull.last)
   where
 
-    loop prev = awaitNonNull >>= maybe (return $ Just prev) (loop . NonNull.last . NonNull.asNotEmpty)
+    loop prev = awaitNonNull >>= maybe (return $ Just prev) (loop . NonNull.last)
 {-# INLINE lastE #-}
 
 -- | Count how many values are in the stream.
@@ -796,7 +796,7 @@ maximumE =
     start' x =
         case NonNull.fromNullable x of
             Nothing -> start
-            Just y -> loop $ NonNull.maximum $ NonNull.asNotEmpty y
+            Just y -> loop $ NonNull.maximum y
     loop prev = await >>= maybe (return $ Just prev) (loop . ofoldl' max prev)
 {-# INLINE maximumE #-}
 
@@ -821,7 +821,7 @@ minimumE =
     start' x =
         case NonNull.fromNullable x of
             Nothing -> start
-            Just y -> loop $ NonNull.minimum $ NonNull.asNotEmpty y
+            Just y -> loop $ NonNull.minimum y
     loop prev = await >>= maybe (return $ Just prev) (loop . ofoldl' min prev)
 {-# INLINE minimumE #-}
 

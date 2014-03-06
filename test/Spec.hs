@@ -192,7 +192,7 @@ main = hspec $ do
             sinkList
         res `shouldBe` drop toSkip (xs :: [Int])
     prop "awaitNonNull" $ \xs ->
-        fmap (NN.toNullable .NN.asNotEmpty) (runIdentity $ yieldMany xs $$ awaitNonNull)
+        fmap NN.toNullable (runIdentity $ yieldMany xs $$ awaitNonNull)
         `shouldBe` listToMaybe (filter (not . null) (xs :: [[Int]]))
     prop "headE" $ \xs ->
         runIdentity (yieldMany xs $$ ((,) <$> headCE <*> foldC))

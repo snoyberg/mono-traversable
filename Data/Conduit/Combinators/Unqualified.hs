@@ -610,7 +610,7 @@ sinkNull = CC.sinkNull
 -- | Same as @await@, but discards any leading 'onull' values.
 --
 -- Since 1.0.0
-awaitNonNull :: (Monad m, NonNull.NonNull b, a ~ NonNull.Nullable b) => Consumer a m (Maybe b)
+awaitNonNull :: (Monad m, MonoFoldable a) => Consumer a m (Maybe (NonNull.NonNull a))
 awaitNonNull = CC.awaitNonNull
 {-# INLINE awaitNonNull #-}
 
