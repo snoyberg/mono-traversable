@@ -30,7 +30,6 @@ import qualified Data.ByteString.Unsafe as SU
 import Data.GrowingAppend
 import Data.Vector.Instances ()
 import qualified Data.Vector.Generic as VG
-import qualified Control.Monad.ST as ST
 import qualified Data.Vector.Algorithms.Merge as VAM
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
@@ -203,17 +202,11 @@ defaultSortBy f = fromList . List.sortBy f . otoList
 {-# INLINE defaultSortBy #-}
 
 vectorSortBy :: VG.Vector v e => (e -> e -> Ordering) -> v e -> v e
-vectorSortBy f v = ST.runST $ do
-    mv <- VG.thaw v
-    VAM.sortBy f mv
-    VG.unsafeFreeze mv
+vectorSortBy f = VG.modify (VAM.sortBy f)
 {-# INLINE vectorSortBy #-}
 
 vectorSort :: (VG.Vector v e, Ord e) => v e -> v e
-vectorSort v = ST.runST $ do
-    mv <- VG.thaw v
-    VAM.sort mv
-    VG.unsafeFreeze mv
+vectorSort = VG.modify VAM.sort
 {-# INLINE vectorSort #-}
 
 defaultCons :: IsSequence seq => Element seq -> seq -> seq
