@@ -285,3 +285,23 @@ main = hspec $ do
             let x1 = Foldl.fold Foldl.length (xs :: [Int])
                 x2 = Foldl.purely ofoldlUnwrap Foldl.length xs
             x2 `shouldBe` x1
+
+    describe "sorting" $ do
+        let test typ dummy = describe typ $ do
+                prop "sortBy" $ \input -> do
+                    let orig = fromList input `asTypeOf` dummy
+                        f x y = compare y x
+                    fromList (sortBy f input) `shouldBe` sortBy f orig
+                    fromList input `shouldBe` orig
+                prop "sort" $ \input -> do
+                    let orig = fromList input `asTypeOf` dummy
+                    fromList (sort input) `shouldBe` sort orig
+                    fromList input `shouldBe` orig
+        test "list" ([] :: [Int])
+        test "vector" (V.empty :: V.Vector Int)
+        test "storable vector" (VS.empty :: VS.Vector Int)
+        test "unboxed vector" (U.empty :: U.Vector Int)
+        test "strict ByteString" S.empty
+        test "lazy ByteString" L.empty
+        test "strict Text" T.empty
+        test "lazy Text" TL.empty

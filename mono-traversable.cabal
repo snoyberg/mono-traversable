@@ -32,6 +32,7 @@ library
                      , semigroupoids >=3.0
                      , comonad >=3.0.3
                      , vector-instances
+                     , vector-algorithms >= 0.6
   hs-source-dirs:      src
   default-language:    Haskell2010
 

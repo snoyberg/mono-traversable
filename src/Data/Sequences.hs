@@ -29,6 +29,9 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.ByteString.Unsafe as SU
 import Data.GrowingAppend
 import Data.Vector.Instances ()
+import qualified Data.Vector.Generic as VG
+import qualified Control.Monad.ST as ST
+import qualified Data.Vector.Algorithms.Merge as VAM
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 -- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
@@ -198,6 +201,20 @@ defaultReverse = fromList . List.reverse . otoList
 defaultSortBy :: IsSequence seq => (Element seq -> Element seq -> Ordering) -> seq -> seq
 defaultSortBy f = fromList . List.sortBy f . otoList
 {-# INLINE defaultSortBy #-}
+
+vectorSortBy :: VG.Vector v e => (e -> e -> Ordering) -> v e -> v e
+vectorSortBy f v = ST.runST $ do
+    mv <- VG.thaw v
+    VAM.sortBy f mv
+    VG.unsafeFreeze mv
+{-# INLINE vectorSortBy #-}
+
+vectorSort :: (VG.Vector v e, Ord e) => v e -> v e
+vectorSort v = ST.runST $ do
+    mv <- VG.thaw v
+    VAM.sort mv
+    VG.unsafeFreeze mv
+{-# INLINE vectorSort #-}
 
 defaultCons :: IsSequence seq => Element seq -> seq -> seq
 defaultCons e = fromList . (e:) . otoList
@@ -629,7 +646,7 @@ instance SemiSequence (V.Vector a) where
     cons = V.cons
     snoc = V.snoc
 
-    sortBy = defaultSortBy
+    sortBy = vectorSortBy
     intersperse = defaultIntersperse
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
@@ -700,7 +717,7 @@ instance U.Unbox a => SemiSequence (U.Vector a) where
     find = U.find
     cons = U.cons
     snoc = U.snoc
-    sortBy = defaultSortBy
+    sortBy = vectorSortBy
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -770,7 +787,7 @@ instance VS.Storable a => SemiSequence (VS.Vector a) where
     snoc = VS.snoc
 
     intersperse = defaultIntersperse
-    sortBy = defaultSortBy
+    sortBy = vectorSortBy
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -994,13 +1011,16 @@ instance OrdSequence TL.Text
 instance Ord a => OrdSequence (Seq.Seq a)
 
 instance Ord a => OrdSequence (V.Vector a) where
-    -- FIXME more efficient sort
+    sort = vectorSort
+    {-# INLINE sort #-}
 
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a) where
-    -- FIXME more efficient sort
+    sort = vectorSort
+    {-# INLINE sort #-}
 
 instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a) where
-    -- FIXME more efficient sort
+    sort = vectorSort
+    {-# INLINE sort #-}
 
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]
