@@ -618,8 +618,8 @@ sinkVector = do
     let initSize = 10
     mv0 <- liftBase $ VM.new initSize
     let go maxSize i mv | i >= maxSize = do
-            let newMax = maxSize + 10
-            mv' <- liftBase $ VM.grow mv newMax
+            let newMax = maxSize * 2
+            mv' <- liftBase $ VM.grow mv maxSize
             go newMax i mv'
         go maxSize i mv = do
             mx <- await
