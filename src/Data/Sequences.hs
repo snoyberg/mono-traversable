@@ -642,7 +642,7 @@ instance SemiSequence (DList.DList a) where
 instance IsSequence (DList.DList a) where
     fromList = DList.fromList
     replicate = DList.replicate
-    tailEx = DL.tail
+    tailEx = DList.tail
     {-# INLINE fromList #-}
     {-# INLINE replicate #-}
     {-# INLINE tailEx #-}

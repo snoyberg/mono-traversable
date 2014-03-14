@@ -20,6 +20,7 @@ import qualified Data.HashSet as HashSet
 import qualified Data.IntSet as IntSet
 import qualified Data.IntMap as IntMap
 import qualified Data.DList as DList
+import Data.DList.Instances ()
 
 -- | olength (x <> y) >= olength x + olength y
 class (Semigroup mono, MonoFoldable mono) => GrowingAppend mono
