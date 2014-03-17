@@ -33,6 +33,8 @@ library
                      , comonad >=3.0.3
                      , vector-instances
                      , vector-algorithms >= 0.6
+                     , dlist >= 0.6 && < 1.0
+                     , dlist-instances == 0.1.*
   hs-source-dirs:      src
   default-language:    Haskell2010
 

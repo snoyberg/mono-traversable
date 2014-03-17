@@ -21,6 +21,7 @@ import Control.Category
 import Control.Arrow ((***), first, second)
 import Control.Monad (liftM)
 import qualified Data.Sequence as Seq
+import qualified Data.DList as DList
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
@@ -631,6 +632,30 @@ instance IsSequence (Seq.Seq a) where
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
+
+instance SemiSequence (DList.DList a) where
+    type Index (DList.DList a) = Int
+    cons = DList.cons
+    snoc = DList.snoc
+
+    reverse = defaultReverse
+    sortBy = defaultSortBy
+    intersperse = defaultIntersperse
+    find = defaultFind
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
+
+instance IsSequence (DList.DList a) where
+    fromList = DList.fromList
+    replicate = DList.replicate
+    tailEx = DList.tail
+    {-# INLINE fromList #-}
+    {-# INLINE replicate #-}
+    {-# INLINE tailEx #-}
 
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
