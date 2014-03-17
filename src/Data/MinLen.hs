@@ -47,6 +47,7 @@ import Data.Sequences
 import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup (..))
 import Data.GrowingAppend
+import Control.Monad (liftM)
 
 -- Type level naturals
 data Zero = Zero
@@ -77,7 +78,11 @@ type instance Element (MinLen nat mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (MinLen nat mono)
 deriving instance MonoFoldable mono => MonoFoldable (MinLen nat mono)
 deriving instance MonoFoldableOrd mono => MonoFoldableOrd (MinLen nat mono)
-deriving instance MonoTraversable mono => MonoTraversable (MinLen nat mono)
+instance MonoTraversable mono => MonoTraversable (MinLen nat mono) where
+    otraverse f (MinLen x) = fmap MinLen (otraverse f x)
+    {-# INLINE otraverse #-}
+    omapM f (MinLen x) = liftM MinLen (omapM f x)
+    {-# INLINE omapM #-}
 deriving instance GrowingAppend mono => GrowingAppend (MinLen nat mono)
 
 
