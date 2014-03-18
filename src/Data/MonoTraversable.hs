@@ -296,7 +296,7 @@ class MonoFoldable mono where
     {-# INLINE ofoldl1Ex' #-}
 
     headEx :: mono -> Element mono
-    headEx = ofoldr1Ex const
+    headEx = ofoldr const (Prelude.error "Data.MonoTraversable.headEx: empty")
     {-# INLINE headEx #-}
 
     lastEx :: mono -> Element mono

@@ -305,3 +305,5 @@ main = hspec $ do
         test "lazy ByteString" L.empty
         test "strict Text" T.empty
         test "lazy Text" TL.empty
+    it "headEx on a list works #26" $
+        headEx (1 : filter Prelude.odd [2,4..]) `shouldBe` (1 :: Int)
