@@ -3,6 +3,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 import Conduit
+import Data.Conduit.Combinators.Internal
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import BasicPrelude hiding (encodeUtf8)
@@ -23,6 +24,7 @@ import System.IO.Silently (hCapture)
 import GHC.IO.Handle (hDuplicateTo)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
+import System.Random.MWC (createSystemRandom)
 
 main :: IO ()
 main = hspec $ do
@@ -107,6 +109,20 @@ main = hspec $ do
             hDuplicateTo h IO.stdin
             x <- stdinC $$ foldC
             x `shouldBe` content
+    it "sourceRandom" $ do
+        x <- sourceRandom $$ takeC 100 =$ sumC :: IO Double
+        x `shouldSatisfy` (\y -> y > 10 && y < 90)
+    it "sourceRandomN" $ do
+        x <- sourceRandomN 100 $$ sumC :: IO Double
+        x `shouldSatisfy` (\y -> y > 10 && y < 90)
+    it "sourceRandomGen" $ do
+        gen <- createSystemRandom
+        x <- sourceRandomGen gen $$ takeC 100 =$ sumC :: IO Double
+        x `shouldSatisfy` (\y -> y > 10 && y < 90)
+    it "sourceRandomNGen" $ do
+        gen <- createSystemRandom
+        x <- sourceRandomNGen gen 100 $$ sumC :: IO Double
+        x `shouldSatisfy` (\y -> y > 10 && y < 90)
     prop "drop" $ \(T.pack -> input) count ->
         runIdentity (yieldMany input $$ (dropC count >>= \() -> sinkList))
         `shouldBe` T.unpack (T.drop count input)
@@ -215,6 +231,12 @@ main = hspec $ do
     prop "lengthE" $ \xs ->
         runIdentity (yieldMany xs $$ lengthCE)
         `shouldBe` length (concat xs :: [Int])
+    prop "lengthIf" $ \x xs ->
+        runIdentity (yieldMany xs $$ lengthIfC (< x))
+        `shouldBe` length (filter (< x) xs :: [Int])
+    prop "lengthIfE" $ \x xs ->
+        runIdentity (yieldMany xs $$ lengthIfCE (< x))
+        `shouldBe` length (filter (< x) (concat xs) :: [Int])
     prop "maximum" $ \xs ->
         runIdentity (yieldMany xs $$ maximumC)
         `shouldBe` (if null (xs :: [Int]) then Nothing else Just (maximum xs))
@@ -491,6 +513,18 @@ main = hspec $ do
     prop "linesUnboundedAscii" $ \(map S.pack -> input) ->
         runIdentity (yieldMany input $$ (linesUnboundedAsciiC >>= \() -> mempty) =$ sinkList)
         `shouldBe` S8.lines (S.concat input)
+    prop "initReplicate" $ \seed delta (min 50 . abs -> cnt) -> do
+        let sink = sumC
+        res1 <- initReplicate (return seed) (return . (+ delta)) cnt $$ sink
+        res1 `shouldBe` cnt * (seed + delta)
+        res2 <- initReplicateConnect (return seed) (return . (+ delta)) cnt sink
+        res2 `shouldBe` res1
+    prop "initReplicate" $ \seed delta (min 50 . abs -> cnt) -> do
+        let sink = takeC cnt =$ sumC
+        res1 <- initRepeat (return seed) (return . (+ delta)) $$ sink
+        res1 `shouldBe` cnt * (seed + delta)
+        res2 <- initRepeatConnect (return seed) (return . (+ delta)) sink
+        res2 `shouldBe` res1
 
 evenInt :: Int -> Bool
 evenInt = even

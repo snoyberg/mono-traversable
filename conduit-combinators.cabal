@@ -1,5 +1,5 @@
 name:                conduit-combinators
-version:             0.2.0.1
+version:             0.2.1
 synopsis:            Commonly used conduit functions, for both chunked and unchunked data
 description:         Provides a replacement for Data.Conduit.List, as well as a convenient Conduit module.
 homepage:            https://github.com/fpco/conduit-combinators
@@ -14,6 +14,7 @@ cabal-version:       >=1.8
 library
   exposed-modules:     Conduit
                        Data.Conduit.Combinators
+                       Data.Conduit.Combinators.Internal
   other-modules:       Data.Conduit.Combinators.Unqualified
   build-depends:       base >= 4 && < 5
                      , chunked-data
@@ -27,6 +28,8 @@ library
                      , system-filepath
                      , text
                      , bytestring
+                     , void
+                     , mwc-random
 
 test-suite test
   hs-source-dirs: test
@@ -44,6 +47,7 @@ test-suite test
                 , mono-traversable
                 , silently
                 , bytestring
+                , mwc-random
   ghc-options:    -Wall
 
 source-repository head

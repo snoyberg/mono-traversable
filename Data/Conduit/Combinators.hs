@@ -39,6 +39,12 @@ module Data.Conduit.Combinators
     , sourceIOHandle
     , stdin
 
+      -- ** Random numbers
+    , sourceRandom
+    , sourceRandomN
+    , sourceRandomGen
+    , sourceRandomNGen
+
       -- * Consumers
       -- ** Pure
     , drop
@@ -78,6 +84,8 @@ module Data.Conduit.Combinators
     , lastE
     , length
     , lengthE
+    , lengthIf
+    , lengthIfE
     , maximum
     , maximumE
     , minimum
@@ -160,7 +168,7 @@ import           Control.Category            (Category (..))
 import           Control.Monad               (unless, when, (>=>), liftM, forever)
 import           Control.Monad.Base          (MonadBase (liftBase))
 import           Control.Monad.IO.Class      (MonadIO (..))
-import           Control.Monad.Primitive     (PrimMonad)
+import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Class   (lift)
 import           Data.Conduit
 import qualified Data.Conduit.List           as CL
@@ -185,6 +193,8 @@ import qualified Data.Textual.Encoding as DTE
 import qualified Data.Conduit.Text as CT
 import Data.ByteString (ByteString)
 import Data.Text (Text)
+import qualified System.Random.MWC as MWC
+import Data.Conduit.Combinators.Internal
 
 -- END IMPORTS
 
@@ -339,6 +349,45 @@ sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
 -- Since 1.0.0
 stdin :: (MonadIO m, IOData a) => Producer m a
 stdin = sourceHandle SIO.stdin
+
+-- | Create an infinite stream of random values, seeding from the system random
+-- number.
+--
+-- Since 1.0.0
+sourceRandom :: (MWC.Variate a, MonadIO m) => Producer m a
+sourceRandom = initRepeat (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform)
+{-# INLINE sourceRandom #-}
+
+-- | Create a stream of random values of length n, seeding from the system
+-- random number.
+--
+-- Since 1.0.0
+sourceRandomN :: (MWC.Variate a, MonadIO m)
+              => Int -- ^ count
+              -> Producer m a
+sourceRandomN = initReplicate (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform)
+{-# INLINE [0] sourceRandomN #-}
+
+-- | Create an infinite stream of random values, using the given random number
+-- generator.
+--
+-- Since 1.0.0
+sourceRandomGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
+                => MWC.Gen (PrimState base)
+                -> Producer m a
+sourceRandomGen gen = initRepeat (return gen) (liftBase . MWC.uniform)
+{-# INLINE sourceRandomGen #-}
+
+-- | Create a stream of random values of length n, seeding from the system
+-- random number.
+--
+-- Since 1.0.0
+sourceRandomNGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
+                 => MWC.Gen (PrimState base)
+                 -> Int -- ^ count
+                 -> Producer m a
+sourceRandomNGen gen = initReplicate (return gen) (liftBase . MWC.uniform)
+{-# INLINE sourceRandomNGen #-}
 
 -- | Ignore a certain number of values in the stream.
 --
@@ -774,6 +823,21 @@ length = foldl (\x _ -> x + 1) 0
 lengthE :: (Monad m, Num len, MonoFoldable mono) => Consumer mono m len
 lengthE = foldl (\x y -> x + fromIntegral (olength y)) 0
 {-# INLINE lengthE #-}
+
+-- | Count how many values in the stream pass the given predicate.
+--
+-- Since 1.0.0
+lengthIf :: (Monad m, Num len) => (a -> Bool) -> Consumer a m len
+lengthIf f = foldl (\cnt a -> if f a then (cnt + 1) else cnt) 0
+{-# INLINE lengthIf #-}
+
+-- | Count how many elements in the chunked stream pass the given predicate.
+--
+-- Since 1.0.0
+lengthIfE :: (Monad m, Num len, MonoFoldable mono)
+          => (Element mono -> Bool) -> Consumer mono m len
+lengthIfE f = foldlE (\cnt a -> if f a then (cnt + 1) else cnt) 0
+{-# INLINE lengthIfE #-}
 
 -- | Get the largest value in the stream, if present.
 --
