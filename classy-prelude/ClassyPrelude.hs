@@ -27,6 +27,8 @@ module ClassyPrelude
       -- ** Time (since 0.6.1)
     , module Data.Time
     , defaultTimeLocale
+      -- ** Generics (since 0.8.1)
+    , Generic
       -- * Poly hierarchy
     , module Data.Foldable
     , module Data.Traversable
@@ -164,6 +166,7 @@ import qualified Data.HashSet as HashSet
 
 import Data.Textual.Encoding
 import Data.Sequences.Lazy
+import GHC.Generics (Generic)
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
