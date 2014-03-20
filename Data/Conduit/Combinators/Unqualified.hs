@@ -194,7 +194,7 @@ import Data.Text (Text)
 import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
 #ifndef WINDOWS
-import qualified System.Posix as Posix
+import qualified System.PosixCompat.Files as Posix
 #endif
 
 

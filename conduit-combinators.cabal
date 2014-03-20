@@ -31,10 +31,7 @@ library
                      , bytestring
                      , void
                      , mwc-random
-  if os(windows)
-      cpp-options:     -DWINDOWS
-  else
-      build-depends:   unix
+                     , unix-compat
 
 test-suite test
   hs-source-dirs: test

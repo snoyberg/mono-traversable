@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
@@ -201,9 +200,7 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
-#ifndef WINDOWS
-import qualified System.Posix as Posix
-#endif
+import qualified System.PosixCompat.Files as Posix
 
 -- END IMPORTS
 
@@ -416,15 +413,14 @@ sourceDirectory = (liftIO . F.listDirectory) >=> yieldMany -- FIXME it would be 
 --
 -- This works the same as @sourceDirectory@, but will not return directories at
 -- all. This function also takes an extra parameter to indicate whether
--- symlinks will be followed (only applicable on POSIX systems, it has no
--- effect on Windows).
+-- symlinks will be followed.
 --
 -- Since 1.0.0
 sourceDirectoryDeep :: MonadIO m
-                    => Bool -- ^ Follow directory symlinks (only used on POSIX platforms)
+                    => Bool -- ^ Follow directory symlinks
                     -> FilePath -- ^ Root directory
                     -> Producer m FilePath
-sourceDirectoryDeep _followSymlinks =
+sourceDirectoryDeep followSymlinks =
     start
   where
     start :: MonadIO m => FilePath -> Producer m FilePath
@@ -440,16 +436,12 @@ sourceDirectoryDeep _followSymlinks =
                 when follow' (start fp)
 
     follow :: FilePath -> Prelude.IO Bool
-#ifdef WINDOWS
-    follow = F.isDirectory
-#else
     follow p = do
         let path = encodeString p
-        stat <- if _followSymlinks
+        stat <- if followSymlinks
             then Posix.getFileStatus path
             else Posix.getSymbolicLinkStatus path
         return (Posix.isDirectory stat)
-#endif
 
 -- | Ignore a certain number of values in the stream.
 --
