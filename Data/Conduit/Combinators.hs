@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
@@ -44,6 +45,10 @@ module Data.Conduit.Combinators
     , sourceRandomN
     , sourceRandomGen
     , sourceRandomNGen
+
+      -- ** Filesystem
+    , sourceDirectory
+    , sourceDirectoryDeep
 
       -- * Consumers
       -- ** Pure
@@ -181,6 +186,7 @@ import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import qualified Filesystem                  as F
 import           Filesystem.Path             (FilePath)
+import           Filesystem.Path.CurrentOS   (encodeString)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
@@ -195,6 +201,9 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
+#ifndef WINDOWS
+import qualified System.Posix as Posix
+#endif
 
 -- END IMPORTS
 
@@ -388,6 +397,59 @@ sourceRandomNGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                  -> Producer m a
 sourceRandomNGen gen = initReplicate (return gen) (liftBase . MWC.uniform)
 {-# INLINE sourceRandomNGen #-}
+
+-- | Stream the contents of the given directory, without traversing deeply.
+--
+-- This function will return /all/ of the contents of the directory, whether
+-- they be files, directories, etc.
+--
+-- Note that the generated filepaths will be the complete path, not just the
+-- filename. In other words, if you have a directory @foo@ containing files
+-- @bar@ and @baz@, and you use @sourceDirectory@ on @foo@, the results will be
+-- @foo/bar@ and @foo/baz@.
+--
+-- Since 1.0.0
+sourceDirectory :: MonadIO m => FilePath -> Producer m FilePath
+sourceDirectory = (liftIO . F.listDirectory) >=> yieldMany -- FIXME it would be nice to not read the entire directory contents into memory...
+
+-- | Deeply stream the contents of the given directory.
+--
+-- This works the same as @sourceDirectory@, but will not return directories at
+-- all. This function also takes an extra parameter to indicate whether
+-- symlinks will be followed (only applicable on POSIX systems, it has no
+-- effect on Windows).
+--
+-- Since 1.0.0
+sourceDirectoryDeep :: MonadIO m
+                    => Bool -- ^ Follow directory symlinks (only used on POSIX platforms)
+                    -> FilePath -- ^ Root directory
+                    -> Producer m FilePath
+sourceDirectoryDeep _followSymlinks =
+    start
+  where
+    start :: MonadIO m => FilePath -> Producer m FilePath
+    start dir = sourceDirectory dir =$= awaitForever go
+
+    go :: MonadIO m => FilePath -> Producer m FilePath
+    go fp = do
+        isFile' <- liftIO $ F.isFile fp
+        if isFile'
+            then yield fp
+            else do
+                follow' <- liftIO $ follow fp
+                when follow' (start fp)
+
+    follow :: FilePath -> Prelude.IO Bool
+#ifdef WINDOWS
+    follow = F.isDirectory
+#else
+    follow p = do
+        let path = encodeString p
+        stat <- if _followSymlinks
+            then Posix.getFileStatus path
+            else Posix.getSymbolicLinkStatus path
+        return (Posix.isDirectory stat)
+#endif
 
 -- | Ignore a certain number of values in the stream.
 --
