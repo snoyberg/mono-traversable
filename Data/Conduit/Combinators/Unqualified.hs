@@ -130,6 +130,14 @@ module Data.Conduit.Combinators.Unqualified
     , concatMapAccumC
     , intersperseC
 
+      -- **** Binary base encoding
+    , encodeBase64C
+    , decodeBase64C
+    , encodeBase64URLC
+    , decodeBase64URLC
+    , encodeBase16C
+    , decodeBase16C
+
       -- *** Monadic
     , mapMC
     , mapMCE
@@ -160,7 +168,12 @@ import qualified Data.Conduit.Combinators as CC
 import Data.Builder
 import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
+import qualified Data.ByteString as S
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Base64.URL as B64U
 import           Control.Applicative         ((<$>))
+import           Control.Exception           (assert)
 import           Control.Category            (Category (..))
 import           Control.Monad               (unless, when, (>=>), liftM, forever)
 import           Control.Monad.Base          (MonadBase (liftBase))
@@ -177,12 +190,13 @@ import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import qualified Filesystem                  as F
-import           Filesystem.Path             (FilePath)
-import           Filesystem.Path.CurrentOS   (encodeString)
+import           Filesystem.Path             (FilePath, (</>))
+import           Filesystem.Path.CurrentOS   (encodeString, decodeString)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum, seq, Show, Char)
+                                              ($), Functor (..), Enum, seq, Show, Char, (||),
+                                              mod, otherwise, Either (..))
 import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
@@ -193,7 +207,8 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
-import qualified System.PosixCompat.Files as Posix
+import qualified System.PosixCompat.Files as PosixC
+import qualified System.Posix.Directory as Dir
 
 
 -- END IMPORTS
@@ -1131,6 +1146,51 @@ concatMapAccumC = CC.concatMapAccum
 intersperseC :: Monad m => a -> Conduit a m a
 intersperseC = CC.intersperse
 {-# INLINE intersperseC #-}
+
+-- | Apply base64-encoding to the stream.
+--
+-- Since 1.0.0
+encodeBase64C :: Monad m => Conduit ByteString m ByteString
+encodeBase64C = CC.encodeBase64
+{-# INLINE encodeBase64C #-}
+
+-- | Apply base64-decoding to the stream. Will stop decoding on the first
+-- invalid chunk.
+--
+-- Since 1.0.0
+decodeBase64C :: Monad m => Conduit ByteString m ByteString
+decodeBase64C = CC.decodeBase64
+{-# INLINE decodeBase64C #-}
+
+-- | Apply URL-encoding to the stream.
+--
+-- Since 1.0.0
+encodeBase64URLC :: Monad m => Conduit ByteString m ByteString
+encodeBase64URLC = CC.encodeBase64URL
+{-# INLINE encodeBase64URLC #-}
+
+-- | Apply lenient base64URL-decoding to the stream. Will stop decoding on the
+-- first invalid chunk.
+--
+-- Since 1.0.0
+decodeBase64URLC :: Monad m => Conduit ByteString m ByteString
+decodeBase64URLC = CC.decodeBase64URL
+{-# INLINE decodeBase64URLC #-}
+
+-- | Apply base16-encoding to the stream.
+--
+-- Since 1.0.0
+encodeBase16C :: Monad m => Conduit ByteString m ByteString
+encodeBase16C = CC.encodeBase16
+{-# INLINE encodeBase16C #-}
+
+-- | Apply base16-decoding to the stream. Will stop decoding on the first
+-- invalid chunk.
+--
+-- Since 1.0.0
+decodeBase16C :: Monad m => Conduit ByteString m ByteString
+decodeBase16C = CC.decodeBase16
+{-# INLINE decodeBase16C #-}
 
 -- | Apply a monadic transformation to all values in a stream.
 --

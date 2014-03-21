@@ -24,7 +24,14 @@ import System.IO.Silently (hCapture)
 import GHC.IO.Handle (hDuplicateTo)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
+import qualified Data.ByteString.Lazy as L
 import System.Random.MWC (createSystemRandom)
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Base16.Lazy as B16L
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Base64.Lazy as B64L
+import qualified Data.ByteString.Base64.URL.Lazy as B64LU
+import qualified Data.ByteString.Base64.URL as B64U
 
 main :: IO ()
 main = hspec $ do
@@ -443,6 +450,36 @@ main = hspec $ do
     prop "intersperse" $ \xs x ->
         runIdentity (yieldMany xs $$ intersperseC x =$ sinkList)
         `shouldBe` intersperse (x :: Int) xs
+    describe "binary base encoding" $ do
+        describe "encode/decode is idempotent" $ do
+            prop "64 non-url" $ \(map S.pack -> bss) ->
+                mconcat bss == runIdentity (yieldMany bss $$ encodeBase64C =$ decodeBase64C =$ foldC)
+            prop "64 url" $ \(map S.pack -> bss) ->
+                mconcat bss == runIdentity (yieldMany bss $$ encodeBase64URLC =$ decodeBase64URLC =$ foldC)
+            prop "16" $ \(map S.pack -> bss) ->
+                mconcat bss == runIdentity (yieldMany bss $$ encodeBase16C =$ decodeBase16C =$ foldC)
+        describe "encode is identical" $ do
+            prop "64 non-url" $ \(map S.pack -> bss) ->
+                B64.encode (mconcat bss) == runIdentity (yieldMany bss $$ encodeBase64C =$ foldC)
+            prop "64 url" $ \(map S.pack -> bss) ->
+                B64U.encode (mconcat bss) == runIdentity (yieldMany bss $$ encodeBase64URLC =$ foldC)
+            prop "16" $ \(map S.pack -> bss) ->
+                B16.encode (mconcat bss) == runIdentity (yieldMany bss $$ encodeBase16C =$ foldC)
+        describe "decode leftovers work" $ do
+            let test name encL dec decC = prop name $ \(L.toChunks . encL . L.pack -> bss) -> do
+                    let invalid = "\0INVALID"
+                        src = yieldMany bss >> yield invalid
+                        sink = (,) <$> (decC =$ foldC) <*> foldC
+                        expected = (dec $ mconcat bss, invalid)
+                    actual <- src $$ sink
+                    actual `shouldBe` expected
+            test "64 non-url" B64L.encode B64.decodeLenient decodeBase64C
+            test "64 url" B64LU.encode B64U.decodeLenient decodeBase64URLC
+            let b16Decode x =
+                    case B16.decode x of
+                        (y, "") -> y
+                        _ -> error "FIXME!"
+            test "16" B16L.encode b16Decode decodeBase16C
     prop "mapM" $ \input ->
         runIdentity (yieldMany input $$ mapMC (return . succChar) =$ sinkList)
         `shouldBe` map succChar input

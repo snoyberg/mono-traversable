@@ -141,6 +141,14 @@ module Data.Conduit.Combinators
     , concatMapAccum
     , intersperse
 
+      -- *** Binary base encoding
+    , encodeBase64
+    , decodeBase64
+    , encodeBase64URL
+    , decodeBase64URL
+    , encodeBase16
+    , decodeBase16
+
       -- ** Monadic
     , mapM
     , mapME
@@ -168,7 +176,12 @@ module Data.Conduit.Combinators
 import Data.Builder
 import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
+import qualified Data.ByteString as S
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Base64.URL as B64U
 import           Control.Applicative         ((<$>))
+import           Control.Exception           (assert)
 import           Control.Category            (Category (..))
 import           Control.Monad               (unless, when, (>=>), liftM, forever)
 import           Control.Monad.Base          (MonadBase (liftBase))
@@ -190,7 +203,8 @@ import           Filesystem.Path.CurrentOS   (encodeString, decodeString)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum, seq, Show, Char, (||))
+                                              ($), Functor (..), Enum, seq, Show, Char, (||),
+                                              mod, otherwise, Either (..))
 import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
@@ -1371,6 +1385,101 @@ intersperse x =
   where
     go y = yield y >> concatMap (\z -> [x, z])
 {-# INLINE intersperse #-}
+
+codeWith :: Monad m
+         => Int
+         -> (ByteString -> Either e ByteString)
+         -> Conduit ByteString m ByteString
+codeWith size f =
+    loop
+  where
+    loop = await >>= maybe (return ()) push
+
+    loopWith bs
+        | S.null bs = loop
+        | otherwise = await >>= maybe (finish bs) (pushWith bs)
+
+    finish bs =
+        case f bs of
+            Left _ -> leftover bs
+            Right x -> yield x
+
+    push bs = do
+        let (x, y) = S.splitAt (len - (len `mod` size)) bs
+        if S.null x
+            then loopWith y
+            else do
+                case f x of
+                    Left _ -> leftover bs
+                    Right x' -> yield x' >> loopWith y
+      where
+        len = olength bs
+
+    pushWith bs1 bs2 | S.length bs1 + S.length bs2 < size = loopWith (S.append bs1 bs2)
+    pushWith bs1 bs2 = assertion1 $ assertion2 $ assertion3 $
+        case f bs1' of
+            Left _ -> leftover bs2 >> leftover bs1
+            Right toYield -> yield toYield >> push y
+      where
+        m = S.length bs1 `mod` size
+        (x, y) = S.splitAt (size - m) bs2
+        bs1' = mappend bs1 x
+
+        assertion1 = assert $ olength bs1 < size
+        assertion2 = assert $ olength bs1' `mod` size == 0
+        assertion3 = assert $ olength bs1' > 0
+
+-- | Apply base64-encoding to the stream.
+--
+-- Since 1.0.0
+encodeBase64 :: Monad m => Conduit ByteString m ByteString
+encodeBase64 = codeWith 3 (Right . B64.encode)
+{-# INLINE encodeBase64 #-}
+
+-- | Apply base64-decoding to the stream. Will stop decoding on the first
+-- invalid chunk.
+--
+-- Since 1.0.0
+decodeBase64 :: Monad m => Conduit ByteString m ByteString
+decodeBase64 = codeWith 4 B64.decode
+{-# INLINE decodeBase64 #-}
+
+-- | Apply URL-encoding to the stream.
+--
+-- Since 1.0.0
+encodeBase64URL :: Monad m => Conduit ByteString m ByteString
+encodeBase64URL = codeWith 3 (Right . B64U.encode)
+{-# INLINE encodeBase64URL #-}
+
+-- | Apply lenient base64URL-decoding to the stream. Will stop decoding on the
+-- first invalid chunk.
+--
+-- Since 1.0.0
+decodeBase64URL :: Monad m => Conduit ByteString m ByteString
+decodeBase64URL = codeWith 4 B64U.decode
+{-# INLINE decodeBase64URL #-}
+
+-- | Apply base16-encoding to the stream.
+--
+-- Since 1.0.0
+encodeBase16 :: Monad m => Conduit ByteString m ByteString
+encodeBase16 = map B16.encode
+{-# INLINE encodeBase16 #-}
+
+-- | Apply base16-decoding to the stream. Will stop decoding on the first
+-- invalid chunk.
+--
+-- Since 1.0.0
+decodeBase16 :: Monad m => Conduit ByteString m ByteString
+decodeBase16 =
+    codeWith 2 decode'
+  where
+    decode' x
+        | onull z = Right y
+        | otherwise = Left ()
+      where
+        (y, z) = B16.decode x
+{-# INLINE decodeBase16 #-}
 
 -- | Apply a monadic transformation to all values in a stream.
 --
