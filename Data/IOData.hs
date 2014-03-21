@@ -21,6 +21,11 @@ import qualified Prelude
 import           System.IO                     (Handle)
 import qualified System.IO
 
+#if !MIN_VERSION_text(0, 11, 3)
+import           Control.Exception             (handle, throwIO)
+import           System.IO.Error               (isEOFError)
+#endif
+
 -- | Data which can be read to and from files and handles.
 --
 -- Note that, for lazy sequences, these operations may perform
@@ -66,7 +71,13 @@ instance IOData Text.Text where
     hGetChunk = liftIO . Text.hGetChunk
 #else
     -- Dangerously inefficient!
-    hGetChunk = liftIO . liftM Text.singleton . System.IO.hGetChar
+    hGetChunk =
+        liftIO . handleEOF . liftM Text.singleton . System.IO.hGetChar
+      where
+        handleEOF = handle $ \e ->
+            if isEOFError e
+                then Prelude.return Text.empty
+                else throwIO e
 #endif
 instance IOData LText.Text where
     readFile = liftIO . LText.readFile . FilePath.encodeString
