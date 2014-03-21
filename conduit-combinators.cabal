@@ -32,6 +32,10 @@ library
                      , void
                      , mwc-random
                      , unix-compat
+  if os(windows)
+      cpp-options:     -DWINDOWS
+  else
+      build-depends:   unix
 
 test-suite test
   hs-source-dirs: test

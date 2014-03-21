@@ -124,11 +124,14 @@ main = hspec $ do
         x <- sourceRandomNGen gen 100 $$ sumC :: IO Double
         x `shouldSatisfy` (\y -> y > 10 && y < 90)
     it "sourceDirectory" $ do
-        res <- sourceDirectory "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
+        res <- runResourceT
+             $ sourceDirectory "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
         sort res `shouldBe` ["test/Spec.hs", "test/subdir"]
     it "sourceDirectoryDeep" $ do
-        res1 <- sourceDirectoryDeep False "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
-        res2 <- sourceDirectoryDeep True "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
+        res1 <- runResourceT
+              $ sourceDirectoryDeep False "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
+        res2 <- runResourceT
+              $ sourceDirectoryDeep True "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
         sort res1 `shouldBe` ["test/Spec.hs", "test/subdir/dummyfile.txt"]
         sort res1 `shouldBe` sort res2
     prop "drop" $ \(T.pack -> input) count ->

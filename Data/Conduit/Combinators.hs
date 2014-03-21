@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
@@ -184,12 +185,12 @@ import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import qualified Filesystem                  as F
-import           Filesystem.Path             (FilePath)
-import           Filesystem.Path.CurrentOS   (encodeString)
+import           Filesystem.Path             (FilePath, (</>))
+import           Filesystem.Path.CurrentOS   (encodeString, decodeString)
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum, seq, Show, Char)
+                                              ($), Functor (..), Enum, seq, Show, Char, (||))
 import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
@@ -200,7 +201,8 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
-import qualified System.PosixCompat.Files as Posix
+import qualified System.PosixCompat.Files as PosixC
+import qualified System.Posix.Directory as Dir
 
 -- END IMPORTS
 
@@ -406,8 +408,20 @@ sourceRandomNGen gen = initReplicate (return gen) (liftBase . MWC.uniform)
 -- @foo/bar@ and @foo/baz@.
 --
 -- Since 1.0.0
-sourceDirectory :: MonadIO m => FilePath -> Producer m FilePath
-sourceDirectory = (liftIO . F.listDirectory) >=> yieldMany -- FIXME it would be nice to not read the entire directory contents into memory...
+sourceDirectory :: MonadResource m => FilePath -> Producer m FilePath
+#ifdef WINDOWS
+sourceDirectory = (liftIO . F.listDirectory) >=> yieldMany
+#else
+sourceDirectory dir =
+    bracketP (Dir.openDirStream $ encodeString dir) Dir.closeDirStream loop
+  where
+    loop ds = do
+        fp <- liftIO $ Dir.readDirStream ds
+        unless (Prelude.null fp) $ do
+            unless (fp == "." || fp == "..")
+                $ yield $ dir </> decodeString fp
+            loop ds
+#endif
 
 -- | Deeply stream the contents of the given directory.
 --
@@ -416,17 +430,17 @@ sourceDirectory = (liftIO . F.listDirectory) >=> yieldMany -- FIXME it would be 
 -- symlinks will be followed.
 --
 -- Since 1.0.0
-sourceDirectoryDeep :: MonadIO m
+sourceDirectoryDeep :: MonadResource m
                     => Bool -- ^ Follow directory symlinks
                     -> FilePath -- ^ Root directory
                     -> Producer m FilePath
 sourceDirectoryDeep followSymlinks =
     start
   where
-    start :: MonadIO m => FilePath -> Producer m FilePath
+    start :: MonadResource m => FilePath -> Producer m FilePath
     start dir = sourceDirectory dir =$= awaitForever go
 
-    go :: MonadIO m => FilePath -> Producer m FilePath
+    go :: MonadResource m => FilePath -> Producer m FilePath
     go fp = do
         isFile' <- liftIO $ F.isFile fp
         if isFile'
@@ -439,9 +453,9 @@ sourceDirectoryDeep followSymlinks =
     follow p = do
         let path = encodeString p
         stat <- if followSymlinks
-            then Posix.getFileStatus path
-            else Posix.getSymbolicLinkStatus path
-        return (Posix.isDirectory stat)
+            then PosixC.getFileStatus path
+            else PosixC.getSymbolicLinkStatus path
+        return (PosixC.isDirectory stat)
 
 -- | Ignore a certain number of values in the stream.
 --
