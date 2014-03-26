@@ -1,12 +1,15 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 import Conduit
+import Prelude hiding (FilePath)
+import Data.Maybe (listToMaybe)
 import Data.Conduit.Combinators.Internal
+import Data.List (intersperse, sort, find)
+import Filesystem.Path (hasExtension)
+import Filesystem.Path.CurrentOS (encodeString)
 import Test.Hspec
 import Test.Hspec.QuickCheck
-import BasicPrelude hiding (encodeUtf8)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.IORef
@@ -14,8 +17,9 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
 import Control.Monad.Trans.Writer
-import qualified Prelude
 import qualified System.IO as IO
+import Data.Monoid (Monoid (..))
+import Control.Applicative ((<$>), (<*>))
 import Data.Builder
 import Data.Sequences.Lazy
 import Data.Textual.Encoding
@@ -40,7 +44,7 @@ main = hspec $ do
             runIdentity (yieldMany [1..10] $$ sinkList)
             `shouldBe` [1..10]
         it "Text" $
-            runIdentity (yieldMany ("Hello World" :: Text) $$ sinkList)
+            runIdentity (yieldMany ("Hello World" :: T.Text) $$ sinkList)
             `shouldBe` "Hello World"
     it "unfold" $
         let f 11 = Nothing
@@ -94,22 +98,22 @@ main = hspec $ do
     it "sourceFile" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
-        writeFile fp contents
+        writeFile (encodeString fp) contents
         res <- runResourceT $ sourceFile fp $$ sinkLazy
-        res `shouldBe` TL.fromStrict contents
+        res `shouldBe` TL.pack contents
     it "sourceHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         res <- IO.withBinaryFile "tmp" IO.ReadMode $ \h -> sourceHandle h $$ sinkLazy
-        res `shouldBe` TL.fromStrict contents
+        res `shouldBe` TL.pack contents
     it "sourceIOHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         let open = IO.openBinaryFile "tmp" IO.ReadMode
         res <- runResourceT $ sourceIOHandle open $$ sinkLazy
-        res `shouldBe` TL.fromStrict contents
+        res `shouldBe` TL.pack contents
     prop "stdin" $ \(S.pack -> content) -> do
         S.writeFile "tmp" content
         IO.withBinaryFile "tmp" IO.ReadMode $ \h -> do
@@ -312,7 +316,7 @@ main = hspec $ do
         let contents = concat $ replicate 1000 $ "this is some content\n"
             fp = "tmp"
         runResourceT $ yield contents $$ sinkFile fp
-        res <- readFile fp
+        res <- readFile $ encodeString fp
         res `shouldBe` contents
     it "sinkHandle" $ do
         let contents = concat $ replicate 1000 $ "this is some content\n"
@@ -381,9 +385,9 @@ main = hspec $ do
             res = runIdentity $ src $$ sink
          in res `shouldBe` (1, [6..10])
     it "takeExactlyE" $
-        let src = yield ("Hello World" :: Text)
+        let src = yield ("Hello World" :: T.Text)
             sink = do
-                takeExactlyCE 5 (mempty :: Sink Text Identity ())
+                takeExactlyCE 5 (mempty :: Sink T.Text Identity ())
                 y <- sinkLazy
                 return y
             res = runIdentity $ src $$ sink
@@ -397,7 +401,7 @@ main = hspec $ do
         res <- src $$ sink
         res `shouldBe` (1, V.fromList $ T.unpack " World")
     it "takeExactlyE 2" $
-        let src = yield ("Hello World" :: Text)
+        let src = yield ("Hello World" :: T.Text)
             sink = do
                 x <- takeExactlyCE 5 $ return 1
                 y <- sinkLazy
@@ -412,7 +416,7 @@ main = hspec $ do
             -- Aborted (core dumped)
             --
             -- Report upstream when packages are released
-         in res `shouldBe` (1, " World" :: LText)
+         in res `shouldBe` (1, " World" :: TL.Text)
     prop "concat" $ \input ->
         runIdentity (yield (T.pack input) $$ concatC =$ sinkList)
         `shouldBe` input
