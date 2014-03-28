@@ -199,7 +199,7 @@ defaultReverse = fromList . List.reverse . otoList
 {-# INLINE defaultReverse #-}
 
 defaultSortBy :: IsSequence seq => (Element seq -> Element seq -> Ordering) -> seq -> seq
-defaultSortBy f = fromList . List.sortBy f . otoList
+defaultSortBy f = fromList . sortBy f . otoList
 {-# INLINE defaultSortBy #-}
 
 vectorSortBy :: VG.Vector v e => (e -> e -> Ordering) -> v e -> v e
@@ -237,7 +237,7 @@ instance SemiSequence [a] where
     intersperse = List.intersperse
     reverse = List.reverse
     find = List.find
-    sortBy = List.sortBy
+    sortBy f = V.toList . sortBy f . V.fromList
     cons = (:)
     snoc = defaultSnoc
     {-# INLINE intersperse #-}
@@ -310,7 +310,7 @@ instance SemiSequence (NE.NonEmpty a) where
     find         = find
     cons         = NE.cons
     snoc xs x    = NE.fromList $ flip snoc x $ NE.toList xs
-    sortBy f     = NE.fromList . List.sortBy f . NE.toList
+    sortBy f     = NE.fromList . sortBy f . NE.toList
     {-# INLINE intersperse #-}
     {-# INLINE reverse #-}
     {-# INLINE find #-}
@@ -1012,11 +1012,11 @@ instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 
 class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
     sort :: seq -> seq
-    sort = fromList . List.sort . otoList
+    sort = fromList . sort . otoList
     {-# INLINE sort #-}
 
 instance Ord a => OrdSequence [a] where
-    sort = List.sort
+    sort = V.toList . sort . V.fromList
     {-# INLINE sort #-}
 
 instance OrdSequence S.ByteString where

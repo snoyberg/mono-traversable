@@ -1,5 +1,5 @@
 name:                mono-traversable
-version:             0.4.0.3
+version:             0.4.0.4
 synopsis:            Type classes for mapping, folding, and traversing monomorphic containers
 description:         Monomorphic variants of the Functor, Foldable, and Traversable typeclasses. Contains even more experimental code for abstracting containers and sequences.
 homepage:            https://github.com/snoyberg/mono-traversable
@@ -56,6 +56,18 @@ test-suite test
                      , containers
                      , unordered-containers
                      , foldl
+
+benchmark sorting
+    type: exitcode-stdio-1.0
+    hs-source-dirs: bench
+    build-depends:  base
+                  , criterion
+                  , mono-traversable
+                  , vector
+                  , mwc-random
+    main-is:        sorting.hs
+    ghc-options:    -Wall -O2
+    default-language:    Haskell2010
                      
 source-repository head
   type: git
