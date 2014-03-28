@@ -1,5 +1,5 @@
 name:                classy-prelude
-version:             0.8.1.1
+version:             0.8.2
 synopsis:            A typeclass-based Prelude.
 description:         Focuses on using common typeclasses when possible, and creating new ones to avoid name clashing. Exposes many recommended datastructures (Map, ByteString, etc) directly without requiring long import lists and qualified modules.
 homepage:            https://github.com/snoyberg/classy-prelude
@@ -14,7 +14,7 @@ cabal-version:       >=1.8
 library
   exposed-modules:     ClassyPrelude
   build-depends:       base                          >= 4          && < 5
-                     , basic-prelude                 >= 0.3.6      && < 0.4
+                     , basic-prelude                 >= 0.3.7      && < 0.4
                      , system-filepath               >= 0.4        && < 0.5
                      , transformers
                      , containers                    >= 0.4.2

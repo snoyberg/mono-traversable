@@ -120,6 +120,7 @@ module ClassyPrelude
     , asSet
     , asVector
     , asUVector
+    , asSVector
     ) where
 
 import qualified Prelude
@@ -311,6 +312,9 @@ asVector = id
 
 asUVector :: UVector a -> UVector a
 asUVector = id
+
+asSVector :: SVector a -> SVector a
+asSVector = id
 
 print :: (Show a, MonadIO m) => a -> m ()
 print = liftIO . Prelude.print
