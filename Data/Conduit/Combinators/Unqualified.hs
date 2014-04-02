@@ -180,6 +180,7 @@ import           Control.Monad.Base          (MonadBase (liftBase))
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Class   (lift)
+import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
 import qualified Data.Conduit.List           as CL
 import           Data.IOData

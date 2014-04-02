@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleContexts #-}
 -- | Your intended one-stop-shop for conduit functionality.
 -- This re-exports functions from many commonly used modules.
 -- When there is a conflict with standard functions, functions
@@ -12,7 +13,9 @@
 module Conduit
     ( -- * Core conduit library
       module Data.Conduit
+#if !MIN_VERSION_conduit(1,1,0)
     , module Data.Conduit.Util
+#endif
 #if MIN_VERSION_conduit(1, 0, 11)
     , module Data.Conduit.Lift
 #endif
@@ -22,17 +25,38 @@ module Conduit
     , MonadIO (..)
     , MonadTrans (..)
     , MonadBase (..)
+    , MonadThrow (..)
+    , MonadBaseControl
+      -- * ResourceT
+    , MonadResource
+    , runResourceT
+      -- * Acquire
+#if MIN_VERSION_resourcet(1,1,0)
+    , module Data.Acquire
+    , withAcquire
+#endif
       -- * Pure pipelines
     , Identity (..)
     ) where
 
 import Data.Conduit
+#if !MIN_VERSION_conduit(1,1,0)
 import Data.Conduit.Util hiding (zip)
+#endif
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Trans.Class (MonadTrans (..))
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Base (MonadBase (..))
 #if MIN_VERSION_conduit(1, 0, 11)
 import Data.Conduit.Lift
 #endif
 import Data.Conduit.Combinators.Unqualified
 import Data.Functor.Identity (Identity (..))
+import Control.Monad.Trans.Resource (MonadResource, MonadThrow (..), runResourceT)
+#if MIN_VERSION_resourcet(1,1,0)
+import Data.Acquire hiding (with)
+import qualified Data.Acquire
+
+withAcquire :: MonadBaseControl IO m => Acquire a -> (a -> m b) -> m b
+withAcquire = Data.Acquire.with
+#endif
