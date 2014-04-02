@@ -1,5 +1,5 @@
 name:                classy-prelude-conduit
-version:             0.8.0
+version:             0.8.1
 synopsis:            conduit instances for classy-prelude
 description:         conduit instances for classy-prelude
 homepage:            https://github.com/snoyberg/classy-prelude
@@ -14,7 +14,7 @@ cabal-version:       >=1.8
 library
   exposed-modules:     ClassyPrelude.Conduit
   build-depends:       base                          >= 4          && < 5
-                     , conduit                       >= 0.5.4.1    && < 1.1
+                     , conduit                       >= 1.0        && < 1.2
                      , classy-prelude                >= 0.8        && < 0.9
                      , transformers
                      , monad-control
@@ -22,7 +22,7 @@ library
                      , void
                      , bytestring
                      , system-fileio
-                     , conduit-combinators
+                     , conduit-combinators           >= 0.2.4
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite spec
