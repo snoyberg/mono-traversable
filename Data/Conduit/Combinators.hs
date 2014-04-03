@@ -219,6 +219,10 @@ import Data.Conduit.Combinators.Internal
 import qualified System.PosixCompat.Files as PosixC
 import qualified System.Posix.Directory as Dir
 
+#if MIN_VERSION_conduit(1,1,0)
+import qualified Data.Conduit.Filesystem as CF
+#endif
+
 -- END IMPORTS
 
 -- | Yield each of the values contained by the given @MonoFoldable@.
@@ -424,6 +428,10 @@ sourceRandomNGen gen = initReplicate (return gen) (liftBase . MWC.uniform)
 --
 -- Since 1.0.0
 sourceDirectory :: MonadResource m => FilePath -> Producer m FilePath
+#if MIN_VERSION_conduit(1,1,0)
+sourceDirectory = mapOutput decodeString . CF.sourceDirectory . encodeString
+#else
+
 #ifdef WINDOWS
 sourceDirectory = (liftIO . F.listDirectory) >=> yieldMany
 #else
@@ -438,6 +446,8 @@ sourceDirectory dir =
             loop ds
 #endif
 
+#endif
+
 -- | Deeply stream the contents of the given directory.
 --
 -- This works the same as @sourceDirectory@, but will not return directories at
@@ -449,6 +459,10 @@ sourceDirectoryDeep :: MonadResource m
                     => Bool -- ^ Follow directory symlinks
                     -> FilePath -- ^ Root directory
                     -> Producer m FilePath
+#if MIN_VERSION_conduit(1,1,0)
+sourceDirectoryDeep follow = mapOutput decodeString . CF.sourceDirectoryDeep follow . encodeString
+#else
+
 sourceDirectoryDeep followSymlinks =
     start
   where
@@ -471,6 +485,7 @@ sourceDirectoryDeep followSymlinks =
             then PosixC.getFileStatus path
             else PosixC.getSymbolicLinkStatus path
         return (PosixC.isDirectory stat)
+#endif
 
 -- | Ignore a certain number of values in the stream.
 --

@@ -211,6 +211,10 @@ import Data.Conduit.Combinators.Internal
 import qualified System.PosixCompat.Files as PosixC
 import qualified System.Posix.Directory as Dir
 
+#if MIN_VERSION_conduit(1,1,0)
+import qualified Data.Conduit.Filesystem as CF
+#endif
+
 
 -- END IMPORTS
 
