@@ -15,6 +15,7 @@ module ClassyPrelude
     , module Control.Monad
       -- ** Mutable references
     , module Control.Concurrent.MVar.Lifted
+    , module Control.Concurrent.STM.Lifted
     , module Data.IORef.Lifted
       -- ** Debugging
     , trace
@@ -130,6 +131,7 @@ import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_)
 import Control.Concurrent.MVar.Lifted
+import Control.Concurrent.STM.Lifted
 import Data.IORef.Lifted
 import qualified Data.Monoid as Monoid
 import qualified Data.Traversable as Traversable

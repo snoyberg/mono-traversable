@@ -32,6 +32,7 @@ library
                      , chunked-data
                      , enclosed-exceptions
                      , ghc-prim
+                     , stm-lifted
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
