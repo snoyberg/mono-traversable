@@ -15,7 +15,8 @@ module ClassyPrelude
     , module Control.Monad
       -- ** Mutable references
     , module Control.Concurrent.MVar.Lifted
-    , module Control.Concurrent.STM.Lifted
+    , module Control.Concurrent.STM
+    , atomically
     , module Data.IORef.Lifted
       -- ** Debugging
     , trace
@@ -131,7 +132,8 @@ import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_)
 import Control.Concurrent.MVar.Lifted
-import Control.Concurrent.STM.Lifted
+import Control.Concurrent.STM hiding (atomically)
+import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
 import qualified Data.Monoid as Monoid
 import qualified Data.Traversable as Traversable
@@ -456,3 +458,7 @@ ordNubBy p f = go Map.empty
     elem_by :: (a -> a -> Bool) -> a -> [a] -> Bool
     elem_by _  _ []     = False
     elem_by eq y (x:xs) = y `eq` x || elem_by eq y xs
+
+-- | Generalized version of 'STM.atomically'.
+atomically :: MonadIO m => STM a -> m a
+atomically = liftIO . STM.atomically
