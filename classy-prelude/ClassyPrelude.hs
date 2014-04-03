@@ -116,8 +116,10 @@ module ClassyPrelude
     , asLText
     , asList
     , asMap
+    , asIntMap
     , asMaybe
     , asSet
+    , asIntSet
     , asVector
     , asUVector
     , asSVector
@@ -301,11 +303,17 @@ asList = id
 asMap :: Map k v -> Map k v
 asMap = id
 
+asIntMap :: IntMap v -> IntMap v
+asIntMap = id
+
 asMaybe :: Maybe a -> Maybe a
 asMaybe = id
 
 asSet :: Set a -> Set a
 asSet = id
+
+asIntSet :: IntSet -> IntSet
+asIntSet = id
 
 asVector :: Vector a -> Vector a
 asVector = id
