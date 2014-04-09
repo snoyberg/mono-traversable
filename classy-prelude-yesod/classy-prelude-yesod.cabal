@@ -1,5 +1,5 @@
 name:                classy-prelude-yesod
-version:             0.9.0
+version:             0.9.0.1
 synopsis:            Provide a classy prelude including common Yesod functionality.
 description:         This is an extension of classy-prelude-conduit, adding in commonly used functions and data types from Yesod.
 homepage:            https://github.com/snoyberg/classy-prelude
