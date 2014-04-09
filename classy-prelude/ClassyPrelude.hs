@@ -17,6 +17,11 @@ module ClassyPrelude
     , module Control.Concurrent.MVar.Lifted
     , module Control.Concurrent.STM
     , atomically
+    , alwaysSTM
+    , alwaysSucceedsSTM
+    , retrySTM
+    , orElseSTM
+    , checkSTM
     , module Data.IORef.Lifted
       -- ** Debugging
     , trace
@@ -132,7 +137,7 @@ import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_)
 import Control.Concurrent.MVar.Lifted
-import Control.Concurrent.STM hiding (atomically)
+import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
 import qualified Data.Monoid as Monoid
@@ -462,3 +467,28 @@ ordNubBy p f = go Map.empty
 -- | Generalized version of 'STM.atomically'.
 atomically :: MonadIO m => STM a -> m a
 atomically = liftIO . STM.atomically
+
+-- | Synonym for 'STM.retry'.
+retrySTM :: STM a
+retrySTM = STM.retry
+{-# INLINE retrySTM #-}
+
+-- | Synonym for 'STM.always'.
+alwaysSTM :: STM Bool -> STM ()
+alwaysSTM = STM.always
+{-# INLINE alwaysSTM #-}
+
+-- | Synonym for 'STM.alwaysSucceeds'.
+alwaysSucceedsSTM :: STM a -> STM ()
+alwaysSucceedsSTM = STM.alwaysSucceeds
+{-# INLINE alwaysSucceedsSTM #-}
+
+-- | Synonym for 'STM.orElse'.
+orElseSTM :: STM a -> STM a -> STM a
+orElseSTM = STM.orElse
+{-# INLINE orElseSTM #-}
+
+-- | Synonym for 'STM.check'.
+checkSTM :: Bool -> STM ()
+checkSTM = STM.check
+{-# INLINE checkSTM #-}
