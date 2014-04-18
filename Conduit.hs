@@ -29,6 +29,7 @@ module Conduit
     , MonadBaseControl
       -- * ResourceT
     , MonadResource
+    , ResourceT
     , runResourceT
       -- * Acquire
 #if MIN_VERSION_resourcet(1,1,0)
@@ -52,7 +53,7 @@ import Data.Conduit.Lift
 #endif
 import Data.Conduit.Combinators.Unqualified
 import Data.Functor.Identity (Identity (..))
-import Control.Monad.Trans.Resource (MonadResource, MonadThrow (..), runResourceT)
+import Control.Monad.Trans.Resource (MonadResource, MonadThrow (..), runResourceT, ResourceT)
 #if MIN_VERSION_resourcet(1,1,0)
 import Data.Acquire hiding (with)
 import qualified Data.Acquire
