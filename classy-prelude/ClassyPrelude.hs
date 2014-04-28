@@ -113,6 +113,7 @@ module ClassyPrelude
     , fpToTextEx
       -- ** Exceptions
     , module Control.Exception.Enclosed
+    , MonadThrow (throwM)
       -- ** Force types
       -- | Helper functions for situations where type inferer gets confused.
     , asByteString
@@ -145,6 +146,7 @@ import qualified Data.Traversable as Traversable
 import Data.Traversable (Traversable)
 import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
+import Control.Monad.Catch (MonadThrow (throwM))
 
 import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>))
