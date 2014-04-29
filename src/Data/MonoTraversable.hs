@@ -311,6 +311,26 @@ class MonoFoldable mono where
     unsafeLast = lastEx
     {-# INLINE unsafeLast #-}
 
+    maximumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
+    maximumByEx f =
+        ofoldl1Ex' go
+      where
+        go x y =
+            case f x y of
+                LT -> y
+                _  -> x
+    {-# INLINE maximumByEx #-}
+
+    minimumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
+    minimumByEx f =
+        ofoldl1Ex' go
+      where
+        go x y =
+            case f x y of
+                GT -> y
+                _  -> x
+    {-# INLINE minimumByEx #-}
+
 instance MonoFoldable S.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = S.foldr
@@ -489,6 +509,8 @@ instance MonoFoldable (Vector a) where
     lastEx = V.last
     unsafeHead = V.unsafeHead
     unsafeLast = V.unsafeLast
+    maximumByEx = V.maximumBy
+    minimumByEx = V.minimumBy
     {-# INLINE ofoldMap #-}
     {-# INLINE ofoldr #-}
     {-# INLINE ofoldl' #-}
@@ -503,6 +525,8 @@ instance MonoFoldable (Vector a) where
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
     {-# INLINE unsafeHead #-}
+    {-# INLINE maximumByEx #-}
+    {-# INLINE minimumByEx #-}
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
 instance MonoFoldable (DList a) where
@@ -526,6 +550,8 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     lastEx = U.last
     unsafeHead = U.unsafeHead
     unsafeLast = U.unsafeLast
+    maximumByEx = U.maximumBy
+    minimumByEx = U.minimumBy
     {-# INLINE ofoldMap #-}
     {-# INLINE ofoldr #-}
     {-# INLINE ofoldl' #-}
@@ -540,6 +566,8 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
     {-# INLINE unsafeHead #-}
+    {-# INLINE maximumByEx #-}
+    {-# INLINE minimumByEx #-}
 instance VS.Storable a => MonoFoldable (VS.Vector a) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = VS.foldr
@@ -555,6 +583,8 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     lastEx = VS.last
     unsafeHead = VS.unsafeHead
     unsafeLast = VS.unsafeLast
+    maximumByEx = VS.maximumBy
+    minimumByEx = VS.minimumBy
     {-# INLINE ofoldMap #-}
     {-# INLINE ofoldr #-}
     {-# INLINE ofoldl' #-}
@@ -569,6 +599,8 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
     {-# INLINE unsafeHead #-}
+    {-# INLINE maximumByEx #-}
+    {-# INLINE minimumByEx #-}
 instance MonoFoldable (Either a b) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr f b (Right a) = f a b
@@ -653,29 +685,9 @@ class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
     maximumEx = maximumByEx compare
     {-# INLINE maximumEx #-}
 
-    maximumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
-    maximumByEx f =
-        ofoldl1Ex' go
-      where
-        go x y =
-            case f x y of
-                LT -> y
-                _  -> x
-    {-# INLINE maximumByEx #-}
-
     minimumEx :: mono -> Element mono
     minimumEx = minimumByEx compare
     {-# INLINE minimumEx #-}
-
-    minimumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
-    minimumByEx f =
-        ofoldl1Ex' go
-      where
-        go x y =
-            case f x y of
-                GT -> y
-                _  -> x
-    {-# INLINE minimumByEx #-}
 
 instance MonoFoldableOrd S.ByteString where
     maximumEx = S.maximum
@@ -712,33 +724,21 @@ instance Ord v => MonoFoldableOrd (Map k v)
 instance Ord v => MonoFoldableOrd (HashMap k v)
 instance Ord a => MonoFoldableOrd (Vector a) where
     maximumEx   = V.maximum
-    maximumByEx = V.maximumBy
     minimumEx   = V.minimum
-    minimumByEx = V.minimumBy
     {-# INLINE maximumEx #-}
-    {-# INLINE maximumByEx #-}
     {-# INLINE minimumEx #-}
-    {-# INLINE minimumByEx #-}
 instance Ord e => MonoFoldableOrd (Set e)
 instance Ord e => MonoFoldableOrd (HashSet e)
 instance (U.Unbox a, Ord a) => MonoFoldableOrd (U.Vector a) where
     maximumEx   = U.maximum
-    maximumByEx = U.maximumBy
     minimumEx   = U.minimum
-    minimumByEx = U.minimumBy
     {-# INLINE maximumEx #-}
-    {-# INLINE maximumByEx #-}
     {-# INLINE minimumEx #-}
-    {-# INLINE minimumByEx #-}
 instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
     maximumEx   = VS.maximum
-    maximumByEx = VS.maximumBy
     minimumEx   = VS.minimum
-    minimumByEx = VS.minimumBy
     {-# INLINE maximumEx #-}
-    {-# INLINE maximumByEx #-}
     {-# INLINE minimumEx #-}
-    {-# INLINE minimumByEx #-}
 instance Ord b => MonoFoldableOrd (Either a b) where
 
 maximumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
