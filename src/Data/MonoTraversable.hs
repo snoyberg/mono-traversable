@@ -747,7 +747,7 @@ maximumMay mono
     | otherwise = Just (maximumEx mono)
 {-# INLINE maximumMay #-}
 
-maximumByMay :: MonoFoldableOrd mono
+maximumByMay :: MonoFoldable mono
              => (Element mono -> Element mono -> Ordering)
              -> mono
              -> Maybe (Element mono)
@@ -762,7 +762,7 @@ minimumMay mono
     | otherwise = Just (minimumEx mono)
 {-# INLINE minimumMay #-}
 
-minimumByMay :: MonoFoldableOrd mono
+minimumByMay :: MonoFoldable mono
              => (Element mono -> Element mono -> Ordering)
              -> mono
              -> Maybe (Element mono)

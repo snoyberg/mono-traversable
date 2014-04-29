@@ -196,7 +196,7 @@ minimum = minimumEx . unMinLen
 {-# INLINE minimum #-}
 
 -- | like Data.List, but not partial on a MonoFoldable
-maximumBy :: MonoFoldableOrd mono
+maximumBy :: MonoFoldable mono
           => (Element mono -> Element mono -> Ordering)
           -> MinLen (Succ nat) mono
           -> Element mono
@@ -204,7 +204,7 @@ maximumBy cmp = maximumByEx cmp . unMinLen
 {-# INLINE maximumBy #-}
 
 -- | like Data.List, but not partial on a MonoFoldable
-minimumBy :: MonoFoldableOrd mono
+minimumBy :: MonoFoldable mono
           => (Element mono -> Element mono -> Ordering)
           -> MinLen (Succ nat) mono
           -> Element mono
