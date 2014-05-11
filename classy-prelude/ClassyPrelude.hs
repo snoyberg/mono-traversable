@@ -13,6 +13,8 @@ module ClassyPrelude
     , WrappedMonoid
       -- ** Monad
     , module Control.Monad
+    , whenM
+    , unlessM
       -- ** Mutable references
     , module Control.Concurrent.MVar.Lifted
     , module Control.Concurrent.STM
@@ -136,7 +138,7 @@ module ClassyPrelude
 import qualified Prelude
 import Control.Exception (assert)
 import Control.Exception.Enclosed
-import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_)
+import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
 import Control.Concurrent.MVar.Lifted
 import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
@@ -494,3 +496,15 @@ orElseSTM = STM.orElse
 checkSTM :: Bool -> STM ()
 checkSTM = STM.check
 {-# INLINE checkSTM #-}
+
+-- | Only perform the action if the predicate returns @True@.
+--
+-- Since 0.9.2
+whenM :: Monad m => m Bool -> m () -> m ()
+whenM mbool action = mbool >>= flip when action
+
+-- | Only perform the action if the predicate returns @False@.
+--
+-- Since 0.9.2
+unlessM :: Monad m => m Bool -> m () -> m ()
+unlessM mbool action = mbool >>= flip unless action
