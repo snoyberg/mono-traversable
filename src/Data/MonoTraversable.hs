@@ -257,11 +257,11 @@ class MonoFoldable mono where
     ofor_ = flip otraverse_
     {-# INLINE ofor_ #-}
 
-    omapM_ :: (MonoFoldable mono, Monad m) => (Element mono -> m b) -> mono -> m ()
+    omapM_ :: (MonoFoldable mono, Monad m) => (Element mono -> m ()) -> mono -> m ()
     omapM_ f = ofoldr ((>>) . f) (return ())
     {-# INLINE omapM_ #-}
 
-    oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m b) -> m ()
+    oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m ()) -> m ()
     oforM_ = flip omapM_
     {-# INLINE oforM_ #-}
 
@@ -479,7 +479,7 @@ instance MonoFoldable [a] where
     {-# INLINE otoList #-}
 instance MonoFoldable (Maybe a) where
     omapM_ _ Nothing = return ()
-    omapM_ f (Just x) = f x >> return ()
+    omapM_ f (Just x) = f x
     {-# INLINE omapM_ #-}
 instance MonoFoldable (Tree a)
 instance MonoFoldable (Seq a) where
@@ -621,6 +621,8 @@ instance MonoFoldable (Either a b) where
     ofoldr1Ex _ (Right x) = x
     ofoldl1Ex' _ (Left _) = Prelude.error "ofoldl1Ex' on Either"
     ofoldl1Ex' _ (Right x) = x
+    omapM_ _ (Left _) = return ()
+    omapM_ f (Right x) = f x
     {-# INLINE ofoldMap #-}
     {-# INLINE ofoldr #-}
     {-# INLINE ofoldl' #-}
