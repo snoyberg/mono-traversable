@@ -71,6 +71,8 @@ module ClassyPrelude
     , forM_
     , any
     , all
+    , and
+    , or
     , foldl'
     , foldr
     , foldM
@@ -227,17 +229,33 @@ product = oproduct
 
 all :: MonoFoldable c => (Element c -> Bool) -> c -> Bool
 all = oall
+{-# INLINE all #-}
 
 any :: MonoFoldable c => (Element c -> Bool) -> c -> Bool
 any = oany
+{-# INLINE any #-}
+
+-- |
+--
+-- Since 0.9.2
+and :: (MonoFoldable mono, Element mono ~ Bool) => mono -> Bool
+and = oand
+{-# INLINE and #-}
+
+-- |
+--
+-- Since 0.9.2
+or :: (MonoFoldable mono, Element mono ~ Bool) => mono -> Bool
+or = oor
+{-# INLINE or #-}
 
 length :: MonoFoldable c => c -> Int
 length = olength
 
-mapM_ :: (Monad m, MonoFoldable c) => (Element c -> m a) -> c -> m ()
+mapM_ :: (Monad m, MonoFoldable c) => (Element c -> m ()) -> c -> m ()
 mapM_ = omapM_
 
-forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m a) -> m ()
+forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m ()) -> m ()
 forM_ = oforM_
 
 concatMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
