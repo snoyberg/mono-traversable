@@ -662,6 +662,20 @@ oproduct :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
 oproduct = ofoldl' (*) 1
 {-# INLINE oproduct #-}
 
+-- | Are all of the values @True@?
+--
+-- Since 0.6.0
+oand :: (Element mono ~ Bool, MonoFoldable mono) => mono -> Bool
+oand = oall id
+{-# INLINE oand #-}
+
+-- | Are any of the values @True@?
+--
+-- Since 0.6.0
+oor :: (Element mono ~ Bool, MonoFoldable mono) => mono -> Bool
+oor = oany id
+{-# INLINE oor #-}
+
 class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where -- FIXME is this really just MonoMonad?
     oconcatMap :: (Element mono -> mono) -> mono -> mono
     oconcatMap = ofoldMap
