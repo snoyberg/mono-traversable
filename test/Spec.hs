@@ -30,6 +30,7 @@ import Data.Containers
 import qualified Data.IntSet as IntSet
 import Control.Arrow (first, second)
 import qualified Control.Foldl as Foldl
+import Data.Int (Int64)
 
 main :: IO ()
 main = hspec $ do
@@ -41,13 +42,15 @@ main = hspec $ do
     describe "osum" $ do
         it "list" $ do
             let x = 1
-                y = 10000000 :: Int
+                -- explicitly using Int64 to avoid overflow issues, see:
+                -- https://github.com/snoyberg/mono-traversable/issues/29
+                y = 10000000 :: Int64
                 list = [x..y]
             osum list `shouldBe` ((x + y) * (y - x + 1) `div` 2)
     describe "oproduct" $ do
         it "list" $ do
             let x = 1
-                y = 10000000 :: Int
+                y = 10000000 :: Int64
                 list = [x..y]
                 fact n =
                     go 1 1
