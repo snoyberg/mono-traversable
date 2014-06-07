@@ -1,5 +1,5 @@
 name:                mono-traversable
-version:             0.6.0.1
+version:             0.6.0.2
 synopsis:            Type classes for mapping, folding, and traversing monomorphic containers
 description:         Monomorphic variants of the Functor, Foldable, and Traversable typeclasses. Contains even more experimental code for abstracting containers and sequences.
 homepage:            https://github.com/snoyberg/mono-traversable
@@ -26,7 +26,7 @@ library
                      , hashable
                      , bytestring >= 0.9
                      , text >=0.11
-                     , semigroups >= 0.9
+                     , semigroups >= 0.10
                      , transformers >=0.3
                      , vector >=0.10
                      , semigroupoids >=3.0
