@@ -307,7 +307,7 @@ instance SemiSequence (NE.NonEmpty a) where
 
     intersperse  = NE.intersperse
     reverse      = NE.reverse
-    find         = find
+    find x       = find x . NE.toList
     cons         = NE.cons
     snoc xs x    = NE.fromList $ flip snoc x $ NE.toList xs
     sortBy f     = NE.fromList . sortBy f . NE.toList

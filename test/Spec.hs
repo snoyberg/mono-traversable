@@ -310,3 +310,6 @@ main = hspec $ do
         test "lazy Text" TL.empty
     it "headEx on a list works #26" $
         headEx (1 : filter Prelude.odd [2,4..]) `shouldBe` (1 :: Int)
+
+    it "find doesn't infinitely loop on NonEmpty #31" $
+        find (== "a") ("a" NE.:| ["d","fgf"]) `shouldBe` Just "a"
