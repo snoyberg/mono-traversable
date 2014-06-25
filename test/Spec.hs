@@ -531,6 +531,16 @@ main = hspec $ do
                =$ decodeUtf8C
                =$ sinkLazy
         actual `shouldBe` expected
+    prop "encode/decode UTF8 lenient" $ \(map T.pack -> inputs) (min 50 . max 1 . abs -> chunkSize) -> do
+        let expected = fromChunks inputs
+        actual <- yieldMany inputs
+               $$ encodeUtf8C
+               =$ concatC
+               =$ conduitVector chunkSize
+               =$ mapC (S.pack . V.toList)
+               =$ decodeUtf8LenientC
+               =$ sinkLazy
+        actual `shouldBe` expected
     prop "line" $ \(map T.pack -> input) size ->
         let src = yieldMany input
             sink = do

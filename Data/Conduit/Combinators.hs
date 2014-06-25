@@ -163,6 +163,7 @@ module Data.Conduit.Combinators
       -- ** Textual
     , encodeUtf8
     , decodeUtf8
+    , decodeUtf8Lenient
     , line
     , lineAscii
     , unlines
@@ -1608,6 +1609,13 @@ encodeUtf8 = map DTE.encodeUtf8
 -- Since 1.0.0
 decodeUtf8 :: MonadThrow m => Conduit ByteString m Text
 decodeUtf8 = CT.decode CT.utf8
+
+-- | Decode a stream of binary data as UTF8, replacing any invalid bytes with
+-- the Unicode replacement character.
+--
+-- Since 1.0.0
+decodeUtf8Lenient :: MonadThrow m => Conduit ByteString m Text
+decodeUtf8Lenient = CT.decodeUtf8Lenient
 
 -- | Stream in the entirety of a single line.
 --

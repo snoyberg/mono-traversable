@@ -1,5 +1,5 @@
 name:                conduit-combinators
-version:             0.2.5.2
+version:             0.2.6.1
 synopsis:            Commonly used conduit functions, for both chunked and unchunked data
 description:         Provides a replacement for Data.Conduit.List, as well as a convenient Conduit module.
 homepage:            https://github.com/fpco/conduit-combinators
@@ -20,7 +20,7 @@ library
   build-depends:       base >= 4 && < 5
                      , chunked-data
                      , conduit >= 1.0.12
-                     , conduit-extra
+                     , conduit-extra >= 1.1.1
                      , transformers
                      , transformers-base
                      , primitive

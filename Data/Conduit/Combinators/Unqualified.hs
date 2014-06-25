@@ -152,6 +152,7 @@ module Data.Conduit.Combinators.Unqualified
       -- *** Textual
     , encodeUtf8C
     , decodeUtf8C
+    , decodeUtf8LenientC
     , lineC
     , lineAsciiC
     , unlinesC
@@ -1297,6 +1298,14 @@ encodeUtf8C = CC.encodeUtf8
 decodeUtf8C :: MonadThrow m => Conduit ByteString m Text
 decodeUtf8C = CC.decodeUtf8
 {-# INLINE decodeUtf8C #-}
+
+-- | Decode a stream of binary data as UTF8, replacing any invalid bytes with
+-- the Unicode replacement character.
+--
+-- Since 1.0.0
+decodeUtf8LenientC :: MonadThrow m => Conduit ByteString m Text
+decodeUtf8LenientC = CC.decodeUtf8Lenient
+{-# INLINE decodeUtf8LenientC #-}
 
 -- | Stream in the entirety of a single line.
 --
