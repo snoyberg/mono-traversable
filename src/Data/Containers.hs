@@ -40,6 +40,10 @@ class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), Growi
     union :: set -> set -> set
     difference :: set -> set -> set
     intersection :: set -> set -> set
+
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.Map.Strict".
+#endif
 instance Ord k => SetContainer (Map.Map k v) where
     type ContainerKey (Map.Map k v) = k
     member = Map.member
@@ -53,6 +57,9 @@ instance Ord k => SetContainer (Map.Map k v) where
     intersection = Map.intersection
     {-# INLINE intersection #-}
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.HashMap.Strict".
+#endif
 instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) where
     type ContainerKey (HashMap.HashMap key value) = key
     member = HashMap.member
@@ -66,6 +73,9 @@ instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) wher
     intersection = HashMap.intersection
     {-# INLINE intersection #-}
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.IntMap.Strict".
+#endif
 instance SetContainer (IntMap.IntMap value) where
     type ContainerKey (IntMap.IntMap value) = Int
     member = IntMap.member
@@ -149,6 +159,9 @@ class PolyMap map where
     intersectionWithMap :: (value1 -> value2 -> value3)
                         -> map value1 -> map value2 -> map value3
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.Map.Strict".
+#endif
 instance Ord key => PolyMap (Map.Map key) where
     differenceMap = Map.difference
     {-# INLINE differenceMap #-}
@@ -158,6 +171,9 @@ instance Ord key => PolyMap (Map.Map key) where
     intersectionWithMap = Map.intersectionWith
     {-# INLINE intersectionWithMap #-}
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.HashMap.Strict".
+#endif
 instance (Eq key, Hashable key) => PolyMap (HashMap.HashMap key) where
     differenceMap = HashMap.difference
     {-# INLINE differenceMap #-}
@@ -167,6 +183,9 @@ instance (Eq key, Hashable key) => PolyMap (HashMap.HashMap key) where
     intersectionWithMap = HashMap.intersectionWith
     {-# INLINE intersectionWithMap #-}
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.IntMap.Strict".
+#endif
 instance PolyMap IntMap.IntMap where
     differenceMap = IntMap.difference
     {-# INLINE differenceMap #-}
@@ -364,6 +383,9 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
       where
         go (k, v) = [(f k, v)]
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.Map.Strict".
+#endif
 instance Ord key => IsMap (Map.Map key value) where
     type MapValue (Map.Map key value) = value
     lookup = Map.lookup
@@ -410,6 +432,9 @@ instance Ord key => IsMap (Map.Map key value) where
     mapKeysWith = Map.mapKeysWith
     {-# INLINE mapKeysWith #-}
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.HashMap.Strict".
+#endif
 instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
     type MapValue (HashMap.HashMap key value) = value
     lookup = HashMap.lookup
@@ -444,6 +469,9 @@ instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
     --mapWithKey = HashMap.mapWithKey
     --mapKeysWith = HashMap.mapKeysWith
 
+#if MIN_VERSION_containers(0, 5, 0)
+-- | This instance uses the functions from "Data.IntMap.Strict".
+#endif
 instance IsMap (IntMap.IntMap value) where
     type MapValue (IntMap.IntMap value) = value
     lookup = IntMap.lookup
