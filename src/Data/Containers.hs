@@ -10,8 +10,10 @@ import Prelude hiding (lookup)
 import Data.Maybe (fromMaybe)
 #if MIN_VERSION_containers(0, 5, 0)
 import qualified Data.Map.Strict as Map
+import qualified Data.IntMap.Strict as IntMap
 #else
 import qualified Data.Map as Map
+import qualified Data.IntMap as IntMap
 #endif
 import qualified Data.HashMap.Strict as HashMap
 import Data.Hashable (Hashable)
@@ -20,7 +22,6 @@ import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup)
 import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element)
-import qualified Data.IntMap as IntMap
 import Data.Function (on)
 import qualified Data.List as List
 import qualified Data.IntSet as IntSet
