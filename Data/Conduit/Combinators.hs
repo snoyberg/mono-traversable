@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoImplicitPrelude         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE BangPatterns #-}
 -- | This module is meant as a replacement for Data.Conduit.List.
 -- That module follows a naming scheme which was originally inspired
 -- by its enumerator roots. This module is meant to introduce a naming
@@ -140,6 +141,7 @@ module Data.Conduit.Combinators
     , scanl
     , concatMapAccum
     , intersperse
+    , slidingWindow
 
       -- *** Binary base encoding
     , encodeBase64
@@ -1405,6 +1407,25 @@ intersperse x =
   where
     go y = yield y >> concatMap (\z -> [x, z])
 {-# INLINE intersperse #-}
+
+-- | Sliding window of values
+-- 1,2,3,4,5 with window size 2 gives
+-- [1,2],[2,3],[3,4],[4,5]
+--
+-- Best used with structures that support O(1) snoc.
+slidingWindow :: (Monad m, Seq.IsSequence seq, Element seq ~ a) => Int -> Conduit a m seq
+slidingWindow sz = go (if sz <= 0 then 1 else sz) mempty
+    where goContinue st = await >>=
+                          maybe (return ())
+                                (\x -> do
+                                   let st' = Seq.snoc st x
+                                   yield st' >> goContinue (Seq.unsafeTail st')
+                                )
+          go 0 st = yield st >> goContinue (Seq.unsafeTail st)
+          go !n st = CL.head >>= \m ->
+                     case m of
+                       Nothing -> yield st
+                       Just x -> go (n-1) (Seq.snoc st x)
 
 codeWith :: Monad m
          => Int

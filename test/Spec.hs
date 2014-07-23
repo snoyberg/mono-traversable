@@ -5,6 +5,7 @@ import Conduit
 import Prelude hiding (FilePath)
 import Data.Maybe (listToMaybe)
 import Data.Conduit.Combinators.Internal
+import Data.Conduit.Combinators (slidingWindow)
 import Data.List (intersperse, sort, find)
 import Filesystem.Path (hasExtension)
 import Filesystem.Path.CurrentOS (encodeString)
@@ -587,6 +588,27 @@ main = hspec $ do
         res1 `shouldBe` cnt * (seed + delta)
         res2 <- initRepeatConnect (return seed) (return . (+ delta)) sink
         res2 `shouldBe` res1
+    it "slidingWindow 0" $
+        let res = runIdentity $ yieldMany [1..5] $= slidingWindow 0 $$ sinkList
+        in res `shouldBe` [[1],[2],[3],[4],[5]]
+    it "slidingWindow 1" $
+        let res = runIdentity $ yieldMany [1..5] $= slidingWindow 1 $$ sinkList
+        in res `shouldBe` [[1],[2],[3],[4],[5]]
+    it "slidingWindow 2" $
+        let res = runIdentity $ yieldMany [1..5] $= slidingWindow 2 $$ sinkList
+        in res `shouldBe` [[1,2],[2,3],[3,4],[4,5]]
+    it "slidingWindow 3" $
+        let res = runIdentity $ yieldMany [1..5] $= slidingWindow 3 $$ sinkList
+        in res `shouldBe` [[1,2,3],[2,3,4],[3,4,5]]
+    it "slidingWindow 4" $
+        let res = runIdentity $ yieldMany [1..5] $= slidingWindow 4 $$ sinkList
+        in res `shouldBe` [[1,2,3,4],[2,3,4,5]]
+    it "slidingWindow 5" $
+        let res = runIdentity $ yieldMany [1..5] $= slidingWindow 5 $$ sinkList
+        in res `shouldBe` [[1,2,3,4,5]]
+    it "slidingWindow 6" $
+        let res = runIdentity $ yieldMany [1..5] $= slidingWindow 6 $$ sinkList
+        in res `shouldBe` [[1,2,3,4,5]]
 
 evenInt :: Int -> Bool
 evenInt = even
