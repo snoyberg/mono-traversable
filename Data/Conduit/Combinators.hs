@@ -1413,6 +1413,8 @@ intersperse x =
 -- [1,2],[2,3],[3,4],[4,5]
 --
 -- Best used with structures that support O(1) snoc.
+--
+-- Since 1.0.0
 slidingWindow :: (Monad m, Seq.IsSequence seq, Element seq ~ a) => Int -> Conduit a m seq
 slidingWindow sz = go (if sz <= 0 then 1 else sz) mempty
     where goContinue st = await >>=

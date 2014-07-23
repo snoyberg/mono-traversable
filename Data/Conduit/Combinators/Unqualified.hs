@@ -7,6 +7,7 @@
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoImplicitPrelude         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE BangPatterns #-}
 module Data.Conduit.Combinators.Unqualified
     ( -- ** Producers
       -- *** Pure
@@ -129,6 +130,7 @@ module Data.Conduit.Combinators.Unqualified
     , scanlC
     , concatMapAccumC
     , intersperseC
+    , slidingWindowC
 
       -- **** Binary base encoding
     , encodeBase64C
@@ -1155,6 +1157,17 @@ concatMapAccumC = CC.concatMapAccum
 intersperseC :: Monad m => a -> Conduit a m a
 intersperseC = CC.intersperse
 {-# INLINE intersperseC #-}
+
+-- | Sliding window of values
+-- 1,2,3,4,5 with window size 2 gives
+-- [1,2],[2,3],[3,4],[4,5]
+--
+-- Best used with structures that support O(1) snoc.
+--
+-- Since 1.0.0
+slidingWindowC :: (Monad m, Seq.IsSequence seq, Element seq ~ a) => Int -> Conduit a m seq
+slidingWindowC = CC.slidingWindow
+{-# INLINE slidingWindowC #-}
 
 -- | Apply base64-encoding to the stream.
 --
