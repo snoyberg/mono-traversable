@@ -1397,7 +1397,7 @@ linesUnboundedAsciiC = CC.linesUnboundedAscii
 -- Under the surface, this function uses a number of tricks to get high
 -- performance. For more information on both usage and implementation,
 -- please see:
--- <https://www.fpcomplete.com/user/snoyberg/library-documentation/bytevector-and-vectorbuilder>.
+-- <https://www.fpcomplete.com/user/snoyberg/library-documentation/vectorbuilder>
 --
 -- Since 1.0.0
 vectorBuilderC :: (PrimMonad base, MonadBase base m, V.Vector v e, MonadBase base n)
