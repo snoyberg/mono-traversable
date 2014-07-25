@@ -161,6 +161,9 @@ module Data.Conduit.Combinators.Unqualified
     , unlinesAsciiC
     , linesUnboundedC
     , linesUnboundedAsciiC
+
+      -- ** Special
+    , vectorBuilderC
     ) where
 
 -- BEGIN IMPORTS
@@ -185,6 +188,7 @@ import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Class   (lift)
 import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
+import           Data.Conduit.Internal       (ConduitM (..), Pipe (..))
 import qualified Data.Conduit.List           as CL
 import           Data.IOData
 import           Data.Monoid                 (Monoid (..))
@@ -193,6 +197,7 @@ import qualified Data.Sequences              as Seq
 import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
+import           Data.Void                   (absurd)
 import qualified Filesystem                  as F
 import           Filesystem.Path             (FilePath, (</>))
 import           Filesystem.Path.CurrentOS   (encodeString, decodeString)
@@ -200,7 +205,8 @@ import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
                                               ($), Functor (..), Enum, seq, Show, Char, (||),
-                                              mod, otherwise, Either (..))
+                                              mod, otherwise, Either (..),
+                                              ($!), succ)
 import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
@@ -212,6 +218,8 @@ import Data.Text (Text)
 import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
 import qualified System.PosixCompat.Files as PosixC
+import           Data.Primitive.MutVar       (MutVar, newMutVar, readMutVar,
+                                              writeMutVar)
 
 #ifndef WINDOWS
 import qualified System.Posix.Directory as Dir
@@ -1373,3 +1381,28 @@ linesUnboundedAsciiC :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
                     => Conduit seq m seq
 linesUnboundedAsciiC = CC.linesUnboundedAscii
 {-# INLINE linesUnboundedAsciiC #-}
+
+-- | Generally speaking, yielding values from inside a Conduit requires
+-- some allocation for constructors. This can introduce an overhead,
+-- similar to the overhead needed to represent a list of values instead of
+-- a vector. This overhead is even more severe when talking about unboxed
+-- values.
+--
+-- This combinator allows you to overcome this overhead, and efficiently
+-- fill up vectors. It takes two parameters. The first is the size of each
+-- mutable vector to be allocated. The second is a function. The function
+-- takes an argument which will yield the next value into a mutable
+-- vector.
+--
+-- Under the surface, this function uses a number of tricks to get high
+-- performance. For more information on both usage and implementation,
+-- please see:
+-- <https://www.fpcomplete.com/user/snoyberg/library-documentation/bytevector-and-vectorbuilder>.
+--
+-- Since 1.0.0
+vectorBuilderC :: (PrimMonad base, MonadBase base m, V.Vector v e, MonadBase base n)
+              => Int -- ^ size
+              -> ((e -> n ()) -> Sink i m r)
+              -> ConduitM i (v e) m r
+vectorBuilderC = CC.vectorBuilder
+{-# INLINE vectorBuilderC #-}

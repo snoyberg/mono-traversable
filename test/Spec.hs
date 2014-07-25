@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 import Conduit
 import Prelude hiding (FilePath)
@@ -37,6 +38,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Base64.Lazy as B64L
 import qualified Data.ByteString.Base64.URL.Lazy as B64LU
 import qualified Data.ByteString.Base64.URL as B64U
+import Control.Monad.ST (runST)
 
 main :: IO ()
 main = hspec $ do
@@ -609,6 +611,20 @@ main = hspec $ do
     it "slidingWindow 6" $
         let res = runIdentity $ yieldMany [1..5] $= slidingWindow 6 $$ sinkList
         in res `shouldBe` [[1,2,3,4,5]]
+    prop "vectorBuilder" $ \(values :: [[Int]]) ((+1) . (`mod` 30) . abs -> size) -> do
+        let res = runST
+                $ yieldMany values
+               $$ vectorBuilderC size mapM_CE
+               =$ sinkList
+            expected =
+                loop $ concat values
+              where
+                loop [] = []
+                loop x =
+                    VU.fromList y : loop z
+                  where
+                    (y, z) = splitAt size x
+        res `shouldBe` expected
 
 evenInt :: Int -> Bool
 evenInt = even
