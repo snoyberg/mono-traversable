@@ -1799,7 +1799,7 @@ vectorBuilder size inner = do
 {-# INLINE vectorBuilder #-}
 
 data S s v e = S
-    {-# UNPACK #-} !Int -- ^ index
+    {-# UNPACK #-} !Int -- index
     !(V.Mutable v s e)
     ([v e] -> [v e])
 
