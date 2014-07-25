@@ -1,5 +1,5 @@
 name:                mono-traversable
-version:             0.6.0.4
+version:             0.6.1
 synopsis:            Type classes for mapping, folding, and traversing monomorphic containers
 description:         Monomorphic variants of the Functor, Foldable, and Traversable typeclasses. Contains even more experimental code for abstracting containers and sequences.
 homepage:            https://github.com/snoyberg/mono-traversable
@@ -19,6 +19,7 @@ library
                        Data.Sequences
                        Data.NonNull
                        Data.MinLen
+                       Data.ByteVector
   other-modules:       Data.GrowingAppend
   build-depends:       base >= 4 && < 5
                      , containers >= 0.4

@@ -31,6 +31,7 @@ import qualified Data.IntSet as IntSet
 import Control.Arrow (first, second)
 import qualified Control.Foldl as Foldl
 import Data.Int (Int64)
+import Data.ByteVector
 
 main :: IO ()
 main = hspec $ do
@@ -313,3 +314,9 @@ main = hspec $ do
 
     it "find doesn't infinitely loop on NonEmpty #31" $
         find (== "a") ("a" NE.:| ["d","fgf"]) `shouldBe` Just "a"
+
+    prop "toByteVector works" $ \ws ->
+        (otoList . toByteVector . fromList $ ws) `shouldBe` ws
+
+    prop "fromByteVector works" $ \ws ->
+        (otoList . fromByteVector . fromList $ ws) `shouldBe` ws
