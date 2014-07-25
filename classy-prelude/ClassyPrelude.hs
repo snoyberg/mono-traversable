@@ -49,6 +49,7 @@ module ClassyPrelude
     , module Data.Containers
     , module Data.Builder
     , module Data.MinLen
+    , module Data.ByteVector
       -- * I\/O
     , Handle
     , stdin
@@ -161,6 +162,7 @@ import Data.MonoTraversable
 import Data.Containers
 import Data.Builder
 import Data.MinLen
+import Data.ByteVector
 import qualified Filesystem.Path.CurrentOS as F
 import System.IO (Handle, stdin, stdout, stderr, hClose)
 
