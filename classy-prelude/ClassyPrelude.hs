@@ -25,6 +25,14 @@ module ClassyPrelude
     , orElseSTM
     , checkSTM
     , module Data.IORef.Lifted
+      -- ** Primitive (exported since 0.9.4)
+    , PrimMonad
+    , PrimState
+    , primToPrim
+    , primToIO
+    , primToST
+    , module Data.Primitive.MutVar
+    , Prim
       -- ** Debugging
     , trace
     , traceShow
@@ -187,6 +195,10 @@ import qualified Data.HashSet as HashSet
 import Data.Textual.Encoding
 import Data.Sequences.Lazy
 import GHC.Generics (Generic)
+
+import Control.Monad.Primitive (PrimMonad, PrimState, primToPrim, primToIO, primToST)
+import Data.Primitive.MutVar
+import Data.Primitive.Types (Prim)
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
