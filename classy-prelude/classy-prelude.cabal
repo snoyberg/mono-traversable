@@ -35,6 +35,7 @@ library
                      , ghc-prim
                      , stm
                      , primitive
+                     , mtl
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test

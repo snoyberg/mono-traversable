@@ -46,6 +46,12 @@ module ClassyPrelude
     , defaultTimeLocale
       -- ** Generics (since 0.8.1)
     , Generic
+      -- ** Transformers (since 0.9.4)
+    , Identity (..)
+    , MonadReader
+    , ask
+    , ReaderT (..)
+    , Reader
       -- * Poly hierarchy
     , module Data.Foldable
     , module Data.Traversable
@@ -199,6 +205,9 @@ import GHC.Generics (Generic)
 import Control.Monad.Primitive (PrimMonad, PrimState, primToPrim, primToIO, primToST)
 import Data.Primitive.MutVar
 import Data.Primitive.Types (Prim)
+
+import Data.Functor.Identity (Identity (..))
+import Control.Monad.Reader (MonadReader, ask, ReaderT (..), Reader)
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
