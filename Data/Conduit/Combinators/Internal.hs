@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE CPP #-}
 -- | Internal helper functions, usually used for rewrite rules.
 module Data.Conduit.Combinators.Internal
     ( initReplicate
@@ -80,7 +81,11 @@ initRepeatConnect mseed f (ConduitM sink0) = do
         loop (PipeM mp) = mp >>= loop
         loop (Leftover _ i) = absurd i
 
+#if MIN_VERSION_conduit(1, 2, 0)
+    loop (injectLeftovers (sink0 Done))
+#else
     loop (injectLeftovers sink0)
+#endif
 {-# RULES "initRepeatConnect" forall mseed f sink.
     initRepeat mseed f $$ sink
     = initRepeatConnect mseed f sink
