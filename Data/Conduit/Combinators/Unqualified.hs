@@ -260,7 +260,7 @@ unfoldC = CC.unfold
 -- structures.
 --
 -- Since 1.0.0
-enumFromToC :: (Monad m, Enum a, Eq a) => a -> a -> Producer m a
+enumFromToC :: (Monad m, Enum a, Ord a) => a -> a -> Producer m a
 enumFromToC = CC.enumFromTo
 {-# INLINE enumFromToC #-}
 

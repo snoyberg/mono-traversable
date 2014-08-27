@@ -267,7 +267,7 @@ unfold = CL.unfold
 -- structures.
 --
 -- Since 1.0.0
-enumFromTo :: (Monad m, Enum a, Eq a) => a -> a -> Producer m a
+enumFromTo :: (Monad m, Enum a, Ord a) => a -> a -> Producer m a
 enumFromTo = CL.enumFromTo
 
 -- | Produces an infinite stream of repeated applications of f to x.
@@ -1807,6 +1807,15 @@ onAwait :: Monad m
         => ConduitM i o m ()
         -> Sink i m r
         -> ConduitM i o m r
+#if MIN_VERSION_conduit(1, 2, 0)
+onAwait (ConduitM callback) (ConduitM sink0) = ConduitM $ \rest -> let
+    go (Done r) = rest r
+    go (HaveOutput _ _ o) = absurd o
+    go (NeedInput f g) = callback $ \() -> NeedInput (go . f) (go . g)
+    go (PipeM mp) = PipeM (liftM go mp)
+    go (Leftover f i) = Leftover (go f) i
+    in go (sink0 Done)
+#else
 onAwait (ConduitM callback) =
     ConduitM . go . unConduitM
   where
@@ -1815,6 +1824,7 @@ onAwait (ConduitM callback) =
     go (NeedInput f g) = callback >> NeedInput (go . f) (go . g)
     go (PipeM mp) = PipeM (liftM go mp)
     go (Leftover f i) = Leftover (go f) i
+#endif
 {-# INLINE onAwait #-}
 
 yieldS :: (PrimMonad base, MonadBase base m)
