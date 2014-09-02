@@ -87,6 +87,7 @@ import Data.Semigroup (Semigroup, Option (..))
 import qualified Data.ByteString.Unsafe as SU
 import Data.DList (DList)
 import qualified Data.DList as DL
+import Data.Bifunctor (Bifunctor(..))
 
 type family Element mono
 type instance Element S.ByteString = Word8
@@ -941,3 +942,28 @@ instance VS.Storable a => MonoPointed (VS.Vector a) where
 instance MonoPointed (Either a b) where
     opoint = Right
     {-# INLINE opoint #-}
+
+
+type family Elem1 mono
+type family Elem2 mono
+class MonoBifunctor mono where
+    obimap  :: (Elem1 mono -> Elem1 mono) -> (Elem2 mono -> Elem2 mono) -> mono -> mono
+    default obimap :: (Bifunctor f, Elem1 (f a b) ~ a, Elem2 (f a b) ~ b, f a b ~ mono)
+                   => (a -> a) -> (b -> b) -> f a b -> f a b
+    obimap = bimap
+    {-# INLINE obimap #-}
+
+    ofirst  :: (Elem1 mono -> Elem1 mono) -> mono -> mono
+    ofirst f = obimap f id
+    {-# INLINE ofirst #-}
+    osecond :: (Elem2 mono -> Elem2 mono) -> mono -> mono
+    osecond g = obimap id g
+    {-# INLINE osecond #-}
+
+type instance Elem1 (Either a b) = a
+type instance Elem2 (Either a b) = b
+instance MonoBifunctor (Either a b) where
+
+type instance Elem1 (a, b) = a
+type instance Elem2 (a, b) = b
+instance MonoBifunctor (a,b)
