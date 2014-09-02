@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
 module Spec where
 
 import Test.Hspec
@@ -32,6 +33,9 @@ import Control.Arrow (first, second)
 import qualified Control.Foldl as Foldl
 import Data.Int (Int64)
 import Data.ByteVector
+import Data.Monoid ((<>))
+
+default (Int, Text)
 
 main :: IO ()
 main = hspec $ do
@@ -320,3 +324,7 @@ main = hspec $ do
 
     prop "fromByteVector works" $ \ws ->
         (otoList . fromByteVector . fromList $ ws) `shouldBe` ws
+
+    describe "MonoBifunctor" $
+      it "(a,b)" $
+        obimap (+3) (<> "b") (2,"a") `shouldBe` (5,"ab")
