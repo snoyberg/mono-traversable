@@ -6,12 +6,13 @@
 -- | Warning: This module should be considered highly experimental.
 module Data.Sequences where
 
+import Data.Maybe (fromJust, isJust)
 import Data.Monoid (Monoid, mconcat, mempty)
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral, ($), flip, maybe, error)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), fst, snd, Integral, ($), flip, maybe, error)
 import Data.Char (Char, isSpace)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
@@ -156,6 +157,10 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
 
     unsafeTail :: seq -> seq
     unsafeTail = tailEx
+
+    catMaybes :: (IsSequence maybseq, Element maybseq ~ Maybe (Element seq))
+              => maybseq -> seq
+    catMaybes = fromList . fmap fromJust . otoList . filter isJust
 
     unsafeInit :: seq -> seq
     unsafeInit = initEx

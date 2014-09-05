@@ -14,8 +14,8 @@ cabal-version:       >=1.10
 
 library
   ghc-options: -Wall
-  exposed-modules:     Data.Containers
-                       Data.MonoTraversable
+  exposed-modules:     Data.MonoTraversable
+                       Data.Containers
                        Data.Sequences
                        Data.NonNull
                        Data.MinLen
@@ -69,7 +69,7 @@ benchmark sorting
     main-is:        sorting.hs
     ghc-options:    -Wall -O2
     default-language:    Haskell2010
-                     
+
 source-repository head
   type: git
   location: git://github.com/snoyberg/mono-traversable.git
