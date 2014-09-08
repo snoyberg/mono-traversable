@@ -946,6 +946,7 @@ instance MonoPointed (Either a b) where
 
 type family Elem1 mono
 type family Elem2 mono
+-- | Bifunctor for containers with less than 2 type variable
 class MonoBifunctor mono where
     obimap  :: (Elem1 mono -> Elem1 mono) -> (Elem2 mono -> Elem2 mono) -> mono -> mono
     default obimap :: (Bifunctor f, Elem1 (f a b) ~ a, Elem2 (f a b) ~ b, f a b ~ mono)
