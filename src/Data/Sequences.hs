@@ -158,10 +158,6 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     unsafeTail :: seq -> seq
     unsafeTail = tailEx
 
-    catMaybes :: (IsSequence maybseq, Element maybseq ~ Maybe (Element seq))
-              => maybseq -> seq
-    catMaybes = fromList . fmap fromJust . otoList . filter isJust
-
     unsafeInit :: seq -> seq
     unsafeInit = initEx
     {-# INLINE fromList #-}
@@ -1114,3 +1110,10 @@ instance Textual TL.Text where
     {-# INLINE toLower #-}
     {-# INLINE toUpper #-}
     {-# INLINE toCaseFold #-}
+
+-- | Takes all of the `Just` values from a sequence of @Maybe t@s and
+-- concatenates them into an unboxed sequence of @t@s.
+catMaybes :: (IsSequence (f (Maybe t)), Functor f,
+              Element (f (Maybe t)) ~ Maybe t)
+          => f (Maybe t) -> f t
+catMaybes = fmap fromJust . filter isJust
