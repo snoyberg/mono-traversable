@@ -6,12 +6,13 @@
 -- | Warning: This module should be considered highly experimental.
 module Data.Sequences where
 
+import Data.Maybe (fromJust, isJust)
 import Data.Monoid (Monoid, mconcat, mempty)
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), not, fst, snd, Integral, ($), flip, maybe, error)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), fst, snd, Integral, ($), flip, maybe, error)
 import Data.Char (Char, isSpace)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
@@ -1109,3 +1110,10 @@ instance Textual TL.Text where
     {-# INLINE toLower #-}
     {-# INLINE toUpper #-}
     {-# INLINE toCaseFold #-}
+
+-- | Takes all of the `Just` values from a sequence of @Maybe t@s and
+-- concatenates them into an unboxed sequence of @t@s.
+catMaybes :: (IsSequence (f (Maybe t)), Functor f,
+              Element (f (Maybe t)) ~ Maybe t)
+          => f (Maybe t) -> f t
+catMaybes = fmap fromJust . filter isJust
