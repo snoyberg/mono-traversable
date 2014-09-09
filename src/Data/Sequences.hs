@@ -1113,6 +1113,8 @@ instance Textual TL.Text where
 
 -- | Takes all of the `Just` values from a sequence of @Maybe t@s and
 -- concatenates them into an unboxed sequence of @t@s.
+--
+-- Since 0.6.2
 catMaybes :: (IsSequence (f (Maybe t)), Functor f,
               Element (f (Maybe t)) ~ Maybe t)
           => f (Maybe t) -> f t
