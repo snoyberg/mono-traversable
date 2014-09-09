@@ -168,7 +168,7 @@ import Data.IOData (IOData (..))
 import Control.Monad.Catch (MonadThrow (throwM))
 
 import Data.Vector.Instances ()
-import CorePrelude hiding (print, undefined, (<>))
+import CorePrelude hiding (print, undefined, (<>), catMaybes)
 import Data.ChunkedZip
 import qualified Data.Char as Char
 import Data.Sequences
