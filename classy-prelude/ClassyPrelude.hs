@@ -55,6 +55,8 @@ module ClassyPrelude
       -- * Poly hierarchy
     , module Data.Foldable
     , module Data.Traversable
+      -- ** Bifunctor (since 0.10.0)
+    , module Data.Bifunctor
       -- * Mono hierarchy
     , module Data.MonoTraversable
     , module Data.Sequences
@@ -168,7 +170,7 @@ import Data.IOData (IOData (..))
 import Control.Monad.Catch (MonadThrow (throwM))
 
 import Data.Vector.Instances ()
-import CorePrelude hiding (print, undefined, (<>), catMaybes)
+import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
 import Data.ChunkedZip
 import qualified Data.Char as Char
 import Data.Sequences
@@ -208,6 +210,7 @@ import Data.Primitive.Types (Prim)
 
 import Data.Functor.Identity (Identity (..))
 import Control.Monad.Reader (MonadReader, ask, ReaderT (..), Reader)
+import Data.Bifunctor
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
