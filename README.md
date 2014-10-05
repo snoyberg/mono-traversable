@@ -3,7 +3,7 @@ mono-traversable
 
 Type classes for mapping, folding, and traversing monomorphic containers. Contains even more experimental code for abstracting containers and sequences. 
 
-A polymorphin container is one such as list which has a type variable `[a]`
+A polymorphic container is one such as list which has a type variable `[a]`
 A monomorphic container is one such as Text which has a type `Text` that does not expose the underlying characters.
 
 Adding instances
