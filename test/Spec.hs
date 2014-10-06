@@ -81,6 +81,9 @@ main = hspec $ do
     describe "groupAll" $ do
         it "list" $ groupAll ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
         it "Text" $ groupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
+    describe "ordGroupAll" $ do
+        it "list" $ ordGroupAll ("abcabcabc" :: String) == ["aaa", "bbb", "ccc"]
+        it "Text" $ ordGroupAll ("abcabcabc" :: Text) == ["aaa", "bbb", "ccc"]
     describe "unsnoc" $ do
         let test name dummy = prop name $ \xs ->
                 let seq' = fromList xs `asTypeOf` dummy
@@ -96,6 +99,10 @@ main = hspec $ do
         test "lazy ByteString" L.empty
     describe "groupAllOn" $ do
         it "list" $ groupAllOn (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
+    describe "ordGroupAllOn" $ do
+        -- TODO: Currently returns the list in a different order from groupAllOn due to the sorting
+        --       should we try to maintain the original ordering?
+        it "list" $ ordGroupAllOn (`mod` 3) ([1..9] :: [Int]) == [[3, 6, 9], [1, 4, 7], [2, 5, 8]]
     describe "breakWord" $ do
         let test x y z = it (show (x, y, z)) $ breakWord (x :: Text) `shouldBe` (y, z)
         test "hello world" "hello" "world"
