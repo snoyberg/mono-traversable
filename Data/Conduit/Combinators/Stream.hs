@@ -8,7 +8,28 @@
 --   "Data.Conduit.Combinators".  Many functions don't have stream
 --   versions here because instead they have @RULES@ which inline a
 --   definition that fuses.
-module Data.Conduit.Combinators.Stream where
+module Data.Conduit.Combinators.Stream
+  ( yieldManyS
+  , repeatMS
+  , repeatWhileMS
+  , sourceHandleS
+  , foldl1S
+  , allS
+  , anyS
+  , lastS
+  , lastES
+  , findS
+  , concatMapS
+  , concatMapMS
+  , concatS
+  , scanlS
+  , scanlMS
+  , intersperseS
+  , slidingWindowS
+  , filterMS
+  , splitOnUnboundedES
+  )
+  where
 
 -- BEGIN IMPORTS
 
@@ -81,7 +102,7 @@ foldl1S f (Stream step ms0) =
         return $ case res of
             Stop () -> Stop mprev
             Skip s' -> Skip (mprev, s')
-            Emit s' a -> Skip (Just $ maybe a (f a) mprev, s')
+            Emit s' a -> Skip (Just $ maybe a (`f` a) mprev, s')
 {-# INLINE foldl1S #-}
 
 allS :: Monad m
@@ -115,14 +136,14 @@ fmapS f s inp =
 lastS :: Monad m
       => StreamConsumer a m (Maybe a)
 lastS (Stream step ms0) =
-    Stream step' ms0
+    Stream step' (liftM (Nothing,) ms0)
   where
-    step' s = do
+    step' (mlast, s) = do
         res <- step s
         return $ case res of
-            Stop () -> Stop Nothing
-            Skip s' -> Skip s'
-            Emit _ x -> Stop (Just x)
+            Stop () -> Stop mlast
+            Skip s' -> Skip (mlast, s')
+            Emit s' x -> Skip (Just x, s')
 {-# INLINE lastS #-}
 
 lastES :: (Monad m, Seq.IsSequence seq)
@@ -192,70 +213,98 @@ concatS :: (Monad m, MonoFoldable mono)
 concatS = concatMapS id
 {-# INLINE concatS #-}
 
+data ScanState a s
+    = ScanEnded
+    | ScanContinues a s
+
 scanlS :: Monad m => (a -> b -> a) -> a -> StreamConduit b m a
 scanlS f seed0 (Stream step ms0) =
-    Stream step' (liftM (seed0, ) ms0)
+    Stream step' (liftM (ScanContinues seed0) ms0)
   where
-    step' (seed, s) = do
+    step' ScanEnded = return $ Stop ()
+    step' (ScanContinues seed s) = do
         res <- step s
         return $ case res of
-            Stop () -> Stop ()
-            Skip s' -> Skip (seed, s')
-            Emit s' x -> Emit (r, s') r
+            Stop () -> Emit ScanEnded seed
+            Skip s' -> Skip (ScanContinues seed s')
+            Emit s' x -> Emit (ScanContinues seed' s') seed
               where
-                !r = f seed x
+                !seed' = f seed x
 {-# INLINE scanlS #-}
 
 scanlMS :: Monad m => (a -> b -> m a) -> a -> StreamConduit b m a
 scanlMS f seed0 (Stream step ms0) =
-    Stream step' (liftM (seed0, ) ms0)
+    Stream step' (liftM (ScanContinues seed0) ms0)
   where
-    step' (seed, s) = do
+    step' ScanEnded = return $ Stop ()
+    step' (ScanContinues seed s) = do
         res <- step s
         case res of
-            Stop () -> return $ Stop ()
-            Skip s' -> return $ Skip (seed, s')
+            Stop () -> return $ Emit ScanEnded seed
+            Skip s' -> return $ Skip (ScanContinues seed s')
             Emit s' x -> do
-                !r <- f seed x
-                return $ Emit (r, s') r
+                !seed' <- f seed x
+                return $ Emit (ScanContinues seed' s') seed
 {-# INLINE scanlMS #-}
+
+data IntersperseState a s
+    = IFirstValue s
+    | IGotValue s a
+    | IEmitValue s a
 
 intersperseS :: Monad m => a -> StreamConduit a m a
 intersperseS sep (Stream step ms0) =
-    Stream step' (liftM (False, ) ms0)
+    Stream step' (liftM IFirstValue ms0)
   where
-    -- Emit a separator
-    step' (True, s) = return $ Emit (False, s) sep
-    -- Wait for a value
-    step' (False, s) = do
+    step' (IFirstValue s) = do
         res <- step s
         return $ case res of
             Stop () -> Stop ()
-            Skip s' -> Skip (False, s')
-            Emit s' x -> Emit (True, s') x
+            Skip s' -> Skip (IFirstValue s')
+            Emit s' x -> Emit (IGotValue s' x) x
+    -- Emit the separator once we know it's not the end of the list.
+    step' (IGotValue s x) = do
+        res <- step s
+        return $ case res of
+            Stop () -> Stop ()
+            Skip s' -> Skip (IGotValue s' x)
+            Emit s' x' -> Emit (IEmitValue s' x') sep
+    -- We emitted a separator, now emit the value that comes after.
+    step' (IEmitValue s x) = return $ Emit (IGotValue s x) x
 {-# INLINE intersperseS #-}
+
+data SlidingWindowState seq s
+    = SWInitial Int seq s
+    | SWSliding seq s
+    | SWEarlyExit
 
 slidingWindowS :: (Monad m, Seq.IsSequence seq, Element seq ~ a) => Int -> StreamConduit a m seq
 slidingWindowS sz (Stream step ms0) =
-    Stream step' (liftM (Just (max 1 sz), mempty, ) ms0)
+    Stream step' (liftM (SWInitial (max 1 sz) mempty) ms0)
   where
-    step' (mn, st, s) = do
+    step' (SWInitial n st s) = do
+        res <- step s
+        return $ case res of
+            Stop () -> Emit SWEarlyExit st
+            Skip s' -> Skip (SWInitial n st s')
+            Emit s' x ->
+                if n == 1
+                    then Emit (SWSliding (Seq.unsafeTail st') s') st'
+                    else Skip (SWInitial (n - 1) st' s')
+              where
+                st' = Seq.snoc st x
+    -- After collecting the initial window, each upstream element
+    -- causes an additional window to be yielded.
+    step' (SWSliding st s) = do
         res <- step s
         return $ case res of
             Stop () -> Stop ()
-            Skip s' -> Skip (mn, st, s')
-            Emit s' x ->
-                case mn of
-                     -- Collecting the initial window (a prefix of the
-                     -- input stream)
-                     Just 1 -> Emit (Nothing, Seq.unsafeTail st', s') st'
-                     Just n -> Skip (Just (n - 1), st', s')
-                     -- After collecting the initial window, each
-                     -- upstream element causes an additional window
-                     -- to be yielded.
-                     Nothing -> Emit (Nothing, Seq.unsafeTail st', s') st'
-               where
-                 st' = Seq.snoc st x
+            Skip s' -> Skip (SWSliding st s')
+            Emit s' x -> Emit (SWSliding (Seq.unsafeTail st') s') st'
+              where
+                st' = Seq.snoc st x
+    step' SWEarlyExit = return $ Stop ()
+
 {-# INLINE slidingWindowS #-}
 
 filterMS :: Monad m

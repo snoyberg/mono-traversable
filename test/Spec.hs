@@ -39,6 +39,7 @@ import qualified Data.ByteString.Base64.Lazy as B64L
 import qualified Data.ByteString.Base64.URL.Lazy as B64LU
 import qualified Data.ByteString.Base64.URL as B64U
 import Control.Monad.ST (runST)
+import qualified StreamSpec
 
 main :: IO ()
 main = hspec $ do
@@ -625,6 +626,7 @@ main = hspec $ do
                   where
                     (y, z) = splitAt size x
         res `shouldBe` expected
+    StreamSpec.spec
 
 evenInt :: Int -> Bool
 evenInt = even
