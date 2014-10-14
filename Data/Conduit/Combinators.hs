@@ -251,53 +251,36 @@ import qualified Data.Conduit.Filesystem as CF
 
 -- TODO:
 --
---   * Fusion to test:
---     - sourceHandle
---     - all / any
---
 --   * Fusion to implement
 --     - sourceRandom*
 --     - sourceDirectory*
 --     - sinkVector*
---     - sinkLazy
 --     - vectorBuilder
 --
---   * Investigate if it's possible to implement the functions that
---   require leftovers by making leftovers an explicit component of
---   the results.  This would be valuable for various encoding /
---   decoding functions which are used in many applications.
---
---   * Possible, but questionable worth
+--   * Possible, but of questionable worth:
 --     - awaitNonNull
+
+-- Fusion isn't possible for the following operations:
 --
---   * Could use INLINE_RULE if fusion worked for fmap:
---     - all / any
---     - sinkLazy / sinkLazyBuilder
+--   * Due to a lack of leftovers:
+--     - dropE, dropWhile, dropWhileE
+--     - headE
+--     - peek, peekE
+--     - null, nullE
+--     - takeE, takeWhile, takeWhileE
+--     - mapWhile
+--     - codeWith
+--     - line
+--     - lineAscii
 --
---   * Requires streams to be exposed from conduit for a nice implementation:
---     - sinkLazy / sinkLazyBuilder
+--   * Due to a use of leftover in a dependency:
+--     - Due to "codeWith": encodeBase64, decodeBase64, encodeBase64URL, decodeBase64URL, decodeBase16
+--     - due to "CT.decode": decodeUtf8, decodeUtf8Lenient
 --
---   * Fusion isn't possible for the following operations:
---
---     * Due to a lack of leftovers:
---       - dropE, dropWhile, dropWhileE
---       - headE
---       - peek, peekE
---       - null, nullE
---       - takeE, takeWhile, takeWhileE
---       - mapWhile
---       - codeWith
---       - line
---       - lineAscii
---
---     * Due to a use of leftover in a dependency:
---       - Due to "codeWith": encodeBase64, decodeBase64, encodeBase64URL, decodeBase64URL, decodeBase16
---       - due to "CT.decode": decodeUtf8, decodeUtf8Lenient
---
---     * takeExactly / takeExactlyE - no monadic bind.  Another way to
---     look at this is that subsequent streams drive stream
---     evaluation, so there's no way for the conduit to guarantee a
---     certain amount of demand from the upstream.
+--   * takeExactly / takeExactlyE - no monadic bind.  Another way to
+--   look at this is that subsequent streams drive stream evaluation,
+--   so there's no way for the conduit to guarantee a certain amount
+--   of demand from the upstream.
 
 -- | Yield each of the values contained by the given @MonoFoldable@.
 --
@@ -878,11 +861,14 @@ INLINE_RULE(notElemE, x, all (Seq.notElem x))
 -- This can be used to consume a stream of strict ByteStrings into a lazy
 -- ByteString, for example.
 --
+-- Subject to fusion
+--
 -- Since 1.0.0
-sinkLazy :: (Monad m, LazySequence lazy strict)
-         => Consumer strict m lazy
-sinkLazy = (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
-{-# INLINE sinkLazy #-}
+sinkLazy, sinkLazyC :: (Monad m, LazySequence lazy strict)
+                    => Consumer strict m lazy
+sinkLazyC = (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
+{-# INLINE sinkLazyC #-}
+STREAMING0(sinkLazy)
 
 -- | Consume all values from the stream and return as a list. Note that this
 -- will pull all values into memory.
@@ -965,11 +951,14 @@ INLINE_RULE0(sinkBuilder, foldMap toBuilder)
 --
 -- * Some buffer copying may occur in this version.
 --
+-- Subject to fusion
+--
 -- Since 1.0.0
-sinkLazyBuilder :: (Monad m, Monoid builder, ToBuilder a builder, Builder builder lazy)
-                => Consumer a m lazy
-sinkLazyBuilder = fmap builderToLazy sinkBuilder
-{-# INLINE sinkLazyBuilder #-}
+sinkLazyBuilder, sinkLazyBuilderC :: (Monad m, Monoid builder, ToBuilder a builder, Builder builder lazy)
+                                  => Consumer a m lazy
+sinkLazyBuilderC = fmap builderToLazy sinkBuilder
+{-# INLINE sinkLazyBuilderC #-}
+STREAMING0(sinkLazyBuilder)
 
 -- | Consume and discard all remaining values in the stream.
 --

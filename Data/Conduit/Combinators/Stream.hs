@@ -16,6 +16,8 @@ module Data.Conduit.Combinators.Stream
   , foldl1S
   , allS
   , anyS
+  , sinkLazyS
+  , sinkLazyBuilderS
   , lastS
   , lastES
   , findS
@@ -35,13 +37,16 @@ module Data.Conduit.Combinators.Stream
 
 import           Control.Monad (liftM)
 import           Control.Monad.IO.Class (MonadIO (..))
+import           Data.Builder
 import           Data.Conduit.Internal.Fusion
+import           Data.Conduit.Internal.List.Stream (foldS)
 import           Data.IOData
 import           Data.Maybe (isNothing, isJust)
 import           Data.MonoTraversable
 import           Data.Monoid (Monoid (..))
 import qualified Data.NonNull as NonNull
 import qualified Data.Sequences as Seq
+import           Data.Sequences.Lazy
 import           Prelude
 import           System.IO (Handle)
 
@@ -117,21 +122,20 @@ anyS :: Monad m
 anyS f = fmapS isJust (findS f)
 {-# INLINE anyS #-}
 
--- Utility function for allS / anyS
-
-fmapS :: Monad m
-      => (a -> b)
-      -> StreamConduitM i o m a
-      -> StreamConduitM i o m b
-fmapS f s inp =
-    case s inp of
-        Stream step ms0 -> Stream (fmap (liftM (fmap f)) step) ms0
-
 --TODO: use a definition like
 -- fmapS (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
 
-{-sinkLazyS :: (Monad m, LazySequence lazy strict)
-          => StreamConsumer strict m lazy-}
+sinkLazyS :: (Monad m, LazySequence lazy strict)
+          => StreamConsumer strict m lazy
+sinkLazyS = fmapS (fromChunks . ($ [])) $ foldS (\front next -> front . (next:)) id
+{-# INLINE sinkLazyS #-}
+
+sinkLazyBuilderS :: (Monad m, Monoid builder, ToBuilder a builder, Builder builder lazy)
+                 => StreamConsumer a m lazy
+sinkLazyBuilderS = fmapS builderToLazy (foldS combiner mempty)
+  where
+    combiner accum = mappend accum . toBuilder
+{-# INLINE sinkLazyBuilderS #-}
 
 lastS :: Monad m
       => StreamConsumer a m (Maybe a)
@@ -360,3 +364,12 @@ splitOnUnboundedES f (Stream step ms0) =
       where
         (x, y) = Seq.break f t
 {-# INLINE splitOnUnboundedES #-}
+
+-- Utility function
+fmapS :: Monad m
+      => (a -> b)
+      -> StreamConduitM i o m a
+      -> StreamConduitM i o m b
+fmapS f s inp =
+    case s inp of
+        Stream step ms0 -> Stream (fmap (liftM (fmap f)) step) ms0
