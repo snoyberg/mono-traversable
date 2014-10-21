@@ -10,10 +10,8 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import ClassyPrelude hiding (undefined)
 import Test.QuickCheck.Arbitrary
-import Prelude (asTypeOf, fromIntegral, undefined)
-import qualified Prelude
+import Prelude (undefined)
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
-import Data.Functor.Identity (runIdentity)
 import Control.Concurrent (throwTo, threadDelay, forkIO)
 import Control.Exception (throw)
 import qualified Data.Set as Set
