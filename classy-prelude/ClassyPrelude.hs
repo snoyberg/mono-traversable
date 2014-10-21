@@ -17,6 +17,7 @@ module ClassyPrelude
     , unlessM
       -- ** Mutable references
     , module Control.Concurrent.MVar.Lifted
+    , module Control.Concurrent.Chan.Lifted
     , module Control.Concurrent.STM
     , atomically
     , alwaysSTM
@@ -154,6 +155,7 @@ module ClassyPrelude
     , asVector
     , asUVector
     , asSVector
+    , asString
     ) where
 
 import qualified Prelude
@@ -161,6 +163,7 @@ import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
 import Control.Concurrent.MVar.Lifted
+import Control.Concurrent.Chan.Lifted
 import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
@@ -382,6 +385,9 @@ asUVector = id
 
 asSVector :: SVector a -> SVector a
 asSVector = id
+
+asString :: [Char] -> [Char]
+asString = id
 
 print :: (Show a, MonadIO m) => a -> m ()
 print = liftIO . Prelude.print
