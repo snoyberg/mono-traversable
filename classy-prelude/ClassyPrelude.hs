@@ -291,6 +291,15 @@ forM_ = oforM_
 
 concatMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
 concatMap = ofoldMap
+{-# INLINE concatMap #-}
+
+foldMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
+foldMap = ofoldMap
+{-# INLINE foldMap #-}
+
+fold :: (Monoid (Element c), MonoFoldable c) => c -> Element c
+fold = ofoldMap id
+{-# INLINE fold #-}
 
 foldr :: MonoFoldable c => (Element c -> b -> b) -> b -> c -> b
 foldr = ofoldr
