@@ -77,15 +77,16 @@ module ClassyPrelude
     , map
     , concat
     , concatMap
+    , foldMap
+    , fold
     , length
     , null
     , pack
     , unpack
     , repack
     , toList
-    , Traversable.mapM
     , mapM_
-    , Traversable.forM
+    , sequence_
     , forM_
     , any
     , all
@@ -161,15 +162,14 @@ module ClassyPrelude
 import qualified Prelude
 import Control.Exception (assert)
 import Control.Exception.Enclosed
-import Control.Monad (when, unless, void, liftM, ap, forever, join, sequence, sequence_, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
+import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
 import Control.Concurrent.MVar.Lifted
 import Control.Concurrent.Chan.Lifted
 import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
 import qualified Data.Monoid as Monoid
-import qualified Data.Traversable as Traversable
-import Data.Traversable (Traversable)
+import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
 import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, MonadMask)
@@ -569,3 +569,7 @@ whenM mbool action = mbool >>= flip when action
 -- Since 0.9.2
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM mbool action = mbool >>= flip unless action
+
+sequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m a)) => mono -> m ()
+sequence_ = mapM_ (>> return ())
+{-# INLINE sequence_ #-}
