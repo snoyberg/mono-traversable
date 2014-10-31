@@ -13,16 +13,24 @@ import Data.Conduit.Internal (ConduitM (..), Pipe (..), injectLeftovers)
 import Data.Void (absurd)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (replicateM_, forever)
+import Data.Conduit.Combinators.Stream
+import Data.Conduit.Internal.Fusion
+
+-- Defines INLINE_RULE0, INLINE_RULE, STREAMING0, and STREAMING.
+#include "fusion-macros.h"
 
 -- | Acquire the seed value and perform the given action with it n times,
 -- yielding each result.
 --
+-- Subject to fusion
+--
 -- Since 0.2.1
-initReplicate :: Monad m => m seed -> (seed -> m a) -> Int -> Producer m a
-initReplicate mseed f cnt = do
+initReplicate, initReplicateC :: Monad m => m seed -> (seed -> m a) -> Int -> Producer m a
+initReplicateC mseed f cnt = do
     seed <- lift mseed
     replicateM_ cnt (lift (f seed) >>= yield)
-{-# INLINE [1] initReplicate #-}
+{-# INLINE [1] initReplicateC #-}
+STREAMING(initReplicate, mseed f cnt)
 
 -- | Optimized version of initReplicate for the special case of connecting with
 -- a @Sink@.
@@ -62,11 +70,15 @@ initReplicateConnect mseed f cnt0 (ConduitM sink0) = do
 -- | Acquire the seed value and perform the given action with it forever,
 -- yielding each result.
 --
+-- Subject to fusion
+--
 -- Since 0.2.1
-initRepeat :: Monad m => m seed -> (seed -> m a) -> Producer m a
-initRepeat mseed f = do
+initRepeat, initRepeatC :: Monad m => m seed -> (seed -> m a) -> Producer m a
+initRepeatC mseed f = do
     seed <- lift mseed
     forever $ lift (f seed) >>= yield
+{-# INLINE [1] initRepeatC #-}
+STREAMING(initRepeat, mseed f)
 
 -- | Optimized version of initRepeat for the special case of connecting with
 -- a @Sink@.

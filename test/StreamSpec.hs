@@ -7,32 +7,31 @@ module StreamSpec where
 
 import           Control.Applicative
 import qualified Control.Monad
-import           Control.Monad (MonadPlus(..), liftM)
+import           Control.Monad (liftM)
 import           Control.Monad.Identity (Identity, runIdentity)
 import           Control.Monad.State (StateT(..), get, put)
 import           Data.Conduit
 import           Data.Conduit.Combinators
+import           Data.Conduit.Combinators.Internal
 import           Data.Conduit.Combinators.Stream
 import           Data.Conduit.Internal.Fusion
 import           Data.Conduit.Internal.List.Stream (takeS, sourceListS, mapS)
 import           Data.Conduit.List (consume, isolate, sourceList)
-import qualified Data.Foldable
-import qualified Data.Foldable as F
-import           Data.Function (on)
 import qualified Data.List
-import qualified Data.Maybe
 import           Data.MonoTraversable
 import           Data.Monoid (Monoid(..))
 import qualified Data.NonNull as NonNull
 import           Data.Sequence (Seq)
 import qualified Data.Sequences as Seq
 import qualified Data.Text.Lazy as TL
+import           Data.Vector (Vector)
 import           Prelude
-    ((.), ($), (>>=), (=<<), return, (==), Int, id, Maybe(..), Monad, Bool(..),
+    ((.), ($), (=<<), return, id, Maybe(..), Monad, Bool(..), Int,
      Eq, Show, String, Functor, fst, snd)
 import qualified Prelude
 import qualified Safe
 import qualified System.IO as IO
+import           System.IO.Unsafe
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -180,13 +179,33 @@ spec = do
         qit "slidingWindowS" $
             \(getSmall -> n) ->
                 slidingWindowS n `checkStreamConduit`
-                (\xs -> runIdentity $ sourceList xs $= slidingWindow n $$ consume
+                (\xs -> runIdentity $
+                    sourceList xs $= preventFusion (slidingWindow n) $$ consume
                     :: [Seq Int])
         qit "splitOnUnboundedES" $
-          \(getBlind -> (f :: Int -> Bool)) ->
-              splitOnUnboundedES f `checkStreamConduit`
-              (\xs -> runIdentity $ sourceList xs $= splitOnUnboundedE f $$ consume
-                  :: [Seq Int])
+            \(getBlind -> (f :: Int -> Bool)) ->
+                splitOnUnboundedES f `checkStreamConduit`
+                (\xs -> runIdentity $
+                    sourceList xs $= preventFusion (splitOnUnboundedE f) $$ consume
+                    :: [Seq Int])
+        qit "initReplicateS" $
+            \(getBlind -> (mseed :: M Int), getBlind -> (f :: Int -> M Int), getSmall -> cnt) ->
+                initReplicateS mseed f cnt `checkStreamProducerM`
+                (preventFusion (initReplicate mseed f cnt) $$ consume)
+        qit "initRepeatS" $
+            \(getBlind -> (mseed :: M Int), getBlind -> (f :: Int -> M Int)) ->
+                initRepeatS mseed f `checkInfiniteStreamProducerM`
+                (preventFusion (initRepeat mseed f) $= take 10 $$ consume)
+        qit "sinkVectorS" $
+            \() -> checkStreamConsumerM'
+                unsafePerformIO
+                (sinkVectorS :: forall o. StreamConduitM Int o IO.IO (Vector Int))
+                (\xs -> sourceList xs $$ preventFusion sinkVector)
+        qit "sinkVectorNS" $
+            \(getSmall . getNonNegative -> n) -> checkStreamConsumerM'
+                unsafePerformIO
+                (sinkVectorNS n :: forall o. StreamConduitM Int o IO.IO (Vector Int))
+                (\xs -> sourceList xs $$ preventFusion (sinkVectorN n))
 
 instance Arbitrary a => Arbitrary (Seq a) where
     arbitrary = Seq.fromList <$> arbitrary
@@ -268,8 +287,8 @@ checkConduit c l = checkConduitM' runIdentity c (return . l)
 checkStreamConduit :: (Show a, Arbitrary a, Show b, Eq b) => StreamConduit a Identity b -> ([a] -> [b]) -> Property
 checkStreamConduit c l = checkStreamConduitM' runIdentity c (return . l)
 
-checkConduitResult :: (Show a, Arbitrary a, Show b, Eq b, Show r, Eq r) => ConduitM a b Identity r -> ([a] -> ([b], r)) -> Property
-checkConduitResult c l = checkConduitResultM' runIdentity c (return . l)
+-- checkConduitResult :: (Show a, Arbitrary a, Show b, Eq b, Show r, Eq r) => ConduitM a b Identity r -> ([a] -> ([b], r)) -> Property
+-- checkConduitResult c l = checkConduitResultM' runIdentity c (return . l)
 
 checkStreamConduitResult :: (Show a, Arbitrary a, Show b, Eq b, Show r, Eq r) => StreamConduitM a b Identity r -> ([a] -> ([b], r)) -> Property
 checkStreamConduitResult c l = checkStreamConduitResultM' runIdentity c (return . l)
@@ -301,8 +320,8 @@ checkConduitM = checkConduitM' runM
 checkStreamConduitM :: (Show a, Arbitrary a, Show b, Eq b) => StreamConduit a M b -> ([a] -> M [b]) -> Property
 checkStreamConduitM = checkStreamConduitM' runM
 
-checkConduitResultM :: (Show a, Arbitrary a, Show b, Eq b, Show r, Eq r) => ConduitM a b M r -> ([a] -> M ([b], r)) -> Property
-checkConduitResultM = checkConduitResultM' runM
+-- checkConduitResultM :: (Show a, Arbitrary a, Show b, Eq b, Show r, Eq r) => ConduitM a b M r -> ([a] -> M ([b], r)) -> Property
+-- checkConduitResultM = checkConduitResultM' runM
 
 checkStreamConduitResultM :: (Show a, Arbitrary a, Show b, Eq b, Show r, Eq r) => StreamConduitM a b M r -> ([a] -> M ([b], r)) -> Property
 checkStreamConduitResultM = checkStreamConduitResultM' runM
@@ -391,15 +410,18 @@ checkStreamConduitM' f s l = forAll arbitrary $ \xs ->
     ===
     f (l xs)
 
-checkConduitResultM' :: (Show a, Arbitrary a, Monad m, Show c, Eq c)
-                     => (m ([b], r) -> c)
-                     -> ConduitM a b m r
-                     -> ([a] -> m ([b], r))
-                     -> Property
-checkConduitResultM' f c l = Prelude.undefined {-FIXME forAll arbitrary $ \xs ->
-    f (sourceList xs $= preventFusion c $$ consume)
-    ===
-    f (l xs)-}
+-- TODO: Fixing this would allow comparing conduit consumers against
+-- their list versions.
+--
+-- checkConduitResultM' :: (Show a, Arbitrary a, Monad m, Show c, Eq c)
+--                      => (m ([b], r) -> c)
+--                      -> ConduitM a b m r
+--                      -> ([a] -> m ([b], r))
+--                      -> Property
+-- checkConduitResultM' f c l = FIXME forAll arbitrary $ \xs ->
+--     f (sourceList xs $= preventFusion c $$ consume)
+--     ===
+--     f (l xs)
 
 checkStreamConduitResultM' :: (Show a, Arbitrary a, Monad m, Show c, Eq c)
                            =>  (m ([b], r) -> c)

@@ -251,16 +251,17 @@ import qualified Data.Conduit.Filesystem as CF
 
 -- TODO:
 --
---   * Fusion to implement
---     - sourceRandom*
---     - sourceDirectory*
---     - sinkVector*
---     - vectorBuilder
+--   * The functions sourceRandom* are based on, initReplicate and
+--   initRepeat have specialized versions for when they're used with
+--   ($$).  How does this interact with stream fusion?
 --
---   * Possible, but of questionable worth:
---     - awaitNonNull
+--   * Is it possible to implement fusion for vectorBuilder?  Since it
+--   takes a Sink yielding function as an input, the rewrite rule
+--   would need to trigger when that parameter looks something like
+--   (\x -> unstream (...)).  I don't see anything preventing doing
+--   this, but it would be quite a bit of code.
 
--- Fusion isn't possible for the following operations:
+-- NOTE: Fusion isn't possible for the following operations:
 --
 --   * Due to a lack of leftovers:
 --     - dropE, dropWhile, dropWhileE
@@ -276,6 +277,11 @@ import qualified Data.Conduit.Filesystem as CF
 --   * Due to a use of leftover in a dependency:
 --     - Due to "codeWith": encodeBase64, decodeBase64, encodeBase64URL, decodeBase64URL, decodeBase16
 --     - due to "CT.decode": decodeUtf8, decodeUtf8Lenient
+--
+--   * Due to lack of resource cleanup (e.g. bracketP):
+--     - sourceDirectory
+--     - sourceDirectoryDeep
+--     - sourceFile
 --
 --   * takeExactly / takeExactlyE - no monadic bind.  Another way to
 --   look at this is that subsequent streams drive stream evaluation,
@@ -405,11 +411,10 @@ INLINE_RULE(replicateM, n m, CL.replicateM n m)
 -- exception safety via @MonadResource. It works for all instances of @IOData@,
 -- including @ByteString@ and @Text@.
 --
--- Subject to fusion
---
 -- Since 1.0.0
 sourceFile :: (MonadResource m, IOData a) => FilePath -> Producer m a
-INLINE_RULE(sourceFile, fp, sourceIOHandle (F.openFile fp SIO.ReadMode))
+sourceFile fp = sourceIOHandle (F.openFile fp SIO.ReadMode)
+{-# INLINE sourceFile #-}
 
 -- | Read all data from the given @Handle@.
 --
@@ -434,11 +439,10 @@ STREAMING(sourceHandle, h)
 --
 -- Automatically closes the file at completion.
 --
--- Subject to fusion
---
 -- Since 1.0.0
 sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
-INLINE_RULE(sourceIOHandle, alloc, bracketP alloc SIO.hClose sourceHandle)
+sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
+{-# INLINE sourceIOHandle #-}
 
 -- | @sourceHandle@ applied to @stdin@.
 --
@@ -451,41 +455,45 @@ INLINE_RULE0(stdin, sourceHandle SIO.stdin)
 -- | Create an infinite stream of random values, seeding from the system random
 -- number.
 --
+-- Subject to fusion
+--
 -- Since 1.0.0
 sourceRandom :: (MWC.Variate a, MonadIO m) => Producer m a
-sourceRandom = initRepeat (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform)
-{-# INLINE sourceRandom #-}
+INLINE_RULE0(sourceRandom, initRepeat (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform))
 
 -- | Create a stream of random values of length n, seeding from the system
 -- random number.
+--
+-- Subject to fusion
 --
 -- Since 1.0.0
 sourceRandomN :: (MWC.Variate a, MonadIO m)
               => Int -- ^ count
               -> Producer m a
-sourceRandomN = initReplicate (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform)
-{-# INLINE [0] sourceRandomN #-}
+INLINE_RULE(sourceRandomN, cnt, initReplicate (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform) cnt)
 
 -- | Create an infinite stream of random values, using the given random number
 -- generator.
+--
+-- Subject to fusion
 --
 -- Since 1.0.0
 sourceRandomGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                 => MWC.Gen (PrimState base)
                 -> Producer m a
-sourceRandomGen gen = initRepeat (return gen) (liftBase . MWC.uniform)
-{-# INLINE sourceRandomGen #-}
+INLINE_RULE(sourceRandomGen, gen, initRepeat (return gen) (liftBase . MWC.uniform))
 
 -- | Create a stream of random values of length n, seeding from the system
 -- random number.
+--
+-- Subject to fusion
 --
 -- Since 1.0.0
 sourceRandomNGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                  => MWC.Gen (PrimState base)
                  -> Int -- ^ count
                  -> Producer m a
-sourceRandomNGen gen = initReplicate (return gen) (liftBase . MWC.uniform)
-{-# INLINE sourceRandomNGen #-}
+INLINE_RULE(sourceRandomNGen, gen cnt, initReplicate (return gen) (liftBase . MWC.uniform) cnt)
 
 -- | Stream the contents of the given directory, without traversing deeply.
 --
@@ -885,10 +893,12 @@ INLINE_RULE0(sinkList, CL.consume)
 -- Note that using this function is more memory efficient than @sinkList@ and
 -- then converting to a @Vector@, as it avoids intermediate list constructors.
 --
+-- Subject to fusion
+--
 -- Since 1.0.0
-sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
-           => Consumer a m (v a)
-sinkVector = do
+sinkVector, sinkVectorC :: (MonadBase base m, V.Vector v a, PrimMonad base)
+                        => Consumer a m (v a)
+sinkVectorC = do
     let initSize = 10
     mv0 <- liftBase $ VM.new initSize
     let go maxSize i mv | i >= maxSize = do
@@ -903,7 +913,8 @@ sinkVector = do
                     liftBase $ VM.write mv i x
                     go maxSize (i + 1) mv
     go initSize 0 mv0
-{-# INLINEABLE sinkVector #-}
+{-# INLINEABLE sinkVectorC #-}
+STREAMING0(sinkVector)
 
 -- | Sink incoming values into a vector, up until size @maxSize@.  Subsequent
 -- values will be left in the stream. If there are less than @maxSize@ values
@@ -912,11 +923,13 @@ sinkVector = do
 -- Note that using this function is more memory efficient than @sinkList@ and
 -- then converting to a @Vector@, as it avoids intermediate list constructors.
 --
+-- Subject to fusion
+--
 -- Since 1.0.0
-sinkVectorN :: (MonadBase base m, V.Vector v a, PrimMonad base)
-            => Int -- ^ maximum allowed size
-            -> Consumer a m (v a)
-sinkVectorN maxSize = do
+sinkVectorN, sinkVectorNC :: (MonadBase base m, V.Vector v a, PrimMonad base)
+                          => Int -- ^ maximum allowed size
+                          -> Consumer a m (v a)
+sinkVectorNC maxSize = do
     mv <- liftBase $ VM.new maxSize
     let go i | i >= maxSize = liftBase $ V.unsafeFreeze mv
         go i = do
@@ -927,7 +940,8 @@ sinkVectorN maxSize = do
                     liftBase $ VM.write mv i x
                     go (i + 1)
     go 0
-{-# INLINEABLE sinkVectorN #-}
+{-# INLINEABLE sinkVectorNC #-}
+STREAMING(sinkVectorN, maxSize)
 
 -- | Convert incoming values to a builder and fold together all builder values.
 --

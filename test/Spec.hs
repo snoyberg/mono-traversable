@@ -141,13 +141,13 @@ main = hspec $ do
     it "sourceDirectory" $ do
         res <- runResourceT
              $ sourceDirectory "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
-        sort res `shouldBe` ["test/Spec.hs", "test/subdir"]
+        sort res `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir"]
     it "sourceDirectoryDeep" $ do
         res1 <- runResourceT
               $ sourceDirectoryDeep False "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
         res2 <- runResourceT
               $ sourceDirectoryDeep True "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
-        sort res1 `shouldBe` ["test/Spec.hs", "test/subdir/dummyfile.txt"]
+        sort res1 `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir/dummyfile.txt"]
         sort res1 `shouldBe` sort res2
     prop "drop" $ \(T.pack -> input) count ->
         runIdentity (yieldMany input $$ (dropC count >>= \() -> sinkList))

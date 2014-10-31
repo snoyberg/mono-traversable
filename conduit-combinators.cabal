@@ -64,6 +64,11 @@ test-suite test
                 , base16-bytestring
                 , base64-bytestring
                 , system-filepath
+                , mtl
+                , conduit
+                , containers
+                , safe
+                , QuickCheck
   ghc-options:    -Wall
 
 source-repository head

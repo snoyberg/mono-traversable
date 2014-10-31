@@ -4,10 +4,10 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
--- | These are streaming versions of some of the functions in
---   "Data.Conduit.Combinators".  Many functions don't have stream
---   versions here because instead they have @RULES@ which inline a
---   definition that fuses.
+-- | These are stream fusion versions of some of the functions in
+-- "Data.Conduit.Combinators".  Many functions don't have stream
+-- versions here because instead they have @RULES@ which inline a
+-- definition that fuses.
 module Data.Conduit.Combinators.Stream
   ( yieldManyS
   , repeatMS
@@ -17,6 +17,8 @@ module Data.Conduit.Combinators.Stream
   , allS
   , anyS
   , sinkLazyS
+  , sinkVectorS
+  , sinkVectorNS
   , sinkLazyBuilderS
   , lastS
   , lastES
@@ -30,13 +32,17 @@ module Data.Conduit.Combinators.Stream
   , slidingWindowS
   , filterMS
   , splitOnUnboundedES
+  , initReplicateS
+  , initRepeatS
   )
   where
 
 -- BEGIN IMPORTS
 
 import           Control.Monad (liftM)
+import           Control.Monad.Base (MonadBase (liftBase))
 import           Control.Monad.IO.Class (MonadIO (..))
+import           Control.Monad.Primitive (PrimMonad)
 import           Data.Builder
 import           Data.Conduit.Internal.Fusion
 import           Data.Conduit.Internal.List.Stream (foldS)
@@ -47,6 +53,8 @@ import           Data.Monoid (Monoid (..))
 import qualified Data.NonNull as NonNull
 import qualified Data.Sequences as Seq
 import           Data.Sequences.Lazy
+import qualified Data.Vector.Generic as V
+import qualified Data.Vector.Generic.Mutable as VM
 import           Prelude
 import           System.IO (Handle)
 
@@ -129,6 +137,52 @@ sinkLazyS :: (Monad m, LazySequence lazy strict)
           => StreamConsumer strict m lazy
 sinkLazyS = fmapS (fromChunks . ($ [])) $ foldS (\front next -> front . (next:)) id
 {-# INLINE sinkLazyS #-}
+
+sinkVectorS :: (MonadBase base m, V.Vector v a, PrimMonad base)
+            => StreamConsumer a m (v a)
+sinkVectorS (Stream step ms0) = do
+    Stream step' $ do
+        s0 <- ms0
+        mv0 <- liftBase $ VM.new initSize
+        return (initSize, 0, mv0, s0)
+  where
+    initSize = 10
+    step' (maxSize, i, mv, s) = do
+        res <- step s
+        case res of
+            Stop () -> liftM (Stop . V.slice 0 i) $ liftBase (V.unsafeFreeze mv)
+            Skip s' -> return $ Skip (maxSize, i, mv, s')
+            Emit s' x -> do
+                liftBase $ VM.write mv i x
+                let i' = i + 1
+                if i' >= maxSize
+                    then do
+                        let newMax = maxSize * 2
+                        mv' <- liftBase $ VM.grow mv maxSize
+                        return $ Skip (newMax, i', mv', s')
+                    else return $ Skip (maxSize, i', mv, s')
+{-# INLINE sinkVectorS #-}
+
+sinkVectorNS :: (MonadBase base m, V.Vector v a, PrimMonad base)
+             => Int -- ^ maximum allowed size
+             -> StreamConsumer a m (v a)
+sinkVectorNS maxSize (Stream step ms0) = do
+    Stream step' $ do
+        s0 <- ms0
+        mv0 <- liftBase $ VM.new maxSize
+        return (0, mv0, s0)
+  where
+    step' (i, mv, _) | i >= maxSize = liftM Stop $ liftBase $ V.unsafeFreeze mv
+    step' (i, mv, s) = do
+        res <- step s
+        case res of
+            Stop () -> liftM (Stop . V.slice 0 i) $ liftBase (V.unsafeFreeze mv)
+            Skip s' -> return $ Skip (i, mv, s')
+            Emit s' x -> do
+                liftBase $ VM.write mv i x
+                let i' = i + 1
+                return $ Skip (i', mv, s')
+{-# INLINE sinkVectorNS #-}
 
 sinkLazyBuilderS :: (Monad m, Monoid builder, ToBuilder a builder, Builder builder lazy)
                  => StreamConsumer a m lazy
@@ -365,7 +419,28 @@ splitOnUnboundedES f (Stream step ms0) =
         (x, y) = Seq.break f t
 {-# INLINE splitOnUnboundedES #-}
 
--- Utility function
+-- | Streaming versions of @Data.Conduit.Combinators.Internal.initReplicate@
+initReplicateS :: Monad m => m seed -> (seed -> m a) -> Int -> StreamProducer m a
+initReplicateS mseed f cnt _ =
+    Stream step (liftM (cnt, ) mseed)
+  where
+    step (ix, _) | ix <= 0 = return $ Stop ()
+    step (ix, seed) = do
+        x <- f seed
+        return $ Emit (ix - 1, seed) x
+{-# INLINE initReplicateS #-}
+
+-- | Streaming versions of @Data.Conduit.Combinators.Internal.initRepeat@
+initRepeatS :: Monad m => m seed -> (seed -> m a) -> StreamProducer m a
+initRepeatS mseed f _ =
+    Stream step mseed
+  where
+    step seed = do
+        x <- f seed
+        return $ Emit seed x
+{-# INLINE initRepeatS #-}
+
+-- | Utility function
 fmapS :: Monad m
       => (a -> b)
       -> StreamConduitM i o m a
@@ -373,3 +448,4 @@ fmapS :: Monad m
 fmapS f s inp =
     case s inp of
         Stream step ms0 -> Stream (fmap (liftM (fmap f)) step) ms0
+{-# INLINE fmapS #-}
