@@ -101,26 +101,27 @@ linesUnboundedOld =
 splitOnUnboundedEC
     :: (Monad m, Seq.IsSequence seq)
     => (Element seq -> Bool) -> Conduit seq m seq
-splitOnUnboundedEC f = go mempty
+splitOnUnboundedEC f =
+    start
   where
-    go t = do
-        mx <- await
-        case mx of
-            Nothing -> unless (onull t) $ yield t
-            Just x ->
-                if onull after
-                    then go (t `mappend` x)
-                    else do
-                        yield (t `mappend` before)
-                        go (Seq.drop 1 after)
-              where
-                (before, after) = Seq.break f x
+    start = await >>= maybe (return ()) loop
+
+    loop t =
+        if onull y
+            then do
+                mt <- await
+                case mt of
+                    Nothing -> unless (onull t) $ yield t
+                    Just t' -> loop (t `mappend` t')
+            else yield x >> loop (Seq.drop 1 y)
+      where
+        (x, y) = Seq.break f t
 {-# INLINE splitOnUnboundedEC #-}
 
 #define RUN_SINK_N(n, consumer)            \
-    flip whnf () $ \() ->                  \
+    flip whnf (n :: Int) $ \upper ->       \
         runIdentity $                      \
-            C.enumFromTo 1 (n :: Int)      \
+            C.enumFromTo 1 upper           \
          $$ C.map (+2)                     \
          $= C.map (+1)                     \
          $= consumer
@@ -143,11 +144,10 @@ main = defaultMain
     , bench "unfused maximumE (old version)" $
         RUN_SINK(C.map (\n -> S.replicate (n `mod` 20) n) =$= maximumEOld)
     -- Benchmarks for 'linesUnbounded'
-    -- TODO: fix fusion.
     , bench "fused linesUnbounded" $
-        RUN_SINK_N(10000, C.map (\n -> T.replicate (n `mod` 20) (T.singleton (toEnum n))) =$= C.linesUnbounded =$= C.map T.length =$= C.sum)
+        RUN_SINK_N(1000, C.map (\n -> T.replicate (n `mod` 20) (T.singleton (toEnum n))) =$= C.linesUnbounded =$= C.map T.length =$= C.sum)
     , bench "unfused linesUnbounded" $
-        RUN_SINK_N(10000, C.map (\n -> T.replicate (n `mod` 20) (T.singleton (toEnum n))) =$= splitOnUnboundedEC (== '\n') =$= C.map T.length =$= C.sum)
+        RUN_SINK_N(1000, C.map (\n -> T.replicate (n `mod` 20) (T.singleton (toEnum n))) =$= splitOnUnboundedEC (== '\n') =$= C.map T.length =$= C.sum)
     , bench "unfused linesUnbounded (old version)" $
-        RUN_SINK_N(10000, C.map (\n -> T.replicate (n `mod` 20) (T.singleton (toEnum n))) =$= linesUnboundedOld =$= C.map T.length =$= C.sum)
+        RUN_SINK_N(1000, C.map (\n -> T.replicate (n `mod` 20) (T.singleton (toEnum n))) =$= linesUnboundedOld =$= C.map T.length =$= C.sum)
     ]
