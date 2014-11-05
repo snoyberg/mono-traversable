@@ -48,6 +48,7 @@ library
 test-suite test
   hs-source-dirs: test
   main-is:        Spec.hs
+  other-modules:  StreamSpec
   type:           exitcode-stdio-1.0
   cpp-options:    -DTEST
   build-depends:  conduit-combinators
