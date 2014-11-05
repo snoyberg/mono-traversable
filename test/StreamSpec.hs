@@ -25,11 +25,12 @@ import           Data.Sequence (Seq)
 import qualified Data.Sequences as Seq
 import qualified Data.Text.Lazy as TL
 import           Data.Vector (Vector)
+import qualified Prelude
 import           Prelude
     ((.), ($), (=<<), return, id, Maybe(..), Monad, Bool(..), Int,
      Eq, Show, String, Functor, fst, snd)
-import qualified Prelude
 import qualified Safe
+import           System.Directory (removeFile)
 import qualified System.IO as IO
 import           System.IO.Unsafe
 import           Test.Hspec
@@ -44,6 +45,7 @@ spec = do
         (res, ()) <- IO.withBinaryFile "tmp" IO.ReadMode $ \h ->
             evalStream $ sourceHandleS h emptyStream
         (TL.concat res) `shouldBe` TL.pack contents
+        removeFile "tmp"
     describe "Comparing list function to" $ do
         qit "yieldMany" $
             \(mono :: Seq Int) ->

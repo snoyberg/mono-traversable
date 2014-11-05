@@ -69,6 +69,7 @@ test-suite test
                 , containers
                 , safe
                 , QuickCheck
+                , directory
   ghc-options:    -Wall
 
 source-repository head
