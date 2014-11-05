@@ -50,12 +50,7 @@ initReplicateConnect mseed f cnt0 (ConduitM sink0) = do
         loop _ (HaveOutput _ _ o) = absurd o
         loop cnt (PipeM mp) = mp >>= loop cnt
         loop _ (Leftover _ i) = absurd i
-
-#if MIN_VERSION_conduit(1, 2, 0)
     loop cnt0 (injectLeftovers $ sink0 Done)
-#else
-    loop cnt0 (injectLeftovers sink0)
-#endif
   where
     finish (Done r) = return r
     finish (HaveOutput _ _ o) = absurd o
@@ -96,12 +91,7 @@ initRepeatConnect mseed f (ConduitM sink0) = do
         loop (HaveOutput _ _ o) = absurd o
         loop (PipeM mp) = mp >>= loop
         loop (Leftover _ i) = absurd i
-
-#if MIN_VERSION_conduit(1, 2, 0)
     loop (injectLeftovers (sink0 Done))
-#else
-    loop (injectLeftovers sink0)
-#endif
 {-# RULES "initRepeatConnect" forall mseed f sink.
     initRepeat mseed f $$ sink
     = initRepeatConnect mseed f sink

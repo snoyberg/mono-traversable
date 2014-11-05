@@ -200,6 +200,7 @@ import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Class   (lift)
 import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
+import qualified Data.Conduit.Filesystem as CF
 import           Data.Conduit.Internal       (ConduitM (..), Pipe (..))
 import qualified Data.Conduit.List           as CL
 import           Data.IOData
@@ -238,10 +239,6 @@ import           Data.Primitive.MutVar       (MutVar, newMutVar, readMutVar,
 
 #ifndef WINDOWS
 import qualified System.Posix.Directory as Dir
-#endif
-
-#if MIN_VERSION_conduit(1,1,0)
-import qualified Data.Conduit.Filesystem as CF
 #endif
 
 -- Defines INLINE_RULE0, INLINE_RULE, STREAMING0, and STREAMING.
@@ -507,25 +504,7 @@ INLINE_RULE(sourceRandomNGen, gen cnt, initReplicate (return gen) (liftBase . MW
 --
 -- Since 1.0.0
 sourceDirectory :: MonadResource m => FilePath -> Producer m FilePath
-#if MIN_VERSION_conduit(1,1,0)
 sourceDirectory = mapOutput decodeString . CF.sourceDirectory . encodeString
-#else
-
-#ifdef WINDOWS
-sourceDirectory = (liftIO . F.listDirectory) >=> yieldMany
-#else
-sourceDirectory dir =
-    bracketP (Dir.openDirStream $ encodeString dir) Dir.closeDirStream loop
-  where
-    loop ds = do
-        fp <- liftIO $ Dir.readDirStream ds
-        unless (Prelude.null fp) $ do
-            unless (fp == "." || fp == "..")
-                $ yield $ dir </> decodeString fp
-            loop ds
-#endif
-
-#endif
 
 -- | Deeply stream the contents of the given directory.
 --
@@ -538,33 +517,7 @@ sourceDirectoryDeep :: MonadResource m
                     => Bool -- ^ Follow directory symlinks
                     -> FilePath -- ^ Root directory
                     -> Producer m FilePath
-#if MIN_VERSION_conduit(1,1,0)
 sourceDirectoryDeep follow = mapOutput decodeString . CF.sourceDirectoryDeep follow . encodeString
-#else
-
-sourceDirectoryDeep followSymlinks =
-    start
-  where
-    start :: MonadResource m => FilePath -> Producer m FilePath
-    start dir = sourceDirectory dir =$= awaitForever go
-
-    go :: MonadResource m => FilePath -> Producer m FilePath
-    go fp = do
-        isFile' <- liftIO $ F.isFile fp
-        if isFile'
-            then yield fp
-            else do
-                follow' <- liftIO $ follow fp
-                when follow' (start fp)
-
-    follow :: FilePath -> Prelude.IO Bool
-    follow p = do
-        let path = encodeString p
-        stat <- if followSymlinks
-            then PosixC.getFileStatus path
-            else PosixC.getSymbolicLinkStatus path
-        return (PosixC.isDirectory stat)
-#endif
 
 -- | Ignore a certain number of values in the stream.
 --
@@ -1977,7 +1930,6 @@ onAwait :: Monad m
         => ConduitM i o m ()
         -> Sink i m r
         -> ConduitM i o m r
-#if MIN_VERSION_conduit(1, 2, 0)
 onAwait (ConduitM callback) (ConduitM sink0) = ConduitM $ \rest -> let
     go (Done r) = rest r
     go (HaveOutput _ _ o) = absurd o
@@ -1985,16 +1937,6 @@ onAwait (ConduitM callback) (ConduitM sink0) = ConduitM $ \rest -> let
     go (PipeM mp) = PipeM (liftM go mp)
     go (Leftover f i) = Leftover (go f) i
     in go (sink0 Done)
-#else
-onAwait (ConduitM callback) =
-    ConduitM . go . unConduitM
-  where
-    go (Done r) = Done r
-    go (HaveOutput _ _ o) = absurd o
-    go (NeedInput f g) = callback >> NeedInput (go . f) (go . g)
-    go (PipeM mp) = PipeM (liftM go mp)
-    go (Leftover f i) = Leftover (go f) i
-#endif
 {-# INLINE onAwait #-}
 
 yieldS :: (PrimMonad base, MonadBase base m)
