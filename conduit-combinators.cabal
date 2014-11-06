@@ -1,5 +1,5 @@
 name:                conduit-combinators
-version:             0.2.8.3
+version:             0.3.0
 synopsis:            Commonly used conduit functions, for both chunked and unchunked data
 description:         Provides a replacement for Data.Conduit.List, as well as a convenient Conduit module.
 homepage:            https://github.com/fpco/conduit-combinators
@@ -10,7 +10,7 @@ maintainer:          michael@snoyman.com
 category:            Data, Conduit
 build-type:          Simple
 cabal-version:       >=1.8
-extra-source-files:  test/subdir/dummyfile.txt fusion-macros.h
+extra-source-files:  test/subdir/dummyfile.txt fusion-macros.h ChangeLog.md
 
 library
   exposed-modules:     Conduit
