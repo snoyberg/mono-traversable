@@ -749,7 +749,12 @@ INLINE_RULE0(and, all id)
 -- Since 1.0.0
 andE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
      => Consumer mono m Bool
+#if __GLASGOW_HASKELL__ >= 706
 INLINE_RULE0(andE, allE id)
+#else
+andE = allE id
+{-# INLINE andE #-}
+#endif
 
 -- | Are any values in the stream True?
 --
@@ -770,7 +775,12 @@ INLINE_RULE0(or, any id)
 -- Since 1.0.0
 orE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
     => Consumer mono m Bool
+#if __GLASGOW_HASKELL__ >= 706
 INLINE_RULE0(orE, anyE id)
+#else
+orE = anyE id
+{-# INLINE orE #-}
+#endif
 
 -- | Are any values in the stream equal to the given value?
 --
@@ -1824,7 +1834,12 @@ takeExactlyUntilE f inner =
 --
 -- Since 1.0.0
 unlines :: (Monad m, Seq.IsSequence seq, Element seq ~ Char) => Conduit seq m seq
+#if __GLASGOW_HASKELL__ >= 706
 INLINE_RULE0(unlines, concatMap (:[Seq.singleton '\n']))
+#else
+unlines = concatMap (:[Seq.singleton '\n'])
+{-# INLINE unlines #-}
+#endif
 
 -- | Same as 'unlines', but operates on ASCII/binary data.
 --
@@ -1832,7 +1847,11 @@ INLINE_RULE0(unlines, concatMap (:[Seq.singleton '\n']))
 --
 -- Since 1.0.0
 unlinesAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8) => Conduit seq m seq
+#if __GLASGOW_HASKELL__ >= 706
 INLINE_RULE0(unlinesAscii, concatMap (:[Seq.singleton 10]))
+#else
+unlinesAscii = concatMap (:[Seq.singleton 10])
+#endif
 
 -- | Split a stream of arbitrarily-chunked data, based on a predicate
 -- on elements.  Elements that satisfy the predicate will cause chunks
@@ -1870,7 +1889,11 @@ STREAMING(splitOnUnboundedE, splitOnUnboundedEC, splitOnUnboundedES, f)
 -- Since 1.0.0
 linesUnbounded :: (Monad m, Seq.IsSequence seq, Element seq ~ Char)
                => Conduit seq m seq
+#if __GLASGOW_HASKELL__ >= 706
 INLINE_RULE0(linesUnbounded, splitOnUnboundedE (== '\n'))
+#else
+linesUnbounded = splitOnUnboundedE (== '\n')
+#endif
 
 -- | Same as 'linesUnbounded', but for ASCII/binary data.
 --
@@ -1879,7 +1902,11 @@ INLINE_RULE0(linesUnbounded, splitOnUnboundedE (== '\n'))
 -- Since 1.0.0
 linesUnboundedAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
                     => Conduit seq m seq
+#if __GLASGOW_HASKELL__ >= 706
 INLINE_RULE0(linesUnboundedAscii, splitOnUnboundedE (== 10))
+#else
+linesUnboundedAscii = splitOnUnboundedE (== 10)
+#endif
 
 -- | Generally speaking, yielding values from inside a Conduit requires
 -- some allocation for constructors. This can introduce an overhead,
