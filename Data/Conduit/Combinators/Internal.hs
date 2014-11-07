@@ -30,7 +30,7 @@ initReplicateC mseed f cnt = do
     seed <- lift mseed
     replicateM_ cnt (lift (f seed) >>= yield)
 {-# INLINE [1] initReplicateC #-}
-STREAMING(initReplicate, mseed f cnt)
+STREAMING(initReplicate, initReplicateC, initReplicateS, mseed f cnt)
 
 -- | Optimized version of initReplicate for the special case of connecting with
 -- a @Sink@.
@@ -73,7 +73,7 @@ initRepeatC mseed f = do
     seed <- lift mseed
     forever $ lift (f seed) >>= yield
 {-# INLINE [1] initRepeatC #-}
-STREAMING(initRepeat, mseed f)
+STREAMING(initRepeat, initRepeatC, initRepeatS, mseed f)
 
 -- | Optimized version of initRepeat for the special case of connecting with
 -- a @Sink@.

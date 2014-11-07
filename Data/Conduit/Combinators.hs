@@ -297,7 +297,7 @@ yieldMany, yieldManyC :: (Monad m, MonoFoldable mono)
                       -> Producer m (Element mono)
 yieldManyC = ofoldMap yield
 {-# INLINE yieldManyC #-}
-STREAMING(yieldMany, x)
+STREAMING(yieldMany, yieldManyC, yieldManyS, x)
 
 -- | Generate a producer from a seed value.
 --
@@ -371,7 +371,7 @@ repeatM, repeatMC :: Monad m
                   -> Producer m a
 repeatMC m = forever $ lift m >>= yield
 {-# INLINE repeatMC #-}
-STREAMING(repeatM, m)
+STREAMING(repeatM, repeatMC, repeatMS, m)
 
 -- | Repeatedly run the given action and yield all values it produces, until
 -- the provided predicate returns @False@.
@@ -389,7 +389,7 @@ repeatWhileMC m f =
     loop = do
         x <- lift m
         when (f x) $ yield x >> loop
-STREAMING(repeatWhileM, m f)
+STREAMING(repeatWhileM, repeatWhileMC, repeatWhileMS, m f)
 
 -- | Perform the given action n times, yielding each result.
 --
@@ -430,7 +430,7 @@ sourceHandleC h =
             then return ()
             else yield x >> loop
 {-# INLINEABLE sourceHandleC #-}
-STREAMING(sourceHandle, h)
+STREAMING(sourceHandle, sourceHandleC, sourceHandleS, h)
 
 -- | Open a @Handle@ using the given function and stream data from it.
 --
@@ -648,7 +648,7 @@ foldl1C f =
     await >>= maybe (return Nothing) loop
   where
     loop prev = await >>= maybe (return $ Just prev) (loop . f prev)
-STREAMING(foldl1, f)
+STREAMING(foldl1, foldl1C, foldl1S, f)
 
 -- | A strict left fold on a chunked stream, with no starting value.
 -- Returns 'Nothing' when the stream is empty.
@@ -687,7 +687,7 @@ all, allC :: Monad m
           -> Consumer a m Bool
 allC f = fmap isNothing $ find (Prelude.not . f)
 {-# INLINE allC #-}
-STREAMING(all, f)
+STREAMING(all, allC, allS, f)
 
 -- | Check that all elements in the chunked stream return True.
 --
@@ -715,7 +715,7 @@ any, anyC :: Monad m
           -> Consumer a m Bool
 anyC = fmap isJust . find
 {-# INLINE anyC #-}
-STREAMING(any, f)
+STREAMING(any, anyC, anyS, f)
 
 -- | Check that at least one element in the chunked stream returns True.
 --
@@ -829,7 +829,7 @@ sinkLazy, sinkLazyC :: (Monad m, LazySequence lazy strict)
                     => Consumer strict m lazy
 sinkLazyC = (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
 {-# INLINE sinkLazyC #-}
-STREAMING0(sinkLazy)
+STREAMING0(sinkLazy, sinkLazyC, sinkLazyS)
 
 -- | Consume all values from the stream and return as a list. Note that this
 -- will pull all values into memory.
@@ -867,7 +867,7 @@ sinkVectorC = do
                     go maxSize (i + 1) mv
     go initSize 0 mv0
 {-# INLINEABLE sinkVectorC #-}
-STREAMING0(sinkVector)
+STREAMING0(sinkVector, sinkVectorC, sinkVectorS)
 
 -- | Sink incoming values into a vector, up until size @maxSize@.  Subsequent
 -- values will be left in the stream. If there are less than @maxSize@ values
@@ -894,7 +894,7 @@ sinkVectorNC maxSize = do
                     go (i + 1)
     go 0
 {-# INLINEABLE sinkVectorNC #-}
-STREAMING(sinkVectorN, maxSize)
+STREAMING(sinkVectorN, sinkVectorNC, sinkVectorNS, maxSize)
 
 -- | Convert incoming values to a builder and fold together all builder values.
 --
@@ -925,7 +925,7 @@ sinkLazyBuilder, sinkLazyBuilderC :: (Monad m, Monoid builder, ToBuilder a build
                                   => Consumer a m lazy
 sinkLazyBuilderC = fmap builderToLazy sinkBuilder
 {-# INLINE sinkLazyBuilderC #-}
-STREAMING0(sinkLazyBuilder)
+STREAMING0(sinkLazyBuilder, sinkLazyBuilderC, sinkLazyBuilderS)
 
 -- | Consume and discard all remaining values in the stream.
 --
@@ -996,7 +996,7 @@ lastC =
     await >>= maybe (return Nothing) loop
   where
     loop prev = await >>= maybe (return $ Just prev) loop
-STREAMING0(last)
+STREAMING0(last, lastC, lastS)
 
 -- | Retrieve the last element in the chunked stream, if present.
 --
@@ -1008,7 +1008,7 @@ lastEC =
     awaitNonNull >>= maybe (return Nothing) (loop . NonNull.last)
   where
     loop prev = awaitNonNull >>= maybe (return $ Just prev) (loop . NonNull.last)
-STREAMING0(lastE)
+STREAMING0(lastE, lastEC, lastES)
 
 -- | Count how many values are in the stream.
 --
@@ -1143,7 +1143,7 @@ findC f =
     loop = await >>= maybe (return Nothing) go
     go x = if f x then return (Just x) else loop
 {-# INLINE findC #-}
-STREAMING(find, f)
+STREAMING(find, findC, findS, f)
 
 -- | Apply the action to all values in the stream.
 --
@@ -1295,7 +1295,7 @@ concatMap, concatMapC :: (Monad m, MonoFoldable mono)
                       -> Conduit a m (Element mono)
 concatMapC f = awaitForever (yieldMany . f)
 {-# INLINE concatMapC #-}
-STREAMING(concatMap, f)
+STREAMING(concatMap, concatMapC, concatMapS, f)
 
 -- | Apply the function to each element in the chunked stream, resulting in a
 -- foldable value (e.g., a list). Then yield each of the individual values in
@@ -1432,7 +1432,7 @@ takeExactlyE count inner = takeE count =$= do
 concat, concatC :: (Monad m, MonoFoldable mono)
                 => Conduit mono m (Element mono)
 concatC = awaitForever yieldMany
-STREAMING0(concat)
+STREAMING0(concat, concatC, concatS)
 
 -- | Keep only values in the stream passing a given predicate.
 --
@@ -1498,7 +1498,7 @@ scanlC f =
             let seed' = f seed b
             seed' `seq` yield seed
             loop seed'
-STREAMING(scanl, f x)
+STREAMING(scanl, scanlC, scanlS, f x)
 
 -- | 'concatMap' with an accumulator.
 --
@@ -1518,7 +1518,7 @@ intersperseC x =
     await >>= omapM_ go
   where
     go y = yield y >> concatMap (\z -> [x, z])
-STREAMING(intersperse, x)
+STREAMING(intersperse, intersperseC, intersperseS, x)
 
 -- | Sliding window of values
 -- 1,2,3,4,5 with window size 2 gives
@@ -1542,7 +1542,7 @@ slidingWindowC sz = go (max 1 sz) mempty
                      case m of
                        Nothing -> yield st
                        Just x -> go (n-1) (Seq.snoc st x)
-STREAMING(slidingWindow, sz)
+STREAMING(slidingWindow, slidingWindowC, slidingWindowS, sz)
 
 codeWith :: Monad m
          => Int
@@ -1685,7 +1685,7 @@ concatMapM, concatMapMC :: (Monad m, MonoFoldable mono)
                         => (a -> m mono)
                         -> Conduit a m (Element mono)
 concatMapMC f = awaitForever (lift . f >=> yieldMany)
-STREAMING(concatMapM, f)
+STREAMING(concatMapM, concatMapMC, concatMapMS, f)
 
 -- | Keep only values in the stream passing a given monadic predicate.
 --
@@ -1701,7 +1701,7 @@ filterMC f =
     go x = do
         b <- lift $ f x
         when b $ yield x
-STREAMING(filterM, f)
+STREAMING(filterM, filterMC, filterMS, f)
 
 -- | Keep only elements in the chunked stream passing a given monadic predicate.
 --
@@ -1740,7 +1740,7 @@ scanlMC f =
             seed' <- lift $ f seed b
             seed' `seq` yield seed
             loop seed'
-STREAMING(scanlM, f x)
+STREAMING(scanlM, scanlMC, scanlMS, f x)
 
 -- | 'concatMapM' with an accumulator.
 --
@@ -1858,7 +1858,7 @@ splitOnUnboundedEC f =
             else yield x >> loop (Seq.drop 1 y)
       where
         (x, y) = Seq.break f t
-STREAMING(splitOnUnboundedE, f)
+STREAMING(splitOnUnboundedE, splitOnUnboundedEC, splitOnUnboundedES, f)
 
 -- | Convert a stream of arbitrarily-chunked textual data into a stream of data
 -- where each chunk represents a single line. Note that, if you have
