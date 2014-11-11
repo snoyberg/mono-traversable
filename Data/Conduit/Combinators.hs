@@ -1207,8 +1207,7 @@ INLINE_RULE(foldMapM, f, CL.foldMapM f)
 foldMapME :: (Monad m, MonoFoldable mono, Monoid w)
           => (Element mono -> m w)
           -> Consumer mono m w
-INLINE_RULE(foldMapME, f,
-    CL.foldM (ofoldlM (\accum e -> mappend accum `liftM` f e)) mempty)
+INLINE_RULE(foldMapME, f, CL.foldM (ofoldlM (\accum e -> mappend accum `liftM` f e)) mempty)
 
 -- | Write all data to the given file.
 --
