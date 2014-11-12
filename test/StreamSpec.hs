@@ -107,12 +107,12 @@ spec = do
                 Safe.lastMay
         qit "lastE" $
             \(getBlind -> f) ->
-                let g x = Seq.replicate (Prelude.abs (f x)) x :: Seq Int
+                let g x = Seq.replicate (Prelude.abs (getSmall (f x))) x :: Seq Int
                  in (map g =$= lastE) `checkConsumer`
                     (lastEL . Prelude.map g :: [Int] -> Maybe Int)
         qit "lastES" $
             \(getBlind -> f) ->
-                let g x = Seq.replicate (Prelude.abs (f x)) x :: Seq Int
+                let g x = Seq.replicate (Prelude.abs (getSmall (f x))) x :: Seq Int
                  in (lastES . mapS g) `checkStreamConsumer`
                     (lastEL . Prelude.map g :: [Int] -> Maybe Int)
         qit "find" $
