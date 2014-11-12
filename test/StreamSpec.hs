@@ -3,6 +3,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module StreamSpec where
 
 import           Control.Applicative
@@ -387,7 +389,7 @@ checkStreamConsumerM' :: (Show a, Monad m, Show b, Eq b)
                       -> StreamConsumer Int m a
                       -> ([Int] -> m a)
                       -> Property
-checkStreamConsumerM' f s l = forAll arbitrary $ \xs ->
+checkStreamConsumerM' f s l = forAll (arbitrary) $ \xs ->
     f (liftM snd $ evalStream $ s $ sourceListS xs emptyStream)
     ===
     f (l xs)
@@ -478,3 +480,25 @@ instance Arbitrary a => Arbitrary (M a) where
 
 runM :: M a -> (a, Int)
 runM (M m) = runIdentity $ runStateT m 0
+
+--------------------------------------------------------------------------------
+-- Utilities from QuickCheck-2.7 (absent in earlier versions)
+
+#if !MIN_VERSION_QuickCheck(2,7,0)
+getBlind :: Blind a -> a
+getBlind (Blind x) = x
+
+-- | @Small x@: generates values of @x@ drawn from a small range.
+-- The opposite of 'Large'.
+newtype Small a = Small {getSmall :: a}
+    deriving (Prelude.Ord, Prelude.Eq, Prelude.Enum, Prelude.Show, Prelude.Num)
+
+instance Prelude.Integral a => Arbitrary (Small a) where
+    arbitrary = Prelude.fmap Small arbitrarySizedIntegral
+    shrink (Small x) = Prelude.map Small (shrinkIntegral x)
+
+(===) :: (Show a, Eq a) => a -> a -> Property
+x === y = whenFail
+    (Prelude.fail $ Prelude.show x Prelude.++ " should match " Prelude.++ Prelude.show y)
+    (x Prelude.== y)
+#endif

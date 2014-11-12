@@ -69,7 +69,7 @@ test-suite test
                 , conduit
                 , containers
                 , safe
-                , QuickCheck >= 2.7
+                , QuickCheck >= 2.5
                 , directory
   ghc-options:    -Wall
 
