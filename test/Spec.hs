@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Spec where
 
 import Test.Hspec
 import Test.Hspec.QuickCheck
-import Test.QuickCheck (Arbitrary)
+import Test.QuickCheck (Arbitrary(..))
 import Data.MonoTraversable
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -32,6 +33,10 @@ import Control.Arrow (first, second)
 import qualified Control.Foldl as Foldl
 import Data.Int (Int64)
 import Data.ByteVector
+import Control.Monad (liftM2)
+
+instance Arbitrary a => Arbitrary (NE.NonEmpty a) where
+    arbitrary = liftM2 (NE.:|) arbitrary arbitrary
 
 main :: IO ()
 main = hspec $ do
@@ -123,6 +128,11 @@ main = hspec $ do
         test "strict Text" T.empty
         test "lazy Text" TL.empty
     describe "NonNull" $ do
+        describe "fromNonEmpty" $ do
+          prop "toMinList" $ \(ne :: NE.NonEmpty Int) ->
+            let m = NN.toMinList ne
+            in  NE.toList ne `shouldBe` NN.toNullable m
+
         let test' forceTyp typ dummy = describe typ $ do
                 prop "head" $ \x xs ->
                     let nn = forceTyp $ NN.ncons x (fromList xs `asTypeOf` dummy)
