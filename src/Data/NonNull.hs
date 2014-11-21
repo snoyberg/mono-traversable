@@ -37,6 +37,7 @@ module Data.NonNull (
   , minimum
   , minimumBy
   , (<|)
+  , toMinList
 ) where
 
 import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate, maximum, minimum)
@@ -72,6 +73,9 @@ toNullable = unMinLen
 fromNonEmpty :: IsSequence seq => NE.NonEmpty (Element seq) -> NonNull seq
 fromNonEmpty = nonNull . fromList . NE.toList
 {-# INLINE fromNonEmpty #-}
+
+toMinList :: NE.NonEmpty a -> NonNull [a] 
+toMinList ne = fromNonEmpty ne
 
 -- | Like cons, prepends an element.
 -- However, the prepend is to a Nullable, creating a 'NonNull'
