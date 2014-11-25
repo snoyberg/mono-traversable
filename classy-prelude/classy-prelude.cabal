@@ -1,7 +1,8 @@
 name:                classy-prelude
 version:             0.10.2
 synopsis:            A typeclass-based Prelude.
-description:         Focuses on using common typeclasses when possible, and creating new ones to avoid name clashing. Exposes many recommended datastructures (Map, ByteString, etc) directly without requiring long import lists and qualified modules.
+description:         Modern best practices without name collisions. No partial functions are exposed, but modern data structures are, without requiring import lists. Qualified modules also are not needed: instead operations are based on type-classes from the mono-traversable package.
+
 homepage:            https://github.com/snoyberg/classy-prelude
 license:             MIT
 license-file:        LICENSE
