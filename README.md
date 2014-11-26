@@ -129,6 +129,58 @@ class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
   ...
 ```
 
+### Containers
+
+### Sequences
+
+### MinLen
+
+Did you notice minimumEx and maximumEx from above? Ex stands for 'Exception'.
+An exception will occur if you call minimumEx on an empty list.
+MinLen is a tool to guarantee that this never occurs, and instead to prove that there is one or more elements in your list.
+
+``` haskell
+minimumEx :: MonoFoldable mono => mono -> Element mono
+
+-- | like Data.List, but not partial on a MonoFoldable
+minimum :: MonoFoldableOrd mono => MinLen (Succ nat) mono -> Element mono
+minimum = minimumEx . unMinLen
+
+newtype MinLen nat mono = MinLen { unMinLen :: mono }
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
+
+-- Type level naturals
+data Zero = Zero
+data Succ nat = Succ nat
+```
+
+The `minimum` function exposed from `MinLen` is very similar to `minimumEx`, but has a `MinLen` wrapper that ensures it will never throw an exception.
+`MinLen` is a newtype with a phantom type that contains information about the minimum number of elements we know are in the structure. That is done through type-level Peano numbers.
+
+What do we know about the input to minimum? If nat is Zero, then it reduces to `MinLen (Succ Zero) mono`. Succ means successor, and the successor of 0 is 1, so the data structure has a minimum length of 1.
+
+Lets see this in practice
+
+``` haskell
+> minimum []
+<interactive>:3:9:
+    Couldn't match expected type ‘MinLen (Succ nat0) mono’
+                with actual type ‘[t0]’
+
+
+> minimum [1,2,3]
+-- same error as above
+
+> minimum (toMinList (3 :| [2,1]))
+1
+> minimum (3 `mlcons` toMinLenZero [2,1])
+1
+```
+
+Here we used Data.List.NonEmpty combined with toMinList or we just work with a List and prove through the usage of cons that it has more than one element.
+
+
+
 Adding instances
 ----------------
 
