@@ -10,6 +10,7 @@ import Data.Maybe (fromJust, isJust)
 import Data.Monoid (Monoid, mconcat, mempty)
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
+import Data.Ord (comparing)
 import qualified Data.List as List
 import qualified Control.Monad (filterM, replicateM)
 import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), fst, snd, Integral, ($), flip, maybe, error)
@@ -138,10 +139,14 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     groupBy :: (Element seq -> Element seq -> Bool) -> seq -> [seq]
     groupBy f = fmap fromList . List.groupBy f . otoList
 
-    -- | Similar to standard 'groupBy', but operates on the whole collection,
+    -- | /O(n^2)/. Similar to standard 'groupBy', but operates on the whole collection,
     -- not just the consecutive items.
     groupAllOn :: Eq b => (Element seq -> b) -> seq -> [seq]
     groupAllOn f = fmap fromList . groupAllOn f . otoList
+
+    -- | Same behavior as 'groupAllOn', but requires a function that produces an 'Ord' result and is /O(n log n)/.
+    ordGroupAllOn :: Ord b => (Element seq -> b) -> seq -> [seq]
+    ordGroupAllOn f = fmap fromList . ordGroupAllOn f . otoList
 
     subsequences :: seq -> [seq]
     subsequences = List.map fromList . List.subsequences . otoList
@@ -180,6 +185,7 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -276,6 +282,11 @@ instance IsSequence [a] where
       where
         (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllOn _ [] = []
+    ordGroupAllOn f = let cmp = comparing snd
+                      in (List.map . List.map) fst
+                        . groupBy (((==EQ) .) . cmp)
+                        . sortBy cmp
+                        . List.map (\x -> (x, f x))
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -296,6 +307,7 @@ instance IsSequence [a] where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -376,6 +388,7 @@ instance IsSequence S.ByteString where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -437,6 +450,7 @@ instance IsSequence T.Text where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -498,6 +512,7 @@ instance IsSequence L.ByteString where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -559,6 +574,7 @@ instance IsSequence TL.Text where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -627,6 +643,7 @@ instance IsSequence (Seq.Seq a) where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -721,6 +738,7 @@ instance IsSequence (V.Vector a) where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -791,6 +809,7 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -861,6 +880,7 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
+    {-# INLINE ordGroupAllOn #-}
     {-# INLINE subsequences #-}
     {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
@@ -887,7 +907,7 @@ class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     group :: seq -> [seq]
     group = groupBy (==)
 
-    -- | Similar to standard 'group', but operates on the whole collection,
+    -- | /O(n^2)/. Similar to standard 'group', but operates on the whole collection,
     -- not just the consecutive items.
     groupAll :: seq -> [seq]
     groupAll = groupAllOn id
@@ -1014,15 +1034,22 @@ instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
     sort :: seq -> seq
     sort = fromList . sort . otoList
+
+    -- | Same behavior as 'groupAll', but has /O(n log n)/.
+    ordGroupAll :: seq -> [seq]
+    ordGroupAll = ordGroupAllOn id
     {-# INLINE sort #-}
+    {-# INLINE ordGroupAll #-}
 
 instance Ord a => OrdSequence [a] where
     sort = V.toList . sort . V.fromList
     {-# INLINE sort #-}
+    {-# INLINE ordGroupAll #-}
 
 instance OrdSequence S.ByteString where
     sort = S.sort
     {-# INLINE sort #-}
+    {-# INLINE ordGroupAll #-}
 
 instance OrdSequence L.ByteString
 instance OrdSequence T.Text
@@ -1032,14 +1059,17 @@ instance Ord a => OrdSequence (Seq.Seq a)
 instance Ord a => OrdSequence (V.Vector a) where
     sort = vectorSort
     {-# INLINE sort #-}
+    {-# INLINE ordGroupAll #-}
 
 instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a) where
     sort = vectorSort
     {-# INLINE sort #-}
+    {-# INLINE ordGroupAll #-}
 
 instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a) where
     sort = vectorSort
     {-# INLINE sort #-}
+    {-# INLINE ordGroupAll #-}
 
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     words :: t -> [t]
