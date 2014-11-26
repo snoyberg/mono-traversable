@@ -98,7 +98,21 @@ class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where
 class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
     maximumEx :: mono -> Element mono
     minimumEx :: mono -> Element mono
+
+-- Instances must obey the laws:
+--
+-- * @otoList (opoint x) = [x]@
+--
+-- MonoPointed does not require a Monoid.
+-- However, for a Monoid, the above law
+-- can be expressed as @oconcatMap opoint == id@
+class MonoFoldable mono => MonoPointed mono where
+    opoint :: Element mono -> mono
 ```
+
+MonoPointed abstracts over the concept of a singleton.
+The `Pointed` typeclass fell out of favor in the Haskell community because it has no meaningful laws.
+However, in the Mono version we are creating a relation to Foldable. Perhaps that means the class should be called something else.
 
 
 ### MonoTraversable
