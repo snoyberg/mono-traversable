@@ -129,9 +129,59 @@ class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
   ...
 ```
 
+
 ### Containers
 
+* SetContainer: unifies operations across `Set` and `Map`
+* PolyMap: differenceMap and intersectionMap
+* IsSet: unifies operations across different `Set`s
+* IsMap: unifies operations across different `Map`s
+* MonoZip: zip operations on MonoFunctors.
+
+Note that because `Set` and `Map` are not a Functor (and therefore not MonoFoldable), one must use `mapFromList`, `mapToList`, `setFromList`, and `setToList`.
+
+
 ### Sequences
+
+`IsSequence` contains list-like operations.
+
+``` haskell
+-- | Sequence Laws:
+--
+-- > fromList . otoList = id
+-- > fromList (x <> y) = fromList x <> fromList y
+-- > otoList (fromList x <> fromList y) = x <> y
+class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => IsSequence seq where
+    fromList :: [Element seq] -> seq
+    break :: (Element seq -> Bool) -> seq -> (seq, seq)
+    ...
+```
+
+The laws state that an IsSequence is a list-like (sequential) structure.
+
+* an `IsSequence` is not just something that can be converted to a list (`MonoFoldable`), but something that can be created from a list.
+* Converting to and from a list does not change the `IsSequence`, and it doesn't even change the `IsSequence` if you do the conversions on chunks of the `IsSequence`.
+
+SemiSequence is required by IsSequence. It is conceptually the same as IsSequence, but contains operations that can also be used on the NonEmpty (which is a SemiGroup) because they do not reduce the number of elements in the sequence.
+
+
+There are some more typeclasess that build on top of IsSequence.
+
+``` haskell
+class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
+class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
+class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
+    words :: t -> [t]
+    unwords :: [t] -> t
+    lines :: t -> [t]
+    unlines :: [t] -> t
+    toLower :: t -> t
+    toUpper :: t -> t
+    ...
+```
+
+Textual functions are always safe to use with Unicode (it is possible to mis-use other functions that operate on-individual characters).
+
 
 ### MinLen
 
