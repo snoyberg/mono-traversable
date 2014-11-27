@@ -117,7 +117,8 @@ However, in the Mono version we are creating a relation to Foldable. Perhaps tha
 
 ### MonoTraversable
 
-`Traversable` for monomprohic containers, just as `MonoFunctor` is `Functor` for monomorphic containes.
+`MonoTraversable` is `Traversable` for monomorphic containers, just as
+`MonoFunctor` is `Functor` for monomorphic containers.
 
 ``` haskell
 class (Functor t, Foldable t) => Traversable t where
@@ -265,7 +266,7 @@ in your code, and your ready to use ```CustomType a``` with the functions define
 **Note**: if your type is as _monomorphic container_ without the proper typeclasses, then you will have to provide an implementation. However, this should be fairly simple, as it can be seen [in the code](https://hackage.haskell.org/package/mono-traversable-0.2.0.0/docs/src/Data-MonoTraversable.html#line-234)
 
 
-mono-traversable versuse lens Traversal
+mono-traversable versus lens Traversal
 ---------------------------------------
 lens is a huge package with a lot of functionality.
 One piece of functionality it exposes is Fold and Traversal which can also be used to deal with monomorphic containers.
