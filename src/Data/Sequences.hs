@@ -34,19 +34,16 @@ import Data.Vector.Instances ()
 import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Algorithms.Merge as VAM
 
--- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
--- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
--- 'SemiSequence' is exported so that you can define new instances of 'IsSequence' or 'NonNull'
+-- | 'SemiSequence' was created to share code between 'IsSequence' and 'MinLen'.
 --
 -- @Semi@ means 'SemiGroup'
--- A 'SemiSequence' can accomodate a 'SemiGroup' such as 'NonEmpty'
--- A Monoid should be able to fill out 'IsSequence'
+-- A 'SemiSequence' can accomodate a 'SemiGroup' such as 'NonEmpty' or 'MinLen'
+-- A Monoid should be able to fill out 'IsSequence'.
 --
--- As a base for 'NonNull',
--- a 'SemiSequence' keeps the same type when increasing its number of elements.
--- However, a decreasing function such as filter may change a 'NonNull' type.
+-- 'SemiSequence' operations maintain the same type because they all maintain the same number of elements or increase them.
+-- However, a decreasing function such as filter may change they type.
 -- For example, from 'NonEmpty' to '[]'
--- This exists on 'NonNull' as 'nfilter'
+-- This type-changing function exists on 'NonNull' as 'nfilter'
 --
 -- 'filter' and other such functions are placed in 'IsSequence'
 class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
