@@ -75,7 +75,10 @@ import Data.Functor.Compose (Compose)
 import Data.Functor.Product (Product)
 import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.HashSet (HashSet)
+import qualified Data.HashSet as HashSet
+import Data.Hashable (Hashable)
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
@@ -879,14 +882,19 @@ ofoldMUnwrap f mx unwrap mono = do
     x' <- ofoldlM f x mono
     unwrap x'
 
--- | 'opoint' is the same as @pure@ from Applicative
-class MonoFunctor mono => MonoPointed mono where
+-- | 'opoint' is the same as @pure@ for an Applicative
+--
+-- For any 'MonoFunctor', the following law holds:
+-- 
+-- > omap f . point = point . f
+class MonoPointed mono where
     opoint :: Element mono -> mono
     default opoint :: (Applicative f, (f a) ~ mono, Element (f a) ~ a)
                    => Element mono -> mono
     opoint = pure
     {-# INLINE opoint #-}
 
+-- monomorphic
 instance MonoPointed S.ByteString where
     opoint = S.singleton
     {-# INLINE opoint #-}
@@ -899,6 +907,8 @@ instance MonoPointed T.Text where
 instance MonoPointed TL.Text where
     opoint = TL.singleton
     {-# INLINE opoint #-}
+
+-- Applicative
 instance MonoPointed [a]
 instance MonoPointed (Maybe a)
 instance MonoPointed (Seq a)
@@ -907,6 +917,8 @@ instance MonoPointed (NonEmpty a)
 instance MonoPointed (Identity a)
 instance MonoPointed (Vector a)
 instance MonoPointed (DList a)
+
+-- Not Applicative
 instance U.Unbox a => MonoPointed (U.Vector a) where
     opoint = U.singleton
     {-# INLINE opoint #-}
@@ -915,4 +927,13 @@ instance VS.Storable a => MonoPointed (VS.Vector a) where
     {-# INLINE opoint #-}
 instance MonoPointed (Either a b) where
     opoint = Right
+    {-# INLINE opoint #-}
+instance MonoPointed IntSet.IntSet where
+    opoint = IntSet.singleton
+    {-# INLINE opoint #-}
+instance MonoPointed (Set a) where
+    opoint = Set.singleton
+    {-# INLINE opoint #-}
+instance Hashable a => MonoPointed (HashSet a) where
+    opoint = HashSet.singleton
     {-# INLINE opoint #-}

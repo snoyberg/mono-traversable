@@ -99,11 +99,11 @@ class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
     maximumEx :: mono -> Element mono
     minimumEx :: mono -> Element mono
 
-class MonoFunctor mono => MonoPointed mono where
+class MonoPointed mono where
     opoint :: Element mono -> mono
 ```
 
-MonoPointed abstracts over the concept of a singleton. `opoint` is the same as `pure` from Applicative. Since mono-traversable did not bother with a `MonoApplicative` typeclass, we added `MonoPointed` to still have the functionality of `pure`.
+MonoPointed abstracts over the concept of a singleton. For any `Applicative`, `opoint` is the same as `pure` from Applicative. Since mono-traversable did not bother with a `MonoApplicative` typeclass, we added `MonoPointed` to still have the functionality of `pure`.
 
 
 ### MonoTraversable
