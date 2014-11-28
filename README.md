@@ -163,7 +163,7 @@ The laws state that an IsSequence is a list-like (sequential) structure.
 * an `IsSequence` is not just something that can be converted to a list (`MonoFoldable`), but something that can be created from a list.
 * Converting to and from a list does not change the `IsSequence`, and it doesn't even change the `IsSequence` if you do the conversions on chunks of the `IsSequence`.
 
-SemiSequence is required by IsSequence. It is conceptually the same as IsSequence, but contains operations that can also be used on the NonEmpty (which is a SemiGroup) because they do not reduce the number of elements in the sequence.
+SemiSequence is required by IsSequence. It is conceptually the same as IsSequence, but contains operations that can also be used on a `NonEmpty` or a `MinLen` (which are SemiGroups) because they do not reduce the number of elements in the sequence.
 
 
 There are some more typeclasess that build on top of IsSequence.
