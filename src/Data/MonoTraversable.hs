@@ -52,8 +52,8 @@ import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
 import Data.Semigroup (Option)
-import Data.List.NonEmpty (NonEmpty ((:|)))
-import Data.Functor.Identity (Identity (Identity))
+import Data.List.NonEmpty (NonEmpty)
+import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import Data.HashMap.Strict (HashMap)
 import Data.Vector (Vector)
@@ -882,11 +882,23 @@ ofoldMUnwrap f mx unwrap mono = do
     x' <- ofoldlM f x mono
     unwrap x'
 
--- | Instances must obey the laws:
+-- | Anything which is MonoPointed should be MonoFoldable.
+-- Instances must obey the laws:
 --
--- * @otoList . mconcat . map opoint == id@
-class MonoPointed mono where
+-- * @otoList (opoint x) = [x]@
+--
+-- MonoPointed does not require a Monoid.
+-- However, for a Monoid, the above law
+-- can be expressed as @oconcatMap opoint == id@
+--
+-- MonoPointed does not require Applicative.
+-- However, for Applicative, 'opoint' is @pure@
+class MonoFoldable mono => MonoPointed mono where
     opoint :: Element mono -> mono
+    default opoint :: (Applicative f, (f a) ~ mono, Element (f a) ~ a)
+                   => Element mono -> mono
+    opoint = pure
+    {-# INLINE opoint #-}
 instance MonoPointed S.ByteString where
     opoint = S.singleton
     {-# INLINE opoint #-}
@@ -902,33 +914,17 @@ instance MonoPointed TL.Text where
 instance MonoPointed IntSet.IntSet where
     opoint = IntSet.singleton
     {-# INLINE opoint #-}
-instance MonoPointed [a] where
-    opoint = (:[])
-    {-# INLINE opoint #-}
-instance MonoPointed (Maybe a) where
-    opoint = Just
-    {-# INLINE opoint #-}
-instance MonoPointed (Seq a) where
-    opoint = Seq.singleton
-    {-# INLINE opoint #-}
-instance MonoPointed (Option a) where
-    opoint = Option . Just
-    {-# INLINE opoint #-}
-instance MonoPointed (NonEmpty a) where
-    opoint = (:| [])
-    {-# INLINE opoint #-}
-instance MonoPointed (Identity a) where
-    opoint = Identity
-    {-# INLINE opoint #-}
-instance MonoPointed (Vector a) where
-    opoint = V.singleton
-    {-# INLINE opoint #-}
+instance MonoPointed [a]
+instance MonoPointed (Maybe a)
+instance MonoPointed (Seq a)
+instance MonoPointed (Option a)
+instance MonoPointed (NonEmpty a)
+instance MonoPointed (Identity a)
+instance MonoPointed (Vector a)
 instance MonoPointed (Set a) where
     opoint = Set.singleton
     {-# INLINE opoint #-}
-instance MonoPointed (DList a) where
-    opoint = DL.singleton
-    {-# INLINE opoint #-}
+instance MonoPointed (DList a)
 instance Hashable a => MonoPointed (HashSet a) where
     opoint = HashSet.singleton
     {-# INLINE opoint #-}
@@ -938,6 +934,4 @@ instance U.Unbox a => MonoPointed (U.Vector a) where
 instance VS.Storable a => MonoPointed (VS.Vector a) where
     opoint = VS.singleton
     {-# INLINE opoint #-}
-instance MonoPointed (Either a b) where
-    opoint = Right
-    {-# INLINE opoint #-}
+instance MonoPointed (Either a b)
