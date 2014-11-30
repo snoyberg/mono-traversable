@@ -12,14 +12,14 @@ mono-traversable also adds
   * `MinLen` for making partial functions (head, tail) total
 
 
-Standard Type-classess
+Standard Typeclasses
 ----------------------
 
 in the upcoming GHC 7.10, using `Functor`, `Foldable`, and `Traversable` will become common-place. This means that rather than using `List.map`, `Vector.map`, etc, the map from the prelude will work on all data types that are a Functor. Of course, you can already do this now using `fmap`.
 
 For a Haskeller, it is important to understand `Functor`, `Applicative`, `Monad`, `Foldable`, and `Monoid`: these are encountered in every day code. For mono-traversable, it is most important to understand [Foldable](https://www.haskell.org/haskellwiki/Typeclassopedia#Foldable).
 
-mono-traversable Type-classess
+mono-traversable Typeclasses
 ----------------------
 
 ### MonoFunctor
