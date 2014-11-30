@@ -12,6 +12,27 @@ mono-traversable also adds
   * `MinLen` for making partial functions (head, tail) total
 
 
+Using Typeclasses
+-----------------
+
+There are 2 use cases for mono-traversable: application authors and library authors.
+
+### Library authors
+
+As a library author, if you want to allow a user to pass in a `Text` or a `String`,
+then you need to expose an API with a mono-traversable typeclass.
+You should think twice about using mono-traversable though because
+
+* Using Typeclasses makes type inference more difficult. It is usually better to force the user to give a `Text`. Another option is to just have multiple APIs.
+* If you are operating on polymorphic structures in which the normal typeclasses suffice, you should just use them from base. On the other hand, even if you are using polymorphic containers you may want to leverage `IsSequence` or `MinLen`.
+
+### Application authors
+
+As an application author, you should consider using classy-prelude, which leans heavily on mono-traversable.
+
+When writing your own function signatures, you should default to making them concrete: if you are actually using a list, then make your function take a list rather than an `IsSequence`. This will improve type inference, error messages, and make your code easier to understand. When you decide to use a `Vector` instead of a list, change the type signature to use a `Vector`. When you actually need a function to both accept a `Vector` and a list, it is easy to change the function signature to the more abstract typeclasses that you require.
+
+
 Standard Typeclasses
 ----------------------
 
