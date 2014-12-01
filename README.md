@@ -34,14 +34,14 @@ When writing your own function signatures, you should default to making them con
 
 
 Standard Typeclasses
-----------------------
+--------------------
 
 in the upcoming GHC 7.10, using `Functor`, `Foldable`, and `Traversable` will become common-place. This means that rather than using `List.map`, `Vector.map`, etc, the map from the prelude will work on all data types that are a Functor. Of course, you can already do this now using `fmap`.
 
 For a Haskeller, it is important to understand `Functor`, `Applicative`, `Monad`, `Foldable`, and `Monoid`: these are encountered in every day code. For mono-traversable, it is most important to understand [Foldable](https://www.haskell.org/haskellwiki/Typeclassopedia#Foldable).
 
 mono-traversable Typeclasses
-----------------------
+----------------------------
 
 ### MonoFunctor
 
@@ -274,20 +274,19 @@ Now you are ready to use ```CustomType a``` with the functions defined in this p
 
 
 mono-traversable versus lens Traversal
----------------------------------------
-lens is a huge package with a lot of functionality.
-One piece of functionality it exposes is Fold and Traversal which can also be used to deal with monomorphic containers.
+--------------------------------------
+
+lens is a library with a lot of functionality covering a variety pf patterns. One piece of functionality it exposes is `Fold` and `Traversal` which can also be used to deal with monomorphic containers.
 
 You could prefer mono-traversable to using this part of lens because
 
-* There is really no new API to learn. If you know Foldable, you can use MonoFoldable just as easily
-* mono-traversable's typeclass based approach means many methods are included in the class but can easily be given specialised optimized implementations
-* You don't need to explicitly pass around the Traversal
+* Familiar API - If you know `Foldable`, you can use `MonoFoldable` just as easily
+* mono-traversable's typeclass based approach means many methods are included in the class but can be given specialised optimized implementations
+* You don't explicitly pass around the `Traversal`
 
-The last point is also a point of inflexibility and points to a use case where you could prefer using a lens Traversal.
-mono-traversable treats ByteString as a sequence of bytes.
-If you want to treat it as both bytes and characters, mono-traversable would require a newtype wrapper around ByteString,
-whereas a lens traversal would just use a different traversal function.
+The last point is also a point of inflexibility and points to a use case where you could prefer using a lens `Traversal`. mono-traversable treats `ByteString` as a sequence of bytes. If you want to treat it as both bytes and characters, mono-traversable would require a newtype wrapper around `ByteString`, whereas a lens `Traversal` would use a different traversal function.
+
+mono-traversable is only an alternative for `Fold` and `Traversal`, not for `Lens`, `Prism`, `Iso`, `Getter`, `Setter`, `Review`, or `Equality`.
 
 
 
