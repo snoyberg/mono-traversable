@@ -911,7 +911,6 @@ instance MonoPointed TL.Text where
 -- Applicative
 instance MonoPointed [a]
 instance MonoPointed (Maybe a)
-instance MonoPointed (Seq a)
 instance MonoPointed (Option a)
 instance MonoPointed (NonEmpty a)
 instance MonoPointed (Identity a)
@@ -919,6 +918,9 @@ instance MonoPointed (Vector a)
 instance MonoPointed (DList a)
 
 -- Not Applicative
+instance MonoPointed (Seq a)
+    opoint = Seq.singleton
+    {-# INLINE opoint #-}
 instance U.Unbox a => MonoPointed (U.Vector a) where
     opoint = U.singleton
     {-# INLINE opoint #-}
