@@ -918,7 +918,7 @@ instance MonoPointed (Vector a)
 instance MonoPointed (DList a)
 
 -- Not Applicative
-instance MonoPointed (Seq a)
+instance MonoPointed (Seq a) where
     opoint = Seq.singleton
     {-# INLINE opoint #-}
 instance U.Unbox a => MonoPointed (U.Vector a) where
