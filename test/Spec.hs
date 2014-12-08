@@ -269,9 +269,9 @@ main = hspec $ do
                     let m1 = mapWithKey (+) (mapFromList xs) `asTypeOf` dummy
                         m2 = mapFromList $ mapWithKey (+) xs
                     m1 `shouldBe` m2
-                prop "mapKeysWith" $ \(filterDups -> xs) -> do
-                    let m1 = mapKeysWith (+) f (mapFromList xs) `asTypeOf` dummy
-                        m2 = mapFromList $ mapKeysWith (+) f xs
+                prop "omapKeysWith" $ \(filterDups -> xs) -> do
+                    let m1 = omapKeysWith (+) f (mapFromList xs) `asTypeOf` dummy
+                        m2 = mapFromList $ omapKeysWith (+) f xs
                         f = flip mod 5
                     m1 `shouldBe` m2
             filterDups :: [(Int, v)] -> [(Int, v)]

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -32,6 +33,7 @@ import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.ByteString as ByteString
 import Control.Arrow ((***))
 import Data.GrowingAppend
+import GHC.Exts (Constraint)
 
 class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), GrowingAppend set) => SetContainer set where
     type ContainerKey set
@@ -40,6 +42,7 @@ class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), Growi
     union :: set -> set -> set
     difference :: set -> set -> set
     intersection :: set -> set -> set
+    keys :: set -> [ContainerKey set]
 
 #if MIN_VERSION_containers(0, 5, 0)
 -- | This instance uses the functions from "Data.Map.Strict".
@@ -56,6 +59,8 @@ instance Ord k => SetContainer (Map.Map k v) where
     {-# INLINE difference #-}
     intersection = Map.intersection
     {-# INLINE intersection #-}
+    keys = Map.keys
+    {-# INLINE keys #-}
 
 #if MIN_VERSION_containers(0, 5, 0)
 -- | This instance uses the functions from "Data.HashMap.Strict".
@@ -72,6 +77,8 @@ instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) wher
     {-# INLINE difference #-}
     intersection = HashMap.intersection
     {-# INLINE intersection #-}
+    keys = HashMap.keys
+    {-# INLINE keys #-}
 
 #if MIN_VERSION_containers(0, 5, 0)
 -- | This instance uses the functions from "Data.IntMap.Strict".
@@ -88,6 +95,8 @@ instance SetContainer (IntMap.IntMap value) where
     {-# INLINE difference #-}
     intersection = IntMap.intersection
     {-# INLINE intersection #-}
+    keys = IntMap.keys
+    {-# INLINE keys #-}
 
 instance Ord element => SetContainer (Set.Set element) where
     type ContainerKey (Set.Set element) = element
@@ -101,6 +110,8 @@ instance Ord element => SetContainer (Set.Set element) where
     {-# INLINE difference #-}
     intersection = Set.intersection
     {-# INLINE intersection #-}
+    keys = Set.toList
+    {-# INLINE keys #-}
 
 instance (Eq element, Hashable element) => SetContainer (HashSet.HashSet element) where
     type ContainerKey (HashSet.HashSet element) = element
@@ -114,6 +125,8 @@ instance (Eq element, Hashable element) => SetContainer (HashSet.HashSet element
     {-# INLINE difference #-}
     intersection = HashSet.intersection
     {-# INLINE intersection #-}
+    keys = HashSet.toList
+    {-# INLINE keys #-}
 
 instance SetContainer IntSet.IntSet where
     type ContainerKey IntSet.IntSet = Int
@@ -127,6 +140,8 @@ instance SetContainer IntSet.IntSet where
     {-# INLINE difference #-}
     intersection = IntSet.intersection
     {-# INLINE intersection #-}
+    keys = IntSet.toList
+    {-# INLINE keys #-}
 
 instance Eq key => SetContainer [(key, value)] where
     type ContainerKey [(key, value)] = key
@@ -146,6 +161,8 @@ instance Eq key => SetContainer [(key, value)] where
                 Just _ -> loop rest
     intersection = List.intersectBy ((==) `on` fst)
     {-# INLINE intersection #-}
+    keys = map fst
+    {-# INLINE keys #-}
 
 -- | A guaranteed-polymorphic @Map@, which allows for more polymorphic versions
 -- of functions.
@@ -194,6 +211,26 @@ instance PolyMap IntMap.IntMap where
     {-# INLINE intersectionMap #-}
     intersectionWithMap = IntMap.intersectionWith
     {-# INLINE intersectionWithMap #-}
+
+-- | A @Map@ type polymorphic in both its key and value.
+class BiPolyMap map where
+    type BPMKeyConstraint map key :: Constraint
+    mapKeysWith :: (BPMKeyConstraint map k1, BPMKeyConstraint map k2)
+                => (v -> v -> v) -- ^ combine values that now overlap
+                -> (k1 -> k2)
+                -> map k1 v
+                -> map k2 v
+instance BiPolyMap Map.Map where
+    type BPMKeyConstraint Map.Map key = Ord key
+    mapKeysWith = Map.mapKeysWith
+    {-# INLINE mapKeysWith #-}
+instance BiPolyMap HashMap.HashMap where
+    type BPMKeyConstraint HashMap.HashMap key = (Hashable key, Eq key)
+    mapKeysWith g f =
+        mapFromList . unionsWith g . map go . mapToList
+      where
+        go (k, v) = [(f k, v)]
+    {-# INLINE mapKeysWith #-}
 
 class (MonoTraversable map, SetContainer map) => IsMap map where
     -- | In some cases, @MapValue@ and @Element@ will be different, e.g., the
@@ -373,12 +410,12 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
       where
         go (k, v) = (k, f k v)
 
-    mapKeysWith
+    omapKeysWith
         :: (MapValue map -> MapValue map -> MapValue map)
         -> (ContainerKey map -> ContainerKey map)
         -> map
         -> map
-    mapKeysWith g f =
+    omapKeysWith g f =
         mapFromList . unionsWith g . map go . mapToList
       where
         go (k, v) = [(f k, v)]
@@ -429,8 +466,8 @@ instance Ord key => IsMap (Map.Map key value) where
     {-# INLINE unionsWith #-}
     mapWithKey = Map.mapWithKey
     {-# INLINE mapWithKey #-}
-    mapKeysWith = Map.mapKeysWith
-    {-# INLINE mapKeysWith #-}
+    omapKeysWith = Map.mapKeysWith
+    {-# INLINE omapKeysWith #-}
 
 #if MIN_VERSION_containers(0, 5, 0)
 -- | This instance uses the functions from "Data.HashMap.Strict".
@@ -515,8 +552,8 @@ instance IsMap (IntMap.IntMap value) where
     mapWithKey = IntMap.mapWithKey
     {-# INLINE mapWithKey #-}
 #if MIN_VERSION_containers(0, 5, 0)
-    mapKeysWith = IntMap.mapKeysWith
-    {-# INLINE mapKeysWith #-}
+    omapKeysWith = IntMap.mapKeysWith
+    {-# INLINE omapKeysWith #-}
 #endif
 
 instance Eq key => IsMap [(key, value)] where
@@ -613,3 +650,16 @@ instance MonoZip LText.Text where
     {-# INLINE ozip #-}
     {-# INLINE ounzip #-}
     {-# INLINE ozipWith #-}
+
+class SetContainer set => HasKeysSet set where
+    type KeySet set
+    keysSet :: set -> KeySet set
+instance Ord k => HasKeysSet (Map.Map k v) where
+    type KeySet (Map.Map k v) = Set.Set k
+    keysSet = Map.keysSet
+instance HasKeysSet (IntMap.IntMap v) where
+    type KeySet (IntMap.IntMap v) = IntSet.IntSet
+    keysSet = IntMap.keysSet
+instance (Hashable k, Eq k) => HasKeysSet (HashMap.HashMap k v) where
+    type KeySet (HashMap.HashMap k v) = HashSet.HashSet k
+    keysSet = setFromList . HashMap.keys
