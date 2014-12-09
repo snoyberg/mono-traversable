@@ -6,3 +6,5 @@ Work on better polymorphic containers
 * Add new class `BiPolyMap`
 * Add `keys` to `IsSet`
 * New class `HasKeysSet`
+
+Added `index`, `indexEx` and `unsafeIndex`.

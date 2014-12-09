@@ -160,6 +160,16 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
 
     unsafeInit :: seq -> seq
     unsafeInit = initEx
+
+    index :: seq -> Index seq -> Maybe (Element seq)
+    index seq' idx = headMay (drop idx seq')
+
+    indexEx :: seq -> Index seq -> Element seq
+    indexEx seq' idx = maybe (error "Data.Sequences.indexEx") id (index seq' idx)
+
+    unsafeIndex :: seq -> Index seq -> Element seq
+    unsafeIndex = indexEx
+
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -186,6 +196,9 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
 
 defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
 defaultFind f = List.find f . otoList
@@ -383,6 +396,15 @@ instance IsSequence S.ByteString where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
 
+    index bs i
+        | i >= S.length bs = Nothing
+        | otherwise = Just (S.index bs i)
+    indexEx = S.index
+    unsafeIndex = SU.unsafeIndex
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
+
 instance SemiSequence T.Text where
     type Index T.Text = Int
     intersperse = T.intersperse
@@ -443,6 +465,15 @@ instance IsSequence T.Text where
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
+
+    index t i
+        | i >= T.length t = Nothing
+        | otherwise = Just (T.index t i)
+    indexEx = T.index
+    unsafeIndex = T.index
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
 
 instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
@@ -505,6 +536,12 @@ instance IsSequence L.ByteString where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
 
+    indexEx = L.index
+    unsafeIndex = L.index
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
+
 instance SemiSequence TL.Text where
     type Index TL.Text = Int64
     intersperse = TL.intersperse
@@ -565,6 +602,12 @@ instance IsSequence TL.Text where
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
+
+    indexEx = TL.index
+    unsafeIndex = TL.index
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
 
 instance SemiSequence (Seq.Seq a) where
     type Index (Seq.Seq a) = Int
@@ -633,6 +676,15 @@ instance IsSequence (Seq.Seq a) where
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
+
+    index seq' i
+        | i >= Seq.length seq' = Nothing
+        | otherwise = Just (Seq.index seq' i)
+    indexEx = Seq.index
+    unsafeIndex = Seq.index
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
 
 instance SemiSequence (DList.DList a) where
     type Index (DList.DList a) = Int
@@ -728,6 +780,15 @@ instance IsSequence (V.Vector a) where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
 
+    index v i
+        | i >= V.length v = Nothing
+        | otherwise = Just (v V.! i)
+    indexEx = (V.!)
+    unsafeIndex = V.unsafeIndex
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
+
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
 
@@ -798,6 +859,15 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
 
+    index v i
+        | i >= U.length v = Nothing
+        | otherwise = Just (v U.! i)
+    indexEx = (U.!)
+    unsafeIndex = U.unsafeIndex
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
+
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
     reverse = VS.reverse
@@ -867,6 +937,15 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
+
+    index v i
+        | i >= VS.length v = Nothing
+        | otherwise = Just (v VS.! i)
+    indexEx = (VS.!)
+    unsafeIndex = VS.unsafeIndex
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
 
 class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     stripPrefix :: seq -> seq -> Maybe seq
