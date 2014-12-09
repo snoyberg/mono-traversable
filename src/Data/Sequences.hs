@@ -33,6 +33,7 @@ import Data.GrowingAppend
 import Data.Vector.Instances ()
 import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Algorithms.Merge as VAM
+import Data.Ord (comparing)
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 -- You should always use 'IsSequence' or 'NonNull' rather than using 'SemiSequence'
@@ -1198,3 +1199,10 @@ catMaybes :: (IsSequence (f (Maybe t)), Functor f,
               Element (f (Maybe t)) ~ Maybe t)
           => f (Maybe t) -> f t
 catMaybes = fmap fromJust . filter isJust
+
+-- | Same as @sortBy . comparing@.
+--
+-- Sicne 0.7.0
+sortOn :: (Ord o, SemiSequence seq) => (Element seq -> o) -> seq -> seq
+sortOn = sortBy . comparing
+{-# INLINE sortOn #-}
