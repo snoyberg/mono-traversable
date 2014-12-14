@@ -34,6 +34,7 @@ import qualified Control.Foldl as Foldl
 import Data.Int (Int64)
 import Data.ByteVector
 import Control.Monad (liftM2)
+import qualified Data.Sequence as Seq
 
 instance Arbitrary a => Arbitrary (NE.NonEmpty a) where
     arbitrary = liftM2 (NE.:|) arbitrary arbitrary
@@ -99,6 +100,24 @@ main = hspec $ do
         test "list" ([] :: [Int])
         test "Text" ("" :: Text)
         test "lazy ByteString" L.empty
+    describe "index" $ do
+        let test name dummy = prop name $ \(abs -> i) xs ->
+                let seq' = fromList xs `asTypeOf` dummy
+                    mx = index xs (fromIntegral i)
+                 in mx == index seq' i &&
+                    (case mx of
+                        Nothing -> True
+                        Just x -> indexEx seq' i == x &&
+                                  unsafeIndex seq' i == x)
+        test "list" ([] :: [Int])
+        test "Text" ("" :: Text)
+        test "lazy Text" ("" :: TL.Text)
+        test "ByteString" S.empty
+        test "lazy ByteString" L.empty
+        test "Vector" (V.singleton (1 :: Int))
+        test "SVector" (VS.singleton (1 :: Int))
+        test "UVector" (U.singleton (1 :: Int))
+        test "Seq" (Seq.fromList [1 :: Int])
     describe "groupAllOn" $ do
         it "list" $ groupAllOn (`mod` 3) ([1..9] :: [Int]) == [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
     describe "breakWord" $ do
@@ -269,9 +288,9 @@ main = hspec $ do
                     let m1 = mapWithKey (+) (mapFromList xs) `asTypeOf` dummy
                         m2 = mapFromList $ mapWithKey (+) xs
                     m1 `shouldBe` m2
-                prop "mapKeysWith" $ \(filterDups -> xs) -> do
-                    let m1 = mapKeysWith (+) f (mapFromList xs) `asTypeOf` dummy
-                        m2 = mapFromList $ mapKeysWith (+) f xs
+                prop "omapKeysWith" $ \(filterDups -> xs) -> do
+                    let m1 = omapKeysWith (+) f (mapFromList xs) `asTypeOf` dummy
+                        m2 = mapFromList $ omapKeysWith (+) f xs
                         f = flip mod 5
                     m1 `shouldBe` m2
             filterDups :: [(Int, v)] -> [(Int, v)]
