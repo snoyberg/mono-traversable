@@ -405,7 +405,7 @@ INLINE_RULE(replicateM, n m, CL.replicateM n m)
 -- | Read all data from the given file.
 --
 -- This function automatically opens and closes the file handle, and ensures
--- exception safety via @MonadResource. It works for all instances of @IOData@,
+-- exception safety via @MonadResource@. It works for all instances of @IOData@,
 -- including @ByteString@ and @Text@.
 --
 -- Since 1.0.0
@@ -1212,7 +1212,7 @@ INLINE_RULE(foldMapME, f, CL.foldM (ofoldlM (\accum e -> mappend accum `liftM` f
 -- | Write all data to the given file.
 --
 -- This function automatically opens and closes the file handle, and ensures
--- exception safety via @MonadResource. It works for all instances of @IOData@,
+-- exception safety via @MonadResource@. It works for all instances of @IOData@,
 -- including @ByteString@ and @Text@.
 --
 -- Since 1.0.0
@@ -1855,7 +1855,7 @@ unlinesAscii = concatMap (:[Seq.singleton 10])
 -- | Split a stream of arbitrarily-chunked data, based on a predicate
 -- on elements.  Elements that satisfy the predicate will cause chunks
 -- to be split, and aren't included in these output chunks.  Note
--- that, if you have unknown/untrusted input, this function is
+-- that, if you have unknown or untrusted input, this function is
 -- /unsafe/, since it would allow an attacker to form chunks of
 -- massive length and exhaust memory.
 splitOnUnboundedE, splitOnUnboundedEC
@@ -1880,7 +1880,7 @@ STREAMING(splitOnUnboundedE, splitOnUnboundedEC, splitOnUnboundedES, f)
 
 -- | Convert a stream of arbitrarily-chunked textual data into a stream of data
 -- where each chunk represents a single line. Note that, if you have
--- unknown/untrusted input, this function is /unsafe/, since it would allow an
+-- unknown or untrusted input, this function is /unsafe/, since it would allow an
 -- attacker to form lines of massive length and exhaust memory.
 --
 -- Subject to fusion
