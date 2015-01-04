@@ -20,6 +20,10 @@ test name forceType = bench name $ whnfIO $ do
     replicateM_ 500 $ do
         pushBack coll x
         pushFront coll x
+    replicateM_ 500 $ do
+        pushBack coll x
+        void $ popFront coll
+{-# INLINE test #-}
 
 main :: IO ()
 main = defaultMain

@@ -36,6 +36,7 @@ instance V.MVector v a => MutableCollection (Deque v s a) where
         liftM Deque $ newRef (DequeState v 0 0)
       where
         baseSize = 32
+    {-# INLINE newColl #-}
 instance V.MVector v a => MutablePopFront (Deque v s a) where
     popFront (Deque var) = do
         DequeState v start size <- readRef var
@@ -45,6 +46,7 @@ instance V.MVector v a => MutablePopFront (Deque v s a) where
                 x <- V.unsafeRead v (start `mod` V.length v)
                 writeRef var $! DequeState v (start + 1) (size - 1)
                 return $! Just x
+    {-# INLINE popFront #-}
 instance V.MVector v a => MutablePopBack (Deque v s a) where
     popBack (Deque var) = do
         DequeState v start size <- readRef var
@@ -56,6 +58,7 @@ instance V.MVector v a => MutablePopBack (Deque v s a) where
                 x <- V.unsafeRead v end
                 writeRef var $! DequeState v start size'
                 return $! Just x
+    {-# INLINE popBack #-}
 instance V.MVector v a => MutablePushFront (Deque v s a) where
     pushFront (Deque var) x = do
         DequeState v start size <- readRef var
@@ -69,6 +72,7 @@ instance V.MVector v a => MutablePushFront (Deque v s a) where
                         start' = (start - 1) `mod` V.length v
                     V.unsafeWrite v start' x
                     writeRef var $! DequeState v start' size'
+    {-# INLINE pushFront #-}
 instance V.MVector v a => MutablePushBack (Deque v s a) where
     pushBack (Deque var) x = do
         DequeState v start size <- readRef var
@@ -81,6 +85,7 @@ instance V.MVector v a => MutablePushBack (Deque v s a) where
                     let end = (start + size) `mod` V.length v
                     V.unsafeWrite v end x
                     writeRef var $! DequeState v start (size + 1)
+    {-# INLINE pushBack #-}
 
 newVector :: (PrimMonad m, V.MVector v a)
           => v (PrimState m) a
@@ -99,3 +104,4 @@ newVector v start size f = do
         (V.unsafeSlice size1 size2 v')
         (V.unsafeTake size2 v)
     f v' 0 size
+{-# INLINE newVector #-}

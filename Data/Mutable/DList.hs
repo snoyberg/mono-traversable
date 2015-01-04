@@ -28,6 +28,7 @@ instance MutableCollection (DList s a) where
         x <- newRef $! Nothing
         y <- newRef $! Nothing
         return $! DList x y
+    {-# INLINE newColl #-}
 instance MutablePopFront (DList s a) where
     popFront (DList frontRef backRef) = do
         mfront <- readRef frontRef
@@ -43,6 +44,7 @@ instance MutablePopFront (DList s a) where
                         writeRef prevRef $! Nothing
                         writeRef frontRef $! Just next
                 return $ Just val
+    {-# INLINE popFront #-}
 instance MutablePopBack (DList s a) where
     popBack (DList frontRef backRef) = do
         mback <- readRef backRef
@@ -58,6 +60,7 @@ instance MutablePopBack (DList s a) where
                         writeRef nextRef $! Nothing
                         writeRef backRef (Just prev)
                 return $ Just val
+    {-# INLINE popBack #-}
 instance MutablePushFront (DList s a) where
     pushFront (DList frontRef backRef) val = do
         mfront <- readRef frontRef
@@ -74,6 +77,7 @@ instance MutablePushFront (DList s a) where
                 let node = Just $ Node val prevRefNew nextRef
                 writeRef prevRef node
                 writeRef frontRef node
+    {-# INLINE pushFront #-}
 instance MutablePushBack (DList s a) where
     pushBack (DList frontRef backRef) val = do
         mback <- readRef backRef
@@ -90,3 +94,4 @@ instance MutablePushBack (DList s a) where
                 let node = Just $! Node val prevRef nextRefNew
                 writeRef nextRef $! node
                 writeRef backRef $! node
+    {-# INLINE pushBack #-}
