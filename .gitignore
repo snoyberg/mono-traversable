@@ -4,3 +4,8 @@
 *.tix
 *.swp
 /dist/
+*.html
+cabal.config
+cabal.sandbox.config
+/tarballs/
+.cabal-sandbox

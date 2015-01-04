@@ -1,5 +1,5 @@
 name:                mutable-containers
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            Abstactions and concrete implementations of mutable containers
 description:         See docs and README at <http://www.stackage.org/package/mutable-containers>
 homepage:            https://github.com/fpco/mutable-containers
@@ -9,7 +9,7 @@ author:              Michael Snoyman
 maintainer:          michael@fpcomplete.com
 category:            Data
 build-type:          Simple
-extra-source-files:  README.md
+extra-source-files:  README.md ChangeLog.md
 cabal-version:       >=1.10
 
 library
@@ -38,14 +38,24 @@ test-suite test
                      , containers
   default-language:    Haskell2010
 
-benchmark bench
+benchmark deque
   type:                exitcode-stdio-1.0
   hs-source-dirs:      bench
-  main-is:             bench.hs
+  main-is:             deque.hs
   build-depends:       base
                      , mutable-containers
                      , criterion
                      , containers
+  ghc-options:         -Wall -O2 -rtsopts
+  default-language:    Haskell2010
+
+benchmark ref
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      bench
+  main-is:             ref.hs
+  build-depends:       base
+                     , mutable-containers
+                     , criterion
   ghc-options:         -Wall -O2 -rtsopts
   default-language:    Haskell2010
 
