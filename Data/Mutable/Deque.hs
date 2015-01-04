@@ -7,14 +7,12 @@ module Data.Mutable.Deque
     , module Data.Mutable.Class
     ) where
 
-import Data.Mutable.Class
-import qualified Data.Vector.Generic.Mutable as V
-import Control.Monad
-import Control.Monad.Primitive (PrimState, PrimMonad)
-import Data.Primitive.MutVar (MutVar)
-import qualified Data.Vector.Unboxed.Mutable as U
+import           Control.Monad                (liftM)
+import           Data.Mutable.Class
+import qualified Data.Vector.Generic.Mutable  as V
+import qualified Data.Vector.Mutable          as B
 import qualified Data.Vector.Storable.Mutable as S
-import qualified Data.Vector.Mutable as B
+import qualified Data.Vector.Unboxed.Mutable  as U
 
 data DequeState v s a = DequeState
     (v s a)

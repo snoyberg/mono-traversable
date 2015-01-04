@@ -11,13 +11,10 @@ module Data.Mutable.SRef
     , MutableRef (..)
     ) where
 
-import Data.Mutable.Class
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import Control.Monad.ST (ST)
-import Control.Monad (liftM)
+import           Control.Monad                (liftM)
+import           Data.Mutable.Class
+import qualified Data.Vector.Generic.Mutable  as V
 import qualified Data.Vector.Storable.Mutable as VS
-import qualified Data.Vector.Mutable as VB
-import qualified Data.Vector.Generic.Mutable as V
 
 -- | A storable vector reference, supporting any monad.
 newtype SRef s a = SRef (VS.MVector s a)

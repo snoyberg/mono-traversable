@@ -1,10 +1,15 @@
+{-# LANGUAGE TypeFamilies #-}
+import Control.Monad
 import Criterion.Main
 import Data.Mutable.Class
-import Control.Monad
-import Data.Mutable.URef
 import Data.Mutable.SRef
+import Data.Mutable.URef
 import Data.Mutable.VRef
 
+test :: (MCState c ~ PrimState IO, RefElement c ~ Int, MutableRef c)
+     => String
+     -> (c -> c)
+     -> Benchmark
 test name forceType = bench name $ whnfIO $ do
     ref <- fmap forceType $ newRef (5 :: Int)
     replicateM_ 500 $ do

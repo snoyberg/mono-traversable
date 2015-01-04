@@ -1,18 +1,37 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TypeFamilies      #-}
 -- | Various typeclasses for mutable containers.
 module Data.Mutable.Class
-    where
+    ( PrimMonad
+    , PrimState
+    , RealWorld
+    , MutableStack
+    , MutableDeque
+    , IORef
+    , asIORef
+    , STRef
+    , asSTRef
+    , MutVar
+    , asMutVar
+    , MutableContainer (..)
+    , MutableRef (..)
+    , MutableAtomicRef (..)
+    , MutableCollection (..)
+    , MutablePushFront (..)
+    , MutablePushBack (..)
+    , MutablePopFront (..)
+    , MutablePopBack (..)
+    ) where
 
-import Control.Monad.Primitive
-import Data.IORef
-import Data.STRef
-import Data.Primitive.MutVar
-import Data.Monoid
-import Data.MonoTraversable (Element)
-import qualified Data.Sequences as Seqs
+import           Control.Monad.Primitive
+import           Data.IORef
+import           Data.Monoid
+import           Data.MonoTraversable    (Element)
+import           Data.Primitive.MutVar
+import qualified Data.Sequences          as Seqs
+import           Data.STRef
 
 class MutableContainer c where
     type MCState c

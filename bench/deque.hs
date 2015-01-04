@@ -1,11 +1,16 @@
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TypeFamilies    #-}
+import Control.Monad
 import Criterion.Main
 import Data.Mutable.Class
-import Control.Monad
-import Data.IORef (IORef)
-import Data.Sequence (Seq)
 import Data.Mutable.Deque
 import Data.Mutable.DList
+import Data.Sequence      (Seq)
 
+test :: (MCState c ~ PrimState IO, CollElement c ~ Int, MutableDeque c)
+     => String
+     -> (c -> c)
+     -> Benchmark
 test name forceType = bench name $ whnfIO $ do
     let x = 5 :: Int
     coll <- fmap forceType newColl

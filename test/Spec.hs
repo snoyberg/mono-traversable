@@ -1,19 +1,16 @@
 {-# LANGUAGE TypeFamilies #-}
+import Control.Monad             (forM_)
+import Data.Mutable.Deque
+import Data.Mutable.DList
+import Data.Mutable.SRef
+import Data.Mutable.URef
+import Data.Mutable.VRef
+import Data.Sequence             (Seq)
+import Data.Vector               (Vector)
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen
-import Data.Mutable.Deque
-import Control.Monad (forM_)
-import Data.IORef
-import Data.Primitive.MutVar (MutVar)
-import Control.Monad.Primitive (PrimState)
-import Data.Sequence (Seq)
-import Data.STRef (STRef)
-import Data.Vector (Vector)
-import Data.Mutable.URef
-import Data.Mutable.SRef
-import Data.Mutable.DList
 
 main :: IO ()
 main = hspec spec
@@ -107,14 +104,15 @@ spec = do
                     AtomicModifyRef i -> do
                         let f x = (x + i, ())
                         atomicModifyRef base f
-                        atomic tested f
+                        _ <- atomic tested f
                         check
                     AtomicModifyRef' i -> do
                         atomicModifyRef' base $ \x -> (x - i, ())
-                        atomic' tested $ \x -> (x - i, ())
+                        _ <- atomic' tested $ \x -> (x - i, ())
                         check
         test "URef" asURef modifyRefHelper modifyRefHelper'
         test "SRef" asSRef modifyRefHelper modifyRefHelper'
+        test "VRef" asVRef modifyRefHelper modifyRefHelper'
         test "STRef" asSTRef modifyRefHelper modifyRefHelper'
         test "MutVar" asMutVar atomicModifyRef atomicModifyRef'
 

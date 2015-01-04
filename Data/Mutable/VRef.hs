@@ -11,12 +11,10 @@ module Data.Mutable.VRef
     , MutableRef (..)
     ) where
 
-import Data.Mutable.Class
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import Control.Monad.ST (ST)
-import Control.Monad (liftM)
-import qualified Data.Vector.Mutable as VB
+import           Control.Monad               (liftM)
+import           Data.Mutable.Class
 import qualified Data.Vector.Generic.Mutable as V
+import qualified Data.Vector.Mutable         as VB
 
 -- | A boxed vector reference, supporting any monad.
 newtype VRef s a = VRef (VB.MVector s a)

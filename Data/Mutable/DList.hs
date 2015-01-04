@@ -7,7 +7,6 @@ module Data.Mutable.DList
     ) where
 
 import Data.Mutable.Class
-import Data.Primitive.MutVar
 
 data Node s a = Node
     a

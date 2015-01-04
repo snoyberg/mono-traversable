@@ -11,14 +11,10 @@ module Data.Mutable.URef
     , MutableRef (..)
     ) where
 
-import Data.Mutable.Class
-import Control.Monad.Primitive (PrimMonad, PrimState)
-import Control.Monad.ST (ST)
-import Control.Monad (liftM)
-import qualified Data.Vector.Unboxed.Mutable as VU
-import qualified Data.Vector.Storable.Mutable as VS
-import qualified Data.Vector.Mutable as VB
+import           Control.Monad               (liftM)
+import           Data.Mutable.Class
 import qualified Data.Vector.Generic.Mutable as V
+import qualified Data.Vector.Unboxed.Mutable as VU
 
 -- | An unboxed vector reference, supporting any monad.
 newtype URef s a = URef (VU.MVector s a)
