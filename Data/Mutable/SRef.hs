@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 -- | Use 1-length mutable storable vectors for mutable references.
 --
--- Motivated by: http://stackoverflow.com/questions/27261813/why-is-my-little-stref-int-require-allocating-gigabytes and ArrayRef.
+-- Motivated by: <http://stackoverflow.com/questions/27261813/why-is-my-little-stref-int-require-allocating-gigabytes> and ArrayRef.
 module Data.Mutable.SRef
     ( -- * Types
       SRef
@@ -19,14 +19,14 @@ import qualified Data.Vector.Storable.Mutable as VS
 import qualified Data.Vector.Mutable as VB
 import qualified Data.Vector.Generic.Mutable as V
 
--- | An unboxed vector reference, supporting any monad.
+-- | A storable vector reference, supporting any monad.
 newtype SRef s a = SRef (VS.MVector s a)
 
 asSRef :: SRef s a -> SRef s a
 asSRef x = x
 {-# INLINE asSRef #-}
 
--- | An unboxed IO vector reference.
+-- | A storable IO vector reference.
 type IOSRef = SRef (PrimState IO)
 
 instance MutableContainer (SRef s a) where

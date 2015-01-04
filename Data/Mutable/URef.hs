@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 -- | Use 1-length mutable unboxed vectors for mutable references.
 --
--- Motivated by: http://stackoverflow.com/questions/27261813/why-is-my-little-stref-int-require-allocating-gigabytes and ArrayRef.
+-- Motivated by: <http://stackoverflow.com/questions/27261813/why-is-my-little-stref-int-require-allocating-gigabytes> and ArrayRef.
 module Data.Mutable.URef
     ( -- * Types
       URef
