@@ -79,6 +79,7 @@ spec = do
                 drain
         test "UDeque" asUDeque
         test "SDeque" asSDeque
+        test "BDeque" asBDeque
         test "DList" asDList
         test "MutVar Seq" (id :: MutVar (PrimState IO) (Seq Int) -> MutVar (PrimState IO) (Seq Int))
         test "STRef Vector" (id :: STRef (PrimState IO) (Vector Int) -> STRef (PrimState IO) (Vector Int))

@@ -16,6 +16,7 @@ library
   exposed-modules:     Data.Mutable.SRef
                        Data.Mutable.Class
                        Data.Mutable.URef
+                       Data.Mutable.VRef
                        Data.Mutable.DList
                        Data.Mutable.Deque
   build-depends:       base >= 4.7 && < 5

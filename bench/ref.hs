@@ -3,6 +3,7 @@ import Data.Mutable.Class
 import Control.Monad
 import Data.Mutable.URef
 import Data.Mutable.SRef
+import Data.Mutable.VRef
 
 test name forceType = bench name $ whnfIO $ do
     ref <- fmap forceType $ newRef (5 :: Int)
@@ -22,4 +23,5 @@ main = defaultMain
     , test "MutVar" asMutVar
     , test "URef" asURef
     , test "SRef" asSRef
+    , test "VRef" asVRef
     ]

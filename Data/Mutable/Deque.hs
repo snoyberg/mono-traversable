@@ -3,6 +3,7 @@ module Data.Mutable.Deque
     ( Deque
     , asUDeque
     , asSDeque
+    , asBDeque
     , module Data.Mutable.Class
     ) where
 
@@ -13,6 +14,7 @@ import Control.Monad.Primitive (PrimState, PrimMonad)
 import Data.Primitive.MutVar (MutVar)
 import qualified Data.Vector.Unboxed.Mutable as U
 import qualified Data.Vector.Storable.Mutable as S
+import qualified Data.Vector.Mutable as B
 
 data DequeState v s a = DequeState
     (v s a)
@@ -26,6 +28,9 @@ asUDeque = id
 
 asSDeque :: Deque S.MVector s a -> Deque S.MVector s a
 asSDeque = id
+
+asBDeque :: Deque B.MVector s a -> Deque B.MVector s a
+asBDeque = id
 
 instance MutableContainer (Deque v s a) where
     type MCState (Deque v s a) = s

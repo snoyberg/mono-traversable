@@ -31,5 +31,6 @@ main = defaultMain
     , test "IORef (Seq Int)" (id :: IORef (Seq Int) -> IORef (Seq Int))
     , test "UDeque" asUDeque
     , test "SDeque" asSDeque
+    , test "BDeque" asBDeque
     , test "DList" asDList
     ]
