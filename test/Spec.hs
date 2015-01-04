@@ -4,6 +4,7 @@ import Data.Mutable.Deque
 import Data.Mutable.DList
 import Data.Mutable.SRef
 import Data.Mutable.URef
+import Data.Mutable.PRef
 import Data.Mutable.VRef
 import Data.Sequence             (Seq)
 import Data.Vector               (Vector)
@@ -111,6 +112,7 @@ spec = do
                         _ <- atomic' tested $ \x -> (x - i, ())
                         check
         test "URef" asURef modifyRefHelper modifyRefHelper'
+        test "PRef" asPRef modifyRefHelper modifyRefHelper'
         test "SRef" asSRef modifyRefHelper modifyRefHelper'
         test "VRef" asVRef modifyRefHelper modifyRefHelper'
         test "STRef" asSTRef modifyRefHelper modifyRefHelper'
