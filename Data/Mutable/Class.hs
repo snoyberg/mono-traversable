@@ -7,6 +7,7 @@ module Data.Mutable.Class
     ( PrimMonad
     , PrimState
     , RealWorld
+    , MutableQueue
     , MutableStack
     , MutableDeque
     , IORef
@@ -37,7 +38,14 @@ import           Data.Primitive.MutVar
 import qualified Data.Sequences          as Seqs
 import           Data.STRef
 
+-- | The parent typeclass for all mutable containers.
+--
+-- Since 0.2.0
 class MutableContainer c where
+    -- | Associated type giving the primitive state token for the given
+    -- container, much like 'PrimState' from primtive.
+    --
+    -- Since 0.2.0
     type MCState c
 
 instance MutableContainer (IORef a) where
@@ -47,22 +55,52 @@ instance MutableContainer (STRef s a) where
 instance MutableContainer (MutVar s a) where
     type MCState (MutVar s a) = s
 
+-- | Typeclass for single-cell mutable references.
+--
+-- Since 0.2.0
 class MutableContainer c => MutableRef c where
+    -- | Associated type giving the type of the value inside the mutable
+    -- reference.
+    --
+    -- Since 0.2.0
     type RefElement c
+
+    -- | Create a new mutable reference with the given value.
+    --
+    -- Since 0.2.0
     newRef :: (PrimMonad m, PrimState m ~ MCState c)
            => RefElement c
            -> m c
+
+    -- | Read the current value in the mutable reference.
+    --
+    -- Since 0.2.0
     readRef :: (PrimMonad m, PrimState m ~ MCState c)
             => c
             -> m (RefElement c)
+
+    -- | Write a new value to the mutable reference.
+    --
+    -- Since 0.2.0
     writeRef :: (PrimMonad m, PrimState m ~ MCState c)
              => c
              -> RefElement c
              -> m ()
+
+    -- | Modify the value in the mutable reference, without necessarily forcing the result.
+    --
+    -- Note: some implementations /will/ force the result, in particular
+    -- @PRef@, @SRef@, and @URef@.
+    --
+    -- Since 0.2.0
     modifyRef :: (PrimMonad m, PrimState m ~ MCState c)
               => c
               -> (RefElement c -> RefElement c)
               -> m ()
+
+    -- | Modify the value in the mutable reference, forcing the result.
+    --
+    -- Since 0.2.0
     modifyRef' :: (PrimMonad m, PrimState m ~ MCState c)
                => c
                -> (RefElement c -> RefElement c)
@@ -105,12 +143,22 @@ instance MutableRef (MutVar s a) where
     modifyRef' = modifyMutVar'
     {-# INLINE modifyRef' #-}
 
+-- | @MutableRef@s that provide for atomic modifications of their contents.
+--
+-- Since 0.2.0
 class MutableRef c => MutableAtomicRef c where
+    -- | Modify the value without necessarily forcing the result.
+    --
+    -- Since 0.2.0
     atomicModifyRef
         :: (PrimMonad m, PrimState m ~ MCState c)
         => c
         -> (RefElement c -> (RefElement c, a))
         -> m a
+
+    -- | Modify the value, forcing the result.
+    --
+    -- Since 0.2.0
     atomicModifyRef'
         :: (PrimMonad m, PrimState m ~ MCState c)
         => c
@@ -127,8 +175,18 @@ instance MutableAtomicRef (MutVar s a) where
     atomicModifyRef' = atomicModifyMutVar'
     {-# INLINE atomicModifyRef' #-}
 
+-- | Containers which contain 0 or more values.
+--
+-- Since 0.2.0
 class MutableContainer c => MutableCollection c where
+    -- | The type of each value in the collection.
+    --
+    -- Since 0.2.0
     type CollElement c
+
+    -- | Create a new, empty collection.
+    --
+    -- Since 0.2.0
     newColl :: (PrimMonad m, PrimState m ~ MCState c)
             => m c
 instance Monoid w => MutableCollection (IORef w) where
@@ -144,7 +202,13 @@ instance Monoid w => MutableCollection (MutVar s w) where
     newColl = newRef mempty
     {-# INLINE newColl #-}
 
+-- | Take a value from the front of the collection, if available.
+--
+-- Since 0.2.0
 class MutableCollection c => MutablePopFront c where
+    -- | Take a value from the front of the collection, if available.
+    --
+    -- Since 0.2.0
     popFront :: (PrimMonad m, PrimState m ~ MCState c)
              => c
              -> m (Maybe (CollElement c))
@@ -175,7 +239,13 @@ instance Seqs.IsSequence a => MutablePopFront (MutVar s a) where
     popFront = popFrontRef
     {-# INLINE popFront #-}
 
+-- | Place a value at the front of the collection.
+--
+-- Since 0.2.0
 class MutableCollection c => MutablePushFront c where
+    -- | Place a value at the front of the collection.
+    --
+    -- Since 0.2.0
     pushFront :: (PrimMonad m, PrimState m ~ MCState c)
               => c
               -> CollElement c
@@ -202,7 +272,13 @@ instance Seqs.IsSequence a => MutablePushFront (MutVar s a) where
     pushFront = pushFrontRef
     {-# INLINE pushFront #-}
 
+-- | Take a value from the back of the collection, if available.
+--
+-- Since 0.2.0
 class MutableCollection c => MutablePopBack c where
+    -- | Take a value from the back of the collection, if available.
+    --
+    -- Since 0.2.0
     popBack :: (PrimMonad m, PrimState m ~ MCState c)
             => c
             -> m (Maybe (CollElement c))
@@ -233,7 +309,13 @@ instance Seqs.IsSequence a => MutablePopBack (MutVar s a) where
     popBack = popBackRef
     {-# INLINE popBack #-}
 
+-- | Place a value at the back of the collection.
+--
+-- Since 0.2.0
 class MutableCollection c => MutablePushBack c where
+    -- | Place a value at the back of the collection.
+    --
+    -- Since 0.2.0
     pushBack :: (PrimMonad m, PrimState m ~ MCState c)
              => c
              -> CollElement c
@@ -260,15 +342,32 @@ instance Seqs.IsSequence a => MutablePushBack (MutVar s a) where
     pushBack = pushBackRef
     {-# INLINE pushBack #-}
 
+-- | Collections which allow pushing and popping at the front (aka FIFOs).
+--
+-- Since 0.2.0
 type MutableQueue c = (MutablePopFront c, MutablePushBack c)
+
+-- | Collections which allow pushing at the back and popping at the front (aka FILOs).
+--
+-- Since 0.2.0
 type MutableStack c = (MutablePopFront c, MutablePushFront c)
+
+-- | Collections which allow pushing and popping at the front and back.
+--
+-- Since 0.2.0
 type MutableDeque c = (MutableQueue c, MutablePushFront c, MutablePopBack c)
 
+-- |
+-- Since 0.2.0
 asIORef :: IORef a -> IORef a
 asIORef = id
 
+-- |
+-- Since 0.2.0
 asSTRef :: STRef s a -> STRef s a
 asSTRef = id
 
+-- |
+-- Since 0.2.0
 asMutVar :: MutVar s a -> MutVar s a
 asMutVar = id

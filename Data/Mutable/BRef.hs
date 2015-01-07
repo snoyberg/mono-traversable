@@ -20,8 +20,12 @@ import qualified Data.Vector.Generic.Mutable as V
 import qualified Data.Vector.Mutable         as VB
 
 -- | A boxed vector reference, supporting any monad.
+--
+-- Since 0.2.0
 newtype BRef s a = BRef (VB.MVector s a)
 
+-- |
+-- Since 0.2.0
 asBRef :: BRef s a -> BRef s a
 asBRef x = x
 {-# INLINE asBRef #-}

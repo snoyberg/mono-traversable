@@ -23,8 +23,12 @@ import Data.Primitive.Types
 import GHC.Types                (Int (..))
 
 -- | A primitive ByteArray reference, supporting any monad.
+--
+-- Since 0.2.0
 newtype PRef s a = PRef (MutableByteArray s)
 
+-- |
+-- Since 0.2.0
 asPRef :: PRef s a -> PRef s a
 asPRef x = x
 {-# INLINE asPRef #-}

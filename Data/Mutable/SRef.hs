@@ -17,8 +17,12 @@ import qualified Data.Vector.Generic.Mutable  as V
 import qualified Data.Vector.Storable.Mutable as VS
 
 -- | A storable vector reference, supporting any monad.
+--
+-- Since 0.2.0
 newtype SRef s a = SRef (VS.MVector s a)
 
+-- |
+-- Since 0.2.0
 asSRef :: SRef s a -> SRef s a
 asSRef x = x
 {-# INLINE asSRef #-}

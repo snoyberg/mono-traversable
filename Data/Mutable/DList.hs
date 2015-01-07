@@ -13,8 +13,13 @@ data Node s a = Node
     (MutVar s (Maybe (Node s a))) -- previous
     (MutVar s (Maybe (Node s a))) -- next
 
+-- | A doubly-linked list.
+--
+-- Since 0.2.0
 data DList s a = DList (MutVar s (Maybe (Node s a))) (MutVar s (Maybe (Node s a)))
 
+-- |
+-- Since 0.2.0
 asDList :: DList s a -> DList s a
 asDList = id
 {-# INLINE asDList #-}

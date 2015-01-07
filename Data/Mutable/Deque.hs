@@ -22,18 +22,40 @@ data DequeState v s a = DequeState
     {-# UNPACK #-} !Int -- start
     {-# UNPACK #-} !Int -- size
 
+-- | A double-ended queue supporting any underlying vector type and any monad.
+--
+-- This implements a circular double-ended queue with exponential growth.
+--
+-- Since 0.2.0
 newtype Deque v s a = Deque (MutVar s (DequeState v s a))
 
+-- | A 'Deque' specialized to unboxed vectors.
+--
+-- Since 0.2.0
 type UDeque = Deque U.MVector
+
+-- | A 'Deque' specialized to storable vectors.
+--
+-- Since 0.2.0
 type SDeque = Deque S.MVector
+
+-- | A 'Deque' specialized to boxed vectors.
+--
+-- Since 0.2.0
 type BDeque = Deque B.MVector
 
+-- |
+-- Since 0.2.0
 asUDeque :: UDeque s a -> UDeque s a
 asUDeque = id
 
+-- |
+-- Since 0.2.0
 asSDeque :: SDeque s a -> SDeque s a
 asSDeque = id
 
+-- |
+-- Since 0.2.0
 asBDeque :: BDeque s a -> BDeque s a
 asBDeque = id
 

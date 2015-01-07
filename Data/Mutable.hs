@@ -40,6 +40,7 @@ module Data.Mutable
     , MutablePopFront (..)
     , MutablePopBack (..)
       -- * Constraint kinds
+    , MutableQueue
     , MutableStack
     , MutableDeque
       -- * Convenience re-exports

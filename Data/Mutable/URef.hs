@@ -17,8 +17,12 @@ import qualified Data.Vector.Generic.Mutable as V
 import qualified Data.Vector.Unboxed.Mutable as VU
 
 -- | An unboxed vector reference, supporting any monad.
+--
+-- Since 0.2.0
 newtype URef s a = URef (VU.MVector s a)
 
+-- |
+-- Since 0.2.0
 asURef :: URef s a -> URef s a
 asURef x = x
 {-# INLINE asURef #-}
