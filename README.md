@@ -1,6 +1,6 @@
 One of Haskell's strengths is immutable data structures. These structures make
 it easier to reason about code, simplify concurrency and parallelism, and in
-some case can improve performance by allowing sharing. However, there are still
+some cases can improve performance by allowing sharing. However, there are still
 classes of problems where mutable data structures can both be more convenient,
 and provide a performance boost. This library is meant to provide such
 structures in a performant, well tested way. It also provides a simple
