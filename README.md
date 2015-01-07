@@ -120,11 +120,86 @@ The following benchmarks were performed on January 7, 2015, against version 0.2.
 ### Ref benchmark
 
 ```
+benchmarking IORef
+time                 4.322 μs   (4.322 μs .. 4.323 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 4.322 μs   (4.322 μs .. 4.323 μs)
+std dev              1.401 ns   (1.114 ns .. 1.802 ns)
+
+benchmarking STRef
+time                 4.484 μs   (4.484 μs .. 4.485 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 4.484 μs   (4.484 μs .. 4.484 μs)
+std dev              941.0 ps   (748.5 ps .. 1.164 ns)
+
+benchmarking MutVar
+time                 4.482 μs   (4.482 μs .. 4.483 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 4.482 μs   (4.482 μs .. 4.483 μs)
+std dev              843.2 ps   (707.9 ps .. 1.003 ns)
+
+benchmarking URef
+time                 2.020 μs   (2.019 μs .. 2.020 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 2.020 μs   (2.019 μs .. 2.020 μs)
+std dev              955.2 ps   (592.2 ps .. 1.421 ns)
+
+benchmarking PRef
+time                 2.015 μs   (2.014 μs .. 2.015 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 2.014 μs   (2.014 μs .. 2.015 μs)
+std dev              901.3 ps   (562.8 ps .. 1.238 ns)
+
+benchmarking SRef
+time                 2.231 μs   (2.230 μs .. 2.232 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 2.231 μs   (2.230 μs .. 2.231 μs)
+std dev              1.938 ns   (1.589 ns .. 2.395 ns)
+
+benchmarking BRef
+time                 4.279 μs   (4.279 μs .. 4.279 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 4.279 μs   (4.279 μs .. 4.279 μs)
+std dev              1.281 ns   (1.016 ns .. 1.653 ns)
 ```
 
 ### Deque benchmark
 
 ```
+time                 8.371 ms   (8.362 ms .. 8.382 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 8.386 ms   (8.378 ms .. 8.398 ms)
+std dev              29.25 μs   (20.73 μs .. 42.47 μs)
+
+benchmarking IORef (Seq Int)
+time                 142.9 μs   (142.7 μs .. 143.1 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 142.7 μs   (142.6 μs .. 142.9 μs)
+std dev              542.8 ns   (426.5 ns .. 697.0 ns)
+
+benchmarking UDeque
+time                 107.5 μs   (107.4 μs .. 107.6 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 107.5 μs   (107.4 μs .. 107.6 μs)
+std dev              227.4 ns   (171.8 ns .. 297.8 ns)
+
+benchmarking SDeque
+time                 97.82 μs   (97.76 μs .. 97.89 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 97.82 μs   (97.78 μs .. 97.89 μs)
+std dev              169.5 ns   (110.6 ns .. 274.5 ns)
+
+benchmarking BDeque
+time                 113.5 μs   (113.4 μs .. 113.6 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 113.6 μs   (113.5 μs .. 113.7 μs)
+std dev              300.4 ns   (221.8 ns .. 424.1 ns)
+
+benchmarking DList
+time                 156.5 μs   (156.3 μs .. 156.6 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 156.4 μs   (156.3 μs .. 156.6 μs)
+std dev              389.5 ns   (318.3 ns .. 502.8 ns)
 ```
 
 ## Test coverage
