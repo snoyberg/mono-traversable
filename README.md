@@ -73,7 +73,7 @@ boxed), it was trivial to include it along with the other two, and does
 actually demonstrate a performance advantage. Unlike `URef` and `SRef`, there
 is no restriction on the type of value it can store.
 
-The finally reference type is `PRef`. Unlike the other three mentioned, it
+The final reference type is `PRef`. Unlike the other three mentioned, it
 doesn't use vectors at all, but instead drops down directly to a mutable
 bytearray to store values. This means it has slightly less overhead (no need to
 store the size of the vector), but also restricts the types of things that can
