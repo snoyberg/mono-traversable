@@ -1,91 +1,134 @@
-This package provides common mutable containers, such as double-ended queues
-and doubly-linked lists. It is implemented as both an abstract set of type
-classes, and concrete implementations.
+One of Haskell's strengths is immutable data structures. These structures make
+it easier to reason about code, simplify concurrency and parallelism, and in
+some case can improve performance by allowing sharing. However, there are still
+classes of problems where mutable data structures can both be more convenient,
+and provide a performance boost. This library is meant to provide such
+structures in a performant, well tested way. It also provides a simple
+abstraction over such data structures via typeclasses.
 
-Note that this library should be considered extremely experimental. That said,
-it currently has 100% test coverage and has some performance tuning, though the
-API is expected to change significantly.
+We'll first talk about the general approach to APIs in this package. Next,
+there are two main sets of abstractions provided, which we'll cover in the
+following two sections, along with their concrete implementations. Finally,
+we'll cover benchmarks.
+
+## API structure
+
+The API takes heavy advantage of the `PrimMonad` typeclass from the primitive
+package. This allows our data structures to work in both `IO` and `ST` code.
+Each data structure has an associated type, `MCState`, which gives the
+primitive state for that structure. For example, in the case of `IORef`, that
+state is `RealWorld`, whereas for `STRef s`, it would be `s`. This associated
+type is quite similar to the `PrimState` associated type from primitive, and in
+many type signatures you'll see an equality constraint along the lines of:
+
+```haskell
+PrimState m ~ MCState c
+```
+
+For those who are wondering, `MCState` stands for "mutable container state."
+
+All actions are part of a typeclass, which allows for generic access to
+different types of structures quite easily. In addition, we provide type hint
+functions, such as `asIORef`, which can help specify types when using such
+generic functions. For example, a common idiom might be:
+
+```haskell
+ioref <- fmap asIORef $ newRef someVal
+```
+
+Wherever possible, we stick to well accepted naming and type signature
+standards. For example, note how closely `modifyRef` and `modifyRef'` match
+`modifyIORef` and `modifyIORef'`.
+
+## Single cell references
+
+The base package provides both `IORef` and `STRef` as boxed mutable references,
+for storing a single value. The primitive package also provides `MutVar`, which
+generalizes over both of those and works for any `PrimMonad` instance. The
+`MutableRef` typeclass in this package abstracts over all three of those. It
+has two associated types: `MCState` for the primitive state, and `RefElement`
+to specify what is contained by the reference.
+
+You may be wondering: why not just take the reference as a type parameter? That
+wouldn't allow us to have monomorphic reference types, which may be useful
+under some circumstances. This is a similar motivation to how the
+`mono-traversable` package works.
+
+In addition to providing an abstraction over `IORef`, `STRef`, and `MutVar`,
+this package provides four addition single-cell mutable references. `URef`,
+`SRef`, and `BRef` all contain a 1-length mutable vector under the surface,
+which is unboxed, storable, and boxed, respectively. The advantage of the first
+two over boxed standard boxed references is that it can avoid a significant
+amount of allocation overhead. See [the relevant Stack Overflow
+discussion](http://stackoverflow.com/questions/27261813/why-is-my-little-stref-int-require-allocating-gigabytes)
+and the benchmarks below.
+
+While `BRef` doesn't give this same advantage (since the values are still
+boxed), it was trivial to include it along with the other two, and does
+actually demonstrate a performance advantage. Unlike `URef` and `SRef`, there
+is no restriction on the type of value it can store.
+
+The finally reference type is `PRef`. Unlike the other three mentioned, it
+doesn't use vectors at all, but instead drops down directly to a mutable
+bytearray to store values. This means it has slightly less overhead (no need to
+store the size of the vector), but also restricts the types of things that can
+be stored (only instances of `Prim`).
+
+You should benchmark your program to determine the most efficient reference
+type, but generally speaking `PRef` will be most performant, followed by `URef`
+and `SRef`, and finally `BRef`.
+
+## Collections
+
+Collections allow you to push and pop values to the beginning and end of
+themselves. Since different data structures allow different operations, each
+operation goes into its own typeclass, appropriately named `MutablePushFront`,
+`MutablePushBack`, `MutablePopFront`, and `MutablePopBack`. There is also a
+parent typeclass `MutableCollection` which provides:
+
+1. The `CollElement` associated type to indicate what kinds of values are in the collection.
+2. The `newColl` function to create a new, empty collection.
+
+The `mono-traversable` package provides a typeclass `IsSequence` which
+abstracts over sequence-like things. In particular, it provides operations for
+`cons`, `snoc`, `uncons`, and `unsnoc`. Using this abstraction, we can provide
+an instance for all of the typeclasses listed above for any mutable reference
+containing an instance of `IsSequence`, e.g. `IORef [Int]` or `BRef s (Seq
+Double)`.
+
+Note that the performance of some of these combinations is *terrible*. In
+particular, `pushBack` or `popBack` on a list requires traversing the entire
+list, and any push operations on a `Vector` requires copying the entire
+contents of the vector. Caveat emptor! If you *must* use one of these
+structures, it's highly recommended to use `Seq`, which gives the best overall
+performance.
+
+However, in addition to these instances, this package also provides two
+additional data structures: double-ended queues and doubly-linked lists. The
+former is based around mutable vectors, and therefore as unboxed (`UDeque`),
+storable (`SDeque`), and boxed (`BDeque`) variants. Doubly-linked lists have no
+such variety, and are simply `DList`s.
+
+For general purpose queue-like structures, `UDeque` or `SDeque` is likely to
+give you best performance. As usual, benchmark your own program to be certain,
+and see the benchmark results below.
 
 ## Benchmark results
 
-The following benchmarks were performed on January 4, 2015, against version 0.1.1.0.
-
-### Deque benchmark
-
-```
-benchmarking IORef [Int]
-time                 8.355 ms   (8.350 ms .. 8.362 ms)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 8.353 ms   (8.348 ms .. 8.358 ms)
-std dev              15.89 μs   (11.83 μs .. 23.66 μs)
-
-benchmarking IORef (Seq Int)
-time                 140.5 μs   (140.4 μs .. 140.6 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 140.5 μs   (140.4 μs .. 140.6 μs)
-std dev              313.3 ns   (239.0 ns .. 404.1 ns)
-
-benchmarking UDeque
-time                 101.2 μs   (101.2 μs .. 101.2 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 101.2 μs   (101.2 μs .. 101.2 μs)
-std dev              16.11 ns   (13.38 ns .. 21.34 ns)
-
-benchmarking SDeque
-time                 97.86 μs   (97.85 μs .. 97.88 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 97.88 μs   (97.87 μs .. 97.89 μs)
-std dev              38.61 ns   (31.34 ns .. 50.52 ns)
-
-benchmarking BDeque
-time                 113.7 μs   (113.7 μs .. 113.7 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 113.7 μs   (113.7 μs .. 113.7 μs)
-std dev              29.87 ns   (22.98 ns .. 39.57 ns)
-
-benchmarking DList
-time                 160.8 μs   (160.7 μs .. 160.9 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 160.9 μs   (160.8 μs .. 161.0 μs)
-std dev              331.8 ns   (277.0 ns .. 401.2 ns)
-```
+The following benchmarks were performed on January 7, 2015, against version 0.2.0.
 
 ### Ref benchmark
 
 ```
-benchmarking IORef
-time                 4.321 μs   (4.320 μs .. 4.322 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 4.322 μs   (4.321 μs .. 4.323 μs)
-std dev              4.840 ns   (3.746 ns .. 6.242 ns)
-
-benchmarking STRef
-time                 4.481 μs   (4.480 μs .. 4.481 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 4.481 μs   (4.481 μs .. 4.481 μs)
-std dev              1.127 ns   (805.5 ps .. 1.758 ns)
-
-benchmarking MutVar
-time                 4.478 μs   (4.476 μs .. 4.481 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 4.479 μs   (4.477 μs .. 4.481 μs)
-std dev              6.500 ns   (5.199 ns .. 8.246 ns)
-
-benchmarking URef
-time                 2.019 μs   (2.019 μs .. 2.020 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 2.020 μs   (2.019 μs .. 2.020 μs)
-std dev              471.2 ps   (371.2 ps .. 671.9 ps)
-
-benchmarking SRef
-time                 2.175 μs   (2.174 μs .. 2.176 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 2.172 μs   (2.170 μs .. 2.173 μs)
-std dev              5.106 ns   (4.054 ns .. 6.660 ns)
-
-benchmarking VRef
-time                 4.280 μs   (4.279 μs .. 4.280 μs)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 4.281 μs   (4.280 μs .. 4.283 μs)
-std dev              4.552 ns   (1.911 ns .. 8.892 ns)
 ```
+
+### Deque benchmark
+
+```
+```
+
+## Test coverage
+
+As of version 0.2.0, this package has 100% test coverage. If you look at the
+report yourself, you'll see some uncovered code; it's just the automatically
+derived `Show` instance needed for QuickCheck inside the test suite itself.

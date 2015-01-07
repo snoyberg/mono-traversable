@@ -1,5 +1,5 @@
 name:                mutable-containers
-version:             0.1.2.0
+version:             0.2.0
 synopsis:            Abstactions and concrete implementations of mutable containers
 description:         See docs and README at <http://www.stackage.org/package/mutable-containers>
 homepage:            https://github.com/fpco/mutable-containers
@@ -13,11 +13,12 @@ extra-source-files:  README.md ChangeLog.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Data.Mutable.SRef
+  exposed-modules:     Data.Mutable
+  other-modules:       Data.Mutable.SRef
                        Data.Mutable.Class
                        Data.Mutable.URef
                        Data.Mutable.PRef
-                       Data.Mutable.VRef
+                       Data.Mutable.BRef
                        Data.Mutable.DList
                        Data.Mutable.Deque
   build-depends:       base >= 4.7 && < 5

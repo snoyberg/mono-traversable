@@ -23,6 +23,10 @@ module Data.Mutable.Class
     , MutablePushBack (..)
     , MutablePopFront (..)
     , MutablePopBack (..)
+    , pushFrontRef
+    , pushBackRef
+    , popFrontRef
+    , popBackRef
     ) where
 
 import           Control.Monad.Primitive

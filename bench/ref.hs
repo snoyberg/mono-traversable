@@ -1,11 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 import Control.Monad
 import Criterion.Main
-import Data.Mutable.Class
-import Data.Mutable.SRef
-import Data.Mutable.URef
-import Data.Mutable.PRef
-import Data.Mutable.VRef
+import Data.Mutable
 
 test :: (MCState c ~ PrimState IO, RefElement c ~ Int, MutableRef c)
      => String
@@ -30,5 +26,5 @@ main = defaultMain
     , test "URef" asURef
     , test "PRef" asPRef
     , test "SRef" asSRef
-    , test "VRef" asVRef
+    , test "BRef" asBRef
     ]

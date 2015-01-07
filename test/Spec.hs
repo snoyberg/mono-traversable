@@ -1,11 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 import Control.Monad             (forM_)
-import Data.Mutable.Deque
-import Data.Mutable.DList
-import Data.Mutable.SRef
-import Data.Mutable.URef
-import Data.Mutable.PRef
-import Data.Mutable.VRef
+import Data.Mutable
 import Data.Sequence             (Seq)
 import Data.Vector               (Vector)
 import Test.Hspec
@@ -81,6 +76,7 @@ spec = do
         test "DList" asDList
         test "MutVar Seq" (id :: MutVar (PrimState IO) (Seq Int) -> MutVar (PrimState IO) (Seq Int))
         test "STRef Vector" (id :: STRef (PrimState IO) (Vector Int) -> STRef (PrimState IO) (Vector Int))
+        test "BRef Vector" (id :: BRef (PrimState IO) (Vector Int) -> BRef (PrimState IO) (Vector Int))
     describe "Ref" $ do
         let test name forceType atomic atomic' = prop name $ \start actions -> do
                 base <- fmap asIORef $ newRef start
@@ -114,7 +110,7 @@ spec = do
         test "URef" asURef modifyRefHelper modifyRefHelper'
         test "PRef" asPRef modifyRefHelper modifyRefHelper'
         test "SRef" asSRef modifyRefHelper modifyRefHelper'
-        test "VRef" asVRef modifyRefHelper modifyRefHelper'
+        test "BRef" asBRef modifyRefHelper modifyRefHelper'
         test "STRef" asSTRef modifyRefHelper modifyRefHelper'
         test "MutVar" asMutVar atomicModifyRef atomicModifyRef'
 

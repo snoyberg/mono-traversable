@@ -1,8 +1,11 @@
 {-# LANGUAGE TypeFamilies #-}
 module Data.Mutable.Deque
     ( Deque
+    , UDeque
     , asUDeque
+    , SDeque
     , asSDeque
+    , BDeque
     , asBDeque
     , module Data.Mutable.Class
     ) where
@@ -21,13 +24,17 @@ data DequeState v s a = DequeState
 
 newtype Deque v s a = Deque (MutVar s (DequeState v s a))
 
-asUDeque :: Deque U.MVector s a -> Deque U.MVector s a
+type UDeque = Deque U.MVector
+type SDeque = Deque S.MVector
+type BDeque = Deque B.MVector
+
+asUDeque :: UDeque s a -> UDeque s a
 asUDeque = id
 
-asSDeque :: Deque S.MVector s a -> Deque S.MVector s a
+asSDeque :: SDeque s a -> SDeque s a
 asSDeque = id
 
-asBDeque :: Deque B.MVector s a -> Deque B.MVector s a
+asBDeque :: BDeque s a -> BDeque s a
 asBDeque = id
 
 instance MutableContainer (Deque v s a) where

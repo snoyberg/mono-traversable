@@ -2,9 +2,7 @@
 {-# LANGUAGE TypeFamilies    #-}
 import Control.Monad
 import Criterion.Main
-import Data.Mutable.Class
-import Data.Mutable.Deque
-import Data.Mutable.DList
+import Data.Mutable
 import Data.Sequence      (Seq)
 
 test :: (MCState c ~ PrimState IO, CollElement c ~ Int, MutableDeque c)
