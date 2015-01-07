@@ -6,6 +6,11 @@ and provide a performance boost. This library is meant to provide such
 structures in a performant, well tested way. It also provides a simple
 abstraction over such data structures via typeclasses.
 
+Before anything else, let me provide the caveats of this package:
+
+* Don't use this package unless you have a good reason to! Immutable data structures are a better approach most of the time!
+* This code is intentionally *not* multithread safe. If you need something like a concurrent queue, there are many options on Hackage, from `Chan` to `TChan`, to [chaselev-deque](http://hackage.haskell.org/package/chaselev-deque).
+
 We'll first talk about the general approach to APIs in this package. Next,
 there are two main sets of abstractions provided, which we'll cover in the
 following two sections, along with their concrete implementations. Finally,
