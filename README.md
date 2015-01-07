@@ -60,7 +60,7 @@ under some circumstances. This is a similar motivation to how the
 `mono-traversable` package works.
 
 In addition to providing an abstraction over `IORef`, `STRef`, and `MutVar`,
-this package provides four addition single-cell mutable references. `URef`,
+this package provides four additional single-cell mutable references. `URef`,
 `SRef`, and `BRef` all contain a 1-length mutable vector under the surface,
 which is unboxed, storable, and boxed, respectively. The advantage of the first
 two over boxed standard boxed references is that it can avoid a significant
