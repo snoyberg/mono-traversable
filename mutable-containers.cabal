@@ -1,5 +1,5 @@
 name:                mutable-containers
-version:             0.2.0
+version:             0.2.0.1
 synopsis:            Abstactions and concrete implementations of mutable containers
 description:         See docs and README at <http://www.stackage.org/package/mutable-containers>
 homepage:            https://github.com/fpco/mutable-containers
