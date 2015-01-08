@@ -85,7 +85,7 @@ spec = do
                         expected <- readRef base
                         actual <- readRef tested
                         expected `shouldBe` actual
-                forM_ actions $ \action -> case action of
+                forM_ (actions :: [RefAction]) $ \action -> case action of
                     WriteRef i -> do
                         writeRef base i
                         writeRef tested i
