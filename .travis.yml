@@ -5,6 +5,7 @@ env:
 
 matrix:
   allow_failures:
+   - env: GHCVER=7.10.1 CABALVER=1.22
    - env: GHCVER=head  CABALVER=head
 
 before_install:
@@ -19,7 +20,7 @@ install:
  - cabal install --only-dependencies --enable-tests
 
 script:
- - cabal configure --enable-tests --enable-library-coverage
+ - cabal configure --enable-tests --enable-library-coverage || cabal configure --enable-tests --enable-coverage
  - cabal build
  - cabal test
 
