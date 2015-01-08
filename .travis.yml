@@ -26,4 +26,4 @@ script:
 
 after_script:
  - cabal install hpc-coveralls
- - hpc-coveralls test
+ - hpc-coveralls --exclude-dir=test test
