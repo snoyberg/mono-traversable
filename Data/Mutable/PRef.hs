@@ -18,8 +18,10 @@ module Data.Mutable.PRef
 
 import Control.Monad            (liftM)
 import Data.Mutable.Class
-import Data.Primitive.ByteArray
-import Data.Primitive.Types
+import Data.Primitive           (sizeOf)
+import Data.Primitive.ByteArray (MutableByteArray, newByteArray, readByteArray,
+                                 writeByteArray)
+import Data.Primitive.Types     (Prim)
 import GHC.Types                (Int (..))
 
 -- | A primitive ByteArray reference, supporting any monad.
@@ -42,7 +44,7 @@ instance Prim a => MutableRef (PRef s a) where
     type RefElement (PRef s a) = a
 
     newRef x = do
-        ba <- newByteArray (I# (sizeOf# x))
+        ba <- newByteArray (sizeOf $! x)
         writeByteArray ba 0 x
         return $! PRef ba
     {-# INLINE newRef #-}
