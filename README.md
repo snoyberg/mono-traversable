@@ -1,3 +1,6 @@
+[![Coverage Status](https://img.shields.io/coveralls/fpco/mutable-containers.svg)](https://coveralls.io/r/fpco/mutable-containers)
+![Travis Build Status](https://travis-ci.org/fpco/mutable-containers.svg)
+
 One of Haskell's strengths is immutable data structures. These structures make
 it easier to reason about code, simplify concurrency and parallelism, and in
 some cases can improve performance by allowing sharing. However, there are still
