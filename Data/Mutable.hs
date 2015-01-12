@@ -47,6 +47,9 @@ module Data.Mutable
     , PrimMonad
     , PrimState
     , RealWorld
+    , Prim
+    , Unbox
+    , Storable
     ) where
 
 import Data.Mutable.Class
@@ -56,3 +59,6 @@ import Data.Mutable.PRef
 import Data.Mutable.BRef
 import Data.Mutable.Deque
 import Data.Mutable.DList
+import Data.Vector.Unboxed (Unbox)
+import Data.Primitive (Prim)
+import Data.Vector.Storable (Storable)

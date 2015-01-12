@@ -1,3 +1,7 @@
+## 0.2.1
+
+* Export `Prim`, `Unbox` and `Storable`
+
 ## 0.2.0
 
 * Restructure under the Data.Mutable module.
