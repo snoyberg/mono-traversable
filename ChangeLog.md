@@ -1,6 +1,7 @@
 ## 0.2.1
 
 * Export `Prim`, `Unbox` and `Storable`
+* `SRef` uses `ForeignPtr` directly (slightly more efficient)
 
 ## 0.2.0
 

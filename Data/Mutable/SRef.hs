@@ -11,15 +11,15 @@ module Data.Mutable.SRef
     , MutableRef (..)
     ) where
 
-import           Control.Monad                (liftM)
 import           Data.Mutable.Class
-import qualified Data.Vector.Generic.Mutable  as V
-import qualified Data.Vector.Storable.Mutable as VS
+import Foreign.ForeignPtr
+import Foreign.Storable
+import Control.Monad.Primitive
 
 -- | A storable vector reference, supporting any monad.
 --
 -- Since 0.2.0
-newtype SRef s a = SRef (VS.MVector s a)
+newtype SRef s a = SRef (ForeignPtr a)
 
 -- |
 -- Since 0.2.0
@@ -32,19 +32,23 @@ type IOSRef = SRef (PrimState IO)
 
 instance MutableContainer (SRef s a) where
     type MCState (SRef s a) = s
-instance VS.Storable a => MutableRef (SRef s a) where
+instance Storable a => MutableRef (SRef s a) where
     type RefElement (SRef s a) = a
 
-    newRef = liftM SRef . V.replicate 1
+    newRef x = unsafePrimToPrim $ do
+        fptr <- mallocForeignPtr
+        withForeignPtr fptr $ flip poke x
+        return $! SRef fptr
     {-# INLINE newRef#-}
 
-    readRef (SRef v) = V.unsafeRead v 0
+    readRef (SRef fptr) = unsafePrimToPrim $ withForeignPtr fptr peek
     {-# INLINE readRef #-}
 
-    writeRef (SRef v) = V.unsafeWrite v 0
+    writeRef (SRef fptr) x = unsafePrimToPrim $ withForeignPtr fptr $ flip poke x
     {-# INLINE writeRef #-}
 
-    modifyRef (SRef v) f = V.unsafeRead v 0 >>= V.unsafeWrite v 0 . f
+    modifyRef (SRef fptr) f = unsafePrimToPrim $ withForeignPtr fptr $ \ptr ->
+        peek ptr >>= poke ptr . f
     {-# INLINE modifyRef #-}
 
     modifyRef' = modifyRef
