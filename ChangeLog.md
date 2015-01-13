@@ -1,3 +1,7 @@
+## 0.2.1.1
+
+* Fix a bug in `Deque`'s new vector allocation/copy code.
+
 ## 0.2.1
 
 * Export `Prim`, `Unbox` and `Storable`

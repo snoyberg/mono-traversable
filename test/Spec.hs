@@ -40,6 +40,14 @@ instance Arbitrary DequeAction where
         , [return PopFront, return PopBack]
         ]
 
+manyPushes :: [DequeAction]
+manyPushes = concat
+    [ replicate 50 $ PushBack 0
+    , replicate 50 PopFront
+    , replicate 50 $ PushFront 0
+    , replicate 50 PopBack
+    ]
+
 specialCase :: [DequeAction]
 specialCase =
     [PushBack 9, PushBack 5,PushBack 11,PushBack 2,PushBack 13,PushBack 10,PushBack 4,PushBack 13,PushBack 7,PushBack 8,PushBack 6,PushBack 4,PushBack 7,PushBack 9,PushBack 10,PushBack 3,PushBack 2,PushBack 12,PushBack 12 ,PushBack 6,PushBack 3,PushBack 5,PushBack 14,PushBack 14,PushBack 11,PushBack 8,PopFront,PopFront,PopFront,PushBack 11,PushBack 3,PopFront,PopFront,PushBack 13,PushBack 12,PopFront,PushBack 10,PushBack 7,PopFront,PopFront,PushBack 13,PushBack 9,PopFront,PushBack 7,PushBack 2,PopFront,PopFront,PushBack 6,PushBack 4,PopFront,PopFront,PopFront,PushBack 9,PushBack 3,PopFront,PushBack 10,PushBack 6,PopFront,PopFront,PopFront,PushBack 12,PushBack 5,PopFront,PushBack 12,PushBack 5,PopFront,PushBack 6,PushBack 4,PopFront,PopFront,PopFront,PushBack 14,PushBack 10,PopFront,PushBack 14,PushBack 10,PopFront,PushBack 11,PushBack 8,PopFront,PushBack 8,PushBack 2,PopFront,PopFront,PopFront,PushBack 13,PushBack 7,PopFront,PushBack 12,PushBack 5,PopFront,PushBack 10,PushBack 8, PopFront,PushBack 7,PushBack 2,PopFront,PopFront,PushBack 9,PushBack 4,PopFront,PopFront,PopFront,PopFront,PopFront,PopFront,PopFront,PopFront,PushBack 4,PushBack 9,PushBack 3,PushBack 10,PushBack 6,PushBack 4,PushBack 13,PushBack 7,PushBack 9,PushBack 3,PopFront]
@@ -76,6 +84,7 @@ spec = do
                 drain
         let test name forceType = describe name $ do
                 prop "arbitrary actions" $ runActions forceType
+                it "many pushes" $ runActions forceType manyPushes
                 it "special case" $ runActions forceType specialCase
 
         test "UDeque" asUDeque

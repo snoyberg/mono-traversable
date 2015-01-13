@@ -131,7 +131,7 @@ newVector v start size f = do
         size2 = start `mod` V.length v
     V.unsafeCopy
         (V.unsafeTake size1 v')
-        (V.unsafeDrop start v)
+        (V.unsafeSlice size2 size1 v)
     V.unsafeCopy
         (V.unsafeSlice size1 size2 v')
         (V.unsafeTake size2 v)
