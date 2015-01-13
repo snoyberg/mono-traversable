@@ -1,3 +1,7 @@
+## 0.2.1.2
+
+* `Deque` optimizations by avoiding modulus operations completely.
+
 ## 0.2.1.1
 
 * Fix a bug in `Deque`'s new vector allocation/copy code.
