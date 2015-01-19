@@ -5,7 +5,7 @@ description:         Provides a replacement for Data.Conduit.List, as well as a 
 homepage:            https://github.com/fpco/conduit-combinators
 license:             MIT
 license-file:        LICENSE
-author:              Michael snoyman
+author:              Michael Snoyman
 maintainer:          michael@snoyman.com
 category:            Data, Conduit
 build-type:          Simple
