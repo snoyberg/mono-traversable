@@ -945,15 +945,15 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
-class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
+class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq where
     stripPrefix :: seq -> seq -> Maybe seq
     stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
 
-    isPrefixOf :: seq -> seq -> Bool
-    isPrefixOf x y = otoList x `isPrefixOf` otoList y
-
     stripSuffix :: seq -> seq -> Maybe seq
     stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
+
+    isPrefixOf :: seq -> seq -> Bool
+    isPrefixOf x y = otoList x `isPrefixOf` otoList y
 
     isSuffixOf :: seq -> seq -> Bool
     isSuffixOf x y = otoList x `isSuffixOf` otoList y
@@ -968,120 +968,104 @@ class (IsSequence seq, Eq (Element seq)) => EqSequence seq where
     -- not just the consecutive items.
     groupAll :: seq -> [seq]
     groupAll = groupAllOn id
-
-    elem :: Element seq -> seq -> Bool
-    elem e = List.elem e . otoList
-
-    notElem :: Element seq -> seq -> Bool
-    notElem e = List.notElem e . otoList
-    {-# INLINE stripPrefix #-}
     {-# INLINE isPrefixOf #-}
-    {-# INLINE stripSuffix #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
+    {-# INLINE stripPrefix #-}
+    {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
     {-# INLINE groupAll #-}
-    {-# INLINE elem #-}
-    {-# INLINE notElem #-}
+
+{-# DEPRECATED elem "use oelem" #-}
+elem :: EqSequence seq => Element seq -> seq -> Bool
+elem = oelem
+
+{-# DEPRECATED notElem "use onotElem" #-}
+notElem :: EqSequence seq => Element seq -> seq -> Bool
+notElem = onotElem
 
 instance Eq a => EqSequence [a] where
     stripPrefix = List.stripPrefix
-    isPrefixOf = List.isPrefixOf
     stripSuffix x y = fmap reverse (List.stripPrefix (reverse x) (reverse y))
-    isSuffixOf x y = List.isPrefixOf (reverse x) (reverse y)
-    isInfixOf = List.isInfixOf
     group = List.group
-    elem = List.elem
-    notElem = List.notElem
+    isPrefixOf = List.isPrefixOf
+    isSuffixOf x y = List.isPrefixOf (List.reverse x) (List.reverse y)
+    isInfixOf = List.isInfixOf
     {-# INLINE stripPrefix #-}
-    {-# INLINE isPrefixOf #-}
     {-# INLINE stripSuffix #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
     {-# INLINE group #-}
     {-# INLINE groupAll #-}
-    {-# INLINE elem #-}
-    {-# INLINE notElem #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
 
 instance EqSequence S.ByteString where
     stripPrefix x y
         | x `S.isPrefixOf` y = Just (S.drop (S.length x) y)
         | otherwise = Nothing
-    isPrefixOf = S.isPrefixOf
     stripSuffix x y
         | x `S.isSuffixOf` y = Just (S.take (S.length y - S.length x) y)
         | otherwise = Nothing
+    group = S.group
+    isPrefixOf = S.isPrefixOf
     isSuffixOf = S.isSuffixOf
     isInfixOf = S.isInfixOf
-    group = S.group
-    elem = S.elem
-    notElem = S.notElem
     {-# INLINE stripPrefix #-}
-    {-# INLINE isPrefixOf #-}
     {-# INLINE stripSuffix #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
     {-# INLINE group #-}
     {-# INLINE groupAll #-}
-    {-# INLINE elem #-}
-    {-# INLINE notElem #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
 
 instance EqSequence L.ByteString where
     stripPrefix x y
         | x `L.isPrefixOf` y = Just (L.drop (L.length x) y)
         | otherwise = Nothing
-    isPrefixOf = L.isPrefixOf
     stripSuffix x y
         | x `L.isSuffixOf` y = Just (L.take (L.length y - L.length x) y)
         | otherwise = Nothing
+    group = L.group
+    isPrefixOf = L.isPrefixOf
     isSuffixOf = L.isSuffixOf
     isInfixOf x y = L.unpack x `List.isInfixOf` L.unpack y
-    group = L.group
-    elem = L.elem
-    notElem = L.notElem
     {-# INLINE stripPrefix #-}
-    {-# INLINE isPrefixOf #-}
     {-# INLINE stripSuffix #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
     {-# INLINE group #-}
     {-# INLINE groupAll #-}
-    {-# INLINE elem #-}
-    {-# INLINE notElem #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
 
 instance EqSequence T.Text where
     stripPrefix = T.stripPrefix
-    isPrefixOf = T.isPrefixOf
     stripSuffix = T.stripSuffix
+    group = T.group
+    isPrefixOf = T.isPrefixOf
     isSuffixOf = T.isSuffixOf
     isInfixOf = T.isInfixOf
-    group = T.group
     {-# INLINE stripPrefix #-}
-    {-# INLINE isPrefixOf #-}
     {-# INLINE stripSuffix #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
     {-# INLINE group #-}
     {-# INLINE groupAll #-}
-    {-# INLINE elem #-}
-    {-# INLINE notElem #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
 
 instance EqSequence TL.Text where
     stripPrefix = TL.stripPrefix
-    isPrefixOf = TL.isPrefixOf
     stripSuffix = TL.stripSuffix
+    group = TL.group
+    isPrefixOf = TL.isPrefixOf
     isSuffixOf = TL.isSuffixOf
     isInfixOf = TL.isInfixOf
-    group = TL.group
     {-# INLINE stripPrefix #-}
-    {-# INLINE isPrefixOf #-}
     {-# INLINE stripSuffix #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
     {-# INLINE group #-}
     {-# INLINE groupAll #-}
-    {-# INLINE elem #-}
-    {-# INLINE notElem #-}
+    {-# INLINE isPrefixOf #-}
+    {-# INLINE isSuffixOf #-}
+    {-# INLINE isInfixOf #-}
 
 instance Eq a => EqSequence (Seq.Seq a)
 instance Eq a => EqSequence (V.Vector a)

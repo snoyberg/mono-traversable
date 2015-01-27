@@ -36,9 +36,9 @@ import           Data.Traversable
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
-import           Prelude              (Bool (..), const, Char, flip, ($), IO, Maybe (..), Either (..),
-                                       replicate, (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
-                                       seq, otherwise, maybe, Ord, (-), (*))
+import           Prelude              (Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
+                                       (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
+                                       seq, otherwise, maybe, Eq, Ord, (-), (*))
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
@@ -52,6 +52,7 @@ import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
 import Data.Semigroup (Option)
+import qualified Data.List as List
 import Data.List.NonEmpty (NonEmpty)
 import Data.Functor.Identity (Identity)
 import Data.Map (Map)
@@ -693,6 +694,64 @@ instance MonoFoldableMonoid T.Text where
 instance MonoFoldableMonoid TL.Text where
     oconcatMap = TL.concatMap
     {-# INLINE oconcatMap #-}
+
+-- | A typeclass for @MonoFoldable@s containing elements which are an instance
+-- of @Eq@.
+class (MonoFoldable mono, Eq (Element mono)) => MonoFoldableEq mono where
+    oelem :: Element mono -> mono -> Bool
+    oelem e = List.elem e . otoList
+
+    onotElem :: Element mono -> mono -> Bool
+    onotElem e = List.notElem e . otoList
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
+
+instance Eq a => MonoFoldableEq (Seq.Seq a)
+instance Eq a => MonoFoldableEq (V.Vector a)
+instance (Eq a, U.Unbox a) => MonoFoldableEq (U.Vector a)
+instance (Eq a, VS.Storable a) => MonoFoldableEq (VS.Vector a)
+instance Eq a => MonoFoldableEq (NonEmpty a)
+instance MonoFoldableEq T.Text
+instance MonoFoldableEq TL.Text
+instance MonoFoldableEq IntSet
+instance Eq a => MonoFoldableEq (Maybe a) 
+instance Eq a => MonoFoldableEq (Tree a)
+instance Eq a => MonoFoldableEq (ViewL a)
+instance Eq a => MonoFoldableEq (ViewR a)
+instance Eq a => MonoFoldableEq (IntMap a)
+instance Eq a => MonoFoldableEq (Option a)
+instance Eq a => MonoFoldableEq (Identity a)
+instance Eq v => MonoFoldableEq (Map k v)
+instance Eq v => MonoFoldableEq (HashMap k v)
+instance Eq a => MonoFoldableEq (HashSet a)
+instance Eq a => MonoFoldableEq (DList a)
+instance Eq b => MonoFoldableEq (Either a b)
+
+
+instance Eq a => MonoFoldableEq [a] where
+    oelem = List.elem
+    onotElem = List.notElem
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
+
+instance MonoFoldableEq S.ByteString where
+    oelem = S.elem
+    onotElem = S.notElem
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
+
+instance MonoFoldableEq L.ByteString where
+    oelem = L.elem
+    onotElem = L.notElem
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
+
+instance (Eq a, Ord a) => MonoFoldableEq (Set a) where
+    oelem = Set.member
+    onotElem = Set.notMember
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
+
 
 -- | A typeclass for @MonoFoldable@s containing elements which are an instance
 -- of @Ord@.
