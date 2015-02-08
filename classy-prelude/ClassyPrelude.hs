@@ -11,6 +11,8 @@ module ClassyPrelude
       -- ** Semigroup
     , Semigroup (..)
     , WrappedMonoid
+      -- ** Applicative
+    , module Control.Applicative
       -- ** Monad
     , module Control.Monad
     , whenM
@@ -160,6 +162,7 @@ module ClassyPrelude
     ) where
 
 import qualified Prelude
+import Control.Applicative ((<**>),liftA,liftA2,liftA3)
 import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
