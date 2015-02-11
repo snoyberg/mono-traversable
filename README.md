@@ -200,7 +200,7 @@ Textual functions are always safe to use with Unicode (it is possible to mis-use
 
 Did you notice minimumEx and maximumEx from above? Ex stands for 'Exception'.
 An exception will occur if you call minimumEx on an empty list.
-MinLen is a tool to guarantee that this never occurs, and instead to prove that there is one or more elements in your list.
+MinLen is a tool to guarantee that this never occurs, and instead to prove that there are one or more elements in your list.
 
 ``` haskell
 minimumEx :: MonoFoldable mono => mono -> Element mono
