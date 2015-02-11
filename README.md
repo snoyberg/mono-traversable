@@ -61,7 +61,7 @@ Now lets compare MonoFunctor to the normal Functor.
 
 ``` haskell
 fmap :: Functor f => (a -> b) -> f a -> f b
-omap :: MonFunctor mono => (Element mono -> Element mono) -> mono -> mono
+omap :: MonoFunctor mono => (Element mono -> Element mono) -> mono -> mono
 ```
 
 So there is no type-change from `a` to `b`, the contained type must stay the same (`Element mono -> Element mono`).
