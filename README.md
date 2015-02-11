@@ -193,7 +193,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     ...
 ```
 
-Textual functions are always safe to use with Unicode (it is possible to mis-use other functions that operate on-individual characters).
+Textual functions are always safe to use with Unicode (it is possible to misuse other functions that operate on individual characters).
 
 
 ### MinLen
