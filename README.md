@@ -249,7 +249,7 @@ Adding instances
 
 If you have a _polymorphic_ data type which is a member of one of the relevant typeclasses ([Functor](http://hackage.haskell.org/package/base/docs/Data-Functor.html),
 [Foldable](http://hackage.haskell.org/package/base/docs/Data-Foldable.html),
-[Traversable](http://hackage.haskell.org/package/base/docs/Data-Traversable.html)), its quite easy to add an instance for
+[Traversable](http://hackage.haskell.org/package/base/docs/Data-Traversable.html)), it's quite easy to add an instance for
 [MonoFunctor](https://hackage.haskell.org/package/mono-traversable/docs/Data-MonoTraversable.html#t:MonoFunctor), [MonoFoldable](https://hackage.haskell.org/package/mono-traversable/docs/Data-MonoTraversable.html#t:MonoFoldable) or [MonoTraversable](https://hackage.haskell.org/package/mono-traversable/docs/Data-MonoTraversable.html#t:MonoTraversable).
 
 You just have to declare the proper type instance:
