@@ -276,7 +276,7 @@ Now you are ready to use ```CustomType a``` with the functions defined in this p
 mono-traversable versus lens Traversal
 --------------------------------------
 
-lens is a library with a lot of functionality covering a variety pf patterns. One piece of functionality it exposes is `Fold` and `Traversal` which can also be used to deal with monomorphic containers.
+lens is a library with a lot of functionality covering a variety of patterns. One piece of functionality it exposes is `Fold` and `Traversal` which can also be used to deal with monomorphic containers.
 
 You could prefer mono-traversable to using this part of lens because
 
