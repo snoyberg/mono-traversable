@@ -270,7 +270,7 @@ instance MonoTraversable (CustomType a)
     
 Now you are ready to use ```CustomType a``` with the functions defined in this package.
 
-**Note**: if your type is a _monomorphic_ container without the proper typeclasses, then you will have to provide an implementation rather than using the default. However, this should be fairly simple, as can be seen [in the code](https://hackage.haskell.org/package/mono-traversable/docs/src/Data-MonoTraversable.html#line-234)
+**Note**: if your type is a _monomorphic_ container without the proper typeclasses, then you will have to provide an implementation rather than using the default. However, this should be fairly simple, as can be seen [in the code](https://github.com/snoyberg/mono-traversable/blob/d85e4ed3c11afec2d49c0f4fe2812122a279e5d4/src/Data/MonoTraversable.hs#L428)
 
 
 mono-traversable versus lens Traversal
