@@ -91,7 +91,7 @@ The list definition was able to default to using `fmap` so no body was needed.
 
 Same as Foldable, but also operates over monomorphic containers.
 
-MonoFoldable is the heart of the power of mono-traversable (and arguable the package should be named mono-foldable) because anything that can be done with `Foldable` can be done with `MonoFoldable`.
+MonoFoldable is the heart of the power of mono-traversable (and arguably the package should be named mono-foldable) because anything that can be done with `Foldable` can be done with `MonoFoldable`.
 The reason why is that a monomorphic container can never change its type.
 So `omap` is a restricted `fmap`.
 However, folding generates a *new* structure, so we have no such concerns.
