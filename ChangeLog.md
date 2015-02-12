@@ -1,3 +1,7 @@
+## 0.8.0.1
+
+README updates
+
 ## 0.8.0
 
 A new MonoFoldableEq class that takes `elem` and `notElem` from `EqSequence`.
