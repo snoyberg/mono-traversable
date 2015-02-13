@@ -1,3 +1,7 @@
+## 0.10.4
+
+* Expose all of Data.Functor
+
 ## 0.10.3
 
 * Expose `liftA` functions and `<**>` [#94](https://github.com/snoyberg/classy-prelude/pull/94)
