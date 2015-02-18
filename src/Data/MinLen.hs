@@ -127,6 +127,8 @@ toMinLen mono =
 unsafeToMinLen :: mono -> MinLen nat mono
 unsafeToMinLen = MinLen
 
+infixr 5 `mlcons`
+
 mlcons :: IsSequence seq => Element seq -> MinLen nat seq -> MinLen (Succ nat) seq
 mlcons e (MinLen seq) = MinLen (cons e seq)
 {-# INLINE mlcons #-}
