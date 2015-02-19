@@ -229,8 +229,8 @@ last = lastEx . unMinLen
 -- ==== __Examples__
 -- 
 -- > > let xs = toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
--- > > fmap initML xs
--- > Just (MinLen {unMinLen = [1,2]})
+-- > > fmap tailML xs
+-- > Just (MinLen {unMinLen = [2,3]})
 tailML :: IsSequence seq => MinLen (Succ nat) seq -> MinLen nat seq
 tailML = MinLen . tailEx . unMinLen
 
