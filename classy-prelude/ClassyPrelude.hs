@@ -499,7 +499,8 @@ fpFromText = F.fromText
 -- when doing that should re-run the haskell-ordnub benchmarks
 
 -- | same behavior as nub, but requires Hashable & Eq and is O(n log n)
--- https://github.com/nh2/haskell-ordnub
+--
+-- <https://github.com/nh2/haskell-ordnub>
 hashNub :: (Hashable a, Eq a) => [a] -> [a]
 hashNub = go HashSet.empty
   where
@@ -508,7 +509,8 @@ hashNub = go HashSet.empty
                 | otherwise            = x : go (HashSet.insert x s) xs
 
 -- | same behavior as nub, but requires Ord and is O(n log n)
--- https://github.com/nh2/haskell-ordnub
+--
+-- <https://github.com/nh2/haskell-ordnub>
 ordNub :: (Ord a) => [a] -> [a]
 ordNub = go Set.empty
   where
@@ -517,7 +519,8 @@ ordNub = go Set.empty
                 | otherwise        = x : go (Set.insert x s) xs
 
 -- | same behavior as nubBy, but requires Ord and is O(n log n)
--- https://github.com/nh2/haskell-ordnub
+--
+-- <https://github.com/nh2/haskell-ordnub>
 ordNubBy :: (Ord b) => (a -> b) -> (a -> a -> Bool) -> [a] -> [a]
 ordNubBy p f = go Map.empty
   -- When removing duplicates, the first function assigns the input to a bucket,

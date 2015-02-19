@@ -22,7 +22,7 @@ Most of this functionality is provided by [mono-traversable](https://github.com/
 Text
 ====
 
-Lots of things use `Text` instead of `String`.'
+Lots of things use `Text` instead of `String`.
 Note that `show` returns a `String`.
 To get back `Text`, use `tshow`.
 
