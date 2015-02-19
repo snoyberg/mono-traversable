@@ -95,8 +95,8 @@ type instance MaxNat (Succ x) (Succ y) = Succ (MaxNat x y)
 --
 -- > head :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
 --
--- The length is also a phantom type, i.e. it is only used
--- on the left hand side of the type and doesn't exist at runtime.
+-- The length is also a <https://wiki.haskell.org/Phantom_type phantom type>,
+-- i.e. it is only used on the left hand side of the type and doesn't exist at runtime.
 -- Notice how @Succ Zero@ isn't included in the printed output:
 --
 -- > > toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
