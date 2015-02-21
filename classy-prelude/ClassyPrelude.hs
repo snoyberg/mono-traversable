@@ -232,14 +232,14 @@ tlshow = fromList . Prelude.show
 -- | Convert a character to lower case.
 --
 -- Character-based case conversion is lossy in comparison to string-based 'Data.MonoTraversable.toLower'.
--- For instance, \'&#x130;\' will be converted to \'i\', instead of \"i&#x307;\".
+-- For instance, &#x130; will be converted to i, instead of i&#x307;.
 charToLower :: Char -> Char
 charToLower = Char.toLower
 
 -- | Convert a character to upper case.
 --
 -- Character-based case conversion is lossy in comparison to string-based 'Data.MonoTraversable.toUpper'.
--- For instance, \'&#xdf;\' won't be converted to \"SS\".
+-- For instance, &#xdf; won't be converted to SS.
 charToUpper :: Char -> Char
 charToUpper = Char.toUpper
 
@@ -340,12 +340,12 @@ infixr 5  ++
 {-# INLINE (++) #-}
 
 infixl 9 \\{-This comment teaches CPP correct behaviour -}
--- | An alias for `difference`.
+-- | An alias for 'difference'.
 (\\) :: SetContainer a => a -> a -> a
 (\\) = difference
 {-# INLINE (\\) #-}
 
--- | An alias for `intersection`.
+-- | An alias for 'intersection'.
 intersect :: SetContainer a => a -> a -> a
 intersect = intersection
 {-# INLINE intersect #-}
@@ -413,14 +413,14 @@ print = liftIO . Prelude.print
 sortWith :: (Ord a, IsSequence c) => (Element c -> a) -> c -> c
 sortWith f = sortBy $ comparing f
 
--- | We define our own @undefined@ which is marked as deprecated. This makes it
+-- | We define our own 'undefined' which is marked as deprecated. This makes it
 -- useful to use during development, but let's you more easily getting
 -- notification if you accidentally ship partial code in production.
 --
 -- The classy prelude recommendation for when you need to really have a partial
--- function in production is to use @error@ with a very descriptive message so
+-- function in production is to use 'error' with a very descriptive message so
 -- that, in case an exception is thrown, you get more information than
--- @Prelude.undefined@.
+-- @"Prelude".'Prelude.undefined'@.
 --
 -- Since 0.5.5
 undefined :: a
@@ -457,9 +457,9 @@ fpToString = F.encodeString
 fpFromString :: String -> FilePath
 fpFromString = F.decodeString
 
--- | Translates a FilePath to a Text
--- Warns if there are non-unicode
--- sequences in the file name
+-- | Translates a 'FilePath' to a 'Text'
+--
+-- Warns if there are non-unicode sequences in the file name
 fpToTextWarn :: MonadIO m => FilePath -> m Text
 fpToTextWarn fp = case F.toText fp of
     Right ok -> return ok
@@ -467,23 +467,24 @@ fpToTextWarn fp = case F.toText fp of
         putStrLn $ pack $ "non-unicode filepath: " ++ F.encodeString fp
         return bad
 
--- | Translates a FilePath to a Text
+-- | Translates a 'FilePath' to a 'Text'
+--
 -- Throws an exception if there are non-unicode
 -- sequences in the file name
 --
 -- Use this to assert that you know
--- a filename will translate properly into a Text
+-- a filename will translate properly into a 'Text'.
 -- If you created the filename, this should be the case.
 fpToTextEx :: FilePath -> Text
 fpToTextEx fp = either (const $ error errorMsg) id $ F.toText fp
   where
     errorMsg = "fpToTextEx: non-unicode filepath: " ++ F.encodeString fp
 
--- | Translates a FilePath to a Text
+-- | Translates a 'FilePath' to a 'Text'
 -- This translation is not correct for a (unix) filename
--- which can contain arbitrary (non-unicode) bytes: those bytes will be discarded
+-- which can contain arbitrary (non-unicode) bytes: those bytes will be discarded.
 --
--- This means you cannot translate the Text back to the original file name.
+-- This means you cannot translate the 'Text' back to the original file name.
 --
 -- If you control or otherwise understand the filenames
 -- and believe them to be unicode valid consider using 'fpToTextEx' or 'fpToTextWarn'
@@ -498,7 +499,7 @@ fpFromText = F.fromText
 -- Should eventually exist in mono-foldable and be extended to MonoFoldable
 -- when doing that should re-run the haskell-ordnub benchmarks
 
--- | same behavior as nub, but requires Hashable & Eq and is O(n log n)
+-- | same behavior as 'Data.List.nub', but requires 'Hashable' & 'Eq' and is @O(n log n)@
 --
 -- <https://github.com/nh2/haskell-ordnub>
 hashNub :: (Hashable a, Eq a) => [a] -> [a]
@@ -508,7 +509,7 @@ hashNub = go HashSet.empty
     go s (x:xs) | x `HashSet.member` s = go s xs
                 | otherwise            = x : go (HashSet.insert x s) xs
 
--- | same behavior as nub, but requires Ord and is O(n log n)
+-- | same behavior as 'Data.List.nub', but requires 'Ord' and is @O(n log n)@
 --
 -- <https://github.com/nh2/haskell-ordnub>
 ordNub :: (Ord a) => [a] -> [a]
@@ -518,7 +519,7 @@ ordNub = go Set.empty
     go s (x:xs) | x `Set.member` s = go s xs
                 | otherwise        = x : go (Set.insert x s) xs
 
--- | same behavior as nubBy, but requires Ord and is O(n log n)
+-- | same behavior as 'Data.List.nubBy', but requires 'Ord' and is @O(n log n)@
 --
 -- <https://github.com/nh2/haskell-ordnub>
 ordNubBy :: (Ord b) => (a -> b) -> (a -> a -> Bool) -> [a] -> [a]
@@ -567,13 +568,13 @@ checkSTM :: Bool -> STM ()
 checkSTM = STM.check
 {-# INLINE checkSTM #-}
 
--- | Only perform the action if the predicate returns @True@.
+-- | Only perform the action if the predicate returns 'True'.
 --
 -- Since 0.9.2
 whenM :: Monad m => m Bool -> m () -> m ()
 whenM mbool action = mbool >>= flip when action
 
--- | Only perform the action if the predicate returns @False@.
+-- | Only perform the action if the predicate returns 'False'.
 --
 -- Since 0.9.2
 unlessM :: Monad m => m Bool -> m () -> m ()
