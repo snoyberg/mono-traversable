@@ -17,7 +17,7 @@
 -- law of @'omap' f . 'omap' g = 'omap' (f . g)@.
 --
 -- Note that all typeclasses have been prefixed with @Mono@, and functions have
--- been prefixed with @o@. The mnemonic for @o@ is \"only one\", or alternatively
+-- been prefixed with @o@. The mnemonic for @o@ is "only one", or alternatively
 -- \"it's mono, but m is overused in Haskell, so we'll use the second letter
 -- instead.\" (Agreed, it's not a great mangling scheme, input is welcome!)
 module Data.MonoTraversable where
@@ -273,7 +273,7 @@ class MonoFoldable mono where
     otraverse_ f = ofoldr ((*>) . f) (pure ())
     {-# INLINE otraverse_ #-}
 
-    -- | 'ofor_' is 'otraverse_' with it's arguments flipped.
+    -- | 'ofor_' is 'otraverse_' with its arguments flipped.
     ofor_ :: (MonoFoldable mono, Applicative f) => mono -> (Element mono -> f b) -> f ()
     ofor_ = flip otraverse_
     {-# INLINE ofor_ #-}
@@ -284,7 +284,7 @@ class MonoFoldable mono where
     omapM_ f = ofoldr ((>>) . f) (return ())
     {-# INLINE omapM_ #-}
 
-    -- | 'oforM_' is 'omapM_' with it's arguments flipped.
+    -- | 'oforM_' is 'omapM_' with its arguments flipped.
     oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m ()) -> m ()
     oforM_ = flip omapM_
     {-# INLINE oforM_ #-}
@@ -1019,12 +1019,12 @@ instance MonoTraversable (Either a b) where
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
 
--- | 'ofor' is 'otraverse' with it's arguments flipped.
+-- | 'ofor' is 'otraverse' with its arguments flipped.
 ofor :: (MonoTraversable mono, Applicative f) => mono -> (Element mono -> f (Element mono)) -> f mono
 ofor = flip otraverse
 {-# INLINE ofor #-}
 
--- | 'oforM' is 'omapM' with it's arguments flipped.
+-- | 'oforM' is 'omapM' with its arguments flipped.
 oforM :: (MonoTraversable mono, Monad f) => mono -> (Element mono -> f (Element mono)) -> f mono
 oforM = flip omapM
 {-# INLINE oforM #-}
