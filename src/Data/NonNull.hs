@@ -56,12 +56,12 @@ instance Exception NullError
 -- | A monomorphic container that is not null.
 type NonNull mono = MinLen (Succ Zero) mono
 
--- | __Safely__ convert from a __unsafe__ monomorphic container to a __safe__
+-- | __Safely__ convert from an __unsafe__ monomorphic container to a __safe__
 -- non-null monomorphic container.
 fromNullable :: MonoFoldable mono => mono -> Maybe (NonNull mono)
 fromNullable = toMinLen
 
--- | __Unsafely__ convert from a __unsafe__ monomorphic container to a __safe__
+-- | __Unsafely__ convert from an __unsafe__ monomorphic container to a __safe__
 -- non-null monomorphic container.
 --
 -- Throws an exception if the monomorphic container is empty.
