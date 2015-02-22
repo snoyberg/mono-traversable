@@ -215,12 +215,12 @@ mlappend (MinLen x) (MinLen y) = MinLen (x `mappend` y)
 {-# INLINE mlappend #-}
 
 -- | Returns the first element.
-head :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
+head :: MonoFoldable mono => MinLen (Succ nat) mono -> Element mono
 head = headEx . unMinLen
 {-# INLINE head #-}
 
 -- | Returns the last element.
-last :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
+last :: MonoFoldable mono => MinLen (Succ nat) mono -> Element mono
 last = lastEx . unMinLen
 {-# INLINE last #-}
 
