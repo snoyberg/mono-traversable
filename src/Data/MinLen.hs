@@ -58,8 +58,8 @@ import Control.Monad (liftM)
 data Zero = Zero
 
 -- | 'Succ' represents the next number in the sequence of natural numbers. It takes a @nat@ (a natural number) as an argument.
--- 'Zero' is a @nat@, allowing @Succ Zero@ to represent 1. 
--- 'Succ' is also a @nat@, so it can be applied to itself, allowing @Succ (Succ Zero)@ to represent 2, 
+-- 'Zero' is a @nat@, allowing @Succ Zero@ to represent 1.
+-- 'Succ' is also a @nat@, so it can be applied to itself, allowing @Succ (Succ Zero)@ to represent 2,
 -- @Succ (Succ (Succ Zero))@ to represent 3, and so on.
 data Succ nat = Succ nat
 
@@ -86,9 +86,9 @@ type instance MaxNat (Succ x) (Succ y) = Succ (MaxNat x y)
 
 -- | A wrapper around a container which encodes its minimum length in the type system.
 -- This allows functions like 'head' and 'maximum' to be made safe without using 'Maybe'.
--- 
+--
 -- The length, @nat@, is encoded as a <https://wiki.haskell.org/Peano_numbers Peano number>,
--- which starts with the 'Zero' constructor and is made one larger with each application 
+-- which starts with the 'Zero' constructor and is made one larger with each application
 -- of 'Succ' ('Zero' for 0, @Succ Zero@ for 1, @Succ (Succ Zero)@ for 2, etc.).
 -- Functions which require atleast one element, then, are typed with @Succ nat@,
 -- where @nat@ is either 'Zero' or any number of applications of 'Succ':
@@ -144,7 +144,7 @@ instance MonoPointed mono => MonoPointed (MinLen (Succ Zero) mono) where
 natProxy :: TypeNat nat => MinLen nat mono -> nat
 natProxy _ = typeNat
 
--- | Types a container as having a minimum length of zero. This is useful when combined with other 'MinLen' 
+-- | Types a container as having a minimum length of zero. This is useful when combined with other 'MinLen'
 -- functions that increase the size of the container.
 --
 -- ==== __Examples__
@@ -227,7 +227,7 @@ last = lastEx . unMinLen
 -- | Returns all but the first element of a sequence, reducing its 'MinLen' by 1.
 --
 -- ==== __Examples__
--- 
+--
 -- > > let xs = toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
 -- > > fmap tailML xs
 -- > Just (MinLen {unMinLen = [2,3]})
@@ -247,7 +247,7 @@ initML = MinLen . initEx . unMinLen
 -- | Joins two semigroups, keeping the larger 'MinLen' of the two.
 --
 -- ==== __Examples__
--- 
+--
 -- > > let xs = unsafeToMinLen [1] :: MinLen (Succ Zero) [Int]
 -- > > let ys = xs `mlunion` xs
 -- > > ys
@@ -261,7 +261,7 @@ mlunion (MinLen x) (MinLen y) = MinLen (x <> y)
 -- | Maps a function that returns a 'Semigroup' over the container, then joins those semigroups together.
 --
 -- ==== __Examples__
--- 
+--
 -- > > let xs = ("hello", 1 :: Integer) `mlcons` (" world", 2) `mlcons` (toMinLenZero [])
 -- > > ofoldMap1 fst xs
 -- > "hello world"
@@ -272,7 +272,7 @@ ofoldMap1 f = ofoldMap1Ex f . unMinLen
 -- | Joins a list of 'Semigroups' together.
 --
 -- ==== __Examples__
--- 
+--
 -- > > let xs = "a" `mlcons` "b" `mlcons` "c" `mlcons` (toMinLenZero [])
 -- > > xs
 -- > MinLen {unMinLen = ["a","b","c"]}
@@ -288,7 +288,7 @@ ofold1 = ofoldMap1 id
 -- @'foldr1' f = 'Prelude.foldr1' f . 'otoList'@
 --
 -- ==== __Examples__
--- 
+--
 -- > > let xs = "a" `mlcons` "b" `mlcons` "c" `mlcons` (toMinLenZero [])
 -- > > ofoldr1 (++) xs
 -- > "abc"
@@ -305,7 +305,7 @@ ofoldr1 f = ofoldr1Ex f . unMinLen
 -- @'foldl1' f = 'Prelude.foldl1' f . 'otoList'@
 --
 -- ==== __Examples__
--- 
+--
 -- > > let xs = "a" `mlcons` "b" `mlcons` "c" `mlcons` (toMinLenZero [])
 -- > > ofoldl1' (++) xs
 -- > "abc"

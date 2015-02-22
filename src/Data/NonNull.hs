@@ -41,12 +41,14 @@ module Data.NonNull (
 ) where
 
 import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate, maximum, minimum)
-import Data.MonoTraversable
-import Data.Sequences
+import Control.Arrow (second)
 import Control.Exception.Base (Exception, throw)
 import Data.Data
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe (fromMaybe)
 import Data.MinLen
+import Data.MonoTraversable
+import Data.Sequences
 
 data NullError = NullError String deriving (Show, Typeable)
 instance Exception NullError
@@ -61,9 +63,9 @@ fromNullable = toMinLen
 -- throw an exception if the 'Nullable' is empty.
 -- do not use this unless you have proved your structure is non-null
 nonNull :: MonoFoldable mono => mono -> NonNull mono
-nonNull nullable = case fromNullable nullable of
-                     Nothing -> throw $ NullError "Data.NonNull.nonNull (NonNull default): expected non-null"
-                     Just xs -> xs
+nonNull nullable =
+  fromMaybe (throw $ NullError "Data.NonNull.nonNull (NonNull default): expected non-null")
+          $ fromNullable nullable
 
 -- | convert a 'NonNull' to a 'Nullable'
 toNullable :: NonNull mono -> mono
@@ -74,8 +76,8 @@ fromNonEmpty :: IsSequence seq => NE.NonEmpty (Element seq) -> NonNull seq
 fromNonEmpty = nonNull . fromList . NE.toList
 {-# INLINE fromNonEmpty #-}
 
-toMinList :: NE.NonEmpty a -> NonNull [a] 
-toMinList ne = fromNonEmpty ne
+toMinList :: NE.NonEmpty a -> NonNull [a]
+toMinList = fromNonEmpty
 
 -- | Like cons, prepends an element.
 -- However, the prepend is to a Nullable, creating a 'NonNull'
@@ -92,16 +94,16 @@ ncons x xs = nonNull $ cons x xs
 
 -- | like 'uncons' of 'SemiSequence'
 nuncons :: IsSequence seq => NonNull seq -> (Element seq, Maybe (NonNull seq))
-nuncons xs = case uncons $ toNullable xs of
-               Nothing -> error "Data.NonNull.nuncons: data structure is null, it should be non-null"
-               Just (x, xsNullable) -> (x, fromNullable xsNullable)
+nuncons xs =
+  second fromNullable
+    $ fromMaybe (error "Data.NonNull.nuncons: data structure is null, it should be non-null")
+              $ uncons (toNullable xs)
 
 -- | like 'uncons' of 'SemiSequence'
 splitFirst :: IsSequence seq => NonNull seq -> (Element seq, seq)
-splitFirst xs = case uncons $ toNullable xs of
-                 Nothing -> error "Data.NonNull.splitFirst: data structure is null, it should be non-null"
-                 Just tup -> tup
-
+splitFirst xs =
+  fromMaybe (error "Data.NonNull.splitFirst: data structure is null, it should be non-null")
+          $ uncons (toNullable xs)
 
 -- | like 'Sequence.filter', but starts with a NonNull
 nfilter :: IsSequence seq => (Element seq -> Bool) -> NonNull seq -> seq
