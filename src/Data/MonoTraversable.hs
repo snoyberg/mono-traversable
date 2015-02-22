@@ -29,6 +29,7 @@ import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Foldable        as F
 import           Data.Functor
+import           Data.Maybe           (fromMaybe)
 import           Data.Monoid (Monoid (..), Any (..), All (..))
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
@@ -38,7 +39,7 @@ import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           Prelude              (Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
                                        (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
-                                       seq, otherwise, maybe, Eq, Ord, (-), (*))
+                                       seq, otherwise, Eq, Ord, (-), (*))
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
@@ -51,7 +52,6 @@ import Data.Sequence (Seq, ViewL, ViewR)
 import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
-import Data.Semigroup (Option)
 import qualified Data.List as List
 import Data.List.NonEmpty (NonEmpty)
 import Data.Functor.Identity (Identity)
@@ -275,7 +275,7 @@ class MonoFoldable mono where
     -- throw an exception. See "Data.NonNull" for a total version of this
     -- function.
     ofoldMap1Ex :: Semigroup m => (Element mono -> m) -> mono -> m
-    ofoldMap1Ex f = maybe (Prelude.error "Data.MonoTraversable.ofoldMap1Ex") id
+    ofoldMap1Ex f = fromMaybe (Prelude.error "Data.MonoTraversable.ofoldMap1Ex")
                        . getOption . ofoldMap (Option . Just . f)
 
     -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
@@ -714,7 +714,7 @@ instance Eq a => MonoFoldableEq (NonEmpty a)
 instance MonoFoldableEq T.Text
 instance MonoFoldableEq TL.Text
 instance MonoFoldableEq IntSet
-instance Eq a => MonoFoldableEq (Maybe a) 
+instance Eq a => MonoFoldableEq (Maybe a)
 instance Eq a => MonoFoldableEq (Tree a)
 instance Eq a => MonoFoldableEq (ViewL a)
 instance Eq a => MonoFoldableEq (ViewR a)
@@ -944,7 +944,7 @@ ofoldMUnwrap f mx unwrap mono = do
 -- | 'opoint' is the same as @pure@ for an Applicative
 --
 -- For any 'MonoFunctor', the following law holds:
--- 
+--
 -- > omap f . point = point . f
 class MonoPointed mono where
     opoint :: Element mono -> mono
