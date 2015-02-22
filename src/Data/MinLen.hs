@@ -16,7 +16,7 @@ module Data.MinLen
     , TypeNat (..)
     , AddNat
     , MaxNat
-      -- * Minimum length newtype wrapper
+      -- * Minimum length data wrapper
     , MinLen
     , unMinLen
     , toMinLenZero
@@ -52,20 +52,46 @@ import Data.GrowingAppend
 import Control.Monad (liftM)
 
 -- $peanoNumbers
--- <https://wiki.haskell.org/Peano_numbers Peano numbers> are a simple way to represent natural numbers (0, 1, 2...) using only a 'Zero' value and a successor function ('Succ'). Each application of 'Succ' increases the number by 1, so @Succ Zero@ is 1, @Succ (Succ Zero)@ is 2, etc.
+-- <https://wiki.haskell.org/Peano_numbers Peano numbers> are a simple way to
+-- represent natural numbers (0, 1, 2...) using only a 'Zero' value and a
+-- successor function ('Succ'). Each application of 'Succ' increases the number
+-- by 1, so @Succ Zero@ is 1, @Succ (Succ Zero)@ is 2, etc.
 
 -- | 'Zero' is the base value for the Peano numbers.
 data Zero = Zero
 
--- | 'Succ' represents the next number in the sequence of natural numbers. It takes a @nat@ (a natural number) as an argument.
--- 'Zero' is a @nat@, allowing @Succ Zero@ to represent 1.
--- 'Succ' is also a @nat@, so it can be applied to itself, allowing @Succ (Succ Zero)@ to represent 2,
--- @Succ (Succ (Succ Zero))@ to represent 3, and so on.
+-- | 'Succ' represents the next number in the sequence of natural numbers.
+--
+-- It takes a @nat@ (a natural number) as an argument.
+--
+-- 'Zero' is a @nat@, allowing @'Succ' 'Zero'@ to represent 1.
+--
+-- 'Succ' is also a @nat@, so it can be applied to itself, allowing
+-- @'Succ' ('Succ' 'Zero')@ to represent 2,
+-- @'Succ' ('Succ' ('Succ' 'Zero'))@ to represent 3, and so on.
 data Succ nat = Succ nat
 
+-- | Type-level natural number utility typeclass
 class TypeNat nat where
+    -- | Turn a type-level natural number into a number
+    --
+    -- @
+    -- > 'toValueNat' 'Zero'
+    -- 0
+    -- > 'toValueNat' ('Succ' ('Succ' ('Succ' 'Zero')))
+    -- 3
+    -- @
     toValueNat :: Num i => nat -> i
+
+    -- | Get a data representation of a natural number type
+    --
+    -- @
+    -- > 'typeNat' :: 'Succ' ('Succ' 'Zero')
+    -- Succ (Succ Zero) -- Errors because Succ and Zero have no Show typeclass,
+    --                  -- But this is what it would look like if it did.
+    -- @
     typeNat :: nat
+
 instance TypeNat Zero where
     toValueNat Zero = 0
     typeNat = Zero
@@ -73,12 +99,30 @@ instance TypeNat nat => TypeNat (Succ nat) where
     toValueNat (Succ nat) = 1 + toValueNat nat
     typeNat = Succ typeNat
 
--- | Adds two type-level naturals. See the 'mlappend' type signature for an example.
+-- | Adds two type-level naturals.
+--
+-- See the 'mlappend' type signature for an example.
+--
+-- @
+-- > :t 'typeNat' :: 'AddNat' ('Succ' ('Succ' 'Zero')) ('Succ' 'Zero')
+--
+-- 'typeNat' :: 'AddNat' ('Succ' ('Succ' 'Zero')) ('Succ' 'Zero')
+--   :: 'Succ' ('Succ' ('Succ' 'Zero'))
+-- @
 type family AddNat x y
 type instance AddNat Zero y = y
 type instance AddNat (Succ x) y = AddNat x (Succ y)
 
--- | Calculates the maximum of two type-level naturals. See the 'mlunion' type signature for an example.
+-- | Calculates the maximum of two type-level naturals.
+--
+-- See the 'mlunion' type signature for an example.
+--
+-- @
+-- > :t 'typeNat' :: 'MaxNat' ('Succ' ('Succ' 'Zero')) ('Succ' 'Zero')
+--
+-- 'typeNat' :: 'MaxNat' ('Succ' ('Succ' 'Zero')) ('Succ' 'Zero')
+--   :: 'Succ' ('Succ' 'Zero')
+-- @
 type family MaxNat x y
 type instance MaxNat Zero y = y
 type instance MaxNat x Zero = x
@@ -89,26 +133,35 @@ type instance MaxNat (Succ x) (Succ y) = Succ (MaxNat x y)
 --
 -- The length, @nat@, is encoded as a <https://wiki.haskell.org/Peano_numbers Peano number>,
 -- which starts with the 'Zero' constructor and is made one larger with each application
--- of 'Succ' ('Zero' for 0, @Succ Zero@ for 1, @Succ (Succ Zero)@ for 2, etc.).
--- Functions which require atleast one element, then, are typed with @Succ nat@,
+-- of 'Succ' ('Zero' for 0, @'Succ' 'Zero'@ for 1, @'Succ' ('Succ' 'Zero')@ for 2, etc.).
+-- Functions which require at least one element, then, are typed with @Succ nat@,
 -- where @nat@ is either 'Zero' or any number of applications of 'Succ':
 --
--- > head :: MonoTraversable mono => MinLen (Succ nat) mono -> Element mono
+-- @
+-- 'head' :: 'MonoTraversable' mono => 'MinLen' ('Succ' nat) mono -> 'Element' mono
+-- @
 --
 -- The length is also a <https://wiki.haskell.org/Phantom_type phantom type>,
 -- i.e. it is only used on the left hand side of the type and doesn't exist at runtime.
--- Notice how @Succ Zero@ isn't included in the printed output:
+-- Notice how @'Succ' 'Zero'@ isn't included in the printed output:
 --
--- > > toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
--- > Just (MinLen {unMinLen = [1,2,3]})
+-- @
+-- > 'toMinLen' [1,2,3] :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- 'Just' ('MinLen' {unMinLen = [1,2,3]})
+-- @
 --
 -- You can still use GHCI's @:i@ command to see the phantom type information:
 --
--- > > let xs = 1 `mlcons` toMinLenZero []
--- > > :i xs
--- > xs :: Num t => MinLen (Succ Zero) [t]
-newtype MinLen nat mono = MinLen { unMinLen :: mono }
-    deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
+-- @
+-- > let xs = 'mlcons' 1 $ 'toMinLenZero' []
+-- > :i xs
+-- xs :: 'Num' t => 'MinLen' ('Succ' 'Zero') [t]
+-- @
+newtype MinLen nat mono =
+    MinLen {
+        unMinLen :: mono -- ^ Get the monomorphic container out of a 'MinLen' wrapper.
+    } deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
+
 type instance Element (MinLen nat mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (MinLen nat mono)
 deriving instance MonoFoldable mono => MonoFoldable (MinLen nat mono)
@@ -141,6 +194,7 @@ instance MonoPointed mono => MonoPointed (MinLen (Succ Zero) mono) where
     opoint = MinLen . opoint
     {-# INLINE opoint #-}
 
+-- | Get the 'typeNat' of a 'MinLen' container.
 natProxy :: TypeNat nat => MinLen nat mono -> nat
 natProxy _ = typeNat
 
@@ -149,24 +203,32 @@ natProxy _ = typeNat
 --
 -- ==== __Examples__
 --
--- > > 1 `mlcons` toMinLenZero []
--- > MinLen {unMinLen = [1]}
+-- @
+-- > > 1 \`mlcons` 'toMinLenZero' []
+-- > 'MinLen' {unMinLen = [1]}
+-- @
 toMinLenZero :: (MonoFoldable mono) => mono -> MinLen Zero mono
 toMinLenZero = MinLen
 
--- | Attempts to add a 'MinLen' constraint to a 'MonoFoldable'.
+-- | __Safe__
+--
+-- Attempts to add a 'MinLen' constraint to a monomorphic container.
 --
 -- ==== __Examples__
 --
--- > > let xs = toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
--- > > xs
--- > Just (MinLen {unMinLen = [1,2,3]})
--- >
--- > > :i xs
--- > xs :: Maybe (MinLen (Succ Zero) [Int])
+-- @
+-- > let xs = 'toMinLen' [1,2,3] :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- > xs
+-- 'Just' ('MinLen' {unMinLen = [1,2,3]})
 --
--- > > toMinLen [] :: Maybe (MinLen (Succ Zero) [Int])
--- > Nothing
+-- > :i xs
+-- xs :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- @
+--
+-- @
+-- > 'toMinLen' [] :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- 'Nothing'
+-- @
 toMinLen :: (MonoFoldable mono, TypeNat nat) => mono -> Maybe (MinLen nat mono)
 toMinLen mono =
     case ocompareLength mono (toValueNat nat :: Int) of
@@ -176,17 +238,21 @@ toMinLen mono =
     nat = natProxy res'
     res' = MinLen mono
 
--- | Although this function itself cannot cause a segfault, it breaks the
--- safety guarantees of @MinLen@ and can lead to a segfault when using
+-- | __Unsafe__
+--
+-- Although this function itself cannot cause a segfault, it breaks the
+-- safety guarantees of 'MinLen' and can lead to a segfault when using
 -- otherwise safe functions.
 --
 -- ==== __Examples__
 --
--- > > let xs = unsafeToMinLen [] :: MinLen (Succ Zero) [Int]
--- > > length xs
--- > 0
--- > > head xs
--- > *** Exception: Data.MonoTraversable.headEx: empty
+-- @
+-- > let xs = 'unsafeToMinLen' [] :: 'MinLen' ('Succ' 'Zero') ['Int']
+-- > 'olength' xs
+-- 0
+-- > 'head' xs
+-- *** Exception: Data.MonoTraversable.headEx: empty
+-- @
 unsafeToMinLen :: mono -> MinLen nat mono
 unsafeToMinLen = MinLen
 
@@ -196,51 +262,69 @@ infixr 5 `mlcons`
 --
 -- ==== __Examples__
 --
--- > > let xs = unsafeToMinLen [1,2,3] :: MinLen (Succ Zero) [Int]
--- > > 0 `mlcons` xs
--- > MinLen {unMinLen = [0,1,2,3]}
+-- @
+-- > let xs = 'unsafeToMinLen' [1,2,3] :: 'MinLen' ('Succ' 'Zero') ['Int']
+-- > 0 \`mlcons` xs
+-- 'MinLen' {unMinLen = [0,1,2,3]}
+-- @
 mlcons :: IsSequence seq => Element seq -> MinLen nat seq -> MinLen (Succ nat) seq
 mlcons e (MinLen seq) = MinLen (cons e seq)
 {-# INLINE mlcons #-}
 
--- | Concatenates two sequences, adding their minimum lengths together.
+-- | Concatenate two sequences, adding their minimum lengths together.
 --
 -- ==== __Examples__
 --
--- > > let xs = unsafeToMinLen [1,2,3] :: MinLen (Succ Zero) [Int]
--- > > xs `mlappend` xs
--- > MinLen {unMinLen = [1,2,3,1,2,3]}
+-- @
+-- > let xs = 'unsafeToMinLen' [1,2,3] :: 'MinLen' ('Succ' 'Zero') ['Int']
+-- > xs \`mlappend` xs
+-- 'MinLen' {unMinLen = [1,2,3,1,2,3]}
+-- @
 mlappend :: IsSequence seq => MinLen x seq -> MinLen y seq -> MinLen (AddNat x y) seq
 mlappend (MinLen x) (MinLen y) = MinLen (x `mappend` y)
 {-# INLINE mlappend #-}
 
--- | Returns the first element.
+-- | Return the first element of a monomorphic container.
+--
+-- __Safe version of 'headEx'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
 head :: MonoFoldable mono => MinLen (Succ nat) mono -> Element mono
 head = headEx . unMinLen
 {-# INLINE head #-}
 
--- | Returns the last element.
+-- | Return the last element of a monomorphic container.
+--
+-- __Safe version of 'lastEx'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
 last :: MonoFoldable mono => MinLen (Succ nat) mono -> Element mono
 last = lastEx . unMinLen
 {-# INLINE last #-}
 
 -- | Returns all but the first element of a sequence, reducing its 'MinLen' by 1.
 --
+-- __Safe__, only works on sequences wrapped in a @'MinLen' ('Succ' nat)@.
+--
 -- ==== __Examples__
 --
--- > > let xs = toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
--- > > fmap tailML xs
--- > Just (MinLen {unMinLen = [2,3]})
+-- @
+-- > let xs = 'toMinLen' [1,2,3] :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- > 'fmap' 'tailML' xs
+-- 'Just' ('MinLen' {unMinLen = [2,3]})
+-- @
 tailML :: IsSequence seq => MinLen (Succ nat) seq -> MinLen nat seq
 tailML = MinLen . tailEx . unMinLen
 
 -- | Returns all but the last element of a sequence, reducing its 'MinLen' by 1.
 --
+-- __Safe__, only works on sequences wrapped in a @'MinLen' ('Succ' nat)@.
+--
 -- ==== __Examples__
 --
--- > > let xs = toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
--- > > fmap initML xs
--- > Just (MinLen {unMinLen = [1,2]})
+-- @
+-- > let xs = 'toMinLen' [1,2,3] :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- > 'fmap' 'initML' xs
+-- 'Just' ('MinLen' {unMinLen = [1,2]})
+-- @
 initML :: IsSequence seq => MinLen (Succ nat) seq -> MinLen nat seq
 initML = MinLen . initEx . unMinLen
 
@@ -248,50 +332,67 @@ initML = MinLen . initEx . unMinLen
 --
 -- ==== __Examples__
 --
--- > > let xs = unsafeToMinLen [1] :: MinLen (Succ Zero) [Int]
--- > > let ys = xs `mlunion` xs
--- > > ys
--- > MinLen {unMinLen = [1,1]}
--- >
--- > > :i ys
--- > ys :: MinLen (Succ Zero) [Int]
+-- @
+-- > let xs = 'unsafeToMinLen' [1] :: 'MinLen' ('Succ' 'Zero') ['Int']
+-- > let ys = xs \`mlunion` xs
+-- > ys
+-- 'MinLen' {unMinLen = [1,1]}
+--
+-- > :i ys
+-- ys :: 'MinLen' ('Succ' 'Zero') ['Int']
+-- @
 mlunion :: GrowingAppend mono => MinLen x mono -> MinLen y mono -> MinLen (MaxNat x y) mono
 mlunion (MinLen x) (MinLen y) = MinLen (x <> y)
 
--- | Maps a function that returns a 'Semigroup' over the container, then joins those semigroups together.
+-- | Map each element of a monomorphic container to a semigroup, and combine the
+-- results.
+--
+-- __Safe version of 'ofoldMap1Ex'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
 --
--- > > let xs = ("hello", 1 :: Integer) `mlcons` (" world", 2) `mlcons` (toMinLenZero [])
--- > > ofoldMap1 fst xs
--- > "hello world"
+-- @
+-- > let xs = ("hello", 1 :: 'Integer') \`mlcons` (" world", 2) \`mlcons` ('toMinLenZero' [])
+-- > 'ofoldMap1' 'fst' xs
+-- "hello world"
+-- @
 ofoldMap1 :: (MonoFoldable mono, Semigroup m) => (Element mono -> m) -> MinLen (Succ nat) mono -> m
 ofoldMap1 f = ofoldMap1Ex f . unMinLen
 {-# INLINE ofoldMap1 #-}
 
--- | Joins a list of 'Semigroups' together.
+-- | Join a monomorphic container, whose elements are 'Semigroup's, together.
+--
+-- __Safe__, only works on monomorphic containers wrapped in a @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
 --
--- > > let xs = "a" `mlcons` "b" `mlcons` "c" `mlcons` (toMinLenZero [])
--- > > xs
--- > MinLen {unMinLen = ["a","b","c"]}
--- >
--- > > ofold1 xs
--- > "abc"
+-- @
+-- > let xs = "a" \`mlcons` "b" \`mlcons` "c" \`mlcons` ('toMinLenZero' [])
+-- > xs
+-- 'MinLen' {unMinLen = ["a","b","c"]}
+--
+-- > 'ofold1' xs
+-- "abc"
+-- @
 ofold1 :: (MonoFoldable mono, Semigroup (Element mono)) => MinLen (Succ nat) mono -> Element mono
 ofold1 = ofoldMap1 id
 {-# INLINE ofold1 #-}
 
--- | A right fold that has no base case, and thus may only be applied to non-empty structures.
+-- | Right-associative fold of a monomorphic container with no base element.
 --
--- @'foldr1' f = 'Prelude.foldr1' f . 'otoList'@
+-- __Safe version of 'ofoldr1Ex'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
+--
+-- @'foldr1' f = "Prelude".'Prelude.foldr1' f . 'otoList'@
 --
 -- ==== __Examples__
 --
--- > > let xs = "a" `mlcons` "b" `mlcons` "c" `mlcons` (toMinLenZero [])
--- > > ofoldr1 (++) xs
--- > "abc"
+-- @
+-- > let xs = "a" \`mlcons` "b" \`mlcons` "c" \`mlcons` ('toMinLenZero' [])
+-- > 'ofoldr1' (++) xs
+-- "abc"
+-- @
 ofoldr1 :: MonoFoldable mono
         => (Element mono -> Element mono -> Element mono)
         -> MinLen (Succ nat) mono
@@ -299,16 +400,21 @@ ofoldr1 :: MonoFoldable mono
 ofoldr1 f = ofoldr1Ex f . unMinLen
 {-# INLINE ofoldr1 #-}
 
--- | A variant of 'ofoldl'' that has no base case,
--- and thus may only be applied to non-empty structures.
+-- | Strict left-associative fold of a monomorphic container with no base
+-- element.
 --
--- @'foldl1' f = 'Prelude.foldl1' f . 'otoList'@
+-- __Safe version of 'ofoldl1Ex''__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
+--
+-- @'foldl1'' f = "Prelude".'Prelude.foldl1'' f . 'otoList'@
 --
 -- ==== __Examples__
 --
--- > > let xs = "a" `mlcons` "b" `mlcons` "c" `mlcons` (toMinLenZero [])
--- > > ofoldl1' (++) xs
--- > "abc"
+-- @
+-- > let xs = "a" \`mlcons` "b" \`mlcons` "c" \`mlcons` ('toMinLenZero' [])
+-- > 'ofoldl1'' (++) xs
+-- "abc"
+-- @
 ofoldl1' :: MonoFoldable mono
          => (Element mono -> Element mono -> Element mono)
          -> MinLen (Succ nat) mono
@@ -316,33 +422,47 @@ ofoldl1' :: MonoFoldable mono
 ofoldl1' f = ofoldl1Ex' f . unMinLen
 {-# INLINE ofoldl1' #-}
 
--- | Like Data.List.'Data.List.maximum', but not partial on a MonoFoldable.
+-- | Get the maximum element of a monomorphic container.
+--
+-- __Safe version of 'maximumEx'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
 --
--- > > let xs = toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
--- > > fmap maximum xs
--- > Just 3
+-- @
+-- > let xs = 'toMinLen' [1,2,3] :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- > 'fmap' 'maximum' xs
+-- 'Just' 3
+-- @
 maximum :: MonoFoldableOrd mono
         => MinLen (Succ nat) mono
         -> Element mono
 maximum = maximumEx . unMinLen
 {-# INLINE maximum #-}
 
--- | Like Data.List.'Data.List.minimum', but not partial on a MonoFoldable.
+-- | Get the minimum element of a monomorphic container.
+--
+-- __Safe version of 'minimumEx'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
 --
--- > > let xs = toMinLen [1,2,3] :: Maybe (MinLen (Succ Zero) [Int])
--- > > fmap minimum xs
--- > Just 1
+-- @
+-- > let xs = 'toMinLen' [1,2,3] :: 'Maybe' ('MinLen' ('Succ' 'Zero') ['Int'])
+-- > 'fmap' 'minimum' xs
+-- 'Just' 1
+-- @
 minimum :: MonoFoldableOrd mono
         => MinLen (Succ nat) mono
         -> Element mono
 minimum = minimumEx . unMinLen
 {-# INLINE minimum #-}
 
--- | Like Data.List.'Data.List.maximumBy', but not partial on a MonoFoldable.
+-- | Get the maximum element of a monomorphic container,
+-- using a supplied element ordering function.
+--
+-- __Safe version of 'maximumByEx'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
 maximumBy :: MonoFoldable mono
           => (Element mono -> Element mono -> Ordering)
           -> MinLen (Succ nat) mono
@@ -350,7 +470,11 @@ maximumBy :: MonoFoldable mono
 maximumBy cmp = maximumByEx cmp . unMinLen
 {-# INLINE maximumBy #-}
 
--- | Like Data.List.'Data.List.minimumBy', but not partial on a MonoFoldable.
+-- | Get the minimum element of a monomorphic container,
+-- using a supplied element ordering function.
+--
+-- __Safe version of 'minimumByEx'__, only works on monomorphic containers wrapped in a
+-- @'MinLen' ('Succ' nat)@.
 minimumBy :: MonoFoldable mono
           => (Element mono -> Element mono -> Ordering)
           -> MinLen (Succ nat) mono
