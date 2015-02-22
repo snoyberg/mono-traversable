@@ -35,13 +35,29 @@ import Control.Arrow ((***))
 import Data.GrowingAppend
 import GHC.Exts (Constraint)
 
+-- | A container whose values are stored in Key-Value pairs.
 class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), GrowingAppend set) => SetContainer set where
+    -- | The type of the key
     type ContainerKey set
+
+    -- | Check if there is a value with the supplied key
+    -- in the container.
     member :: ContainerKey set -> set -> Bool
+
+    -- | Check if there isn't a value with the supplied key
+    -- in the container.
     notMember ::  ContainerKey set -> set -> Bool
+
+    -- | Get the union of two containers.
     union :: set -> set -> set
+
+    -- | Get the difference of two containers.
     difference :: set -> set -> set
+
+    -- | Get the intersection of two containers.
     intersection :: set -> set -> set
+
+    -- | Get a list of all of the keys in the container.
     keys :: set -> [ContainerKey set]
 
 #if MIN_VERSION_containers(0, 5, 0)
@@ -167,12 +183,18 @@ instance Eq key => SetContainer [(key, value)] where
 -- | A guaranteed-polymorphic @Map@, which allows for more polymorphic versions
 -- of functions.
 class PolyMap map where
+    -- | Get the difference between two maps, using the left map's values.
     differenceMap :: map value1 -> map value2 -> map value1
     {-
     differenceWithMap :: (value1 -> value2 -> Maybe value1)
                       -> map value1 -> map value2 -> map value1
     -}
+
+    -- | Get the intersection of two maps, using the left map's values.
     intersectionMap :: map value1 -> map value2 -> map value1
+
+    -- | Get the intersection of two maps with a supplied function
+    -- that takes in the left map's value and the right map's value.
     intersectionWithMap :: (value1 -> value2 -> value3)
                         -> map value1 -> map value2 -> map value3
 
@@ -232,25 +254,48 @@ instance BiPolyMap HashMap.HashMap where
         go (k, v) = [(f k, v)]
     {-# INLINE mapKeysWith #-}
 
+-- | Polymorphic typeclass for interacting with different map types
 class (MonoTraversable map, SetContainer map) => IsMap map where
-    -- | In some cases, @MapValue@ and @Element@ will be different, e.g., the
-    -- @IsMap@ instance of associated lists.
+    -- | In some cases, 'MapValue' and 'Element' will be different, e.g., the
+    -- 'IsMap' instance of associated lists.
     type MapValue map
+
+    -- | Look up a value in a map with a specified key.
     lookup       :: ContainerKey map -> map -> Maybe (MapValue map)
+
+    -- | Insert a key-value pair into a map.
     insertMap    :: ContainerKey map -> MapValue map -> map -> map
+
+    -- | Delete a key-value pair of a map using a specified key.
     deleteMap    :: ContainerKey map -> map -> map
+
+    -- | Create a map from a single key-value pair.
     singletonMap :: ContainerKey map -> MapValue map -> map
+
+    -- | Convert a list of key-value pairs to a map
     mapFromList  :: [(ContainerKey map, MapValue map)] -> map
+
+    -- | Convert a map to a list of key-value pairs.
     mapToList    :: map -> [(ContainerKey map, MapValue map)]
 
+    -- | Like 'lookup', but uses a default value when the key does
+    -- not exist in the map.
     findWithDefault :: MapValue map -> ContainerKey map -> map -> MapValue map
     findWithDefault def key = fromMaybe def . lookup key
 
+    -- | Insert a key-value pair into a map.
+    --
+    -- Inserts the value directly if the key does not exist in the map. Otherwise,
+    -- apply a supplied function that accepts the new value and the previous value
+    -- and insert that result into the map.
     insertWith :: (MapValue map -> MapValue map -> MapValue map)
-               -> ContainerKey map
-               -> MapValue map
-               -> map
-               -> map
+                  -- ^ function that accepts the new value and the
+                  -- previous value and returns the value that will be
+                  -- set in the map.
+               -> ContainerKey map -- ^ key
+               -> MapValue map     -- ^ new value to insert
+               -> map              -- ^ input map
+               -> map              -- ^ resulting map
     insertWith f k v m =
         v' `seq` insertMap k v' m
       where
@@ -259,12 +304,20 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 Nothing -> v
                 Just vold -> f v vold
 
+    -- | Insert a key-value pair into a map.
+    --
+    -- Inserts the value directly if the key does not exist in the map. Otherwise,
+    -- apply a supplied function that accepts the key, the new value, and the
+    -- previous value and insert that result into the map.
     insertWithKey
         :: (ContainerKey map -> MapValue map -> MapValue map -> MapValue map)
-        -> ContainerKey map
-        -> MapValue map
-        -> map
-        -> map
+           -- ^ function that accepts the key, the new value, and the
+           -- previous value and returns the value that will be
+           -- set in the map.
+        -> ContainerKey map -- ^ key
+        -> MapValue map     -- ^ new value to insert
+        -> map              -- ^ input map
+        -> map              -- ^ resulting map
     insertWithKey f k v m =
         v' `seq` insertMap k v' m
       where
@@ -273,12 +326,21 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 Nothing -> v
                 Just vold -> f k v vold
 
+    -- | Insert a key-value pair into a map, return the previous key's value
+    -- if it existed.
+    --
+    -- Inserts the value directly if the key does not exist in the map. Otherwise,
+    -- apply a supplied function that accepts the key, the new value, and the
+    -- previous value and insert that result into the map.
     insertLookupWithKey
         :: (ContainerKey map -> MapValue map -> MapValue map -> MapValue map)
-        -> ContainerKey map
-        -> MapValue map
-        -> map
-        -> (Maybe (MapValue map), map)
+           -- ^ function that accepts the key, the new value, and the
+           -- previous value and returns the value that will be
+           -- set in the map.
+        -> ContainerKey map            -- ^ key
+        -> MapValue map                -- ^ new value to insert
+        -> map                         -- ^ input map
+        -> (Maybe (MapValue map), map) -- ^ previous value and the resulting map
     insertLookupWithKey f k v m =
         v' `seq` (mold, insertMap k v' m)
       where
@@ -287,11 +349,15 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 Nothing -> (Nothing, v)
                 Just vold -> (Just vold, f k v vold)
 
+    -- | Apply a function to the value of a given key.
+    --
+    -- Returns the input map when the key-value pair does not exist.
     adjustMap
         :: (MapValue map -> MapValue map)
-        -> ContainerKey map
-        -> map
-        -> map
+           -- ^ function to apply to the previous value
+        -> ContainerKey map -- ^ key
+        -> map              -- ^ input map
+        -> map              -- ^ resulting map
     adjustMap f k m =
         case lookup k m of
             Nothing -> m
@@ -299,11 +365,15 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 let v' = f v
                  in v' `seq` insertMap k v' m
 
+    -- | Equivalent to 'adjustMap', but the function accepts the key,
+    -- as well as the previous value.
     adjustWithKey
         :: (ContainerKey map -> MapValue map -> MapValue map)
-        -> ContainerKey map
-        -> map
-        -> map
+           -- ^ function that accepts the key and the previous value
+           -- and returns the new value
+        -> ContainerKey map -- ^ key
+        -> map              -- ^ input map
+        -> map              -- ^ resulting map
     adjustWithKey f k m =
         case lookup k m of
             Nothing -> m
@@ -311,11 +381,18 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 let v' = f k v
                  in v' `seq` insertMap k v' m
 
+    -- | Apply a function to the value of a given key.
+    --
+    -- If the function returns 'Nothing', this deletes the key-value pair.
+    --
+    -- Returns the input map when the key-value pair does not exist.
     updateMap
         :: (MapValue map -> Maybe (MapValue map))
-        -> ContainerKey map
-        -> map
-        -> map
+           -- ^ function that accepts the previous value
+           -- and returns the new value or 'Nothing'
+        -> ContainerKey map -- ^ key
+        -> map              -- ^ input map
+        -> map              -- ^ resulting map
     updateMap f k m =
         case lookup k m of
             Nothing -> m
@@ -324,11 +401,15 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                     Nothing -> deleteMap k m
                     Just v' -> v' `seq` insertMap k v' m
 
+    -- | Equivalent to 'updateMap', but the function accepts the key,
+    -- as well as the previous value.
     updateWithKey
         :: (ContainerKey map -> MapValue map -> Maybe (MapValue map))
-        -> ContainerKey map
-        -> map
-        -> map
+           -- ^ function that accepts the key and the previous value
+           -- and returns the new value or 'Nothing'
+        -> ContainerKey map -- ^ key
+        -> map              -- ^ input map
+        -> map              -- ^ resulting map
     updateWithKey f k m =
         case lookup k m of
             Nothing -> m
@@ -337,11 +418,23 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                     Nothing -> deleteMap k m
                     Just v' -> v' `seq` insertMap k v' m
 
+    -- | Apply a function to the value of a given key.
+    --
+    -- If the map does not contain the key this returns 'Nothing'
+    -- and the input map.
+    --
+    -- If the map does contain the key but the function returns 'Nothing',
+    -- this returns the previous value and the map with the key-value pair removed.
+    --
+    -- If the map contains the key and the function returns a value,
+    -- this returns the new value and the map with the key-value pair with the new value.
     updateLookupWithKey
         :: (ContainerKey map -> MapValue map -> Maybe (MapValue map))
-        -> ContainerKey map
-        -> map
-        -> (Maybe (MapValue map), map)
+           -- ^ function that accepts the key and the previous value
+           -- and returns the new value or 'Nothing'
+        -> ContainerKey map            -- ^ key
+        -> map                         -- ^ input map
+        -> (Maybe (MapValue map), map) -- ^ previous/new value and the resulting map
     updateLookupWithKey f k m =
         case lookup k m of
             Nothing -> (Nothing, m)
@@ -350,11 +443,18 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                     Nothing -> (Just v, deleteMap k m)
                     Just v' -> v' `seq` (Just v', insertMap k v' m)
 
+    -- | Update/Delete the value of a given key.
+    --
+    -- Applies a function to previous value of a given key, if it results in 'Nothing'
+    -- delete the key-value pair from the map, otherwise replace the previous value
+    -- with the new value.
     alterMap
         :: (Maybe (MapValue map) -> Maybe (MapValue map))
-        -> ContainerKey map
-        -> map
-        -> map
+           -- ^ function that accepts the previous value and
+           -- returns the new value or 'Nothing'
+        -> ContainerKey map -- ^ key
+        -> map              -- ^ input map
+        -> map              -- ^ resulting map
     alterMap f k m =
         case f mold of
             Nothing ->
@@ -365,11 +465,18 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
       where
         mold = lookup k m
 
+    -- | Combine two maps.
+    --
+    -- When a key exists in both maps, apply a function
+    -- to both of the values and use the result of that as the value
+    -- of the key in the resulting map.
     unionWith
         :: (MapValue map -> MapValue map -> MapValue map)
-        -> map
-        -> map
-        -> map
+           -- ^ function that accepts the first map's value and the second map's value
+           -- and returns the new value that will be used
+        -> map -- ^ first map
+        -> map -- ^ second map
+        -> map -- ^ resulting map
     unionWith f x y =
         mapFromList $ loop $ mapToList x ++ mapToList y
       where
@@ -379,11 +486,15 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 Nothing -> (k, v) : loop rest
                 Just v' -> (k, f v v') : loop (deleteMap k rest)
 
+    -- Equivalent to 'unionWith', but the function accepts the key,
+    -- as well as both of the map's values.
     unionWithKey
         :: (ContainerKey map -> MapValue map -> MapValue map -> MapValue map)
-        -> map
-        -> map
-        -> map
+           -- ^ function that accepts the key, the first map's value and the
+           -- second map's value and returns the new value that will be used
+        -> map -- ^ first map
+        -> map -- ^ second map
+        -> map -- ^ resulting map
     unionWithKey f x y =
         mapFromList $ loop $ mapToList x ++ mapToList y
       where
@@ -393,28 +504,44 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 Nothing -> (k, v) : loop rest
                 Just v' -> (k, f k v v') : loop (deleteMap k rest)
 
+    -- | Combine a list of maps.
+    --
+    -- When a key exists in two different maps, apply a function
+    -- to both of the values and use the result of that as the value
+    -- of the key in the resulting map.
     unionsWith
         :: (MapValue map -> MapValue map -> MapValue map)
-        -> [map]
-        -> map
+           -- ^ function that accepts the first map's value and the second map's value
+           -- and returns the new value that will be used
+        -> [map] -- ^ input list of maps
+        -> map   -- ^ resulting map
     unionsWith _ [] = mempty
     unionsWith _ [x] = x
     unionsWith f (x:y:z) = unionsWith f (unionWith f x y:z)
 
+    -- | Apply a function over every key-value pair of a map.
     mapWithKey
         :: (ContainerKey map -> MapValue map -> MapValue map)
-        -> map
-        -> map
+           -- ^ function that accepts the key and the previous value
+           -- and returns the new value
+        -> map -- ^ input map
+        -> map -- ^ resulting map
     mapWithKey f =
         mapFromList . map go . mapToList
       where
         go (k, v) = (k, f k v)
 
+    -- | Apply a function over every key of a pair and run
+    -- 'unionsWith' over the results.
     omapKeysWith
         :: (MapValue map -> MapValue map -> MapValue map)
+           -- ^ function that accepts the first map's value and the second map's value
+           -- and returns the new value that will be used
         -> (ContainerKey map -> ContainerKey map)
-        -> map
-        -> map
+           -- ^ function that accepts the previous key and
+           -- returns the new key
+        -> map -- ^ input map
+        -> map -- ^ resulting map
     omapKeysWith g f =
         mapFromList . unionsWith g . map go . mapToList
       where
@@ -571,11 +698,21 @@ instance Eq key => IsMap [(key, value)] where
     mapToList = id
     {-# INLINE mapToList #-}
 
+-- | Polymorphic typeclass for interacting with different set types
 class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
+    -- | Insert a value into a set.
     insertSet :: Element set -> set -> set
+
+    -- | Delete a value from a set.
     deleteSet :: Element set -> set -> set
+
+    -- | Create a set from a single element.
     singletonSet :: Element set -> set
+
+    -- | Convert a list to a set.
     setFromList :: [Element set] -> set
+
+    -- | Convert a set to a list.
     setToList :: set -> [Element set]
 
 instance Ord element => IsSet (Set.Set element) where
@@ -615,10 +752,16 @@ instance IsSet IntSet.IntSet where
     {-# INLINE setToList #-}
 
 
--- | zip operations on MonoFunctors.
+-- | Zip operations on 'MonoFunctor's.
 class MonoFunctor mono => MonoZip mono where
+    -- | Combine each element of two 'MonoZip's using a supplied function.
     ozipWith :: (Element mono -> Element mono -> Element mono) -> mono -> mono -> mono
+
+    -- | Take two 'MonoZip's and return a list of the pairs of their elements.
     ozip :: mono -> mono -> [(Element mono, Element mono)]
+
+    -- | Take a list of pairs of elements and return a 'MonoZip' of the first
+    -- components and a 'MonoZip' of the second components.
     ounzip :: [(Element mono, Element mono)] -> (mono, mono)
 
 
@@ -651,9 +794,14 @@ instance MonoZip LText.Text where
     {-# INLINE ounzip #-}
     {-# INLINE ozipWith #-}
 
+-- | Type class for maps whose keys can be converted into sets.
 class SetContainer set => HasKeysSet set where
+    -- | Type of the key set.
     type KeySet set
+
+    -- | Convert a map into a set of its keys.
     keysSet :: set -> KeySet set
+
 instance Ord k => HasKeysSet (Map.Map k v) where
     type KeySet (Map.Map k v) = Set.Set k
     keysSet = Map.keysSet
