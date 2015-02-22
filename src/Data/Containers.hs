@@ -794,8 +794,7 @@ instance MonoZip LText.Text where
     {-# INLINE ounzip #-}
     {-# INLINE ozipWith #-}
 
--- | Type class for maps that their keys can be converted
--- into sets.
+-- | Type class for maps whose keys can be converted into sets.
 class SetContainer set => HasKeysSet set where
     -- | Type of the key set.
     type KeySet set
