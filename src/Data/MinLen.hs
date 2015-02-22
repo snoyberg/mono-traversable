@@ -210,9 +210,7 @@ natProxy _ = typeNat
 toMinLenZero :: (MonoFoldable mono) => mono -> MinLen Zero mono
 toMinLenZero = MinLen
 
--- | __Safe__
---
--- Attempts to add a 'MinLen' constraint to a monomorphic container.
+-- | Attempts to add a 'MinLen' constraint to a monomorphic container.
 --
 -- ==== __Examples__
 --
@@ -286,7 +284,7 @@ mlappend (MinLen x) (MinLen y) = MinLen (x `mappend` y)
 
 -- | Return the first element of a monomorphic container.
 --
--- __Safe version of 'headEx'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'headEx', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 head :: MonoFoldable mono => MinLen (Succ nat) mono -> Element mono
 head = headEx . unMinLen
@@ -294,7 +292,7 @@ head = headEx . unMinLen
 
 -- | Return the last element of a monomorphic container.
 --
--- __Safe version of 'lastEx'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'lastEx', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 last :: MonoFoldable mono => MinLen (Succ nat) mono -> Element mono
 last = lastEx . unMinLen
@@ -302,7 +300,7 @@ last = lastEx . unMinLen
 
 -- | Returns all but the first element of a sequence, reducing its 'MinLen' by 1.
 --
--- __Safe__, only works on sequences wrapped in a @'MinLen' ('Succ' nat)@.
+-- Safe, only works on sequences wrapped in a @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
 --
@@ -316,7 +314,7 @@ tailML = MinLen . tailEx . unMinLen
 
 -- | Returns all but the last element of a sequence, reducing its 'MinLen' by 1.
 --
--- __Safe__, only works on sequences wrapped in a @'MinLen' ('Succ' nat)@.
+-- Safe, only works on sequences wrapped in a @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
 --
@@ -347,7 +345,7 @@ mlunion (MinLen x) (MinLen y) = MinLen (x <> y)
 -- | Map each element of a monomorphic container to a semigroup, and combine the
 -- results.
 --
--- __Safe version of 'ofoldMap1Ex'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'ofoldMap1Ex', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
@@ -363,7 +361,7 @@ ofoldMap1 f = ofoldMap1Ex f . unMinLen
 
 -- | Join a monomorphic container, whose elements are 'Semigroup's, together.
 --
--- __Safe__, only works on monomorphic containers wrapped in a @'MinLen' ('Succ' nat)@.
+-- Safe, only works on monomorphic containers wrapped in a @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
 --
@@ -381,7 +379,7 @@ ofold1 = ofoldMap1 id
 
 -- | Right-associative fold of a monomorphic container with no base element.
 --
--- __Safe version of 'ofoldr1Ex'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'ofoldr1Ex', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 --
 -- @'foldr1' f = "Prelude".'Prelude.foldr1' f . 'otoList'@
@@ -403,7 +401,7 @@ ofoldr1 f = ofoldr1Ex f . unMinLen
 -- | Strict left-associative fold of a monomorphic container with no base
 -- element.
 --
--- __Safe version of 'ofoldl1Ex''__, only works on monomorphic containers wrapped in a
+-- Safe version of 'ofoldl1Ex'', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 --
 -- @'foldl1'' f = "Prelude".'Prelude.foldl1'' f . 'otoList'@
@@ -424,7 +422,7 @@ ofoldl1' f = ofoldl1Ex' f . unMinLen
 
 -- | Get the maximum element of a monomorphic container.
 --
--- __Safe version of 'maximumEx'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'maximumEx', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
@@ -442,7 +440,7 @@ maximum = maximumEx . unMinLen
 
 -- | Get the minimum element of a monomorphic container.
 --
--- __Safe version of 'minimumEx'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'minimumEx', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 --
 -- ==== __Examples__
@@ -461,7 +459,7 @@ minimum = minimumEx . unMinLen
 -- | Get the maximum element of a monomorphic container,
 -- using a supplied element ordering function.
 --
--- __Safe version of 'maximumByEx'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'maximumByEx', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 maximumBy :: MonoFoldable mono
           => (Element mono -> Element mono -> Ordering)
@@ -473,7 +471,7 @@ maximumBy cmp = maximumByEx cmp . unMinLen
 -- | Get the minimum element of a monomorphic container,
 -- using a supplied element ordering function.
 --
--- __Safe version of 'minimumByEx'__, only works on monomorphic containers wrapped in a
+-- Safe version of 'minimumByEx', only works on monomorphic containers wrapped in a
 -- @'MinLen' ('Succ' nat)@.
 minimumBy :: MonoFoldable mono
           => (Element mono -> Element mono -> Ordering)
