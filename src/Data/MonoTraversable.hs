@@ -5,19 +5,19 @@
 {-# LANGUAGE UndecidableInstances #-}
 -- | Type classes mirroring standard typeclasses, but working with monomorphic containers.
 --
--- The motivation is that some commonly used data types (i.e., @ByteString@ and
--- @Text@) do not allow for instances of typeclasses like @Functor@ and
--- @Foldable@, since they are monomorphic structures. This module allows both
+-- The motivation is that some commonly used data types (i.e., 'ByteString' and
+-- 'Text') do not allow for instances of typeclasses like 'Functor' and
+-- 'Foldable', since they are monomorphic structures. This module allows both
 -- monomorphic and polymorphic data types to be instances of the same
 -- typeclasses.
 --
 -- All of the laws for the polymorphic typeclasses apply to their monomorphic
--- cousins. Thus, even though a @MonoFunctor@ instance for @Set@ could
+-- cousins. Thus, even though a 'MonoFunctor' instance for 'Set' could
 -- theoretically be defined, it is omitted since it could violate the functor
--- law of @omap f . omap g = omap (f . g)@.
+-- law of @'omap' f . 'omap' g = 'omap' (f . g)@.
 --
 -- Note that all typeclasses have been prefixed with @Mono@, and functions have
--- been prefixed with @o@. The mnemonic for @o@ is \"only one,\" or alternatively
+-- been prefixed with @o@. The mnemonic for @o@ is \"only one\", or alternatively
 -- \"it's mono, but m is overused in Haskell, so we'll use the second letter
 -- instead.\" (Agreed, it's not a great mangling scheme, input is welcome!)
 module Data.MonoTraversable where
@@ -89,6 +89,8 @@ import qualified Data.ByteString.Unsafe as SU
 import Data.DList (DList)
 import qualified Data.DList as DL
 
+-- | Type family for getting the type of the elements
+-- of a monomorphic container.
 type family Element mono
 type instance Element S.ByteString = Word8
 type instance Element L.ByteString = Word8
@@ -140,8 +142,9 @@ type instance Element (Static f a b) = b
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
 
-
+-- | Monomorphic containers that can be mapped over.
 class MonoFunctor mono where
+    -- | Map over a monomorphic container
     omap :: (Element mono -> Element mono) -> mono -> mono
     default omap :: (Functor f, Element (f a) ~ a, f a ~ mono) => (a -> a) -> f a -> f a
     omap = fmap
@@ -206,112 +209,165 @@ instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
     {-# INLINE omap #-}
 
+-- | Monomorphic containers that can be folded.
 class MonoFoldable mono where
+    -- | Map each element of a monomorphic container to a 'Monoid'
+    -- and combine the results.
     ofoldMap :: Monoid m => (Element mono -> m) -> mono -> m
     default ofoldMap :: (t a ~ mono, a ~ Element (t a), F.Foldable t, Monoid m) => (Element mono -> m) -> mono -> m
     ofoldMap = F.foldMap
     {-# INLINE ofoldMap #-}
 
+    -- | Right-associative fold of a monomorphic container.
     ofoldr :: (Element mono -> b -> b) -> b -> mono -> b
     default ofoldr :: (t a ~ mono, a ~ Element (t a), F.Foldable t) => (Element mono -> b -> b) -> b -> mono -> b
     ofoldr = F.foldr
     {-# INLINE ofoldr #-}
 
+    -- | Strict left-associative fold of a monomorphic container.
     ofoldl' :: (a -> Element mono -> a) -> a -> mono -> a
     default ofoldl' :: (t b ~ mono, b ~ Element (t b), F.Foldable t) => (a -> Element mono -> a) -> a -> mono -> a
     ofoldl' = F.foldl'
     {-# INLINE ofoldl' #-}
 
+    -- | Convert a monomorphic container to a list.
     otoList :: mono -> [Element mono]
     otoList t = build (\ mono n -> ofoldr mono n t)
     {-# INLINE otoList #-}
 
+    -- | Are __all__ of the elements in a monomorphic container
+    -- converted to booleans 'True'?
     oall :: (Element mono -> Bool) -> mono -> Bool
     oall f = getAll . ofoldMap (All . f)
     {-# INLINE oall #-}
 
+    -- | Are __any__ of the elements in a monomorphic container
+    -- converted to booleans 'True'?
     oany :: (Element mono -> Bool) -> mono -> Bool
     oany f = getAny . ofoldMap (Any . f)
     {-# INLINE oany #-}
 
+    -- | Is the monomorphic container empty?
     onull :: mono -> Bool
     onull = oall (const False)
     {-# INLINE onull #-}
 
+    -- | Length of a monomorphic container, returns a 'Int'.
     olength :: mono -> Int
     olength = ofoldl' (\i _ -> i + 1) 0
     {-# INLINE olength #-}
 
+    -- | Length of a monomorphic container, returns a 'Int64'.
     olength64 :: mono -> Int64
     olength64 = ofoldl' (\i _ -> i + 1) 0
     {-# INLINE olength64 #-}
 
+    -- | Compare the length of a monomorphic container and a given number.
     ocompareLength :: Integral i => mono -> i -> Ordering
     ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
     {-# INLINE ocompareLength #-}
 
+    -- | Map each element of a monomorphic container to an action,
+    -- evaluate these actions from left to right, and ignore the results.
     otraverse_ :: (MonoFoldable mono, Applicative f) => (Element mono -> f b) -> mono -> f ()
     otraverse_ f = ofoldr ((*>) . f) (pure ())
     {-# INLINE otraverse_ #-}
 
+    -- | 'ofor_' is 'otraverse_' with it's arguments flipped.
     ofor_ :: (MonoFoldable mono, Applicative f) => mono -> (Element mono -> f b) -> f ()
     ofor_ = flip otraverse_
     {-# INLINE ofor_ #-}
 
+    -- | Map each element of a monomorphic container to a monadic action,
+    -- evaluate these actions from left to right, and ignore the results.
     omapM_ :: (MonoFoldable mono, Monad m) => (Element mono -> m ()) -> mono -> m ()
     omapM_ f = ofoldr ((>>) . f) (return ())
     {-# INLINE omapM_ #-}
 
+    -- | 'oforM_' is 'omapM_' with it's arguments flipped.
     oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m ()) -> m ()
     oforM_ = flip omapM_
     {-# INLINE oforM_ #-}
 
+    -- | Monadic fold over the elements of a monomorphic container, associating to the left.
     ofoldlM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
     ofoldlM f z0 xs = ofoldr f' return xs z0
       where f' x k z = f z x >>= k
     {-# INLINE ofoldlM #-}
 
-    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
-    -- throw an exception. See "Data.NonNull" for a total version of this
-    -- function.
+    -- | Map each element of a monomorphic container to a semigroup,
+    -- and combine the results.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     ofoldMap1Ex :: Semigroup m => (Element mono -> m) -> mono -> m
     ofoldMap1Ex f = fromMaybe (Prelude.error "Data.MonoTraversable.ofoldMap1Ex")
                        . getOption . ofoldMap (Option . Just . f)
 
-    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
-    -- throw an exception. See "Data.NonNull" for a total version of this
-    -- function.
+    -- | Right-associative fold of a monomorphic container with no base element.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     ofoldr1Ex :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldr1Ex :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                            => (a -> a -> a) -> mono -> a
     ofoldr1Ex = F.foldr1
     {-# INLINE ofoldr1Ex #-}
 
-    -- | Note: this is a partial function. On an empty @MonoFoldable@, it will
-    -- throw an exception. See "Data.NonNull" for a total version of this
-    -- function.
+    -- | Strict left-associative fold of a monomorphic container with no base
+    -- element.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     ofoldl1Ex' :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldl1Ex' :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                             => (a -> a -> a) -> mono -> a
     ofoldl1Ex' = F.foldl1
     {-# INLINE ofoldl1Ex' #-}
 
+    -- | Get the first element of a monomorphic container.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     headEx :: mono -> Element mono
     headEx = ofoldr const (Prelude.error "Data.MonoTraversable.headEx: empty")
     {-# INLINE headEx #-}
 
+    -- | Get the last element of a monomorphic container.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     lastEx :: mono -> Element mono
     lastEx = ofoldl1Ex' (flip const)
     {-# INLINE lastEx #-}
 
+    -- | Equivalent to 'headEx'.
     unsafeHead :: mono -> Element mono
     unsafeHead = headEx
     {-# INLINE unsafeHead #-}
 
+    -- | Equivalent to 'lastEx'.
     unsafeLast :: mono -> Element mono
     unsafeLast = lastEx
     {-# INLINE unsafeLast #-}
 
+    -- | Get the minimum element of a monomorphic container,
+    -- using a supplied element ordering function.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     maximumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
     maximumByEx f =
         ofoldl1Ex' go
@@ -322,6 +378,13 @@ class MonoFoldable mono where
                 _  -> x
     {-# INLINE maximumByEx #-}
 
+    -- | Get the maximum element of a monomorphic container,
+    -- using a supplied element ordering function.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     minimumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
     minimumByEx f =
         ofoldl1Ex' go
@@ -639,45 +702,53 @@ instance MonoFoldable (Either a b) where
     {-# INLINE lastEx #-}
     {-# INLINE unsafeHead #-}
 
--- | like Data.List.head, but not partial
+-- | Safe version of 'headEx'.
+--
+-- Returns 'Nothing' instead of throwing an exception when encountering
+-- an empty monomorphic container.
 headMay :: MonoFoldable mono => mono -> Maybe (Element mono)
 headMay mono
     | onull mono = Nothing
     | otherwise = Just (headEx mono)
 {-# INLINE headMay #-}
 
--- | like Data.List.last, but not partial
+-- | Safe version of 'lastEx'.
+--
+-- Returns 'Nothing' instead of throwing an exception when encountering
+-- an empty monomorphic container.
 lastMay :: MonoFoldable mono => mono -> Maybe (Element mono)
 lastMay mono
     | onull mono = Nothing
     | otherwise = Just (lastEx mono)
 {-# INLINE lastMay #-}
 
--- | The 'sum' function computes the sum of the numbers of a structure.
+-- | 'osum' computes the sum of the numbers of a monomorphic container.
 osum :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
 osum = ofoldl' (+) 0
 {-# INLINE osum #-}
 
--- | The 'product' function computes the product of the numbers of a structure.
+-- | 'oproduct' computes the product of the numbers of a monomorphic container.
 oproduct :: (MonoFoldable mono, Num (Element mono)) => mono -> Element mono
 oproduct = ofoldl' (*) 1
 {-# INLINE oproduct #-}
 
--- | Are all of the values @True@?
+-- | Are __all__ of the elements 'True'?
 --
 -- Since 0.6.0
 oand :: (Element mono ~ Bool, MonoFoldable mono) => mono -> Bool
 oand = oall id
 {-# INLINE oand #-}
 
--- | Are any of the values @True@?
+-- | Are __any__ of the elements 'True'?
 --
 -- Since 0.6.0
 oor :: (Element mono ~ Bool, MonoFoldable mono) => mono -> Bool
 oor = oany id
 {-# INLINE oor #-}
 
+-- | A typeclass for monomorphic containers that are 'Monoid's.
 class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where -- FIXME is this really just MonoMonad?
+    -- | Map a function over a monomorphic container and combine the results.
     oconcatMap :: (Element mono -> mono) -> mono -> mono
     oconcatMap = ofoldMap
     {-# INLINE oconcatMap #-}
@@ -695,12 +766,14 @@ instance MonoFoldableMonoid TL.Text where
     oconcatMap = TL.concatMap
     {-# INLINE oconcatMap #-}
 
--- | A typeclass for @MonoFoldable@s containing elements which are an instance
--- of @Eq@.
+-- | A typeclass for monomorphic containers whose elements
+-- are an instance of 'Eq'.
 class (MonoFoldable mono, Eq (Element mono)) => MonoFoldableEq mono where
+    -- | Checks if the monomorphic container includes the supplied element.
     oelem :: Element mono -> mono -> Bool
     oelem e = List.elem e . otoList
 
+    -- | Checks if the monomorphic container does not include the supplied element.
     onotElem :: Element mono -> mono -> Bool
     onotElem e = List.notElem e . otoList
     {-# INLINE oelem #-}
@@ -753,13 +826,25 @@ instance (Eq a, Ord a) => MonoFoldableEq (Set a) where
     {-# INLINE onotElem #-}
 
 
--- | A typeclass for @MonoFoldable@s containing elements which are an instance
--- of @Ord@.
+-- | A typeclass for monomorphic containers whose elements
+-- are an instance of 'Ord'.
 class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
+    -- | Get the minimum element of a monomorphic container.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     maximumEx :: mono -> Element mono
     maximumEx = maximumByEx compare
     {-# INLINE maximumEx #-}
 
+    -- | Get the maximum element of a monomorphic container.
+    --
+    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
+    -- throw an exception.
+    --
+    -- /See "Data.NonNull" for a total version of this function./
     minimumEx :: mono -> Element mono
     minimumEx = minimumByEx compare
     {-# INLINE minimumEx #-}
@@ -816,12 +901,20 @@ instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
     {-# INLINE minimumEx #-}
 instance Ord b => MonoFoldableOrd (Either a b) where
 
+-- | Safe version of 'maximumEx'.
+--
+-- Returns 'Nothing' instead of throwing an exception when
+-- encountering an empty monomorphic container.
 maximumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
 maximumMay mono
     | onull mono = Nothing
     | otherwise = Just (maximumEx mono)
 {-# INLINE maximumMay #-}
 
+-- | Safe version of 'maximumByEx'.
+--
+-- Returns 'Nothing' instead of throwing an exception when
+-- encountering an empty monomorphic container.
 maximumByMay :: MonoFoldable mono
              => (Element mono -> Element mono -> Ordering)
              -> mono
@@ -831,12 +924,20 @@ maximumByMay f mono
     | otherwise = Just (maximumByEx f mono)
 {-# INLINE maximumByMay #-}
 
+-- | Safe version of 'minimumEx'.
+--
+-- Returns 'Nothing' instead of throwing an exception when
+-- encountering an empty monomorphic container.
 minimumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
 minimumMay mono
     | onull mono = Nothing
     | otherwise = Just (minimumEx mono)
 {-# INLINE minimumMay #-}
 
+-- | Safe version of 'minimumByEx'.
+--
+-- Returns 'Nothing' instead of throwing an exception when
+-- encountering an empty monomorphic container.
 minimumByMay :: MonoFoldable mono
              => (Element mono -> Element mono -> Ordering)
              -> mono
@@ -846,15 +947,24 @@ minimumByMay f mono
     | otherwise = Just (minimumByEx f mono)
 {-# INLINE minimumByMay #-}
 
+-- | Monomorphic containers that can be traversed from left to right.
 class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
+    -- | Map each element of a monomorphic container to an action,
+    -- evaluate these actions from left to right, and
+    -- collect the results.
     otraverse :: Applicative f => (Element mono -> f (Element mono)) -> mono -> f mono
     default otraverse :: (Traversable t, mono ~ t a, a ~ Element mono, Applicative f) => (Element mono -> f (Element mono)) -> mono -> f mono
     otraverse = traverse
+
+    -- | Map each element of a monomorphic container to a monadic action,
+    -- evaluate these actions from left to right, and
+    -- collect the results.
     omapM :: Monad m => (Element mono -> m (Element mono)) -> mono -> m mono
     default omapM :: (Traversable t, mono ~ t a, a ~ Element mono, Monad m) => (Element mono -> m (Element mono)) -> mono -> m mono
     omapM = mapM
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
+
 instance MonoTraversable S.ByteString where
     otraverse f = fmap S.pack . traverse f . S.unpack
     omapM f = liftM S.pack . mapM f . S.unpack
@@ -909,10 +1019,12 @@ instance MonoTraversable (Either a b) where
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
 
+-- | 'ofor' is 'otraverse' with it's arguments flipped.
 ofor :: (MonoTraversable mono, Applicative f) => mono -> (Element mono -> f (Element mono)) -> f mono
 ofor = flip otraverse
 {-# INLINE ofor #-}
 
+-- | 'oforM' is 'omapM' with it's arguments flipped.
 oforM :: (MonoTraversable mono, Monad f) => mono -> (Element mono -> f (Element mono)) -> f mono
 oforM = flip omapM
 {-# INLINE oforM #-}
@@ -930,7 +1042,7 @@ ofoldlUnwrap f x unwrap mono = unwrap (ofoldl' f x mono)
 
 -- | A monadic strict left fold, together with an unwrap function.
 --
--- Similar to @foldlUnwrap@, but allows monadic actions. To be used with
+-- Similar to 'foldlUnwrap', but allows monadic actions. To be used with
 -- @impurely@ from @foldl@.
 --
 -- Since 0.3.1
@@ -941,12 +1053,18 @@ ofoldMUnwrap f mx unwrap mono = do
     x' <- ofoldlM f x mono
     unwrap x'
 
--- | 'opoint' is the same as @pure@ for an Applicative
+-- | Typeclass for monomorphic containers that an element can be
+-- lifted into.
 --
 -- For any 'MonoFunctor', the following law holds:
 --
--- > omap f . point = point . f
+-- @
+-- 'omap' f . 'opoint' = 'opoint' . f
+-- @
 class MonoPointed mono where
+    -- | Lift an element into a monomorphic container.
+    --
+    -- 'opoint' is the same as 'Control.Applicative.pure' for an 'Applicative'
     opoint :: Element mono -> mono
     default opoint :: (Applicative f, (f a) ~ mono, Element (f a) ~ a)
                    => Element mono -> mono
