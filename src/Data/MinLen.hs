@@ -204,8 +204,8 @@ natProxy _ = typeNat
 -- ==== __Examples__
 --
 -- @
--- > > 1 \`mlcons` 'toMinLenZero' []
--- > 'MinLen' {unMinLen = [1]}
+-- > 1 \`mlcons` 'toMinLenZero' []
+-- 'MinLen' {unMinLen = [1]}
 -- @
 toMinLenZero :: (MonoFoldable mono) => mono -> MinLen Zero mono
 toMinLenZero = MinLen
