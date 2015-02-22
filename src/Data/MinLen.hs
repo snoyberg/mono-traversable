@@ -16,7 +16,7 @@ module Data.MinLen
     , TypeNat (..)
     , AddNat
     , MaxNat
-      -- * Minimum length data wrapper
+      -- * Minimum length newtype wrapper
     , MinLen
     , unMinLen
     , toMinLenZero
