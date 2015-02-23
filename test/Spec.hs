@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -20,7 +21,12 @@ import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
 import Control.Monad.Trans.Writer
 import qualified System.IO as IO
+#if MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
+#else
+import Data.Monoid (Monoid (..))
+import Control.Applicative ((<$>), (<*>))
+#endif
 import Data.Builder
 import Data.Sequences.Lazy
 import Data.Textual.Encoding
