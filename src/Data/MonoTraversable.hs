@@ -301,7 +301,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.ofoldMap1' from "Data.MinLen" for a total version of this function./
     ofoldMap1Ex :: Semigroup m => (Element mono -> m) -> mono -> m
     ofoldMap1Ex f = fromMaybe (Prelude.error "Data.MonoTraversable.ofoldMap1Ex")
                        . getOption . ofoldMap (Option . Just . f)
@@ -311,7 +311,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.ofoldr1Ex' from "Data.MinLen" for a total version of this function./
     ofoldr1Ex :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldr1Ex :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                            => (a -> a -> a) -> mono -> a
@@ -324,7 +324,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.ofoldl1Ex'' from "Data.MinLen" for a total version of this function./
     ofoldl1Ex' :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldl1Ex' :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                             => (a -> a -> a) -> mono -> a
@@ -336,7 +336,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.head' from "Data.MinLen" for a total version of this function./
     headEx :: mono -> Element mono
     headEx = ofoldr const (Prelude.error "Data.MonoTraversable.headEx: empty")
     {-# INLINE headEx #-}
@@ -346,7 +346,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.last from "Data.MinLen" for a total version of this function./
     lastEx :: mono -> Element mono
     lastEx = ofoldl1Ex' (flip const)
     {-# INLINE lastEx #-}
@@ -361,13 +361,13 @@ class MonoFoldable mono where
     unsafeLast = lastEx
     {-# INLINE unsafeLast #-}
 
-    -- | Get the minimum element of a monomorphic container,
+    -- | Get the maximum element of a monomorphic container,
     -- using a supplied element ordering function.
     --
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.maximiumBy' from "Data.MinLen" for a total version of this function./
     maximumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
     maximumByEx f =
         ofoldl1Ex' go
@@ -378,13 +378,13 @@ class MonoFoldable mono where
                 _  -> x
     {-# INLINE maximumByEx #-}
 
-    -- | Get the maximum element of a monomorphic container,
+    -- | Get the minimum element of a monomorphic container,
     -- using a supplied element ordering function.
     --
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.minimumBy' from "Data.MinLen" for a total version of this function./
     minimumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
     minimumByEx f =
         ofoldl1Ex' go
@@ -834,7 +834,7 @@ class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.maximum' from "Data.MinLen" for a total version of this function./
     maximumEx :: mono -> Element mono
     maximumEx = maximumByEx compare
     {-# INLINE maximumEx #-}
@@ -844,7 +844,7 @@ class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See "Data.NonNull" for a total version of this function./
+    -- /See 'Data.MinLen.minimum' from "Data.MinLen" for a total version of this function./
     minimumEx :: mono -> Element mono
     minimumEx = minimumByEx compare
     {-# INLINE minimumEx #-}
