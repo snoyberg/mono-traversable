@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -20,8 +21,12 @@ import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
 import Control.Monad.Trans.Writer
 import qualified System.IO as IO
+#if MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+#else
 import Data.Monoid (Monoid (..))
 import Control.Applicative ((<$>), (<*>))
+#endif
 import Data.Builder
 import Data.Sequences.Lazy
 import Data.Textual.Encoding
@@ -185,14 +190,14 @@ main = hspec $ do
         let src = yield [1..10]
             res = runIdentity $ src $$ foldMapCE return
          in res `shouldBe` [1..10]
-    prop "all" $ \input -> runIdentity (yieldMany input $$ allC even) `shouldBe` all evenInt input
-    prop "allE" $ \input -> runIdentity (yield input $$ allCE even) `shouldBe` all evenInt input
-    prop "any" $ \input -> runIdentity (yieldMany input $$ anyC even) `shouldBe` any evenInt input
-    prop "anyE" $ \input -> runIdentity (yield input $$ anyCE even) `shouldBe` any evenInt input
-    prop "and" $ \input -> runIdentity (yieldMany input $$ andC) `shouldBe` and input
-    prop "andE" $ \input -> runIdentity (yield input $$ andCE) `shouldBe` and input
-    prop "or" $ \input -> runIdentity (yieldMany input $$ orC) `shouldBe` or input
-    prop "orE" $ \input -> runIdentity (yield input $$ orCE) `shouldBe` or input
+    prop "all" $ \ (input :: [Int]) -> runIdentity (yieldMany input $$ allC even) `shouldBe` all evenInt input
+    prop "allE" $ \ (input :: [Int]) -> runIdentity (yield input $$ allCE even) `shouldBe` all evenInt input
+    prop "any" $ \ (input :: [Int]) -> runIdentity (yieldMany input $$ anyC even) `shouldBe` any evenInt input
+    prop "anyE" $ \ (input :: [Int]) -> runIdentity (yield input $$ anyCE even) `shouldBe` any evenInt input
+    prop "and" $ \ (input :: [Bool]) -> runIdentity (yieldMany input $$ andC) `shouldBe` and input
+    prop "andE" $ \ (input :: [Bool]) -> runIdentity (yield input $$ andCE) `shouldBe` and input
+    prop "or" $ \ (input :: [Bool]) -> runIdentity (yieldMany input $$ orC) `shouldBe` or input
+    prop "orE" $ \ (input :: [Bool]) -> runIdentity (yield input $$ orCE) `shouldBe` or input
     prop "elem" $ \x xs -> runIdentity (yieldMany xs $$ elemC x) `shouldBe` elemInt x xs
     prop "elemE" $ \x xs -> runIdentity (yield xs $$ elemCE x) `shouldBe` elemInt x xs
     prop "notElem" $ \x xs -> runIdentity (yieldMany xs $$ notElemC x) `shouldBe` notElemInt x xs
@@ -236,63 +241,63 @@ main = hspec $ do
     prop "awaitNonNull" $ \xs ->
         fmap NN.toNullable (runIdentity $ yieldMany xs $$ awaitNonNull)
         `shouldBe` listToMaybe (filter (not . null) (xs :: [[Int]]))
-    prop "headE" $ \xs ->
+    prop "headE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ ((,) <$> headCE <*> foldC))
-        `shouldBe` (listToMaybe $ concat xs, drop 1 $ concat xs :: [Int])
+        `shouldBe` (listToMaybe $ concat xs, drop 1 $ concat xs)
     prop "peek" $ \xs ->
         runIdentity (yieldMany xs $$ ((,) <$> peekC <*> sinkList))
         `shouldBe` (listToMaybe xs, xs :: [Int])
-    prop "peekE" $ \xs ->
+    prop "peekE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ ((,) <$> peekCE <*> foldC))
-        `shouldBe` (listToMaybe $ concat xs, concat xs :: [Int])
+        `shouldBe` (listToMaybe $ concat xs, concat xs)
     prop "last" $ \xs ->
         runIdentity (yieldMany xs $$ lastC)
         `shouldBe` listToMaybe (reverse (xs :: [Int]))
-    prop "lastE" $ \xs ->
+    prop "lastE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ lastCE)
-        `shouldBe` listToMaybe (reverse (concat xs :: [Int]))
+        `shouldBe` listToMaybe (reverse (concat xs))
     prop "length" $ \xs ->
         runIdentity (yieldMany xs $$ lengthC)
         `shouldBe` length (xs :: [Int])
-    prop "lengthE" $ \xs ->
+    prop "lengthE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ lengthCE)
-        `shouldBe` length (concat xs :: [Int])
+        `shouldBe` length (concat xs)
     prop "lengthIf" $ \x xs ->
         runIdentity (yieldMany xs $$ lengthIfC (< x))
         `shouldBe` length (filter (< x) xs :: [Int])
-    prop "lengthIfE" $ \x xs ->
+    prop "lengthIfE" $ \x (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ lengthIfCE (< x))
-        `shouldBe` length (filter (< x) (concat xs) :: [Int])
+        `shouldBe` length (filter (< x) (concat xs))
     prop "maximum" $ \xs ->
         runIdentity (yieldMany xs $$ maximumC)
         `shouldBe` (if null (xs :: [Int]) then Nothing else Just (maximum xs))
-    prop "maximumE" $ \xs ->
+    prop "maximumE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ maximumCE)
-        `shouldBe` (if null (concat xs :: [Int]) then Nothing else Just (maximum $ concat xs))
+        `shouldBe` (if null (concat xs) then Nothing else Just (maximum $ concat xs))
     prop "minimum" $ \xs ->
         runIdentity (yieldMany xs $$ minimumC)
         `shouldBe` (if null (xs :: [Int]) then Nothing else Just (minimum xs))
-    prop "minimumE" $ \xs ->
+    prop "minimumE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ minimumCE)
-        `shouldBe` (if null (concat xs :: [Int]) then Nothing else Just (minimum $ concat xs))
+        `shouldBe` (if null (concat xs) then Nothing else Just (minimum $ concat xs))
     prop "null" $ \xs ->
         runIdentity (yieldMany xs $$ nullC)
         `shouldBe` null (xs :: [Int])
-    prop "nullE" $ \xs ->
+    prop "nullE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ ((,) <$> nullCE <*> foldC))
-        `shouldBe` (null (concat xs :: [Int]), concat xs)
+        `shouldBe` (null (concat xs), concat xs)
     prop "sum" $ \xs ->
         runIdentity (yieldMany xs $$ sumC)
         `shouldBe` sum (xs :: [Int])
-    prop "sumE" $ \xs ->
+    prop "sumE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ sumCE)
-        `shouldBe` sum (concat xs :: [Int])
+        `shouldBe` sum (concat xs)
     prop "product" $ \xs ->
         runIdentity (yieldMany xs $$ productC)
         `shouldBe` product (xs :: [Int])
-    prop "productE" $ \xs ->
+    prop "productE" $ \ (xs :: [[Int]]) ->
         runIdentity (yieldMany xs $$ productCE)
-        `shouldBe` product (concat xs :: [Int])
+        `shouldBe` product (concat xs)
     prop "find" $ \x xs ->
         runIdentity (yieldMany xs $$ findC (< x))
         `shouldBe` find (< x) (xs :: [Int])
@@ -302,10 +307,10 @@ main = hspec $ do
     prop "mapM_E" $ \xs ->
         let res = execWriter $ yield xs $$ mapM_CE (tell . return)
          in res `shouldBe` (xs :: [Int])
-    prop "foldM" $ \xs -> do
+    prop "foldM" $ \ (xs :: [Int]) -> do
         res <- yieldMany xs $$ foldMC addM 0
         res `shouldBe` sum xs
-    prop "foldME" $ \xs -> do
+    prop "foldME" $ \ (xs :: [Int]) -> do
         res <- yield xs $$ foldMCE addM 0
         res `shouldBe` sum xs
     it "foldMapM" $
@@ -339,11 +344,11 @@ main = hspec $ do
         let expected = Prelude.unlines $ map showInt vals
         (actual, ()) <- hCapture [IO.stdout] $ yieldMany vals $$ printC
         actual `shouldBe` expected
-    prop "stdout" $ \vals -> do
+    prop "stdout" $ \ (vals :: [String]) -> do
         let expected = concat vals
         (actual, ()) <- hCapture [IO.stdout] $ yieldMany vals $$ stdoutC
         actual `shouldBe` expected
-    prop "stderr" $ \vals -> do
+    prop "stderr" $ \ (vals :: [String]) -> do
         let expected = concat vals
         (actual, ()) <- hCapture [IO.stderr] $ yieldMany vals $$ stderrC
         actual `shouldBe` expected
@@ -356,10 +361,10 @@ main = hspec $ do
     prop "omapE" $ \(map T.pack -> inputs) ->
         runIdentity (yieldMany inputs $$ omapCE succChar =$ foldC)
         `shouldBe` T.map succChar (T.concat inputs)
-    prop "concatMap" $ \input ->
+    prop "concatMap" $ \ (input :: [Int]) ->
         runIdentity (yieldMany input $$ concatMapC showInt =$ sinkList)
         `shouldBe` concatMap showInt input
-    prop "concatMapE" $ \input ->
+    prop "concatMapE" $ \ (input :: [Int]) ->
         runIdentity (yield input $$ concatMapCE showInt =$ foldC)
         `shouldBe` concatMap showInt input
     prop "take" $ \(T.pack -> input) count ->
@@ -497,7 +502,7 @@ main = hspec $ do
     prop "omapME" $ \(map T.pack -> inputs) ->
         runIdentity (yieldMany inputs $$ omapMCE (return . succChar) =$ foldC)
         `shouldBe` T.map succChar (T.concat inputs)
-    prop "concatMapM" $ \input ->
+    prop "concatMapM" $ \ (input :: [Int]) ->
         runIdentity (yieldMany input $$ concatMapMC (return . showInt) =$ sinkList)
         `shouldBe` concatMap showInt input
     prop "filterM" $ \input ->
