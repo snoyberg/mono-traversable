@@ -48,91 +48,290 @@ import Data.Ord (comparing)
 --
 -- 'filter' and other such functions are placed in 'IsSequence'
 class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
+    -- | The type of the index of a sequence.
     type Index seq
 
+    -- | 'intersperse' takes an element and intersperses that element between
+    -- the elements of the sequence.
+    --
+    -- @
+    -- > 'intersperse' ',' "abcde"
+    -- "a,b,c,d,e"
+    -- @
     intersperse :: Element seq -> seq -> seq
 
     -- FIXME split :: (Element seq -> Bool) -> seq -> [seq]
 
+    -- | Reverse a sequence
+    --
+    -- @
+    -- > 'reverse' "hello world"
+    -- "dlrow olleh"
+    -- @
     reverse :: seq -> seq
 
+    -- | 'find' takes a predicate and a sequence and returns the first element in
+    -- the sequence matching the predicate, or 'Nothing' if there isn't an element
+    -- that matches the predicate.
+    --
+    -- @
+    -- > 'find' (== 5) [1 .. 10]
+    -- 'Just' 5
+    --
+    -- > 'find' (== 15) [1 .. 10]
+    -- 'Nothing'
+    -- @
     find :: (Element seq -> Bool) -> seq -> Maybe (Element seq)
 
+    -- | Sort a sequence using an supplied element ordering function.
+    --
+    -- @
+    -- > let compare' x y = case 'compare' x y of LT -> GT; EQ -> EQ; GT -> LT
+    -- > 'sortBy' compare' [5,3,6,1,2,4]
+    -- [6,5,4,3,2,1]
+    -- @
     sortBy :: (Element seq -> Element seq -> Ordering) -> seq -> seq
 
+    -- | Prepend an element onto a sequence.
+    --
+    -- @
+    -- > 4 \``cons`` [1,2,3]
+    -- [4,1,2,3]
+    -- @
     cons :: Element seq -> seq -> seq
 
+    -- | Append an element onto a sequence.
+    --
+    -- @
+    -- > [1,2,3] \``snoc`` 4
+    -- [1,2,3,4]
+    -- @
     snoc :: seq -> Element seq -> seq
 
+-- | Create a sequence from a single element.
+--
+-- @
+-- > 'singleton' 'a' :: 'String'
+-- "a"
+-- > 'singleton' 'a' :: 'Vector' 'Char'
+-- 'Data.Vector.fromList' "a"
+-- @
 singleton :: IsSequence seq => Element seq -> seq
 singleton = opoint
 {-# INLINE singleton #-}
 
 -- | Sequence Laws:
 --
--- > fromList . otoList = id
--- > fromList (x <> y) = fromList x <> fromList y
--- > otoList (fromList x <> fromList y) = x <> y
+-- @
+-- 'fromList' . 'otoList' = 'id'
+-- 'fromList' (x <> y) = 'fromList' x <> 'fromList' y
+-- 'otoList' ('fromList' x <> 'fromList' y) = x <> y
+-- @
 class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => IsSequence seq where
+    -- | Convert a list to a sequence.
+    --
+    -- @
+    -- > 'fromList' ['a', 'b', 'c'] :: Text
+    -- "abc"
+    -- @
     fromList :: [Element seq] -> seq
     -- this definition creates the Monoid constraint
     -- However, all the instances define their own fromList
     fromList = mconcat . fmap singleton
 
     -- below functions change type fron the perspective of NonEmpty
+
+    -- | 'break' applies a predicate to a sequence, and returns a tuple where
+    -- the first element is the longest prefix (possibly empty) of elements that
+    -- /do not satisfy/ the predicate. The second element of the tuple is the
+    -- remainder of the sequence.
+    --
+    -- @'break' p@ is equivalent to @'span' ('not' . p)@
+    --
+    -- @
+    -- > 'break' (> 3) ('fromList' [1,2,3,4,1,2,3,4] :: 'Vector' 'Int')
+    -- (fromList [1,2,3],fromList [4,1,2,3,4])
+    --
+    -- > 'break' (< 'z') ('fromList' "abc" :: 'Text')
+    -- ("","abc")
+    --
+    -- > 'break' (> 'z') ('fromList' "abc" :: 'Text')
+    -- ("abc","")
+    -- @
     break :: (Element seq -> Bool) -> seq -> (seq, seq)
     break f = (fromList *** fromList) . List.break f . otoList
 
+    -- | 'span' applies a predicate to a sequence, and returns a tuple where
+    -- the first element is the longest prefix (possibly empty) that
+    -- /does satisfy/ the predicate. The second element of the tuple is the
+    -- remainder of the sequence.
+    --
+    -- @'span' p xs@ is equivalent to @('takeWhile' p xs, 'dropWhile' p xs)@
+    --
+    -- @
+    -- > 'span' (< 3) ('fromList' [1,2,3,4,1,2,3,4] :: 'Vector' 'Int')
+    -- (fromList [1,2],fromList [3,4,1,2,3,4])
+    --
+    -- > 'span' (< 'z') ('fromList' "abc" :: 'Text')
+    -- ("abc","")
+    --
+    -- > 'span' (< 0) [1,2,3]
+    -- ([],[1,2,3])
+    -- @
     span :: (Element seq -> Bool) -> seq -> (seq, seq)
     span f = (fromList *** fromList) . List.span f . otoList
 
+    -- | 'dropWhile' returns the suffix remaining after 'takeWhile'.
+    --
+    -- @
+    -- > 'dropWhile' (< 3) [1,2,3,4,5,1,2,3]
+    -- [3,4,5,1,2,3]
+    --
+    -- > 'dropWhile' (< 'z') ('fromList' "abc" :: 'Text')
+    -- ""
+    -- @
     dropWhile :: (Element seq -> Bool) -> seq -> seq
     dropWhile f = fromList . List.dropWhile f . otoList
 
+    -- | 'takeWhile' applies a predicate to a sequence, and returns the
+    -- longest prefix (possibly empty) of the sequence of elements that
+    -- /satisfy/ the predicate.
+    --
+    -- @
+    -- > 'takeWhile' (< 3) [1,2,3,4,5,1,2,3]
+    -- [1,2]
+    --
+    -- > 'takeWhile' (< 'z') ('fromList' "abc" :: 'Text')
+    -- "abc"
+    -- @
     takeWhile :: (Element seq -> Bool) -> seq -> seq
     takeWhile f = fromList . List.takeWhile f . otoList
 
+    -- | @'splitAt' n se@ returns a tuple where the first element is the prefix of
+    -- the sequence @se@ with length @n@, and the second element is the remainder of
+    -- the sequence.
+    --
+    -- @
+    -- > 'splitAt' 6 "Hello world!"
+    -- ("Hello ","world!")
+    --
+    -- > 'splitAt' 3 ('fromList' [1,2,3,4,5] :: 'Vector' 'Int')
+    -- (fromList [1,2,3],fromList [4,5])
+    -- @
     splitAt :: Index seq -> seq -> (seq, seq)
     splitAt i = (fromList *** fromList) . List.genericSplitAt i . otoList
 
+    -- | Equivalent to 'splitAt'.
     unsafeSplitAt :: Index seq -> seq -> (seq, seq)
     unsafeSplitAt i seq = (unsafeTake i seq, unsafeDrop i seq)
 
+    -- | @'take' n@ returns the prefix of a sequence of length @n@, or the
+    -- sequence itself if @n > 'olength' seq@.
+    --
+    -- @
+    -- > 'take' 3 "abcdefg"
+    -- "abc"
+    -- > 'take' 4 ('fromList' [1,2,3,4,5,6] :: 'Vector' 'Int')
+    -- fromList [1,2,3,4]
+    -- @
     take :: Index seq -> seq -> seq
     take i = fst . splitAt i
 
+    -- | Equivalent to 'take'.
     unsafeTake :: Index seq -> seq -> seq
     unsafeTake = take
 
+    -- | @'drop' n@ returns the suffix of a sequence after the first @n@
+    -- elements, or an empty sequence if @n > 'olength' seq@.
+    --
+    -- @
+    -- > 'drop' 3 "abcdefg"
+    -- "defg"
+    -- > 'drop' 4 ('fromList' [1,2,3,4,5,6] :: 'Vector' 'Int')
+    -- fromList [5,6]
+    -- @
     drop :: Index seq -> seq -> seq
     drop i = snd . splitAt i
 
+    -- | Equivalent to 'drop'
     unsafeDrop :: Index seq -> seq -> seq
     unsafeDrop = drop
 
+    -- | 'partition' takes a predicate and a sequence and returns the pair of
+    -- sequences of elements which do and do not satisfy the predicate.
+    --
+    -- @
+    -- 'partition' p se = ('filter' p se, 'filter' ('not' . p) se)
+    -- @
     partition :: (Element seq -> Bool) -> seq -> (seq, seq)
     partition f = (fromList *** fromList) . List.partition f . otoList
 
+    -- | 'uncons' returns the tuple of the first element of a sequence and the rest
+    -- of the sequence, or 'Nothing' if the sequence is empty.
+    --
+    -- @
+    -- > 'uncons' ('fromList' [1,2,3,4] :: 'Vector' 'Int')
+    -- 'Just' (1,fromList [2,3,4])
+    --
+    -- > 'uncons' ([] :: ['Int'])
+    -- 'Nothing'
+    -- @
     uncons :: seq -> Maybe (Element seq, seq)
     uncons = fmap (second fromList) . uncons . otoList
 
+    -- | 'unsnoc' returns the tuple of the init of a sequence and the last element,
+    -- or 'Nothing' if the sequence is empty.
+    --
+    -- @
+    -- > 'uncons' ('fromList' [1,2,3,4] :: 'Vector' 'Int')
+    -- 'Just' (fromList [1,2,3],4)
+    --
+    -- > 'uncons' ([] :: ['Int'])
+    -- 'Nothing'
+    -- @
     unsnoc :: seq -> Maybe (seq, Element seq)
     unsnoc = fmap (first fromList) . unsnoc . otoList
 
+    -- | 'filter' given a predicate returns a sequence of all elements that satisfy
+    -- the predicate.
+    --
+    -- @
+    -- > 'filter' (< 5) [1 .. 10]
+    -- [1,2,3,4]
+    -- @
     filter :: (Element seq -> Bool) -> seq -> seq
     filter f = fromList . List.filter f . otoList
 
+    -- | The monadic version of 'filter'.
     filterM :: Monad m => (Element seq -> m Bool) -> seq -> m seq
     filterM f = liftM fromList . filterM f . otoList
 
     -- replicates are not in SemiSequence to allow for zero
+
+    -- | @'replicate' n x@ is a sequence of length @n@ with @x@ as the
+    -- value of every element.
+    --
+    -- @
+    -- > 'replicate' 10 'a' :: Text
+    -- "aaaaaaaaaa"
+    -- @
     replicate :: Index seq -> Element seq -> seq
     replicate i = fromList . List.genericReplicate i
 
+    -- | The monadic version of 'replicateM'.
     replicateM :: Monad m => Index seq -> m (Element seq) -> m seq
     replicateM i = liftM fromList . Control.Monad.replicateM (fromIntegral i)
 
     -- below functions are not in SemiSequence because they return a List (instead of NonEmpty)
+
+    -- | 'group' takes a sequence and returns a list of sequences such that the
+    -- concatenation of the result is equal to the argument. Each subsequence in
+    -- the result contains only equal elements, using the supplied equality test.
+    --
+    -- @
+    -- > 'groupBy' (==) "Mississippi"
+    -- ["M","i","ss","i","ss","i","pp","i"]
+    -- @
     groupBy :: (Element seq -> Element seq -> Bool) -> seq -> [seq]
     groupBy f = fmap fromList . List.groupBy f . otoList
 
@@ -141,30 +340,74 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     groupAllOn :: Eq b => (Element seq -> b) -> seq -> [seq]
     groupAllOn f = fmap fromList . groupAllOn f . otoList
 
+    -- | 'subsequences' returns a list of all subsequences of the argument.
+    --
+    -- @
+    -- > 'subsequences' "abc"
+    -- ["","a","b","ab","c","ac","bc","abc"]
+    -- @
     subsequences :: seq -> [seq]
     subsequences = List.map fromList . List.subsequences . otoList
 
+    -- | 'permutations' returns a list of all permutations of the argument.
+    --
+    -- @
+    -- > 'permutations' "abc"
+    -- ["abc","bac","cba","bca","cab","acb"]
+    -- @
     permutations :: seq -> [seq]
     permutations = List.map fromList . List.permutations . otoList
 
+    -- | __Unsafe__
+    --
+    -- Get the tail of a sequence, throw an exception if the sequence is empty.
+    --
+    -- @
+    -- > 'tailEx' [1,2,3]
+    -- [2,3]
+    -- @
     tailEx :: seq -> seq
     tailEx = snd . maybe (error "Data.Sequences.tailEx") id . uncons
 
+    -- | __Unsafe__
+    --
+    -- Get the init of a sequence, throw an exception if the sequence is empty.
+    --
+    -- @
+    -- > 'initEx' [1,2,3]
+    -- [1,2]
+    -- @
     initEx :: seq -> seq
     initEx = fst . maybe (error "Data.Sequences.initEx") id . unsnoc
 
+    -- | Equivalent to 'tailEx'.
     unsafeTail :: seq -> seq
     unsafeTail = tailEx
 
+    -- | Equivalent to 'initEx'.
     unsafeInit :: seq -> seq
     unsafeInit = initEx
 
+    -- | Get the element of a sequence at a certain index, returns 'Nothing'
+    -- if that index does not exist.
+    --
+    -- @
+    -- > 'index' ('fromList' [1,2,3] :: 'Vector' 'Int') 1
+    -- 'Just' 2
+    -- > 'index' ('fromList' [1,2,3] :: 'Vector' 'Int') 4
+    -- 'Nothing'
+    -- @
     index :: seq -> Index seq -> Maybe (Element seq)
     index seq' idx = headMay (drop idx seq')
 
+    -- | __Unsafe__
+    --
+    -- Get the element of a sequence at a certain index, throws an exception
+    -- if the index does not exist.
     indexEx :: seq -> Index seq -> Element seq
     indexEx seq' idx = maybe (error "Data.Sequences.indexEx") id (index seq' idx)
 
+    -- | Equivalent to 'indexEx'.
     unsafeIndex :: seq -> Index seq -> Element seq
     unsafeIndex = indexEx
 
@@ -198,46 +441,54 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
+-- | Use "Data.List"'s implementation of 'Data.List.find'.
 defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
 defaultFind f = List.find f . otoList
 {-# INLINE defaultFind #-}
 
+-- | Use "Data.List"'s implementation of 'Data.List.intersperse'.
 defaultIntersperse :: IsSequence seq => Element seq -> seq -> seq
 defaultIntersperse e = fromList . List.intersperse e . otoList
 {-# INLINE defaultIntersperse #-}
 
+-- | Use "Data.List"'s implementation of 'Data.List.reverse'.
 defaultReverse :: IsSequence seq => seq -> seq
 defaultReverse = fromList . List.reverse . otoList
 {-# INLINE defaultReverse #-}
 
+-- | Use "Data.List"'s implementation of 'Data.List.sortBy'.
 defaultSortBy :: IsSequence seq => (Element seq -> Element seq -> Ordering) -> seq -> seq
 defaultSortBy f = fromList . sortBy f . otoList
 {-# INLINE defaultSortBy #-}
 
+-- | Sort a vector using an supplied element ordering function.
 vectorSortBy :: VG.Vector v e => (e -> e -> Ordering) -> v e -> v e
 vectorSortBy f = VG.modify (VAM.sortBy f)
 {-# INLINE vectorSortBy #-}
 
+-- | Sort a vector.
 vectorSort :: (VG.Vector v e, Ord e) => v e -> v e
 vectorSort = VG.modify VAM.sort
 {-# INLINE vectorSort #-}
 
+-- | Use "Data.List"'s 'Data.List.:' to prepend an element to a sequence.
 defaultCons :: IsSequence seq => Element seq -> seq -> seq
 defaultCons e = fromList . (e:) . otoList
 {-# INLINE defaultCons #-}
 
+-- | Use "Data.List"'s 'Data.List.++' to append an element to a sequence.
 defaultSnoc :: IsSequence seq => seq -> Element seq -> seq
 defaultSnoc seq e = fromList (otoList seq List.++ [e])
 {-# INLINE defaultSnoc #-}
 
--- | like Data.List.tail, but an input of @mempty@ returns @mempty@
+-- | like Data.List.tail, but an input of 'mempty' returns 'mempty'
 tailDef :: IsSequence seq => seq -> seq
 tailDef xs = case uncons xs of
                Nothing -> mempty
                Just tuple -> snd tuple
 {-# INLINE tailDef #-}
 
--- | like Data.List.init, but an input of @mempty@ returns @mempty@
+-- | like Data.List.init, but an input of 'mempty' returns 'mempty'
 initDef :: IsSequence seq => seq -> seq
 initDef xs = case unsnoc xs of
                Nothing -> mempty
@@ -945,27 +1196,57 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
+-- | A typeclass for sequences whose elements have the 'Eq' typeclass
 class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq where
+    -- | 'stripPrefix' drops the given prefix from a sequence.
+    -- It returns 'Nothing' if the sequence did not start with the prefix
+    -- given, or 'Just' the sequence after the prefix, if it does.
+    --
+    -- @
+    -- > 'stripPrefix' "foo" "foobar"
+    -- 'Just' "foo"
+    -- > 'stripPrefix' "abc" "foobar"
+    -- 'Nothing'
+    -- @
     stripPrefix :: seq -> seq -> Maybe seq
     stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
 
+    -- | 'stripSuffix' drops the given suffix from a sequence.
+    -- It returns 'Nothing' if the sequence did not end with the suffix
+    -- given, or 'Just' the sequence before the suffix, if it does.
+    --
+    -- @
+    -- > 'stripSuffix' "bar" "foobar"
+    -- 'Just' "foo"
+    -- > 'stripSuffix' "abc" "foobar"
+    -- 'Nothing'
+    -- @
     stripSuffix :: seq -> seq -> Maybe seq
     stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
 
+    -- | 'isPrefixOf' takes two sequences and returns 'True' if the first
+    -- sequence is a prefix of the second.
     isPrefixOf :: seq -> seq -> Bool
     isPrefixOf x y = otoList x `isPrefixOf` otoList y
 
+    -- | 'isSuffixOf' takes two sequences and returns 'True' if the first
+    -- sequence is a suffix of the second.
     isSuffixOf :: seq -> seq -> Bool
     isSuffixOf x y = otoList x `isSuffixOf` otoList y
 
+    -- | 'isInfixOf' takes two sequences and returns 'true' if the first
+    -- sequence is contained, wholly and intact, anywhere within the second.
     isInfixOf :: seq -> seq -> Bool
     isInfixOf x y = otoList x `isInfixOf` otoList y
 
+    -- | Equivalent to @'groupBy' (==)@
     group :: seq -> [seq]
     group = groupBy (==)
 
     -- | Similar to standard 'group', but operates on the whole collection,
     -- not just the consecutive items.
+    --
+    -- Equivalent to @'groupAllOn' id@
     groupAll :: seq -> [seq]
     groupAll = groupAllOn id
     {-# INLINE isPrefixOf #-}
@@ -1072,7 +1353,14 @@ instance Eq a => EqSequence (V.Vector a)
 instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
 instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
 
+-- | A typeclass for sequences whose elements have the 'Ord' typeclass
 class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
+    -- | Sort a ordered sequence.
+    --
+    -- @
+    -- > 'sort' [4,3,1,2]
+    -- [1,2,3,4]
+    -- @
     sort :: seq -> seq
     sort = fromList . sort . otoList
     {-# INLINE sort #-}
@@ -1102,19 +1390,79 @@ instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a) where
     sort = vectorSort
     {-# INLINE sort #-}
 
+-- | A typeclass for sequences whose elements are 'Char's.
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
+    -- | Break up a textual sequence into a list of words, which were delimited
+    -- by white space.
+    --
+    -- @
+    -- > 'words' "abc  def ghi"
+    -- ["abc","def","ghi"]
+    -- @
     words :: t -> [t]
+
+    -- | Join a list of textual sequences using seperating spaces.
+    --
+    -- @
+    -- > 'unwords' ["abc","def","ghi"]
+    -- "abc def ghi"
+    -- @
     unwords :: [t] -> t
+
+    -- | Break up a textual sequence at newline characters.
+    --
+    --
+    -- @
+    -- > 'lines' "hello\\nworld"
+    -- ["hello","world"]
+    -- @
     lines :: t -> [t]
+
+    -- | Join a list of textual sequences using newlines.
+    --
+    -- @
+    -- > 'unlines' ["abc","def","ghi"]
+    -- "abc\\ndef\\nghi"
+    -- @
     unlines :: [t] -> t
+
+    -- | Convert a textual sequence to lower-case.
+    --
+    -- @
+    -- > 'toLower' "HELLO WORLD"
+    -- "hello world"
+    -- @
     toLower :: t -> t
+
+    -- | Convert a textual sequence to upper-case.
+    --
+    -- @
+    -- > 'toUpper' "hello world"
+    -- "HELLO WORLD"
+    -- @
     toUpper :: t -> t
+
+    -- | Convert a textual sequence to folded-case.
+    --
+    -- Slightly different from 'toLower', see @"Data.Text".'Data.Text.toCaseFold'@
     toCaseFold :: t -> t
 
+    -- | Split a textual sequence into two parts, split at the first space.
+    --
+    -- @
+    -- > 'breakWord' "hello world"
+    -- ("hello","world")
+    -- @
     breakWord :: t -> (t, t)
     breakWord = fmap (dropWhile isSpace) . break isSpace
     {-# INLINE breakWord #-}
 
+    -- | Split a textual sequence into two parts, split at the newline.
+    --
+    -- @
+    -- > 'breakLine' "abc\\ndef"
+    -- ("abc","def")
+    -- @
     breakLine :: t -> (t, t)
     breakLine =
         (killCR *** drop 1) . break (== '\n')
