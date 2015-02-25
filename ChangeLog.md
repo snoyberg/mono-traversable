@@ -1,3 +1,7 @@
+## 0.9.0.1
+
+* Documentation improvements
+
 ## 0.9.0
 
 * Better fixity for mlcons [#56](https://github.com/snoyberg/mono-traversable/issues/56)
