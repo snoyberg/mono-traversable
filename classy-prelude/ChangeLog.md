@@ -1,3 +1,7 @@
+## 0.10.5
+
+* Export `Data.Mutable`
+
 ## 0.10.4
 
 * Expose all of Data.Functor

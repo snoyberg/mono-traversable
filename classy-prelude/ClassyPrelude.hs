@@ -30,6 +30,7 @@ module ClassyPrelude
     , orElseSTM
     , checkSTM
     , module Data.IORef.Lifted
+    , module Data.Mutable
       -- ** Primitive (exported since 0.9.4)
     , PrimMonad
     , PrimState
@@ -174,6 +175,7 @@ import Control.Concurrent.Chan.Lifted
 import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
+import Data.Mutable
 import qualified Data.Monoid as Monoid
 import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
