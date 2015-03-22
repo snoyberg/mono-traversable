@@ -51,6 +51,7 @@ test-suite test
                      , bytestring
                      , text
                      , hspec
+                     , HUnit
                      , transformers
                      , vector
                      , QuickCheck
