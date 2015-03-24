@@ -34,6 +34,7 @@ import           Data.Monoid (Monoid (..), Any (..), All (..))
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
+import           Data.Traversable.Instances ()
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
@@ -47,8 +48,8 @@ import Foreign.Ptr (plusPtr)
 import Foreign.ForeignPtr (touchForeignPtr)
 import Foreign.Storable (peek)
 import Control.Arrow (Arrow)
-import Data.Tree (Tree)
-import Data.Sequence (Seq, ViewL, ViewR)
+import Data.Tree (Tree (..))
+import Data.Sequence (Seq, ViewL (..), ViewR (..))
 import qualified Data.Sequence as Seq
 import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
@@ -58,19 +59,19 @@ import Data.Functor.Identity (Identity)
 import Data.Map (Map)
 import Data.HashMap.Strict (HashMap)
 import Data.Vector (Vector)
-import Control.Monad.Trans.Maybe (MaybeT)
+import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Trans.List (ListT)
 import Control.Monad.Trans.Identity (IdentityT)
-import Data.Functor.Apply (MaybeApply, WrappedApplicative)
+import Data.Functor.Apply (MaybeApply (..), WrappedApplicative)
 import Control.Comonad (Cokleisli)
 import Control.Monad.Trans.Writer (WriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Strict (WriterT)
-import Control.Monad.Trans.State (StateT)
-import qualified Control.Monad.Trans.State.Strict as Strict (StateT)
-import Control.Monad.Trans.RWS (RWST)
-import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST)
+import Control.Monad.Trans.State (StateT(..))
+import qualified Control.Monad.Trans.State.Strict as Strict (StateT(..))
+import Control.Monad.Trans.RWS (RWST(..))
+import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST(..))
 import Control.Monad.Trans.Reader (ReaderT)
-import Control.Monad.Trans.Error (ErrorT)
+import Control.Monad.Trans.Error (ErrorT(..))
 import Control.Monad.Trans.Cont (ContT)
 import Data.Functor.Compose (Compose)
 import Data.Functor.Product (Product)
@@ -701,6 +702,16 @@ instance MonoFoldable (Either a b) where
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
     {-# INLINE unsafeHead #-}
+instance MonoFoldable (a, b)
+instance MonoFoldable (Const m a)
+instance F.Foldable f => MonoFoldable (MaybeT f a)
+instance F.Foldable f => MonoFoldable (ListT f a)
+instance F.Foldable f => MonoFoldable (IdentityT f a)
+instance F.Foldable f => MonoFoldable (WriterT w f a)
+instance F.Foldable f => MonoFoldable (Strict.WriterT w f a)
+instance F.Foldable f => MonoFoldable (ErrorT e f a)
+instance (F.Foldable f, F.Foldable g) => MonoFoldable (Compose f g a)
+instance (F.Foldable f, F.Foldable g) => MonoFoldable (Product f g a)
 
 -- | Safe version of 'headEx'.
 --
@@ -799,7 +810,16 @@ instance Eq v => MonoFoldableEq (HashMap k v)
 instance Eq a => MonoFoldableEq (HashSet a)
 instance Eq a => MonoFoldableEq (DList a)
 instance Eq b => MonoFoldableEq (Either a b)
-
+instance Eq b => MonoFoldableEq (a, b)
+instance Eq a => MonoFoldableEq (Const m a)
+instance (Eq a, F.Foldable f) => MonoFoldableEq (MaybeT f a)
+instance (Eq a, F.Foldable f) => MonoFoldableEq (ListT f a)
+instance (Eq a, F.Foldable f) => MonoFoldableEq (IdentityT f a)
+instance (Eq a, F.Foldable f) => MonoFoldableEq (WriterT w f a)
+instance (Eq a, F.Foldable f) => MonoFoldableEq (Strict.WriterT w f a)
+instance (Eq a, F.Foldable f) => MonoFoldableEq (ErrorT e f a)
+instance (Eq a, F.Foldable f, F.Foldable g) => MonoFoldableEq (Compose f g a)
+instance (Eq a, F.Foldable f, F.Foldable g) => MonoFoldableEq (Product f g a)
 
 instance Eq a => MonoFoldableEq [a] where
     oelem = List.elem
@@ -900,6 +920,17 @@ instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
     {-# INLINE maximumEx #-}
     {-# INLINE minimumEx #-}
 instance Ord b => MonoFoldableOrd (Either a b) where
+instance Ord a => MonoFoldableOrd (DList a)
+instance Ord b => MonoFoldableOrd (a, b)
+instance Ord a => MonoFoldableOrd (Const m a)
+instance (Ord a, F.Foldable f) => MonoFoldableOrd (MaybeT f a)
+instance (Ord a, F.Foldable f) => MonoFoldableOrd (ListT f a)
+instance (Ord a, F.Foldable f) => MonoFoldableOrd (IdentityT f a)
+instance (Ord a, F.Foldable f) => MonoFoldableOrd (WriterT w f a)
+instance (Ord a, F.Foldable f) => MonoFoldableOrd (Strict.WriterT w f a)
+instance (Ord a, F.Foldable f) => MonoFoldableOrd (ErrorT e f a)
+instance (Ord a, F.Foldable f, F.Foldable g) => MonoFoldableOrd (Compose f g a)
+instance (Ord a, F.Foldable f, F.Foldable g) => MonoFoldableOrd (Product f g a)
 
 -- | Safe version of 'maximumEx'.
 --
@@ -1018,6 +1049,16 @@ instance MonoTraversable (Either a b) where
     omapM f (Right b) = liftM Right (f b)
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
+instance MonoTraversable (a, b)
+instance MonoTraversable (Const m a)
+instance Traversable f => MonoTraversable (MaybeT f a)
+instance Traversable f => MonoTraversable (ListT f a)
+instance Traversable f => MonoTraversable (IdentityT f a)
+instance Traversable f => MonoTraversable (WriterT w f a)
+instance Traversable f => MonoTraversable (Strict.WriterT w f a)
+instance Traversable f => MonoTraversable (ErrorT e f a)
+instance (Traversable f, Traversable g) => MonoTraversable (Compose f g a)
+instance (Traversable f, Traversable g) => MonoTraversable (Product f g a)
 
 -- | 'ofor' is 'otraverse' with its arguments flipped.
 ofor :: (MonoTraversable mono, Applicative f) => mono -> (Element mono -> f (Element mono)) -> f mono
@@ -1093,6 +1134,24 @@ instance MonoPointed (NonEmpty a)
 instance MonoPointed (Identity a)
 instance MonoPointed (Vector a)
 instance MonoPointed (DList a)
+instance MonoPointed (IO a)
+instance MonoPointed (ZipList a)
+instance MonoPointed (r -> a)
+instance Monoid a => MonoPointed (a, b)
+instance Monoid m => MonoPointed (Const m a)
+instance Monad m => MonoPointed (WrappedMonad m a)
+instance Applicative m => MonoPointed (ListT m a)
+instance Applicative m => MonoPointed (IdentityT m a)
+instance Applicative f => MonoPointed (WrappedApplicative f a)
+instance Arrow a => MonoPointed (WrappedArrow a b c)
+instance (Monoid w, Applicative m) => MonoPointed (WriterT w m a)
+instance (Monoid w, Applicative m) => MonoPointed (Strict.WriterT w m a)
+instance Applicative m => MonoPointed (ReaderT r m a)
+instance MonoPointed (ContT r m a)
+instance (Applicative f, Applicative g) => MonoPointed (Compose f g a)
+instance (Applicative f, Applicative g) => MonoPointed (Product f g a)
+instance MonoPointed (Cokleisli w a b)
+instance Applicative f => MonoPointed (Static f a b)
 
 -- Not Applicative
 instance MonoPointed (Seq a) where
@@ -1115,4 +1174,34 @@ instance MonoPointed (Set a) where
     {-# INLINE opoint #-}
 instance Hashable a => MonoPointed (HashSet a) where
     opoint = HashSet.singleton
+    {-# INLINE opoint #-}
+instance Applicative m => MonoPointed (ErrorT e m a) where
+    opoint = ErrorT . pure . Right
+    {-# INLINE opoint #-}
+instance MonoPointed (MaybeApply f a) where
+    opoint = MaybeApply . Right
+    {-# INLINE opoint #-}
+instance Applicative f => MonoPointed (MaybeT f a) where
+    opoint = MaybeT . fmap Just . pure
+    {-# INLINE opoint #-}
+instance (Monoid w, Applicative m) => MonoPointed (RWST r w s m a) where
+    opoint a = RWST (\_ s -> pure (a, s, mempty))
+    {-# INLINE opoint #-}
+instance (Monoid w, Applicative m) => MonoPointed (Strict.RWST r w s m a) where
+    opoint a = Strict.RWST (\_ s -> pure (a, s, mempty))
+    {-# INLINE opoint #-}
+instance Applicative m => MonoPointed (StateT s m a) where
+    opoint a = StateT (\s -> pure (a, s))
+    {-# INLINE opoint #-}
+instance Applicative m => MonoPointed (Strict.StateT s m a) where
+    opoint a = Strict.StateT (\s -> pure (a, s))
+    {-# INLINE opoint #-}
+instance MonoPointed (ViewL a) where
+    opoint a = a :< Seq.empty
+    {-# INLINE opoint #-}
+instance MonoPointed (ViewR a) where
+    opoint a = Seq.empty :> a
+    {-# INLINE opoint #-}
+instance MonoPointed (Tree a) where
+    opoint a = Node a []
     {-# INLINE opoint #-}

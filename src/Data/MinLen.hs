@@ -165,6 +165,7 @@ newtype MinLen nat mono =
 type instance Element (MinLen nat mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (MinLen nat mono)
 deriving instance MonoFoldable mono => MonoFoldable (MinLen nat mono)
+deriving instance MonoFoldableEq mono => MonoFoldableEq (MinLen nat mono)
 deriving instance MonoFoldableOrd mono => MonoFoldableOrd (MinLen nat mono)
 instance MonoTraversable mono => MonoTraversable (MinLen nat mono) where
     otraverse f (MinLen x) = fmap MinLen (otraverse f x)
