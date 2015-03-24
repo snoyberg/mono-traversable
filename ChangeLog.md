@@ -1,3 +1,7 @@
+## 0.9.1
+
+* Fill in missing Mono\* instances [#72](https://github.com/snoyberg/mono-traversable/pull/72)
+
 ## 0.9.0.1
 
 * Documentation improvements
