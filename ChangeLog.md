@@ -1,3 +1,7 @@
+## 0.3.0
+
+* Rename `DList` to `DLList` to avoid conflict with difference lists
+
 ## 0.2.1.2
 
 * `Deque` optimizations by avoiding modulus operations completely.

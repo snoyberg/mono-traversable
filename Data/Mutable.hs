@@ -28,8 +28,8 @@ module Data.Mutable
     , asSDeque
     , BDeque
     , asBDeque
-    , DList
-    , asDList
+    , DLList
+    , asDLList
       -- * Type classes
     , MutableContainer (..)
     , MutableRef (..)
@@ -58,7 +58,7 @@ import Data.Mutable.SRef
 import Data.Mutable.PRef
 import Data.Mutable.BRef
 import Data.Mutable.Deque
-import Data.Mutable.DList
+import Data.Mutable.DLList
 import Data.Vector.Unboxed (Unbox)
 import Data.Primitive (Prim)
 import Data.Vector.Storable (Storable)

@@ -1,8 +1,8 @@
 {-# LANGUAGE TypeFamilies #-}
 -- | Doubly-linked list
-module Data.Mutable.DList
-    ( DList
-    , asDList
+module Data.Mutable.DLList
+    ( DLList
+    , asDLList
     , module Data.Mutable.Class
     ) where
 
@@ -15,26 +15,26 @@ data Node s a = Node
 
 -- | A doubly-linked list.
 --
--- Since 0.2.0
-data DList s a = DList (MutVar s (Maybe (Node s a))) (MutVar s (Maybe (Node s a)))
+-- Since 0.3.0
+data DLList s a = DLList (MutVar s (Maybe (Node s a))) (MutVar s (Maybe (Node s a)))
 
 -- |
 -- Since 0.2.0
-asDList :: DList s a -> DList s a
-asDList = id
-{-# INLINE asDList #-}
+asDLList :: DLList s a -> DLList s a
+asDLList = id
+{-# INLINE asDLList #-}
 
-instance MutableContainer (DList s a) where
-    type MCState (DList s a) = s
-instance MutableCollection (DList s a) where
-    type CollElement (DList s a) = a
+instance MutableContainer (DLList s a) where
+    type MCState (DLList s a) = s
+instance MutableCollection (DLList s a) where
+    type CollElement (DLList s a) = a
     newColl = do
         x <- newRef $! Nothing
         y <- newRef $! Nothing
-        return $! DList x y
+        return $! DLList x y
     {-# INLINE newColl #-}
-instance MutablePopFront (DList s a) where
-    popFront (DList frontRef backRef) = do
+instance MutablePopFront (DLList s a) where
+    popFront (DLList frontRef backRef) = do
         mfront <- readRef frontRef
         case mfront of
             Nothing -> return Nothing
@@ -49,8 +49,8 @@ instance MutablePopFront (DList s a) where
                         writeRef frontRef $! Just next
                 return $ Just val
     {-# INLINE popFront #-}
-instance MutablePopBack (DList s a) where
-    popBack (DList frontRef backRef) = do
+instance MutablePopBack (DLList s a) where
+    popBack (DLList frontRef backRef) = do
         mback <- readRef backRef
         case mback of
             Nothing -> return Nothing
@@ -65,8 +65,8 @@ instance MutablePopBack (DList s a) where
                         writeRef backRef (Just prev)
                 return $ Just val
     {-# INLINE popBack #-}
-instance MutablePushFront (DList s a) where
-    pushFront (DList frontRef backRef) val = do
+instance MutablePushFront (DLList s a) where
+    pushFront (DLList frontRef backRef) val = do
         mfront <- readRef frontRef
         case mfront of
             Nothing -> do
@@ -82,8 +82,8 @@ instance MutablePushFront (DList s a) where
                 writeRef prevRef node
                 writeRef frontRef node
     {-# INLINE pushFront #-}
-instance MutablePushBack (DList s a) where
-    pushBack (DList frontRef backRef) val = do
+instance MutablePushBack (DLList s a) where
+    pushBack (DLList frontRef backRef) val = do
         mback <- readRef backRef
         case mback of
             Nothing -> do
