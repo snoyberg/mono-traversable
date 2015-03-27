@@ -402,6 +402,13 @@ main = hspec $ do
                     | Just DummyException <- fromException e -> return ()
                     | otherwise -> error "Expected a DummyException"
                 Right () -> error "Expected an exception" :: IO ()
+    it "basic DList functionality" $
+        (toList $ asDList $ mconcat
+            [ fromList [1, 2]
+            , singleton 3
+            , cons 4 mempty
+            , fromList $ applyDList (singleton 5 ++ singleton 6) [7, 8]
+            ]) `shouldBe` [1..8 :: Int]
 
 data DummyException = DummyException
     deriving (Show, Typeable)

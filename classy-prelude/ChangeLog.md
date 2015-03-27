@@ -1,3 +1,8 @@
+## 0.11.0
+
+* Upgrade to mutable-containers 0.3
+* Include dlist support
+
 ## 0.10.5
 
 * Export `Data.Mutable`

@@ -139,6 +139,10 @@ module ClassyPrelude
     , fpFromText
     , fpToTextWarn
     , fpToTextEx
+      -- ** Difference lists
+    , DList
+    , asDList
+    , applyDList
       -- ** Exceptions
     , module Control.Exception.Enclosed
     , MonadThrow (throwM)
@@ -224,6 +228,8 @@ import Data.Primitive.Types (Prim)
 import Data.Functor.Identity (Identity (..))
 import Control.Monad.Reader (MonadReader, ask, ReaderT (..), Reader)
 import Data.Bifunctor
+import Data.DList (DList)
+import qualified Data.DList as DList
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
@@ -585,3 +591,17 @@ unlessM mbool action = mbool >>= flip unless action
 sequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m a)) => mono -> m ()
 sequence_ = mapM_ (>> return ())
 {-# INLINE sequence_ #-}
+
+-- | Force type to a 'DList'
+--
+-- Since 0.11.0
+asDList :: DList a -> DList a
+asDList = id
+{-# INLINE asDList #-}
+
+-- | Synonym for 'DList.apply'
+--
+-- Since 0.11.0
+applyDList :: DList a -> [a] -> [a]
+applyDList = DList.apply
+{-# INLINE applyDList #-}
