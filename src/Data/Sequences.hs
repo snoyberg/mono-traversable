@@ -1531,7 +1531,7 @@ catMaybes = fmap fromJust . filter isJust
 
 -- | Same as @sortBy . comparing@.
 --
--- Sicne 0.7.0
+-- Since 0.7.0
 sortOn :: (Ord o, SemiSequence seq) => (Element seq -> o) -> seq -> seq
 sortOn = sortBy . comparing
 {-# INLINE sortOn #-}
