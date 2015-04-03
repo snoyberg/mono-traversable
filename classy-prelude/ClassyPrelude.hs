@@ -100,6 +100,7 @@ module ClassyPrelude
     , foldl'
     , foldr
     , foldM
+    , elem
     --, split
     , readMay
     , intercalate
@@ -306,6 +307,10 @@ forM_ = oforM_
 concatMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
 concatMap = ofoldMap
 {-# INLINE concatMap #-}
+
+elem :: Int
+elem = oelem
+{-# INLINE elem #-}
 
 foldMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
 foldMap = ofoldMap

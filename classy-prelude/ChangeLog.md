@@ -1,3 +1,7 @@
+## 0.11.1
+
+* Fix deprecation warnings for `elem`
+
 ## 0.11.0
 
 * Upgrade to mutable-containers 0.3

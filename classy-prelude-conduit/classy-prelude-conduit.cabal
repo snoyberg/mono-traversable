@@ -1,5 +1,5 @@
 name:                classy-prelude-conduit
-version:             0.11.0
+version:             0.11.1
 synopsis:            conduit instances for classy-prelude
 description:         conduit instances for classy-prelude
 homepage:            https://github.com/snoyberg/classy-prelude
@@ -15,7 +15,7 @@ library
   exposed-modules:     ClassyPrelude.Conduit
   build-depends:       base                          >= 4          && < 5
                      , conduit                       >= 1.0        && < 1.3
-                     , classy-prelude                >= 0.11.0     && < 0.11.1
+                     , classy-prelude                >= 0.11.1     && < 0.11.2
                      , transformers
                      , monad-control
                      , resourcet
