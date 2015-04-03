@@ -191,7 +191,7 @@ import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
 import Data.ChunkedZip
 import qualified Data.Char as Char
-import Data.Sequences
+import Data.Sequences hiding (elem)
 import Data.MonoTraversable
 import Data.Containers
 import Data.Builder
@@ -308,7 +308,7 @@ concatMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
 concatMap = ofoldMap
 {-# INLINE concatMap #-}
 
-elem :: Int
+elem :: (MonoFoldableEq c) => Element c -> c -> Bool
 elem = oelem
 {-# INLINE elem #-}
 
