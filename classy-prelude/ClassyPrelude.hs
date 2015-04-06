@@ -427,8 +427,8 @@ sortWith :: (Ord a, IsSequence c) => (Element c -> a) -> c -> c
 sortWith f = sortBy $ comparing f
 
 -- | We define our own 'undefined' which is marked as deprecated. This makes it
--- useful to use during development, but let's you more easily getting
--- notification if you accidentally ship partial code in production.
+-- useful to use during development, but lets you more easily get
+-- notifications if you accidentally ship partial code in production.
 --
 -- The classy prelude recommendation for when you need to really have a partial
 -- function in production is to use 'error' with a very descriptive message so
