@@ -179,6 +179,7 @@ module Data.Conduit.Combinators
 
       -- * Special
     , vectorBuilder
+    , peekForever
     ) where
 
 -- BEGIN IMPORTS
@@ -1991,3 +1992,17 @@ addE ref e = do
             writeMutVar ref $! S 0 mv' front'
         else writeMutVar ref $! S idx' mv front
 {-# INLINE addE #-}
+
+-- | Run a consuming conduit repeatedly, only stopping when there is no more
+-- data available from upstream.
+--
+-- Since 1.0.0
+peekForever :: Monad m => ConduitM i o m () -> ConduitM i o m ()
+peekForever inner =
+    loop
+  where
+    loop = do
+        mx <- peek
+        case mx of
+            Nothing -> return ()
+            Just _ -> inner >> loop
