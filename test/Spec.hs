@@ -631,7 +631,7 @@ main = hspec $ do
                   where
                     (y, z) = splitAt size x
         res `shouldBe` expected
-    prop "whileHasNext" $ \(strs :: [String]) -> do
+    prop "peekForever" $ \(strs :: [String]) -> do
         res1 <- yieldMany strs $$ linesUnboundedC =$ sinkList
         res2 <- yieldMany strs $$ peekForever (lineC $ foldC >>= yield) =$ sinkList
         res2 `shouldBe` res1
