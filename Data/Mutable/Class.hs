@@ -43,7 +43,7 @@ import           Data.STRef
 -- Since 0.2.0
 class MutableContainer c where
     -- | Associated type giving the primitive state token for the given
-    -- container, much like 'PrimState' from primtive.
+    -- container, much like 'PrimState' from primitive.
     --
     -- Since 0.2.0
     type MCState c
