@@ -1,3 +1,7 @@
+## 0.11.1.1
+
+* Compatibility with time >= 1.5 [#100](https://github.com/snoyberg/classy-prelude/pull/100)
+
 ## 0.11.1
 
 * Fix deprecation warnings for `elem`
