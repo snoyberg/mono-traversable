@@ -212,7 +212,7 @@ import Data.Time
     , parseTime
     , getCurrentTime
     )
-import System.Locale (defaultTimeLocale)
+import Data.Time.Locale.Compat (defaultTimeLocale)
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map

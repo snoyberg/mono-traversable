@@ -30,8 +30,8 @@ library
                      , exceptions                    >= 0.5
                      , semigroups
                      , vector-instances
-                     , old-locale
                      , time
+                     , time-locale-compat
                      , chunked-data
                      , enclosed-exceptions
                      , ghc-prim
