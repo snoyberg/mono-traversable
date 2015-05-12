@@ -197,7 +197,6 @@ import Data.Containers
 import Data.Builder
 import Data.MinLen
 import Data.ByteVector
-import qualified Filesystem.Path.CurrentOS as F
 import System.IO (Handle, stdin, stdout, stderr, hClose)
 
 import Debug.Trace (trace, traceShow)
@@ -465,20 +464,19 @@ traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
 
 fpToString :: FilePath -> String
-fpToString = F.encodeString
+fpToString = id
+{-# DEPRECATED fpToString "Now same as id" #-}
 
 fpFromString :: String -> FilePath
-fpFromString = F.decodeString
+fpFromString = id
+{-# DEPRECATED fpFromString "Now same as id" #-}
 
 -- | Translates a 'FilePath' to a 'Text'
 --
 -- Warns if there are non-unicode sequences in the file name
-fpToTextWarn :: MonadIO m => FilePath -> m Text
-fpToTextWarn fp = case F.toText fp of
-    Right ok -> return ok
-    Left bad -> do
-        putStrLn $ pack $ "non-unicode filepath: " ++ F.encodeString fp
-        return bad
+fpToTextWarn :: Monad m => FilePath -> m Text
+fpToTextWarn = return . pack
+{-# DEPRECATED fpToTextWarn "Use pack" #-}
 
 -- | Translates a 'FilePath' to a 'Text'
 --
@@ -489,9 +487,8 @@ fpToTextWarn fp = case F.toText fp of
 -- a filename will translate properly into a 'Text'.
 -- If you created the filename, this should be the case.
 fpToTextEx :: FilePath -> Text
-fpToTextEx fp = either (const $ error errorMsg) id $ F.toText fp
-  where
-    errorMsg = "fpToTextEx: non-unicode filepath: " ++ F.encodeString fp
+fpToTextEx = pack
+{-# DEPRECATED fpToTextEx "Use pack" #-}
 
 -- | Translates a 'FilePath' to a 'Text'
 -- This translation is not correct for a (unix) filename
@@ -502,10 +499,12 @@ fpToTextEx fp = either (const $ error errorMsg) id $ F.toText fp
 -- If you control or otherwise understand the filenames
 -- and believe them to be unicode valid consider using 'fpToTextEx' or 'fpToTextWarn'
 fpToText :: FilePath -> Text
-fpToText = either id id . F.toText
+fpToText = pack
+{-# DEPRECATED fpToText "Use pack" #-}
 
 fpFromText :: Text -> FilePath
-fpFromText = F.fromText
+fpFromText = unpack
+{-# DEPRECATED fpFromText "Use unpack" #-}
 
 -- Below is a lot of coding for classy-prelude!
 -- These functions are restricted to lists right now.

@@ -1,5 +1,5 @@
 name:                classy-prelude
-version:             0.11.1.1
+version:             0.12.0
 synopsis:            A typeclass-based Prelude.
 description:         Modern best practices without name collisions. No partial functions are exposed, but modern data structures are, without requiring import lists. Qualified modules also are not needed: instead operations are based on type-classes from the mono-traversable package.
 
@@ -16,8 +16,7 @@ extra-source-files:  ChangeLog.md
 library
   exposed-modules:     ClassyPrelude
   build-depends:       base                          >= 4          && < 5
-                     , basic-prelude                 >= 0.3.10     && < 0.4
-                     , system-filepath               >= 0.4        && < 0.5
+                     , basic-prelude                 >= 0.4        && < 0.5
                      , transformers
                      , containers                    >= 0.4.2
                      , text

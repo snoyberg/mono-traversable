@@ -1,3 +1,7 @@
+## 0.12.0
+
+* Drop system-filepath
+
 ## 0.11.1.1
 
 * Compatibility with time >= 1.5 [#100](https://github.com/snoyberg/classy-prelude/pull/100)

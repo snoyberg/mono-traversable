@@ -1,5 +1,5 @@
 name:                classy-prelude-yesod
-version:             0.11.1
+version:             0.12.0
 synopsis:            Provide a classy prelude including common Yesod functionality.
 description:         This is an extension of classy-prelude-conduit, adding in commonly used functions and data types from Yesod.
 homepage:            https://github.com/snoyberg/classy-prelude
@@ -14,8 +14,8 @@ cabal-version:       >=1.8
 library
   exposed-modules:     ClassyPrelude.Yesod
   build-depends:       base >= 4 && < 5
-                     , classy-prelude >= 0.11.1 && < 0.11.2
-                     , classy-prelude-conduit >= 0.11.1 && < 0.11.2
+                     , classy-prelude >= 0.12.0 && < 0.12.1
+                     , classy-prelude-conduit >= 0.12.0 && < 0.12.1
                      , yesod >= 1.2
                      , yesod-newsfeed
                      , yesod-static
