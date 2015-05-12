@@ -1,5 +1,5 @@
 name:                conduit-combinators
-version:             0.3.1
+version:             1.0.0
 synopsis:            Commonly used conduit functions, for both chunked and unchunked data
 description:         Provides a replacement for Data.Conduit.List, as well as a convenient Conduit module.
 homepage:            https://github.com/fpco/conduit-combinators
@@ -27,8 +27,6 @@ library
                      , primitive
                      , mono-traversable >= 0.4
                      , vector
-                     , system-fileio
-                     , system-filepath
                      , text
                      , bytestring
                      , void
@@ -38,6 +36,7 @@ library
                      , base64-bytestring        >= 0.1.1.1
                      , resourcet
                      , monad-control
+                     , filepath
   if os(windows)
       cpp-options:     -DWINDOWS
   else
@@ -64,13 +63,13 @@ test-suite test
                 , mwc-random
                 , base16-bytestring
                 , base64-bytestring
-                , system-filepath
                 , mtl
                 , conduit
                 , containers
                 , safe
                 , QuickCheck >= 2.5
                 , directory
+                , filepath
   ghc-options:    -Wall
 
 source-repository head

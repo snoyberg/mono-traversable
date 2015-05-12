@@ -213,15 +213,14 @@ import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import           Data.Void                   (absurd)
-import qualified Filesystem                  as F
-import           Filesystem.Path             (FilePath, (</>))
-import           Filesystem.Path.CurrentOS   (encodeString, decodeString)
+import qualified System.FilePath             as F
+import           System.FilePath             ((</>))
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
                                               ($), Functor (..), Enum, seq, Show, Char, (||),
                                               mod, otherwise, Either (..),
-                                              ($!), succ)
+                                              ($!), succ, FilePath)
 import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
@@ -411,7 +410,7 @@ INLINE_RULE(replicateM, n m, CL.replicateM n m)
 --
 -- Since 1.0.0
 sourceFile :: (MonadResource m, IOData a) => FilePath -> Producer m a
-sourceFile fp = sourceIOHandle (F.openFile fp SIO.ReadMode)
+sourceFile fp = sourceIOHandle (SIO.openFile fp SIO.ReadMode)
 {-# INLINE sourceFile #-}
 
 -- | Read all data from the given @Handle@.
@@ -505,7 +504,7 @@ INLINE_RULE(sourceRandomNGen, gen cnt, initReplicate (return gen) (liftBase . MW
 --
 -- Since 1.0.0
 sourceDirectory :: MonadResource m => FilePath -> Producer m FilePath
-sourceDirectory = mapOutput decodeString . CF.sourceDirectory . encodeString
+sourceDirectory = CF.sourceDirectory
 
 -- | Deeply stream the contents of the given directory.
 --
@@ -518,7 +517,7 @@ sourceDirectoryDeep :: MonadResource m
                     => Bool -- ^ Follow directory symlinks
                     -> FilePath -- ^ Root directory
                     -> Producer m FilePath
-sourceDirectoryDeep follow = mapOutput decodeString . CF.sourceDirectoryDeep follow . encodeString
+sourceDirectoryDeep = CF.sourceDirectoryDeep
 
 -- | Ignore a certain number of values in the stream.
 --
@@ -1218,7 +1217,7 @@ INLINE_RULE(foldMapME, f, CL.foldM (ofoldlM (\accum e -> mappend accum `liftM` f
 --
 -- Since 1.0.0
 sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
-sinkFile fp = sinkIOHandle (F.openFile fp SIO.WriteMode)
+sinkFile fp = sinkIOHandle (SIO.openFile fp SIO.WriteMode)
 {-# INLINE sinkFile #-}
 
 -- | Print all incoming values to stdout.

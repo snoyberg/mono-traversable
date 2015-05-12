@@ -9,8 +9,7 @@ import Data.Maybe (listToMaybe)
 import Data.Conduit.Combinators.Internal
 import Data.Conduit.Combinators (slidingWindow)
 import Data.List (intersperse, sort, find)
-import Filesystem.Path (hasExtension)
-import Filesystem.Path.CurrentOS (encodeString)
+import System.FilePath (takeExtension)
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import qualified Data.Text as T
@@ -107,7 +106,7 @@ main = hspec $ do
     it "sourceFile" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
-        writeFile (encodeString fp) contents
+        writeFile fp contents
         res <- runResourceT $ sourceFile fp $$ sinkLazy
         res `shouldBe` TL.pack contents
     it "sourceHandle" $ do
@@ -143,15 +142,16 @@ main = hspec $ do
         gen <- createSystemRandom
         x <- sourceRandomNGen gen 100 $$ sumC :: IO Double
         x `shouldSatisfy` (\y -> y > 10 && y < 90)
+    let hasExtension' ext fp = takeExtension fp == ext
     it "sourceDirectory" $ do
         res <- runResourceT
-             $ sourceDirectory "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
+             $ sourceDirectory "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
         sort res `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir"]
     it "sourceDirectoryDeep" $ do
         res1 <- runResourceT
-              $ sourceDirectoryDeep False "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
+              $ sourceDirectoryDeep False "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
         res2 <- runResourceT
-              $ sourceDirectoryDeep True "test" $$ filterC (not . flip hasExtension "swp") =$ sinkList
+              $ sourceDirectoryDeep True "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
         sort res1 `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir/dummyfile.txt"]
         sort res1 `shouldBe` sort res2
     prop "drop" $ \(T.pack -> input) count ->
@@ -325,7 +325,7 @@ main = hspec $ do
         let contents = concat $ replicate 1000 $ "this is some content\n"
             fp = "tmp"
         runResourceT $ yield contents $$ sinkFile fp
-        res <- readFile $ encodeString fp
+        res <- readFile fp
         res `shouldBe` contents
     it "sinkHandle" $ do
         let contents = concat $ replicate 1000 $ "this is some content\n"

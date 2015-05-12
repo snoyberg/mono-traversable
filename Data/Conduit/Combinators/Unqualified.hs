@@ -199,15 +199,14 @@ import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import           Data.Void                   (absurd)
-import qualified Filesystem                  as F
-import           Filesystem.Path             (FilePath, (</>))
-import           Filesystem.Path.CurrentOS   (encodeString, decodeString)
+import qualified System.FilePath             as F
+import           System.FilePath             ((</>))
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe,
                                               ($), Functor (..), Enum, seq, Show, Char, (||),
                                               mod, otherwise, Either (..),
-                                              ($!), succ)
+                                              ($!), succ, FilePath)
 import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
