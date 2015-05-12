@@ -27,3 +27,7 @@ library
                      , containers
                      , vector
                      , semigroups
+
+source-repository head
+  type:     git
+  location: git://github.com/fpco/chunked-data.git
