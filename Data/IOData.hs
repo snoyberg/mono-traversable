@@ -14,9 +14,7 @@ import qualified Data.Text                     as Text
 import qualified Data.Text.IO                  as Text
 import qualified Data.Text.Lazy                as LText
 import qualified Data.Text.Lazy.IO             as LText
-import           Filesystem.Path               (FilePath)
-import qualified Filesystem.Path.CurrentOS     as FilePath
-import           Prelude                       (Char, flip, ($), (.))
+import           Prelude                       (Char, flip, ($), (.), FilePath)
 import qualified Prelude
 import           System.IO                     (Handle)
 import qualified System.IO
@@ -40,8 +38,8 @@ class IsSequence a => IOData a where
     hPutStrLn    :: MonadIO m => Handle -> a -> m ()
     hGetChunk    :: MonadIO m => Handle -> m a
 instance IOData ByteString.ByteString where
-    readFile = liftIO . ByteString.readFile . FilePath.encodeString
-    writeFile fp = liftIO . ByteString.writeFile (FilePath.encodeString fp)
+    readFile = liftIO . ByteString.readFile
+    writeFile fp = liftIO . ByteString.writeFile fp
     getLine = liftIO ByteString.getLine
     hGetContents = liftIO . ByteString.hGetContents
     hGetLine = liftIO . ByteString.hGetLine
@@ -49,8 +47,8 @@ instance IOData ByteString.ByteString where
     hPutStrLn h = liftIO . ByteString8.hPutStrLn h
     hGetChunk = liftIO . flip ByteString.hGetSome defaultChunkSize
 instance IOData LByteString.ByteString where
-    readFile = liftIO . LByteString.readFile . FilePath.encodeString
-    writeFile fp = liftIO . LByteString.writeFile (FilePath.encodeString fp)
+    readFile = liftIO . LByteString.readFile
+    writeFile fp = liftIO . LByteString.writeFile fp
     getLine = liftM fromStrict (liftIO ByteString.getLine)
     hGetContents = liftIO . LByteString.hGetContents
     hGetLine = liftM fromStrict . liftIO . ByteString.hGetLine
@@ -60,8 +58,8 @@ instance IOData LByteString.ByteString where
         ByteString8.hPutStrLn h ByteString.empty
     hGetChunk = liftM fromStrict . hGetChunk
 instance IOData Text.Text where
-    readFile = liftIO . Text.readFile . FilePath.encodeString
-    writeFile fp = liftIO . Text.writeFile (FilePath.encodeString fp)
+    readFile = liftIO . Text.readFile
+    writeFile fp = liftIO . Text.writeFile fp
     getLine = liftIO Text.getLine
     hGetContents = liftIO . Text.hGetContents
     hGetLine = liftIO . Text.hGetLine
@@ -80,8 +78,8 @@ instance IOData Text.Text where
                 else throwIO e
 #endif
 instance IOData LText.Text where
-    readFile = liftIO . LText.readFile . FilePath.encodeString
-    writeFile fp = liftIO . LText.writeFile (FilePath.encodeString fp)
+    readFile = liftIO . LText.readFile
+    writeFile fp = liftIO . LText.writeFile fp
     getLine = liftIO LText.getLine
     hGetContents = liftIO . LText.hGetContents
     hGetLine = liftIO . LText.hGetLine
@@ -89,8 +87,8 @@ instance IOData LText.Text where
     hPutStrLn h = liftIO . LText.hPutStrLn h
     hGetChunk = liftM fromStrict . hGetChunk
 instance (Char ~ c) => IOData [c] where
-    readFile = liftIO . Prelude.readFile . FilePath.encodeString
-    writeFile fp = liftIO . Prelude.writeFile (FilePath.encodeString fp)
+    readFile = liftIO . Prelude.readFile
+    writeFile fp = liftIO . Prelude.writeFile fp
     getLine = liftIO Prelude.getLine
     hGetContents = liftIO . System.IO.hGetContents
     hGetLine = liftIO . System.IO.hGetLine
