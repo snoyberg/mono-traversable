@@ -63,7 +63,11 @@ import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Trans.List (ListT)
 import Control.Monad.Trans.Identity (IdentityT)
 import Data.Functor.Apply (MaybeApply (..), WrappedApplicative)
-import Control.Comonad (Cokleisli)
+import Control.Comonad (Cokleisli, Comonad, extract, extend)
+import Control.Comonad.Store (StoreT)
+import Control.Comonad.Env (EnvT)
+import Control.Comonad.Traced (TracedT)
+import Data.Functor.Coproduct (Coproduct)
 import Control.Monad.Trans.Writer (WriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Strict (WriterT)
 import Control.Monad.Trans.State (StateT(..))
@@ -85,7 +89,7 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
-import Data.Semigroup (Semigroup, Option (..))
+import Data.Semigroup (Semigroup, Option (..), Arg)
 import qualified Data.ByteString.Unsafe as SU
 import Data.DList (DList)
 import qualified Data.DList as DL
@@ -142,6 +146,11 @@ type instance Element (Product f g a) = a
 type instance Element (Static f a b) = b
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
+type instance Element (Arg a b) = b
+type instance Element (EnvT e w a) = a
+type instance Element (StoreT s w a) = a
+type instance Element (TracedT m w a) = a
+type instance Element (Coproduct f g a) = a
 
 -- | Monomorphic containers that can be mapped over.
 class MonoFunctor mono where
@@ -184,6 +193,11 @@ instance Monad m => MonoFunctor (WrappedMonad m a)
 instance MonoFunctor (Map k v)
 instance MonoFunctor (HashMap k v)
 instance MonoFunctor (Vector a)
+instance MonoFunctor (Arg a b)
+instance Functor w => MonoFunctor (EnvT e w a)
+instance Functor w => MonoFunctor (StoreT s w a)
+instance Functor w => MonoFunctor (TracedT m w a)
+instance (Functor f, Functor g) => MonoFunctor (Coproduct f g a)
 instance Arrow a => MonoFunctor (WrappedArrow a b c)
 instance Functor f => MonoFunctor (MaybeApply f a)
 instance Functor f => MonoFunctor (WrappedApplicative f a)
@@ -1205,3 +1219,72 @@ instance MonoPointed (ViewR a) where
 instance MonoPointed (Tree a) where
     opoint a = Node a []
     {-# INLINE opoint #-}
+
+
+-- | Typeclass for monomorphic containers where it is always okay to
+-- "extract" a value from with 'oextract', and where you can extrapolate
+-- any "extracting" function to be a function on the whole part with
+-- 'oextend'.
+--
+-- 'oextend' and 'oextract' should work together following the law:
+--
+-- @
+-- 'oextend' 'oextract' = 'id'
+-- @
+--
+-- As an intuition, @'oextend' f@ uses @f@ to "build up" a new @mono@ with
+-- pieces from the old one received by @f@.
+--
+class MonoFunctor mono => MonoComonad mono where
+    -- | Extract an element from @mono@.  Can be thought of as a dual
+    -- concept to @opoint@.
+    oextract :: mono -> Element mono
+    -- | "Extend" a @mono -> 'Element' mono@ function to be a @mono ->
+    -- mono@; that is, builds a new @mono@ from the old one by using pieces
+    -- glimpsed from the given function.
+    oextend :: (mono -> Element mono) -> mono -> mono
+
+    default oextract :: (Comonad w, (w a) ~ mono, Element (w a) ~ a)
+                   => mono -> Element mono
+    oextract = extract
+    {-# INLINE oextract #-}
+    default oextend :: (Comonad w, (w a) ~ mono, Element (w a) ~ a)
+                   => (mono -> Element mono) -> mono -> mono
+    oextend = extend
+    {-# INLINE oextend #-}
+
+-- Comonad
+instance MonoComonad (Tree a)
+instance MonoComonad (NonEmpty a)
+instance MonoComonad (Identity a)
+instance Monoid m => MonoComonad (m -> a)
+instance MonoComonad (e, a)
+instance MonoComonad (Arg a b)
+instance Comonad w => MonoComonad (IdentityT w a)
+instance Comonad w => MonoComonad (EnvT e w a)
+instance Comonad w => MonoComonad (StoreT s w a)
+instance (Comonad w, Monoid m) => MonoComonad (TracedT m w a)
+instance (Comonad f, Comonad g) => MonoComonad (Coproduct f g a)
+
+-- Not Comonad
+instance MonoComonad (ViewL a) where
+    oextract ~(x :< _) = x
+    {-# INLINE oextract #-}
+    oextend f w@ ~(_ :< xxs) =
+        f w :< case Seq.viewl xxs of
+                 EmptyL -> Seq.empty
+                 xs     -> case oextend f xs of
+                             EmptyL  -> Seq.empty
+                             y :< ys -> y Seq.<| ys
+
+instance MonoComonad (ViewR a) where
+    oextract ~(_ :> x) = x
+    {-# INLINE oextract #-}
+    oextend f w@ ~(xxs :> _) =
+        (case Seq.viewr xxs of
+           EmptyR -> Seq.empty
+           xs     -> case oextend f xs of
+                       EmptyR  -> Seq.empty
+                       ys :> y -> ys Seq.|> y
+        ) :> f w
+
