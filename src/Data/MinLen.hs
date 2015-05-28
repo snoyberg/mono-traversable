@@ -40,7 +40,7 @@ module Data.MinLen
     , minimumBy
     ) where
 
-import Prelude (Num (..), Maybe (..), Int, Ordering (..), Eq, Ord, Read, Show, Functor (..), ($), flip)
+import Prelude (Num (..), Maybe (..), Int, Ordering (..), Eq, Ord, Read, Show, Functor (..), ($), flip, const)
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 import Control.Category
@@ -50,6 +50,7 @@ import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup (..))
 import Data.GrowingAppend
 import Control.Monad (liftM)
+import Control.Monad.Trans.State.Strict (evalState, state)
 
 -- $peanoNumbers
 -- <https://wiki.haskell.org/Peano_numbers Peano numbers> are a simple way to
@@ -480,3 +481,13 @@ minimumBy :: MonoFoldable mono
           -> Element mono
 minimumBy cmp = minimumByEx cmp . unMinLen
 {-# INLINE minimumBy #-}
+
+-- MonoComonad instance for IsSequence mono => NonNull mono
+instance IsSequence mono => MonoComonad (MinLen (Succ Zero) mono) where
+        oextract = headEx . unMinLen
+        oextend f (MinLen mono) = MinLen
+                                . flip evalState mono
+                                . ofor mono
+                                . const
+                                . state
+                                $ \mono' -> (f (MinLen mono'), tailEx mono')
