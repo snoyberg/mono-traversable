@@ -1,0 +1,6 @@
+flags:
+  mono-traversable: {}
+packages:
+- '.'
+extra-deps: []
+resolver: lts-2.9
