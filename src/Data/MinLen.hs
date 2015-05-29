@@ -483,8 +483,8 @@ minimumBy cmp = minimumByEx cmp . unMinLen
 {-# INLINE minimumBy #-}
 
 -- MonoComonad instance for IsSequence mono => NonNull mono
-instance IsSequence mono => MonoComonad (MinLen (Succ Zero) mono) where
-        oextract = headEx . unMinLen
+instance IsSequence mono => MonoComonad (MinLen (Succ a) mono) where
+        oextract = head
         oextend f (MinLen mono) = MinLen
                                 . flip evalState mono
                                 . ofor mono
