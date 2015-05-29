@@ -279,7 +279,10 @@ class MonoFoldable mono where
 
     -- | Compare the length of a monomorphic container and a given number.
     ocompareLength :: Integral i => mono -> i -> Ordering
-    ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0 -- FIXME more efficient implementation
+    -- Basic implementation using length for most instance. See the list
+    -- instance below for support for infinite structures. Arguably, that
+    -- should be the default instead of this.
+    ocompareLength c0 i0 = olength c0 `compare` fromIntegral i0
     {-# INLINE ocompareLength #-}
 
     -- | Map each element of a monomorphic container to an action,
@@ -556,6 +559,11 @@ instance MonoFoldable IntSet where
 instance MonoFoldable [a] where
     otoList = id
     {-# INLINE otoList #-}
+
+    ocompareLength [] i = 0 `compare` i
+    ocompareLength (_:xs) i
+        | i Prelude.<= 0 = GT
+        | otherwise = ocompareLength xs (i - 1)
 instance MonoFoldable (Maybe a) where
     omapM_ _ Nothing = return ()
     omapM_ f (Just x) = f x

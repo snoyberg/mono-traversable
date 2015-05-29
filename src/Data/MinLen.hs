@@ -482,9 +482,14 @@ minimumBy :: MonoFoldable mono
 minimumBy cmp = minimumByEx cmp . unMinLen
 {-# INLINE minimumBy #-}
 
--- MonoComonad instance for IsSequence mono => NonNull mono
-instance IsSequence mono => MonoComonad (MinLen (Succ Zero) mono) where
-        oextract = headEx . unMinLen
+-- | MonoComonad instance for IsSequence mono => NonNull mono
+--
+-- Note that it's tempting to change this instance to @Succ a@, but that's
+-- wrong: we cannot guarantee arbitrary-sized containers will be passed to the
+-- argument to oextend, only that they will be non-empty. See:
+-- https://github.com/snoyberg/mono-traversable/pull/75
+instance (IsSequence mono, nat ~ Succ Zero) => MonoComonad (MinLen nat mono) where
+        oextract = head
         oextend f (MinLen mono) = MinLen
                                 . flip evalState mono
                                 . ofor mono
