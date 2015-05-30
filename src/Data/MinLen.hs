@@ -532,8 +532,8 @@ instance IsSequence mono
 -- instance for 'NonNull'.  If your extending function doesn't require the
 -- list to be of at least a certain length greater than 1, then consider
 -- "downgrading" the 'MinLen' of your type.  This instance is only provided
--- for the ability to use 'oextend' on 'f's that require at least @n > 1@
--- elements.
+-- for the ability to use 'oextend' on 'f's that require at least 2, 3,
+-- etc. elements.
 --
 instance (IsSequence mono, TypeNat a)
     => MonoComonad (MinLen (Succ (Succ a)) mono) where
