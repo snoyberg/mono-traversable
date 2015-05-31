@@ -515,7 +515,8 @@ instance IsSequence mono
 -- | 'oextract' is 'head'.
 --
 -- Similar to the instance for 'NonNull', but when the lower length limit
--- is reached, instead of 'tail'ing, succesively "rotates left" the 'mono'.
+-- is reached, instead of 'tail'ing, successively "rotates left" the
+-- 'mono'.
 --
 -- For example, for @'MinLen' ('Succ' ('Succ' ('Succ' 'Zero'))) [Int]@,
 --
