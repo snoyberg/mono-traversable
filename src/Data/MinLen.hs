@@ -536,6 +536,11 @@ instance IsSequence mono
 -- for the ability to use 'oextend' on 'f's that require at least 2, 3,
 -- etc. elements.
 --
+-- For example, @'oextend' 'osum'@ will behave differently on the same
+-- structure depending on if it is typed as a 'MinLen' 3 or 5.  This is
+-- because you have a different type 'osum' --- one that takes 3 at
+-- minimum vs one that takes 5 at miniumum.
+--
 instance (IsSequence mono, TypeNat a)
     => MonoComonad (MinLen (Succ (Succ a)) mono) where
         oextract  = head
