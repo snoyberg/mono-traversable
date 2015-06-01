@@ -7,6 +7,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Data.MinLen
     ( -- * Type level naturals
       -- ** Peano numbers
@@ -40,7 +41,7 @@ module Data.MinLen
     , minimumBy
     ) where
 
-import Prelude (Num (..), Maybe (..), Int, Ordering (..), Eq, Ord, Read, Show, Functor (..), ($), flip, const)
+import Prelude (Num (..), Maybe (..), Int, Ordering (..), Eq, Ord (..), Read, Show, Functor (..), ($), flip, const, Bool (..), otherwise)
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 import Control.Category
@@ -482,14 +483,28 @@ minimumBy :: MonoFoldable mono
 minimumBy cmp = minimumByEx cmp . unMinLen
 {-# INLINE minimumBy #-}
 
--- | MonoComonad instance for IsSequence mono => NonNull mono
+-- | 'oextract' is 'head'.
 --
--- Note that it's tempting to change this instance to @Succ a@, but that's
--- wrong: we cannot guarantee arbitrary-sized containers will be passed to the
--- argument to oextend, only that they will be non-empty. See:
--- https://github.com/snoyberg/mono-traversable/pull/75
-instance (IsSequence mono, nat ~ Succ Zero) => MonoComonad (MinLen nat mono) where
-        oextract = head
+-- For @'oextend' f@, the new 'mono' is populated by applying @f@ to
+-- successive 'tail's of the original 'mono'.
+--
+-- For example, for @'MinLen' ('Succ' 'Zero') ['Int']@, or
+-- @'NonNull' ['Int']@:
+--
+-- @
+-- 'oextend' f [1,2,3,4,5] = [ f [1, 2, 3, 4, 5]
+--                           , f [2, 3, 4, 5]
+--                           , f [3, 4, 5]
+--                           , f [4, 5]
+--                           , f [5]
+--                           ]
+-- @
+--
+-- Meant to be a direct analogy to the instance for 'NonEmpty' @a@.
+--
+instance IsSequence mono
+    => MonoComonad (MinLen (Succ Zero) mono) where
+        oextract  = head
         oextend f (MinLen mono) = MinLen
                                 . flip evalState mono
                                 . ofor mono
