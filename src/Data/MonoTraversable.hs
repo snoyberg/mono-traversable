@@ -1234,10 +1234,12 @@ instance MonoPointed (Tree a) where
 -- any "extracting" function to be a function on the whole part with
 -- 'oextend'.
 --
--- 'oextend' and 'oextract' should work together following the law:
+-- 'oextend' and 'oextract' should work together following the laws:
 --
 -- @
--- 'oextend' 'oextract' = 'id'
+-- 'oextend' 'oextract'      = 'id'
+-- 'oextract' . 'oextend' f  = f
+-- 'oextend' f . 'oextend' g = 'oextend' (f . 'oextend' g)
 -- @
 --
 -- As an intuition, @'oextend' f@ uses @f@ to "build up" a new @mono@ with
