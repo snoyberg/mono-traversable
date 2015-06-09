@@ -2,11 +2,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module StreamSpec where
 
+import           Control.Arrow (first)
 import           Control.Applicative
 import qualified Control.Monad
 import           Control.Monad (liftM)
@@ -29,8 +31,8 @@ import qualified Data.Text.Lazy as TL
 import           Data.Vector (Vector)
 import qualified Prelude
 import           Prelude
-    ((.), ($), (=<<), return, id, Maybe(..), Monad, Bool(..), Int,
-     Eq, Show, String, Functor, fst, snd)
+    ((.), ($), (>>=), (=<<), return, id, Maybe(..), Either(..), Monad,
+     Bool(..), Int, Eq, Show, String, Functor, fst, snd, either)
 import qualified Safe
 import           System.Directory (removeFile)
 import qualified System.IO as IO
@@ -163,6 +165,16 @@ spec = do
             \(getBlind -> (f :: Int -> Int -> M Int), initial) ->
                 scanlMS f initial `checkStreamConduitM`
                 scanlML f initial
+        qit "mapAccumWhileS" $
+            \(getBlind -> ( f :: Int -> [Int] -> Either [Int] ([Int], Int))
+                          , initial :: [Int]) ->
+                mapAccumWhileS f initial `checkStreamConduitResult`
+                mapAccumWhileL f initial
+        qit "mapAccumWhileMS" $
+            \(getBlind -> ( f :: Int -> [Int] -> M (Either [Int] ([Int], Int)))
+                          , initial :: [Int]) ->
+                mapAccumWhileMS f initial `checkStreamConduitResultM`
+                mapAccumWhileML f initial
         qit "intersperse" $
             \(sep :: Int) ->
                 intersperse sep `checkConduit`
@@ -256,6 +268,17 @@ scanlML f = go
     go l (r:rs) = do
         l' <- f l r
         liftM (l:) (go l' rs)
+
+mapAccumWhileL :: (a -> s -> Either s (s, b)) -> s -> [a] -> ([b], s)
+mapAccumWhileL f = (runIdentity.) . mapAccumWhileML ((return.) . f)
+
+mapAccumWhileML :: Monad m =>
+    (a -> s -> m (Either s (s, b))) -> s -> [a] -> m ([b], s)
+mapAccumWhileML f = go
+    where go s []     = return ([], s)
+          go s (a:as) = f a s >>= either
+              (return . ([], ))
+              (\(s', b) -> liftM (first (b:)) $ go s' as)
 
 --FIXME: the following code is directly copied from the conduit test
 --suite.  How to share this code??

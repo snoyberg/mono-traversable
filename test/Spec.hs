@@ -8,7 +8,8 @@ import Prelude hiding (FilePath)
 import Data.Maybe (listToMaybe)
 import Data.Conduit.Combinators.Internal
 import Data.Conduit.Combinators (slidingWindow)
-import Data.List (intersperse, sort, find)
+import Data.List (intersperse, sort, find, mapAccumL)
+import Safe (tailSafe)
 import System.FilePath (takeExtension)
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -436,16 +437,14 @@ main = hspec $ do
         runIdentity (yield input $$ filterCE evenInt =$ foldC)
         `shouldBe` filter evenInt input
     prop "mapWhile" $ \input (min 20 -> highest) ->
-        let f i =
-                if i < highest
-                    then Just (i + 2 :: Int)
-                    else Nothing
+        let f i | i < highest = Just (i + 2 :: Int)
+                | otherwise   = Nothing
             res = runIdentity $ yieldMany input $$ do
                 x <- (mapWhileC f >>= \() -> mempty) =$ sinkList
                 y <- sinkList
                 return (x, y)
-            expected = (map (+ 2) $ takeWhile (< highest) input, dropWhile (< highest) input)
-         in res `shouldBe` expected
+            (taken, dropped) = span (< highest) input
+         in res `shouldBe` (map (+ 2) taken, dropped)
     prop "conduitVector" $ \(take 200 -> input) size' -> do
         let size = min 30 $ succ $ abs size'
         res <- yieldMany input $$ conduitVector size =$ sinkList
@@ -456,10 +455,20 @@ main = hspec $ do
         let f a b = a + b :: Int
             res = runIdentity $ yieldMany input $$ scanlC f seed =$ sinkList
          in res `shouldBe` scanl f seed input
-    it "concatMapAccum" $
+    prop "mapAccumWhile" $ \input (min 20 -> highest) ->
+        let f i accum | i < highest = Right (i + accum, 2 * i :: Int)
+                      | otherwise   = Left accum
+            res = runIdentity $ yieldMany input $$ do
+                (s, x) <- fuseBoth (mapAccumWhileC f 0) sinkList
+                y <- sinkList
+                return (s, x, y)
+            (taken, dropped) = span (< highest) input
+         in res `shouldBe` (sum taken, map (* 2) taken, tailSafe dropped)
+    prop "concatMapAccum" $ \(input :: [Int]) ->
         let f a accum = (a + accum, [a, accum])
-            res = runIdentity $ yieldMany [1..3] $$ concatMapAccumC f 0 =$ sinkList
-         in res `shouldBe` [1, 0, 2, 1, 3, 3]
+            res = runIdentity $ yieldMany input $$ concatMapAccumC f 0 =$ sinkList
+            expected = concat $ snd $ mapAccumL (flip f) 0 input
+         in res `shouldBe` expected
     prop "intersperse" $ \xs x ->
         runIdentity (yieldMany xs $$ intersperseC x =$ sinkList)
         `shouldBe` intersperse (x :: Int) xs
@@ -520,10 +529,20 @@ main = hspec $ do
             fm a b = return $ a + b
             res = runIdentity $ yieldMany input $$ scanlMC fm seed =$ sinkList
          in res `shouldBe` scanl f seed input
-    it "concatMapAccumM" $
-        let f a accum = return (a + accum, [a, accum])
-            res = runIdentity $ yieldMany [1..3] $$ concatMapAccumMC f 0 =$ sinkList
-         in res `shouldBe` [1, 0, 2, 1, 3, 3]
+    prop "mapAccumWhileM" $ \input (min 20 -> highest) ->
+        let f i accum | i < highest = Right (i + accum, 2 * i :: Int)
+                      | otherwise   = Left accum
+            res = runIdentity $ yieldMany input $$ do
+                (s, x) <- fuseBoth (mapAccumWhileMC ((return.).f) 0) sinkList
+                y <- sinkList
+                return (s, x, y)
+            (taken, dropped) = span (< highest) input
+         in res `shouldBe` (sum taken, map (* 2) taken, tailSafe dropped)
+    prop "concatMapAccumM" $ \(input :: [Int]) ->
+        let f a accum = (a + accum, [a, accum])
+            res = runIdentity $ yieldMany input $$ concatMapAccumMC ((return.).f) 0 =$ sinkList
+            expected = concat $ snd $ mapAccumL (flip f) 0 input
+         in res `shouldBe` expected
     prop "encode UTF8" $ \(map T.pack -> inputs) -> do
         let expected = encodeUtf8 $ fromChunks inputs
         actual <- yieldMany inputs

@@ -7,7 +7,6 @@
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoImplicitPrelude         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE BangPatterns #-}
 module Data.Conduit.Combinators.Unqualified
     ( -- ** Producers
       -- *** Pure
@@ -128,6 +127,7 @@ module Data.Conduit.Combinators.Unqualified
     , mapWhileC
     , conduitVector
     , scanlC
+    , mapAccumWhileC
     , concatMapAccumC
     , intersperseC
     , slidingWindowC
@@ -149,6 +149,7 @@ module Data.Conduit.Combinators.Unqualified
     , filterMCE
     , iterMC
     , scanlMC
+    , mapAccumWhileMC
     , concatMapAccumMC
 
       -- *** Textual
@@ -1147,6 +1148,15 @@ scanlC :: Monad m => (a -> b -> a) -> a -> Conduit b m a
 scanlC = CC.scanl
 {-# INLINE scanlC #-}
 
+-- | 'mapWhileC' with a break condition dependent on an accumulator.
+-- Equivalently, 'CL.mapAccum' as long as the result is @Right@. Instead of
+-- producing a leftover, the breaking input determines the resulting
+-- accumulator via @Left@.
+mapAccumWhileC :: Monad m =>
+    (a -> s -> Either s (s, b)) -> s -> ConduitM a b m s
+mapAccumWhileC = CC.mapAccumWhile
+{-# INLINE mapAccumWhileC #-}
+
 -- | 'concatMap' with an accumulator.
 --
 -- Since 1.0.0
@@ -1293,6 +1303,11 @@ iterMC = CC.iterM
 scanlMC :: Monad m => (a -> b -> m a) -> a -> Conduit b m a
 scanlMC = CC.scanlM
 {-# INLINE scanlMC #-}
+
+-- | Monadic `mapAccumWhileC`.
+mapAccumWhileMC :: Monad m => (a -> s -> m (Either s (s, b))) -> s -> ConduitM a b m s
+mapAccumWhileMC = CC.mapAccumWhileM
+{-# INLINE mapAccumWhileMC #-}
 
 -- | 'concatMapM' with an accumulator.
 --

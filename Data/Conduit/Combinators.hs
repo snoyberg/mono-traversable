@@ -141,6 +141,7 @@ module Data.Conduit.Combinators
     , mapWhile
     , conduitVector
     , scanl
+    , mapAccumWhile
     , concatMapAccum
     , intersperse
     , slidingWindow
@@ -162,6 +163,7 @@ module Data.Conduit.Combinators
     , filterME
     , iterM
     , scanlM
+    , mapAccumWhileM
     , concatMapAccumM
 
       -- ** Textual
@@ -216,8 +218,8 @@ import           Data.Void                   (absurd)
 import qualified System.FilePath             as F
 import           System.FilePath             ((</>))
 import           Prelude                     (Bool (..), Eq (..), Int,
-                                              Maybe (..), Monad (..), Num (..),
-                                              Ord (..), fromIntegral, maybe,
+                                              Maybe (..), Either (..), Monad (..), Num (..),
+                                              Ord (..), fromIntegral, maybe, either,
                                               ($), Functor (..), Enum, seq, Show, Char, (||),
                                               mod, otherwise, Either (..),
                                               ($!), succ, FilePath)
@@ -1509,6 +1511,23 @@ scanlC f =
             loop seed'
 STREAMING(scanl, scanlC, scanlS, f x)
 
+-- | 'mapWhile' with a break condition dependent on an accumulator.
+-- Equivalently, 'CL.mapAccum' as long as the result is @Right@. Instead of
+-- producing a leftover, the breaking input determines the resulting
+-- accumulator via @Left@.
+--
+-- Subject to fusion
+mapAccumWhile, mapAccumWhileC :: Monad m =>
+    (a -> s -> Either s (s, b)) -> s -> ConduitM a b m s
+mapAccumWhileC f =
+    loop
+  where
+    loop s = await >>= maybe (return s) go
+      where
+        go a = either return (\(s', b) -> yield b >> loop s') $ f a s
+{-# INLINE mapAccumWhileC #-}
+STREAMING(mapAccumWhile, mapAccumWhileC, mapAccumWhileS, f s)
+
 -- | 'concatMap' with an accumulator.
 --
 -- Subject to fusion
@@ -1750,6 +1769,20 @@ scanlMC f =
             seed' `seq` yield seed
             loop seed'
 STREAMING(scanlM, scanlMC, scanlMS, f x)
+
+-- | Monadic `mapAccumWhile`.
+--
+-- Subject to fusion
+mapAccumWhileM, mapAccumWhileMC :: Monad m =>
+    (a -> s -> m (Either s (s, b))) -> s -> ConduitM a b m s
+mapAccumWhileMC f =
+    loop
+  where
+    loop s = await >>= maybe (return s) go
+      where
+        go a = lift (f a s) >>= either return (\(s', b) -> yield b >> loop s')
+{-# INLINE mapAccumWhileMC #-}
+STREAMING(mapAccumWhileM, mapAccumWhileMC, mapAccumWhileMS, f s)
 
 -- | 'concatMapM' with an accumulator.
 --
