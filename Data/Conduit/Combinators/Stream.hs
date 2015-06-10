@@ -51,7 +51,9 @@ import           Data.Conduit.Internal.List.Stream (foldS)
 import           Data.IOData
 import           Data.Maybe (isNothing, isJust)
 import           Data.MonoTraversable
+#if ! MIN_VERSION_base(4,8,0)
 import           Data.Monoid (Monoid (..))
+#endif
 import qualified Data.NonNull as NonNull
 import qualified Data.Sequences as Seq
 import           Data.Sequences.Lazy

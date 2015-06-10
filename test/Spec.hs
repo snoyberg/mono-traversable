@@ -23,9 +23,7 @@ import Control.Monad (liftM)
 import Control.Monad.ST (runST)
 import Control.Monad.Trans.Writer
 import qualified System.IO as IO
-#if MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>))
-#else
+#if ! MIN_VERSION_base(4,8,0)
 import Data.Monoid (Monoid (..))
 import Control.Applicative ((<$>), (<*>))
 #endif

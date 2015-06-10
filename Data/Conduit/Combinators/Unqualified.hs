@@ -177,21 +177,14 @@ import qualified Data.Conduit.Combinators as CC
 import Data.Builder
 import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
-import qualified Data.ByteString as S
-import qualified Data.ByteString.Base16 as B16
-import qualified Data.ByteString.Base64 as B64
-import qualified Data.ByteString.Base64.URL as B64U
+#if ! MIN_VERSION_base(4,8,0)
 import           Control.Applicative         ((<$>))
-import           Control.Exception           (assert)
-import           Control.Category            (Category (..))
-import           Control.Monad               (unless, when, (>=>), liftM, forever)
-import           Control.Monad.Base          (MonadBase (liftBase))
+#endif
+import           Control.Monad.Base          (MonadBase (..))
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
-import           Control.Monad.Trans.Class   (lift)
 import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
-import           Data.Conduit.Internal       (ConduitM (..), Pipe (..))
 import qualified Data.Conduit.List           as CL
 import           Data.IOData
 import           Data.Monoid                 (Monoid (..))
@@ -199,33 +192,19 @@ import           Data.MonoTraversable
 import qualified Data.Sequences              as Seq
 import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
-import qualified Data.Vector.Generic.Mutable as VM
-import           Data.Void                   (absurd)
-import qualified System.FilePath             as F
-import           System.FilePath             ((</>))
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
-                                              Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum, seq, Show, Char, (||),
-                                              mod, otherwise, Either (..),
-                                              ($!), succ, FilePath)
+                                              Ord (..), Functor (..), Either (..),
+                                              Enum, Show, Char, FilePath)
 import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 import qualified Data.Textual.Encoding as DTE
-import qualified Data.Conduit.Text as CT
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified System.Random.MWC as MWC
-import Data.Conduit.Combinators.Internal
-import qualified System.PosixCompat.Files as PosixC
-import           Data.Primitive.MutVar       (MutVar, newMutVar, readMutVar,
-                                              writeMutVar)
 
-#ifndef WINDOWS
-import qualified System.Posix.Directory as Dir
-#endif
 
 -- END IMPORTS
 

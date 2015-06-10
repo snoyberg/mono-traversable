@@ -216,12 +216,10 @@ import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import           Data.Void                   (absurd)
-import qualified System.FilePath             as F
-import           System.FilePath             ((</>))
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Either (..), Monad (..), Num (..),
                                               Ord (..), fromIntegral, maybe, either,
-                                              ($), Functor (..), Enum, seq, Show, Char, (||),
+                                              ($), Functor (..), Enum, seq, Show, Char,
                                               mod, otherwise, Either (..),
                                               ($!), succ, FilePath)
 import Data.Word (Word8)
@@ -236,13 +234,8 @@ import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
 import Data.Conduit.Combinators.Stream
 import Data.Conduit.Internal.Fusion
-import qualified System.PosixCompat.Files as PosixC
 import           Data.Primitive.MutVar       (MutVar, newMutVar, readMutVar,
                                               writeMutVar)
-
-#ifndef WINDOWS
-import qualified System.Posix.Directory as Dir
-#endif
 
 -- Defines INLINE_RULE0, INLINE_RULE, STREAMING0, and STREAMING.
 #include "fusion-macros.h"
@@ -543,11 +536,11 @@ dropE =
         then return ()
         else await >>= maybe (return ()) (go i)
 
-    go i seq = do
+    go i sq = do
         unless (onull y) $ leftover y
         loop i'
       where
-        (x, y) = Seq.splitAt i seq
+        (x, y) = Seq.splitAt i sq
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE dropE #-}
 
@@ -575,10 +568,10 @@ dropWhileE f =
   where
     loop = await >>= maybe (return ()) go
 
-    go seq =
+    go sq =
         if onull x then loop else leftover x
       where
-        x = Seq.dropWhile f seq
+        x = Seq.dropWhile f sq
 {-# INLINE dropWhileE #-}
 
 -- | Monoidally combine all values in the stream.
@@ -805,7 +798,11 @@ INLINE_RULE(elem, x, any (== x))
 elemE :: (Monad m, Seq.EqSequence seq)
       => Element seq
       -> Consumer seq m Bool
+#if MIN_VERSION_mono_traversable(0,8,0)
+INLINE_RULE(elemE, f, any (oelem f))
+#else
 INLINE_RULE(elemE, f, any (Seq.elem f))
+#endif
 
 -- | Are no values in the stream equal to the given value?
 --
@@ -827,7 +824,11 @@ INLINE_RULE(notElem, x, all (/= x))
 notElemE :: (Monad m, Seq.EqSequence seq)
          => Element seq
          -> Consumer seq m Bool
+#if MIN_VERSION_mono_traversable(0,8,0)
+INLINE_RULE(notElemE, x, all (onotElem x))
+#else
 INLINE_RULE(notElemE, x, all (Seq.notElem x))
+#endif
 
 -- | Consume all incoming strict chunks into a lazy sequence.
 -- Note that the entirety of the sequence will be resident at memory.
@@ -1352,12 +1353,12 @@ takeE =
         then return ()
         else await >>= maybe (return ()) (go i)
 
-    go i seq = do
+    go i sq = do
         unless (onull x) $ yield x
         unless (onull y) $ leftover y
         loop i'
       where
-        (x, y) = Seq.splitAt i seq
+        (x, y) = Seq.splitAt i sq
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE takeE #-}
 
@@ -1391,13 +1392,13 @@ takeWhileE f =
   where
     loop = await >>= maybe (return ()) go
 
-    go seq = do
+    go sq = do
         unless (onull x) $ yield x
         if onull y
             then loop
             else leftover y
       where
-        (x, y) = Seq.span f seq
+        (x, y) = Seq.span f sq
 {-# INLINE takeWhileE #-}
 
 -- | Consume precisely the given number of values and feed them downstream.
