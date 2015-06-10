@@ -22,7 +22,7 @@ library
                        Data.Mutable.DLList
                        Data.Mutable.Deque
   build-depends:       base >= 4.7 && < 5
-                     , primitive
+                     , primitive >= 0.5.2.1
                      , containers
                      , vector
                      , mono-traversable
