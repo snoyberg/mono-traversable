@@ -19,6 +19,8 @@ import Data.IORef
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as VU
 import qualified Data.Vector.Storable as VS
+import Control.Monad (liftM)
+import Control.Monad.ST (runST)
 import Control.Monad.Trans.Writer
 import qualified System.IO as IO
 #if MIN_VERSION_base(4,8,0)
@@ -43,7 +45,6 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Base64.Lazy as B64L
 import qualified Data.ByteString.Base64.URL.Lazy as B64LU
 import qualified Data.ByteString.Base64.URL as B64U
-import Control.Monad.ST (runST)
 import qualified StreamSpec
 
 main :: IO ()
@@ -650,6 +651,16 @@ main = hspec $ do
                   where
                     (y, z) = splitAt size x
         res `shouldBe` expected
+    prop "mapAccumS" $ \input ->
+        let ints  = [1..]
+            f a s = liftM (:s) $ mapC (* a) =$ takeC a =$ sinkList
+            res   = reverse $ runIdentity $ yieldMany input
+                           $$ mapAccumS f [] (yieldMany ints)
+            expected = loop input ints
+                where  loop []     _  = []
+                       loop (a:as) xs = let (y, ys) = Prelude.splitAt a xs
+                                        in  map (* a) y : loop as ys
+        in  res `shouldBe` expected
     prop "peekForever" $ \(strs' :: [String]) -> do
         let strs = filter (not . null) strs'
         res1 <- yieldMany strs $$ linesUnboundedC =$ sinkList

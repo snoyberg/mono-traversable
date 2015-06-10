@@ -165,6 +165,7 @@ module Data.Conduit.Combinators.Unqualified
 
       -- ** Special
     , vectorBuilderC
+    , CC.mapAccumS
     , CC.peekForever
     ) where
 

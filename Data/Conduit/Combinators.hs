@@ -181,6 +181,7 @@ module Data.Conduit.Combinators
 
       -- * Special
     , vectorBuilder
+    , mapAccumS
     , peekForever
     ) where
 
@@ -2024,6 +2025,20 @@ addE ref e = do
             writeMutVar ref $! S 0 mv' front'
         else writeMutVar ref $! S idx' mv front
 {-# INLINE addE #-}
+
+-- | Consume a source in a way piecewise defined by a controlling stream. The
+-- latter will be evaluated until it terminates.
+--
+-- >>> let f a s = liftM (:s) $ mapC (*a) =$ CL.take a
+-- >>> reverse $ runIdentity $ yieldMany [0..3] $$ mapAccumS f [] (yieldMany [1..])
+-- [[],[1],[4,6],[12,15,18]] :: [[Int]]
+mapAccumS :: Monad m => (a -> s -> Sink b m s) -> s -> Source m b -> Sink a m s
+mapAccumS f s xs = do
+    (zs, u) <- loop (newResumableSource xs, s)
+    lift (closeResumableSource zs) >> return u
+    where loop r@(ys, t) = await >>= maybe (return r) go
+              where go a = lift (ys $$++ f a t) >>= loop
+{-# INLINE mapAccumS #-}
 
 -- | Run a consuming conduit repeatedly, only stopping when there is no more
 -- data available from upstream.
