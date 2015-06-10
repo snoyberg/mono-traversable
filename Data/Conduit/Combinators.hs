@@ -141,6 +141,7 @@ module Data.Conduit.Combinators
     , mapWhile
     , conduitVector
     , scanl
+    , mapAccumWhile
     , concatMapAccum
     , intersperse
     , slidingWindow
@@ -162,6 +163,7 @@ module Data.Conduit.Combinators
     , filterME
     , iterM
     , scanlM
+    , mapAccumWhileM
     , concatMapAccumM
 
       -- ** Textual
@@ -179,6 +181,7 @@ module Data.Conduit.Combinators
 
       -- * Special
     , vectorBuilder
+    , mapAccumS
     , peekForever
     ) where
 
@@ -213,12 +216,10 @@ import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import           Data.Void                   (absurd)
-import qualified System.FilePath             as F
-import           System.FilePath             ((</>))
 import           Prelude                     (Bool (..), Eq (..), Int,
-                                              Maybe (..), Monad (..), Num (..),
-                                              Ord (..), fromIntegral, maybe,
-                                              ($), Functor (..), Enum, seq, Show, Char, (||),
+                                              Maybe (..), Either (..), Monad (..), Num (..),
+                                              Ord (..), fromIntegral, maybe, either,
+                                              ($), Functor (..), Enum, seq, Show, Char,
                                               mod, otherwise, Either (..),
                                               ($!), succ, FilePath)
 import Data.Word (Word8)
@@ -233,13 +234,8 @@ import qualified System.Random.MWC as MWC
 import Data.Conduit.Combinators.Internal
 import Data.Conduit.Combinators.Stream
 import Data.Conduit.Internal.Fusion
-import qualified System.PosixCompat.Files as PosixC
 import           Data.Primitive.MutVar       (MutVar, newMutVar, readMutVar,
                                               writeMutVar)
-
-#ifndef WINDOWS
-import qualified System.Posix.Directory as Dir
-#endif
 
 -- Defines INLINE_RULE0, INLINE_RULE, STREAMING0, and STREAMING.
 #include "fusion-macros.h"
@@ -540,11 +536,11 @@ dropE =
         then return ()
         else await >>= maybe (return ()) (go i)
 
-    go i seq = do
+    go i sq = do
         unless (onull y) $ leftover y
         loop i'
       where
-        (x, y) = Seq.splitAt i seq
+        (x, y) = Seq.splitAt i sq
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE dropE #-}
 
@@ -572,10 +568,10 @@ dropWhileE f =
   where
     loop = await >>= maybe (return ()) go
 
-    go seq =
+    go sq =
         if onull x then loop else leftover x
       where
-        x = Seq.dropWhile f seq
+        x = Seq.dropWhile f sq
 {-# INLINE dropWhileE #-}
 
 -- | Monoidally combine all values in the stream.
@@ -802,7 +798,11 @@ INLINE_RULE(elem, x, any (== x))
 elemE :: (Monad m, Seq.EqSequence seq)
       => Element seq
       -> Consumer seq m Bool
+#if MIN_VERSION_mono_traversable(0,8,0)
+INLINE_RULE(elemE, f, any (oelem f))
+#else
 INLINE_RULE(elemE, f, any (Seq.elem f))
+#endif
 
 -- | Are no values in the stream equal to the given value?
 --
@@ -824,7 +824,11 @@ INLINE_RULE(notElem, x, all (/= x))
 notElemE :: (Monad m, Seq.EqSequence seq)
          => Element seq
          -> Consumer seq m Bool
+#if MIN_VERSION_mono_traversable(0,8,0)
+INLINE_RULE(notElemE, x, all (onotElem x))
+#else
 INLINE_RULE(notElemE, x, all (Seq.notElem x))
+#endif
 
 -- | Consume all incoming strict chunks into a lazy sequence.
 -- Note that the entirety of the sequence will be resident at memory.
@@ -1349,12 +1353,12 @@ takeE =
         then return ()
         else await >>= maybe (return ()) (go i)
 
-    go i seq = do
+    go i sq = do
         unless (onull x) $ yield x
         unless (onull y) $ leftover y
         loop i'
       where
-        (x, y) = Seq.splitAt i seq
+        (x, y) = Seq.splitAt i sq
         i' = i - fromIntegral (olength x)
 {-# INLINEABLE takeE #-}
 
@@ -1388,13 +1392,13 @@ takeWhileE f =
   where
     loop = await >>= maybe (return ()) go
 
-    go seq = do
+    go sq = do
         unless (onull x) $ yield x
         if onull y
             then loop
             else leftover y
       where
-        (x, y) = Seq.span f seq
+        (x, y) = Seq.span f sq
 {-# INLINE takeWhileE #-}
 
 -- | Consume precisely the given number of values and feed them downstream.
@@ -1508,6 +1512,23 @@ scanlC f =
             seed' `seq` yield seed
             loop seed'
 STREAMING(scanl, scanlC, scanlS, f x)
+
+-- | 'mapWhile' with a break condition dependent on an accumulator.
+-- Equivalently, 'CL.mapAccum' as long as the result is @Right@. Instead of
+-- producing a leftover, the breaking input determines the resulting
+-- accumulator via @Left@.
+--
+-- Subject to fusion
+mapAccumWhile, mapAccumWhileC :: Monad m =>
+    (a -> s -> Either s (s, b)) -> s -> ConduitM a b m s
+mapAccumWhileC f =
+    loop
+  where
+    loop s = await >>= maybe (return s) go
+      where
+        go a = either return (\(s', b) -> yield b >> loop s') $ f a s
+{-# INLINE mapAccumWhileC #-}
+STREAMING(mapAccumWhile, mapAccumWhileC, mapAccumWhileS, f s)
 
 -- | 'concatMap' with an accumulator.
 --
@@ -1751,6 +1772,20 @@ scanlMC f =
             loop seed'
 STREAMING(scanlM, scanlMC, scanlMS, f x)
 
+-- | Monadic `mapAccumWhile`.
+--
+-- Subject to fusion
+mapAccumWhileM, mapAccumWhileMC :: Monad m =>
+    (a -> s -> m (Either s (s, b))) -> s -> ConduitM a b m s
+mapAccumWhileMC f =
+    loop
+  where
+    loop s = await >>= maybe (return s) go
+      where
+        go a = lift (f a s) >>= either return (\(s', b) -> yield b >> loop s')
+{-# INLINE mapAccumWhileMC #-}
+STREAMING(mapAccumWhileM, mapAccumWhileMC, mapAccumWhileMS, f s)
+
 -- | 'concatMapM' with an accumulator.
 --
 -- Subject to fusion
@@ -1991,6 +2026,20 @@ addE ref e = do
             writeMutVar ref $! S 0 mv' front'
         else writeMutVar ref $! S idx' mv front
 {-# INLINE addE #-}
+
+-- | Consume a source in a way piecewise defined by a controlling stream. The
+-- latter will be evaluated until it terminates.
+--
+-- >>> let f a s = liftM (:s) $ mapC (*a) =$ CL.take a
+-- >>> reverse $ runIdentity $ yieldMany [0..3] $$ mapAccumS f [] (yieldMany [1..])
+-- [[],[1],[4,6],[12,15,18]] :: [[Int]]
+mapAccumS :: Monad m => (a -> s -> Sink b m s) -> s -> Source m b -> Sink a m s
+mapAccumS f s xs = do
+    (zs, u) <- loop (newResumableSource xs, s)
+    lift (closeResumableSource zs) >> return u
+    where loop r@(ys, t) = await >>= maybe (return r) go
+              where go a = lift (ys $$++ f a t) >>= loop
+{-# INLINE mapAccumS #-}
 
 -- | Run a consuming conduit repeatedly, only stopping when there is no more
 -- data available from upstream.

@@ -28,6 +28,8 @@ module Data.Conduit.Combinators.Stream
   , concatS
   , scanlS
   , scanlMS
+  , mapAccumWhileS
+  , mapAccumWhileMS
   , intersperseS
   , slidingWindowS
   , filterMS
@@ -49,7 +51,9 @@ import           Data.Conduit.Internal.List.Stream (foldS)
 import           Data.IOData
 import           Data.Maybe (isNothing, isJust)
 import           Data.MonoTraversable
+#if ! MIN_VERSION_base(4,8,0)
 import           Data.Monoid (Monoid (..))
+#endif
 import qualified Data.NonNull as NonNull
 import qualified Data.Sequences as Seq
 import           Data.Sequences.Lazy
@@ -304,6 +308,38 @@ scanlMS f seed0 (Stream step ms0) =
                 !seed' <- f seed x
                 return $ Emit (ScanContinues seed' s') seed
 {-# INLINE scanlMS #-}
+
+mapAccumWhileS :: Monad m =>
+    (a -> s -> Either s (s, b)) -> s -> StreamConduitM a b m s
+mapAccumWhileS f initial (Stream step ms0) =
+    Stream step' (liftM (initial, ) ms0)
+  where
+    step' (accum, s) = do
+        res <- step s
+        return $ case res of
+            Stop () -> Stop accum
+            Skip s' -> Skip (accum, s')
+            Emit s' x -> case f x accum of
+                Right (accum', r) -> Emit (accum', s') r
+                Left   accum'     -> Stop accum'
+{-# INLINE mapAccumWhileS #-}
+
+mapAccumWhileMS :: Monad m =>
+    (a -> s -> m (Either s (s, b))) -> s -> StreamConduitM a b m s
+mapAccumWhileMS f initial (Stream step ms0) =
+    Stream step' (liftM (initial, ) ms0)
+  where
+    step' (accum, s) = do
+        res <- step s
+        case res of
+            Stop () -> return $ Stop accum
+            Skip s' -> return $ Skip (accum, s')
+            Emit s' x -> do
+                lr <- f x accum
+                case lr of
+                    Right (accum', r) -> return $ Emit (accum', s') r
+                    Left   accum'     -> return $ Stop accum'
+{-# INLINE mapAccumWhileMS #-}
 
 data IntersperseState a s
     = IFirstValue s
