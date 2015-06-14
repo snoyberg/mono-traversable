@@ -1,3 +1,7 @@
+## 0.9.2
+
+* MonoComonad
+
 ## 0.9.1
 
 * Fill in missing Mono\* instances [#72](https://github.com/snoyberg/mono-traversable/pull/72)
