@@ -1,3 +1,7 @@
+# 1.0.1
+
+* mapAccumWhile, mapAccumWhileM, mapAccumS
+
 # 1.0.0
 
 * Drop system-filepath/system-fileio
