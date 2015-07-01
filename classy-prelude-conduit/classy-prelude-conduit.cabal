@@ -1,5 +1,5 @@
 name:                classy-prelude-conduit
-version:             0.12.0
+version:             0.12.0.1
 synopsis:            conduit instances for classy-prelude
 description:         conduit instances for classy-prelude
 homepage:            https://github.com/snoyberg/classy-prelude
