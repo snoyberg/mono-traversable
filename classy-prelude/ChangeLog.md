@@ -1,3 +1,7 @@
+## 0.12.2
+
+add `errorM`, `terrorM`, and `terror`
+
 ## 0.12.0
 
 * Drop system-filepath
