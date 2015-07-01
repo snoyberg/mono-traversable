@@ -1,0 +1,8 @@
+resolver: lts-2.16
+
+packages:
+  - 'classy-prelude'
+  - 'classy-prelude-conduit'
+  - 'classy-prelude-yesod'
+extra-deps:
+  - 'basic-prelude-0.4.1'
