@@ -599,7 +599,6 @@ instance MonoFoldable (Vector a) where
     unsafeLast = V.unsafeLast
     maximumByEx = V.maximumBy
     minimumByEx = V.minimumBy
-    {-# INLINE ofoldMap #-}
     {-# INLINE ofoldr #-}
     {-# INLINE ofoldl' #-}
     {-# INLINE otoList #-}
