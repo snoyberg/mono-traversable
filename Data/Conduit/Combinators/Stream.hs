@@ -314,14 +314,14 @@ mapAccumWhileS :: Monad m =>
 mapAccumWhileS f initial (Stream step ms0) =
     Stream step' (liftM (initial, ) ms0)
   where
-    step' (accum, s) = do
+    step' (!accum, s) = do
         res <- step s
         return $ case res of
             Stop () -> Stop accum
             Skip s' -> Skip (accum, s')
             Emit s' x -> case f x accum of
-                Right (accum', r) -> Emit (accum', s') r
-                Left   accum'     -> Stop accum'
+                Right (!accum', r) -> Emit (accum', s') r
+                Left   !accum'     -> Stop accum'
 {-# INLINE mapAccumWhileS #-}
 
 mapAccumWhileMS :: Monad m =>
@@ -329,16 +329,16 @@ mapAccumWhileMS :: Monad m =>
 mapAccumWhileMS f initial (Stream step ms0) =
     Stream step' (liftM (initial, ) ms0)
   where
-    step' (accum, s) = do
+    step' (!accum, s) = do
         res <- step s
         case res of
             Stop () -> return $ Stop accum
             Skip s' -> return $ Skip (accum, s')
             Emit s' x -> do
                 lr <- f x accum
-                case lr of
-                    Right (accum', r) -> return $ Emit (accum', s') r
-                    Left   accum'     -> return $ Stop accum'
+                return $ case lr of
+                    Right (!accum', r) -> Emit (accum', s') r
+                    Left   !accum'     -> Stop accum'
 {-# INLINE mapAccumWhileMS #-}
 
 data IntersperseState a s

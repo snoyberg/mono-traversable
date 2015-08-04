@@ -1513,7 +1513,7 @@ scanlC f =
             loop seed'
 STREAMING(scanl, scanlC, scanlS, f x)
 
--- | 'mapWhile' with a break condition dependent on an accumulator.
+-- | 'mapWhile' with a break condition dependent on a strict accumulator.
 -- Equivalently, 'CL.mapAccum' as long as the result is @Right@. Instead of
 -- producing a leftover, the breaking input determines the resulting
 -- accumulator via @Left@.
@@ -1524,9 +1524,9 @@ mapAccumWhile, mapAccumWhileC :: Monad m =>
 mapAccumWhileC f =
     loop
   where
-    loop s = await >>= maybe (return s) go
+    loop !s = await >>= maybe (return s) go
       where
-        go a = either return (\(s', b) -> yield b >> loop s') $ f a s
+        go a = either (return $!) (\(s', b) -> yield b >> loop s') $ f a s
 {-# INLINE mapAccumWhileC #-}
 STREAMING(mapAccumWhile, mapAccumWhileC, mapAccumWhileS, f s)
 
@@ -1780,9 +1780,9 @@ mapAccumWhileM, mapAccumWhileMC :: Monad m =>
 mapAccumWhileMC f =
     loop
   where
-    loop s = await >>= maybe (return s) go
+    loop !s = await >>= maybe (return s) go
       where
-        go a = lift (f a s) >>= either return (\(s', b) -> yield b >> loop s')
+        go a = lift (f a s) >>= either (return $!) (\(s', b) -> yield b >> loop s')
 {-# INLINE mapAccumWhileMC #-}
 STREAMING(mapAccumWhileM, mapAccumWhileMC, mapAccumWhileMS, f s)
 
@@ -2027,8 +2027,8 @@ addE ref e = do
         else writeMutVar ref $! S idx' mv front
 {-# INLINE addE #-}
 
--- | Consume a source in a way piecewise defined by a controlling stream. The
--- latter will be evaluated until it terminates.
+-- | Consume a source with a strict accumulator, in a way piecewise defined by
+-- a controlling stream. The latter will be evaluated until it terminates.
 --
 -- >>> let f a s = liftM (:s) $ mapC (*a) =$ CL.take a
 -- >>> reverse $ runIdentity $ yieldMany [0..3] $$ mapAccumS f [] (yieldMany [1..])
@@ -2037,8 +2037,8 @@ mapAccumS :: Monad m => (a -> s -> Sink b m s) -> s -> Source m b -> Sink a m s
 mapAccumS f s xs = do
     (zs, u) <- loop (newResumableSource xs, s)
     lift (closeResumableSource zs) >> return u
-    where loop r@(ys, t) = await >>= maybe (return r) go
-              where go a = lift (ys $$++ f a t) >>= loop
+    where loop r@(ys, !t) = await >>= maybe (return r) go
+              where go a  = lift (ys $$++ f a t) >>= loop
 {-# INLINE mapAccumS #-}
 
 -- | Run a consuming conduit repeatedly, only stopping when there is no more

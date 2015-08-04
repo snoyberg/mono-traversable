@@ -1128,7 +1128,7 @@ scanlC :: Monad m => (a -> b -> a) -> a -> Conduit b m a
 scanlC = CC.scanl
 {-# INLINE scanlC #-}
 
--- | 'mapWhileC' with a break condition dependent on an accumulator.
+-- | 'mapWhileC' with a break condition dependent on a strict accumulator.
 -- Equivalently, 'CL.mapAccum' as long as the result is @Right@. Instead of
 -- producing a leftover, the breaking input determines the resulting
 -- accumulator via @Left@.
