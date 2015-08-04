@@ -1,3 +1,7 @@
+# 1.0.2
+
+* Make mapAccumWhile & mapAccumS strict in accumulator state [#18](https://github.com/fpco/conduit-combinators/pull/18)
+
 # 1.0.1
 
 * mapAccumWhile, mapAccumWhileM, mapAccumS
