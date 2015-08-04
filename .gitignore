@@ -7,3 +7,5 @@ cabal-dev
 .virthualenv
 tmp
 *.swp
+/.stack-work/
+/tarballs/
