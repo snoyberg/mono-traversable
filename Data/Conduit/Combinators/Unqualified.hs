@@ -34,6 +34,10 @@ module Data.Conduit.Combinators.Unqualified
     , sourceRandomN
     , sourceRandomGen
     , sourceRandomNGen
+    , sourceRandomWith
+    , sourceRandomNWith
+    , sourceRandomGenWith
+    , sourceRandomNGenWith
 
       -- *** Filesystem
     , sourceDirectory
@@ -379,6 +383,48 @@ sourceRandomNGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                  -> Producer m a
 sourceRandomNGen = CC.sourceRandomNGen
 {-# INLINE sourceRandomNGen #-}
+
+-- | Create an infinite stream of random values from an arbitrary distribution,
+-- seeding from the system random number.
+--
+-- Subject to fusion
+sourceRandomWith :: (MWC.Variate a, MonadIO m) => (MWC.GenIO -> SIO.IO a) -> Producer m a
+sourceRandomWith = CC.sourceRandomWith
+{-# INLINE sourceRandomWith #-}
+
+-- | Create a stream of random values of length n from an arbitrary
+-- distribution, seeding from the system random number.
+--
+-- Subject to fusion
+sourceRandomNWith :: (MWC.Variate a, MonadIO m)
+                  => Int -- ^ count
+                  -> (MWC.GenIO -> SIO.IO a)
+                  -> Producer m a
+sourceRandomNWith = CC.sourceRandomNWith
+{-# INLINE sourceRandomNWith #-}
+
+-- | Create an infinite stream of random values from an arbitrary distribution,
+-- using the given random number generator.
+--
+-- Subject to fusion
+sourceRandomGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
+                    => MWC.Gen (PrimState base)
+                    -> (MWC.Gen (PrimState base) -> base a)
+                    -> Producer m a
+sourceRandomGenWith = CC.sourceRandomGenWith
+{-# INLINE sourceRandomGenWith #-}
+
+-- | Create a stream of random values of length n from an arbitrary
+-- distribution, seeding from the system random number.
+--
+-- Subject to fusion
+sourceRandomNGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
+                     => MWC.Gen (PrimState base)
+                     -> Int -- ^ count
+                     -> (MWC.Gen (PrimState base) -> base a)
+                     -> Producer m a
+sourceRandomNGenWith= CC.sourceRandomNGenWith
+{-# INLINE sourceRandomNGenWith #-}
 
 -- | Stream the contents of the given directory, without traversing deeply.
 --
