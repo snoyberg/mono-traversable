@@ -388,6 +388,8 @@ sourceRandomNGen = CC.sourceRandomNGen
 -- seeding from the system random number.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomWith :: (MWC.Variate a, MonadIO m) => (MWC.GenIO -> SIO.IO a) -> Producer m a
 sourceRandomWith = CC.sourceRandomWith
 {-# INLINE sourceRandomWith #-}
@@ -396,6 +398,8 @@ sourceRandomWith = CC.sourceRandomWith
 -- distribution, seeding from the system random number.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomNWith :: (MWC.Variate a, MonadIO m)
                   => Int -- ^ count
                   -> (MWC.GenIO -> SIO.IO a)
@@ -407,6 +411,8 @@ sourceRandomNWith = CC.sourceRandomNWith
 -- using the given random number generator.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                     => MWC.Gen (PrimState base)
                     -> (MWC.Gen (PrimState base) -> base a)
@@ -418,6 +424,8 @@ sourceRandomGenWith = CC.sourceRandomGenWith
 -- distribution, seeding from the system random number.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomNGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                      => MWC.Gen (PrimState base)
                      -> Int -- ^ count

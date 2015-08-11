@@ -500,6 +500,8 @@ sourceRandomNGen gen cnt = sourceRandomNGenWith gen cnt MWC.uniform
 -- seeding from the system random number.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomWith :: (MWC.Variate a, MonadIO m) => (MWC.GenIO -> SIO.IO a) -> Producer m a
 INLINE_RULE(sourceRandomWith, f, initRepeat (liftIO MWC.createSystemRandom) (liftIO . f))
 
@@ -507,6 +509,8 @@ INLINE_RULE(sourceRandomWith, f, initRepeat (liftIO MWC.createSystemRandom) (lif
 -- distribution, seeding from the system random number.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomNWith :: (MWC.Variate a, MonadIO m)
                   => Int -- ^ count
                   -> (MWC.GenIO -> SIO.IO a)
@@ -517,6 +521,8 @@ INLINE_RULE(sourceRandomNWith, cnt f, initReplicate (liftIO MWC.createSystemRand
 -- using the given random number generator.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                     => MWC.Gen (PrimState base)
                     -> (MWC.Gen (PrimState base) -> base a)
@@ -527,6 +533,8 @@ INLINE_RULE(sourceRandomGenWith, gen f, initRepeat (return gen) (liftBase . f))
 -- distribution, seeding from the system random number.
 --
 -- Subject to fusion
+--
+-- Since 1.0.3
 sourceRandomNGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                      => MWC.Gen (PrimState base)
                      -> Int -- ^ count
