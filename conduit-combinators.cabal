@@ -25,7 +25,7 @@ library
                      , transformers
                      , transformers-base
                      , primitive
-                     , mono-traversable >= 0.4
+                     , mono-traversable >= 0.5
                      , vector
                      , text
                      , bytestring
