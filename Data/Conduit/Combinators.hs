@@ -47,6 +47,10 @@ module Data.Conduit.Combinators
     , sourceRandomN
     , sourceRandomGen
     , sourceRandomNGen
+    , sourceRandomWith
+    , sourceRandomNWith
+    , sourceRandomGenWith
+    , sourceRandomNGenWith
 
       -- ** Filesystem
     , sourceDirectory
@@ -452,7 +456,8 @@ INLINE_RULE0(stdin, sourceHandle SIO.stdin)
 --
 -- Since 1.0.0
 sourceRandom :: (MWC.Variate a, MonadIO m) => Producer m a
-INLINE_RULE0(sourceRandom, initRepeat (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform))
+sourceRandom = sourceRandomWith MWC.uniform
+{-# INLINE sourceRandom #-}
 
 -- | Create a stream of random values of length n, seeding from the system
 -- random number.
@@ -463,7 +468,8 @@ INLINE_RULE0(sourceRandom, initRepeat (liftIO MWC.createSystemRandom) (liftIO . 
 sourceRandomN :: (MWC.Variate a, MonadIO m)
               => Int -- ^ count
               -> Producer m a
-INLINE_RULE(sourceRandomN, cnt, initReplicate (liftIO MWC.createSystemRandom) (liftIO . MWC.uniform) cnt)
+sourceRandomN cnt = sourceRandomNWith cnt MWC.uniform
+{-# INLINE sourceRandomN #-}
 
 -- | Create an infinite stream of random values, using the given random number
 -- generator.
@@ -474,7 +480,8 @@ INLINE_RULE(sourceRandomN, cnt, initReplicate (liftIO MWC.createSystemRandom) (l
 sourceRandomGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                 => MWC.Gen (PrimState base)
                 -> Producer m a
-INLINE_RULE(sourceRandomGen, gen, initRepeat (return gen) (liftBase . MWC.uniform))
+sourceRandomGen gen = sourceRandomGenWith gen MWC.uniform
+{-# INLINE sourceRandomGen #-}
 
 -- | Create a stream of random values of length n, seeding from the system
 -- random number.
@@ -486,7 +493,46 @@ sourceRandomNGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
                  => MWC.Gen (PrimState base)
                  -> Int -- ^ count
                  -> Producer m a
-INLINE_RULE(sourceRandomNGen, gen cnt, initReplicate (return gen) (liftBase . MWC.uniform) cnt)
+sourceRandomNGen gen cnt = sourceRandomNGenWith gen cnt MWC.uniform
+{-# INLINE sourceRandomNGen #-}
+
+-- | Create an infinite stream of random values from an arbitrary distribution,
+-- seeding from the system random number.
+--
+-- Subject to fusion
+sourceRandomWith :: (MWC.Variate a, MonadIO m) => (MWC.GenIO -> SIO.IO a) -> Producer m a
+INLINE_RULE(sourceRandomWith, f, initRepeat (liftIO MWC.createSystemRandom) (liftIO . f))
+
+-- | Create a stream of random values of length n from an arbitrary
+-- distribution, seeding from the system random number.
+--
+-- Subject to fusion
+sourceRandomNWith :: (MWC.Variate a, MonadIO m)
+                  => Int -- ^ count
+                  -> (MWC.GenIO -> SIO.IO a)
+                  -> Producer m a
+INLINE_RULE(sourceRandomNWith, cnt f, initReplicate (liftIO MWC.createSystemRandom) (liftIO . f) cnt)
+
+-- | Create an infinite stream of random values from an arbitrary distribution,
+-- using the given random number generator.
+--
+-- Subject to fusion
+sourceRandomGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
+                    => MWC.Gen (PrimState base)
+                    -> (MWC.Gen (PrimState base) -> base a)
+                    -> Producer m a
+INLINE_RULE(sourceRandomGenWith, gen f, initRepeat (return gen) (liftBase . f))
+
+-- | Create a stream of random values of length n from an arbitrary
+-- distribution, seeding from the system random number.
+--
+-- Subject to fusion
+sourceRandomNGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
+                     => MWC.Gen (PrimState base)
+                     -> Int -- ^ count
+                     -> (MWC.Gen (PrimState base) -> base a)
+                     -> Producer m a
+INLINE_RULE(sourceRandomNGenWith, gen cnt f, initReplicate (return gen) (liftBase . f) cnt)
 
 -- | Stream the contents of the given directory, without traversing deeply.
 --
