@@ -9,3 +9,4 @@ cabal.config
 cabal.sandbox.config
 /tarballs/
 .cabal-sandbox
+/.stack-work/
