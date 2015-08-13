@@ -8,6 +8,7 @@ module Data.Mutable
       PRef
     , asPRef
     , URef
+    , IOURef
     , asURef
     , SRef
     , asSRef
