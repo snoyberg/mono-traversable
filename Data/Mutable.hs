@@ -6,13 +6,16 @@ module Data.Mutable
     ( -- * Data types
       -- ** Single-cell mutable references
       PRef
+    , IOPRef
     , asPRef
     , URef
     , IOURef
     , asURef
     , SRef
+    , IOSRef
     , asSRef
     , BRef
+    , IOBRef
     , asBRef
       -- *** Standard re-exports
     , IORef
