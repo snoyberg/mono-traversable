@@ -1,3 +1,7 @@
+## 0.3.1
+
+* Export IOURef [#4](https://github.com/fpco/mutable-containers/pull/4)
+
 ## 0.3.0
 
 * Rename `DList` to `DLList` to avoid conflict with difference lists
