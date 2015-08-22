@@ -7,7 +7,7 @@
 module Data.Sequences where
 
 import Data.Maybe (fromJust, isJust)
-import Data.Monoid (Monoid, mconcat, mempty)
+import Data.Monoid (Monoid, mappend, mconcat, mempty)
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
@@ -410,9 +410,16 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     unsafeIndex :: seq -> Index seq -> Element seq
     unsafeIndex = indexEx
 
+    -- | 'intercalate' @seq seqs@ inserts @seq@ in between @seqs@ and
+    -- concatenates the result.
+    intercalate :: seq -> [seq] -> seq
+    intercalate = defaultIntercalate
 
-    -- | 'splitWhen' splits a sequence into components delimited by separators, where the
-    -- predicate returns True for a separator element.
+    -- | 'splitWhen' splits a sequence into components delimited by separators,
+    -- where the predicate returns True for a separator element. The resulting
+    -- components do not contain the separators. Two adjacent separators result
+    -- in an empty component in the output. The number of resulting components
+    -- is greater by one than number of separators.
     splitWhen :: (Element seq -> Bool) -> seq -> [seq]
     splitWhen = defaultSplitWhen
 
@@ -466,6 +473,12 @@ defaultReverse = fromList . List.reverse . otoList
 defaultSortBy :: IsSequence seq => (Element seq -> Element seq -> Ordering) -> seq -> seq
 defaultSortBy f = fromList . sortBy f . otoList
 {-# INLINE defaultSortBy #-}
+
+-- | Default 'intercalate'
+defaultIntercalate :: (IsSequence seq) => seq -> [seq] -> seq
+defaultIntercalate _ [] = mempty
+defaultIntercalate s (seq:seqs) = mconcat (seq : List.map (s `mappend`) seqs)
+{-# INLINE defaultIntercalate #-}
 
 -- | Use 'splitWhen' from "Data.List.Split"
 defaultSplitWhen :: IsSequence seq => (Element seq -> Bool) -> seq -> [seq]
@@ -549,6 +562,7 @@ instance IsSequence [a] where
       where
         (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllOn _ [] = []
+    intercalate = List.intercalate
     splitWhen = List.splitWhen
     {-# INLINE fromList #-}
     {-# INLINE break #-}
@@ -576,6 +590,7 @@ instance IsSequence [a] where
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
+    {-# INLINE intercalate #-}
     {-# INLINE splitWhen #-}
 
 instance SemiSequence (NE.NonEmpty a) where
@@ -631,7 +646,9 @@ instance IsSequence S.ByteString where
     tailEx = S.tail
     initEx = S.init
     unsafeTail = SU.unsafeTail
-    splitWhen = S.splitWith
+    splitWhen f s | S.null s = [S.empty]
+                  | otherwise = S.splitWith f s
+    intercalate = S.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -659,6 +676,7 @@ instance IsSequence S.ByteString where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
+    {-# INLINE intercalate #-}
 
     index bs i
         | i >= S.length bs = Nothing
@@ -704,6 +722,7 @@ instance IsSequence T.Text where
     tailEx = T.tail
     initEx = T.init
     splitWhen = T.split
+    intercalate = T.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -731,6 +750,7 @@ instance IsSequence T.Text where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
+    {-# INLINE intercalate #-}
 
     index t i
         | i >= T.length t = Nothing
@@ -775,7 +795,9 @@ instance IsSequence L.ByteString where
     groupBy = L.groupBy
     tailEx = L.tail
     initEx = L.init
-    splitWhen = L.splitWith
+    splitWhen f s | L.null s = [L.empty]
+                  | otherwise = L.splitWith f s
+    intercalate = L.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -803,6 +825,7 @@ instance IsSequence L.ByteString where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
+    {-# INLINE intercalate #-}
 
     indexEx = L.index
     unsafeIndex = L.index
@@ -845,6 +868,7 @@ instance IsSequence TL.Text where
     tailEx = TL.tail
     initEx = TL.init
     splitWhen = TL.split
+    intercalate = TL.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -872,6 +896,7 @@ instance IsSequence TL.Text where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
+    {-# INLINE intercalate #-}
 
     indexEx = TL.index
     unsafeIndex = TL.index
@@ -1220,15 +1245,36 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
 -- | A typeclass for sequences whose elements have the 'Eq' typeclass
 class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq where
 
-    -- | @'split' sep@ splits a sequence into components delimited by separator
-    -- element.
-    split :: Element seq -> seq -> [seq]
-    split x = splitWhen (== x)
+    -- | @'splitElem'@ splits a sequence into components delimited by separator
+    -- element. It's equivalent to 'splitWhen' with equality predicate:
+    --
+    -- > splitElem sep === splitWhen (== sep)
+    splitElem :: Element seq -> seq -> [seq]
+    splitElem x = splitWhen (== x)
 
-    -- | @'splitOn' sep@ splits a sequence into components delimited by
-    -- separator subsequence
-    splitOn :: seq -> seq -> [seq]
-    splitOn = defaultSplitOn
+    -- | @'splitSeq'@ splits a sequence into components delimited by
+    -- separator subsequence. 'splitSeq' is the right inverse of 'intercalate':
+    --
+    -- > intercalate x . splitSeq x === id
+    --
+    -- 'splitElem' can be considered a special case of 'splitSeq'
+    --
+    -- > 'splitSeq' (singleton sep) === 'splitElem sep'
+    --
+    -- @'splitSeq' mempty@ is another special case: it splits just before each
+    -- element, and in line with 'splitWhen' rules, it has at least one output
+    -- component:
+    --
+    -- @
+    -- > 'splitSeq' "" ""
+    -- [""]
+    -- > 'splitSeq' "" "a"
+    -- ["", "a"]
+    -- > 'splitSeq' "" "ab"
+    -- ["", "a", "b"]
+    -- @
+    splitSeq :: seq -> seq -> [seq]
+    splitSeq = defaultSplitOn
 
     -- | 'stripPrefix' drops the given prefix from a sequence.
     -- It returns 'Nothing' if the sequence did not start with the prefix
@@ -1281,8 +1327,8 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     -- Equivalent to @'groupAllOn' id@
     groupAll :: seq -> [seq]
     groupAll = groupAllOn id
-    {-# INLINE split #-}
-    {-# INLINE splitOn #-}
+    {-# INLINE splitElem #-}
+    {-# INLINE splitSeq #-}
     {-# INLINE isPrefixOf #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
@@ -1304,14 +1350,14 @@ defaultSplitOn :: EqSequence s => s -> s -> [s]
 defaultSplitOn sep = List.map fromList . List.splitOn (otoList sep) . otoList
 
 instance Eq a => EqSequence [a] where
-    splitOn = List.splitOn
+    splitSeq = List.splitOn
     stripPrefix = List.stripPrefix
     stripSuffix x y = fmap reverse (List.stripPrefix (reverse x) (reverse y))
     group = List.group
     isPrefixOf = List.isPrefixOf
     isSuffixOf x y = List.isPrefixOf (List.reverse x) (List.reverse y)
     isInfixOf = List.isInfixOf
-    {-# INLINE splitOn #-}
+    {-# INLINE splitSeq #-}
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
@@ -1321,7 +1367,8 @@ instance Eq a => EqSequence [a] where
     {-# INLINE isInfixOf #-}
 
 instance EqSequence S.ByteString where
-    split = S.split
+    splitElem sep s | S.null s = [S.empty]
+                    | otherwise = S.split sep s
     stripPrefix x y
         | x `S.isPrefixOf` y = Just (S.drop (S.length x) y)
         | otherwise = Nothing
@@ -1332,7 +1379,7 @@ instance EqSequence S.ByteString where
     isPrefixOf = S.isPrefixOf
     isSuffixOf = S.isSuffixOf
     isInfixOf = S.isInfixOf
-    {-# INLINE split #-}
+    {-# INLINE splitElem #-}
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
@@ -1342,7 +1389,8 @@ instance EqSequence S.ByteString where
     {-# INLINE isInfixOf #-}
 
 instance EqSequence L.ByteString where
-    split = L.split
+    splitElem sep s | L.null s = [L.empty]
+                    | otherwise = L.split sep s
     stripPrefix x y
         | x `L.isPrefixOf` y = Just (L.drop (L.length x) y)
         | otherwise = Nothing
@@ -1353,7 +1401,7 @@ instance EqSequence L.ByteString where
     isPrefixOf = L.isPrefixOf
     isSuffixOf = L.isSuffixOf
     isInfixOf x y = L.unpack x `List.isInfixOf` L.unpack y
-    {-# INLINE split #-}
+    {-# INLINE splitElem #-}
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
@@ -1363,14 +1411,15 @@ instance EqSequence L.ByteString where
     {-# INLINE isInfixOf #-}
 
 instance EqSequence T.Text where
-    splitOn = T.splitOn
+    splitSeq sep | T.null sep = (:) T.empty . List.map singleton . T.unpack
+                 | otherwise = T.splitOn sep
     stripPrefix = T.stripPrefix
     stripSuffix = T.stripSuffix
     group = T.group
     isPrefixOf = T.isPrefixOf
     isSuffixOf = T.isSuffixOf
     isInfixOf = T.isInfixOf
-    {-# INLINE splitOn #-}
+    {-# INLINE splitSeq #-}
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
@@ -1380,14 +1429,15 @@ instance EqSequence T.Text where
     {-# INLINE isInfixOf #-}
 
 instance EqSequence TL.Text where
-    splitOn = TL.splitOn
+    splitSeq sep | TL.null sep = (:) TL.empty . List.map singleton . TL.unpack
+                 | otherwise = TL.splitOn sep
     stripPrefix = TL.stripPrefix
     stripSuffix = TL.stripSuffix
     group = TL.group
     isPrefixOf = TL.isPrefixOf
     isSuffixOf = TL.isSuffixOf
     isInfixOf = TL.isInfixOf
-    {-# INLINE splitOn #-}
+    {-# INLINE splitSeq #-}
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
