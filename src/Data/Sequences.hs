@@ -1259,7 +1259,7 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     --
     -- 'splitElem' can be considered a special case of 'splitSeq'
     --
-    -- > 'splitSeq' (singleton sep) === 'splitElem sep'
+    -- > splitSeq (singleton sep) === splitElem sep
     --
     -- @'splitSeq' mempty@ is another special case: it splits just before each
     -- element, and in line with 'splitWhen' rules, it has at least one output
