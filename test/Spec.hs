@@ -1,6 +1,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns #-}
+
 module Spec where
 
 import Data.MonoTraversable
@@ -9,11 +11,14 @@ import Data.Sequences
 import qualified Data.Sequence as Seq
 import qualified Data.NonNull as NN
 import Data.ByteVector
+import Data.Monoid (mempty, mconcat)
+import Data.Maybe (fromMaybe)
 
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.HUnit ((@?=))
 import Test.QuickCheck hiding (NonEmptyList(..))
+import qualified Test.QuickCheck as QC
 import qualified Test.QuickCheck.Modifiers as QCM
 
 import Data.Text (Text)
@@ -38,7 +43,7 @@ import Control.Applicative
 import Control.Monad.Trans.Writer
 
 import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, Integer, show,
-                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, seq)
+                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, seq, maybe)
 import qualified Prelude
 
 instance Arbitrary a => Arbitrary (NE.NonEmpty a) where
@@ -385,6 +390,59 @@ main = hspec $ do
         test "Strict Text" T.empty
         test "Lazy Text" TL.empty
 
+    describe "Intercalate" $ do
+        let test typ dummy = describe typ $ do
+                prop "intercalate === defaultIntercalate" $ \list lists ->
+                    let seq = fromListAs list dummy
+                        seqs = map (`fromListAs` dummy) lists
+                    in intercalate seq seqs @?= defaultIntercalate seq seqs
+        test "List" ([] :: [Int])
+        test "Vector" (V.empty :: V.Vector Int)
+        test "Storable Vector" (VS.empty :: VS.Vector Int)
+        test "Unboxed Vector" (U.empty :: U.Vector Int)
+        test "Strict ByteString" S.empty
+        test "Lazy ByteString" L.empty
+        test "Strict Text" T.empty
+        test "Lazy Text" TL.empty
+
+    describe "Splitting" $ do
+        let test typ dummy = describe typ $ do
+                let fromList' = (`fromListAs` dummy)
+                let fromSepList sep = fromList' . map (fromMaybe sep)
+                prop "intercalate sep . splitSeq sep === id" $
+                    \(fromList' -> sep) ->
+                    \(mconcat . map (maybe sep fromList') -> xs) ->
+                    intercalate sep (splitSeq sep xs) @?= xs
+                prop "splitSeq mempty xs === mempty : map singleton (otoList xs)" $
+                    \input ->
+                    splitSeq mempty (fromList' input) @?= mempty : map singleton input
+                prop "splitSeq _ mempty == [mempty]" $
+                    \(fromList' -> sep) ->
+                    splitSeq sep mempty @?= [mempty]
+                prop "intercalate (singleton sep) . splitElem sep === id" $
+                    \sep -> \(fromSepList sep -> xs) ->
+                    intercalate (singleton sep) (splitElem sep xs) @?= xs
+                prop "length . splitElem sep === succ . length . filter (== sep)" $
+                    \sep -> \(fromSepList sep -> xs) ->
+                    olength (splitElem sep xs) @?= olength (filter (== sep) xs) + 1
+                prop "splitElem sep (replicate n sep) == replicate (n+1) mempty" $
+                    \(NonNegative n) sep ->
+                    splitElem sep (fromList' (replicate n sep)) @?= replicate (n + 1) mempty
+                prop "splitElem sep === splitWhen (== sep)" $
+                    \sep -> \(fromSepList sep -> xs) ->
+                    splitElem sep xs @?= splitWhen (== sep) xs
+                prop "splitElem sep === splitSeq (singleton sep)" $
+                    \sep -> \(fromSepList sep -> xs) ->
+                    splitElem sep xs @?= splitSeq (singleton sep) xs
+        test "List" ([] :: [Int])
+        test "Vector" (V.empty :: V.Vector Int)
+        test "Storable Vector" (VS.empty :: VS.Vector Int)
+        test "Unboxed Vector" (U.empty :: U.Vector Int)
+        test "Strict ByteString" S.empty
+        test "Lazy ByteString" L.empty
+        test "Strict Text" T.empty
+        test "Lazy Text" TL.empty
+
     describe "Data.ByteVector" $ do
         prop "toByteVector" $ \ws ->
             (otoList . toByteVector . fromList $ ws) @?= ws
@@ -398,3 +456,4 @@ main = hspec $ do
 
         it "#31 find doesn't infinitely loop on NonEmpty" $
             find (== "a") ("a" NE.:| ["d","fgf"]) @?= Just "a"
+
