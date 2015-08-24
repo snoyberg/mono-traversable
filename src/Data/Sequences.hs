@@ -412,6 +412,8 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
 
     -- | 'intercalate' @seq seqs@ inserts @seq@ in between @seqs@ and
     -- concatenates the result.
+    --
+    -- Since 0.9.3
     intercalate :: seq -> [seq] -> seq
     intercalate = defaultIntercalate
 
@@ -420,6 +422,8 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- components do not contain the separators. Two adjacent separators result
     -- in an empty component in the output. The number of resulting components
     -- is greater by one than number of separators.
+    --
+    -- Since 0.9.3
     splitWhen :: (Element seq -> Bool) -> seq -> [seq]
     splitWhen = defaultSplitWhen
 
@@ -1249,6 +1253,8 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     -- element. It's equivalent to 'splitWhen' with equality predicate:
     --
     -- > splitElem sep === splitWhen (== sep)
+    --
+    -- Since 0.9.3
     splitElem :: Element seq -> seq -> [seq]
     splitElem x = splitWhen (== x)
 
@@ -1273,6 +1279,8 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     -- > 'splitSeq' "" "ab"
     -- ["", "a", "b"]
     -- @
+    --
+    -- Since 0.9.3
     splitSeq :: seq -> seq -> [seq]
     splitSeq = defaultSplitOn
 

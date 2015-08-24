@@ -1,3 +1,7 @@
+## 0.9.3
+
+* Added `intercalate`, `splitWhen`, `splitElem`, and `splitSeq` [#80](https://github.com/snoyberg/mono-traversable/pull/80)
+
 ## 0.9.2.1
 
 * Tweak test suite for 32-bit systems [#78](https://github.com/snoyberg/mono-traversable/issues/78)
