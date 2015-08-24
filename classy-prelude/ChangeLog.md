@@ -1,3 +1,7 @@
+## 0.12.3
+
+* mono-traversable-0.9.3 support
+
 ## 0.12.2
 
 add `errorM`, `terrorM`, and `terror`

@@ -1,5 +1,5 @@
 name:                classy-prelude
-version:             0.12.1.1
+version:             0.12.3
 synopsis:            A typeclass-based Prelude.
 description:         Modern best practices without name collisions. No partial functions are exposed, but modern data structures are, without requiring import lists. Qualified modules also are not needed: instead operations are based on type-classes from the mono-traversable package.
 
@@ -25,7 +25,7 @@ library
                      , unordered-containers
                      , hashable
                      , lifted-base                   >= 0.2
-                     , mono-traversable              >= 0.9.1
+                     , mono-traversable              >= 0.9.3
                      , exceptions                    >= 0.5
                      , semigroups
                      , vector-instances

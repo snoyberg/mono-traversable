@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -365,8 +366,10 @@ intersect = intersection
 unions :: (MonoFoldable c, SetContainer (Element c)) => c -> Element c
 unions = ofoldl' union Monoid.mempty
 
+#if !MIN_VERSION_mono_traversable(0, 9, 3)
 intercalate :: (Monoid (Element c), IsSequence c) => Element c -> c -> Element c
 intercalate xs xss = concat (intersperse xs xss)
+#endif
 
 asByteString :: ByteString -> ByteString
 asByteString = id
