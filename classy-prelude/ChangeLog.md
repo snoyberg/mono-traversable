@@ -1,3 +1,7 @@
+## 0.12.4
+
+* Expose `traverse_` and `for_`
+
 ## 0.12.3
 
 * mono-traversable-0.9.3 support

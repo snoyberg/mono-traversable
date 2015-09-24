@@ -301,6 +301,12 @@ length = olength
 mapM_ :: (Monad m, MonoFoldable c) => (Element c -> m ()) -> c -> m ()
 mapM_ = omapM_
 
+traverse_ :: (Applicative f, MonoFoldable c) => (Element c -> f ()) -> c -> f ()
+traverse_ = otraverse_
+
+for_ :: (Applicative f, MonoFoldable c) => c -> (Element c -> f ()) -> f ()
+for_ = ofor_
+
 forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m ()) -> m ()
 forM_ = oforM_
 
