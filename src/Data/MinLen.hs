@@ -162,7 +162,7 @@ type instance MaxNat (Succ x) (Succ y) = Succ (MaxNat x y)
 newtype MinLen nat mono =
     MinLen {
         unMinLen :: mono -- ^ Get the monomorphic container out of a 'MinLen' wrapper.
-    } deriving (Eq, Ord, Read, Show, Data, Typeable, Functor)
+    } deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type instance Element (MinLen nat mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (MinLen nat mono)
@@ -176,6 +176,9 @@ instance MonoTraversable mono => MonoTraversable (MinLen nat mono) where
     {-# INLINE omapM #-}
 deriving instance GrowingAppend mono => GrowingAppend (MinLen nat mono)
 
+-- | This function is unsafe, and must not be exposed from this module.
+unsafeMap :: (mono -> mono) -> MinLen nat mono -> MinLen nat mono
+unsafeMap f (MinLen x) = MinLen (f x)
 
 instance GrowingAppend mono => Semigroup (MinLen nat mono) where
     MinLen x <> MinLen y = MinLen (x <> y)
@@ -183,12 +186,12 @@ instance GrowingAppend mono => Semigroup (MinLen nat mono) where
 instance SemiSequence seq => SemiSequence (MinLen nat seq) where
     type Index (MinLen nat seq) = Index seq
 
-    intersperse e = fmap $ intersperse e
-    reverse       = fmap reverse
+    intersperse e = unsafeMap $ intersperse e
+    reverse       = unsafeMap reverse
     find f        = find f . unMinLen
-    cons x        = fmap $ cons x
-    snoc xs x     = fmap (flip snoc x) xs
-    sortBy f      = fmap $ sortBy f
+    cons x        = unsafeMap $ cons x
+    snoc xs x     = unsafeMap (flip snoc x) xs
+    sortBy f      = unsafeMap $ sortBy f
 
 instance MonoPointed mono => MonoPointed (MinLen Zero mono) where
     opoint = MinLen . opoint

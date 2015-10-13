@@ -1,3 +1,7 @@
+## 0.10.0
+
+* Remove `Functor` instance for `MinLen` [#82](https://github.com/snoyberg/mono-traversable/issues/82)
+
 ## 0.9.3
 
 * Added `intercalate`, `splitWhen`, `splitElem`, and `splitSeq` [#80](https://github.com/snoyberg/mono-traversable/pull/80)
