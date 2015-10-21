@@ -11,7 +11,7 @@ A better Prelude. Haskell's Prelude needs to maintain backwards compatibility an
 
 classy-prelude [should only be used by application developers](http://www.yesodweb.com/blog/2013/10/prelude-replacements-libraries). Library authors should consider using [mono-traversable](https://github.com/snoyberg/mono-traversable/blob/master/README.md), which classy-prelude builds upon.
 
-It is worth noting that classy-prelude [is largely front-running changes that the community would like to make to the base Prelude](http://www.yesodweb.com/blog/2014/10/classy-base-prelude).
+It is worth noting that classy-prelude [largely front-ran changes that the community made to the base Prelude in GHC 7.10](http://www.yesodweb.com/blog/2014/10/classy-base-prelude).
 
 mono-traversable
 ================
