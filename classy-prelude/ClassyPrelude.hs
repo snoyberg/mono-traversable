@@ -171,7 +171,7 @@ module ClassyPrelude
     ) where
 
 import qualified Prelude
-import Control.Applicative ((<**>),liftA,liftA2,liftA3)
+import Control.Applicative ((<**>),liftA,liftA2,liftA3,Alternative (..), optional)
 import Data.Functor
 import Control.Exception (assert)
 import Control.Exception.Enclosed

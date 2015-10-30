@@ -1,8 +1,6 @@
-resolver: lts-3.0
+resolver: lts-3.9
 
 packages:
   - 'classy-prelude'
   - 'classy-prelude-conduit'
   - 'classy-prelude-yesod'
-extra-deps:
-  - mono-traversable-0.9.3

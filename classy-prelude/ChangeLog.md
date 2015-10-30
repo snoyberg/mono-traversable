@@ -1,3 +1,7 @@
+## 0.12.5
+
+* Expose `Alternative` and `optional`
+
 ## 0.12.4
 
 * Expose `traverse_` and `for_`
