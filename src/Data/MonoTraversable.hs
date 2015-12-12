@@ -571,7 +571,7 @@ instance MonoFoldable (Maybe a) where
     {-# INLINE omapM_ #-}
 instance MonoFoldable (Tree a)
 instance MonoFoldable (Seq a) where
-    headEx = flip Seq.index 1
+    headEx = flip Seq.index 0
     lastEx xs = Seq.index xs (Seq.length xs - 1)
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
@@ -1297,4 +1297,3 @@ instance MonoComonad (ViewR a) where
                        EmptyR  -> Seq.empty
                        ys :> y -> ys Seq.|> y
         ) :> f w
-

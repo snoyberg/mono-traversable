@@ -457,3 +457,6 @@ main = hspec $ do
         it "#31 find doesn't infinitely loop on NonEmpty" $
             find (== "a") ("a" NE.:| ["d","fgf"]) @?= Just "a"
 
+        it "#83 head on Seq works correctly" $ do
+            headEx (Seq.fromList [1 :: Int,2,3]) @?= (1 :: Int)
+            headMay (Seq.fromList [] :: Seq.Seq Int) @?= Nothing
