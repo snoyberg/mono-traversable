@@ -1,3 +1,7 @@
+## 0.10.0.1
+
+* Instance for Data.Sequence.Seq is incorrect. [#83](https://github.com/snoyberg/mono-traversable/issues/83)
+
 ## 0.10.0
 
 * Remove `Functor` instance for `MinLen` [#82](https://github.com/snoyberg/mono-traversable/issues/82)
