@@ -225,6 +225,33 @@ instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
     {-# INLINE omap #-}
 
+-- | Monomorphic Applicatives.
+
+class MonoApplicative mono where
+    -- | Pure for monomorphic container.
+    opure :: a -> mono a
+    default opure :: (Applicative f, Element (f a) ~ a, f a ~ mono a) => a -> f a
+    opure = pure
+    {-# INLINE opure #-}
+
+    -- | Apply over a monomorphic container.
+    oap :: mono (a -> a) -> mono a -> mono a
+    default oap :: (Applicative f, Element (f a) ~ a, f a ~ mono a) => f (a -> a) -> f a -> f a
+    oap = (<*>)
+    {-# INLINE oap #-}
+
+instance MonoApplicative []
+instance MonoApplicative IO
+instance MonoApplicative Maybe
+instance MonoApplicative ZipList
+instance MonoApplicative Identity
+instance MonoApplicative ((->) a)
+instance MonoApplicative (Either e)
+instance Monoid a => MonoApplicative ((,) a)
+instance Monad m => MonoApplicative (WrappedMonad m)
+instance Monoid m => MonoApplicative (Const m)
+instance Arrow a => MonoApplicative (WrappedArrow a b)
+
 -- | Monomorphic containers that can be folded.
 class MonoFoldable mono where
     -- | Map each element of a monomorphic container to a 'Monoid'
