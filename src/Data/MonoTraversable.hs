@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstrainedClassMethods #-}
+{-# LANGUAGE CPP                     #-}
 {-# LANGUAGE DefaultSignatures       #-}
 {-# LANGUAGE FlexibleContexts        #-}
 {-# LANGUAGE FlexibleInstances       #-}
@@ -68,7 +69,9 @@ import Control.Comonad (Cokleisli, Comonad, extract, extend)
 import Control.Comonad.Store (StoreT)
 import Control.Comonad.Env (EnvT)
 import Control.Comonad.Traced (TracedT)
+#if !MIN_VERSION_comonad(5,0,0)
 import Data.Functor.Coproduct (Coproduct)
+#endif
 import Control.Monad.Trans.Writer (WriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Strict (WriterT)
 import Control.Monad.Trans.State (StateT(..))
@@ -151,7 +154,9 @@ type instance Element (Arg a b) = b
 type instance Element (EnvT e w a) = a
 type instance Element (StoreT s w a) = a
 type instance Element (TracedT m w a) = a
+#if !MIN_VERSION_comonad(5,0,0)
 type instance Element (Coproduct f g a) = a
+#endif
 
 -- | Monomorphic containers that can be mapped over.
 class MonoFunctor mono where
@@ -198,7 +203,9 @@ instance MonoFunctor (Arg a b)
 instance Functor w => MonoFunctor (EnvT e w a)
 instance Functor w => MonoFunctor (StoreT s w a)
 instance Functor w => MonoFunctor (TracedT m w a)
+#if !MIN_VERSION_comonad(5,0,0)
 instance (Functor f, Functor g) => MonoFunctor (Coproduct f g a)
+#endif
 instance Arrow a => MonoFunctor (WrappedArrow a b c)
 instance Functor f => MonoFunctor (MaybeApply f a)
 instance Functor f => MonoFunctor (WrappedApplicative f a)
@@ -1274,7 +1281,9 @@ instance Comonad w => MonoComonad (IdentityT w a)
 instance Comonad w => MonoComonad (EnvT e w a)
 instance Comonad w => MonoComonad (StoreT s w a)
 instance (Comonad w, Monoid m) => MonoComonad (TracedT m w a)
+#if !MIN_VERSION_comonad(5,0,0)
 instance (Comonad f, Comonad g) => MonoComonad (Coproduct f g a)
+#endif
 
 -- Not Comonad
 instance MonoComonad (ViewL a) where

@@ -1,3 +1,7 @@
+## 0.10.1
+
+* Allow comonad-5 [#86](https://github.com/snoyberg/mono-traversable/issues/86)
+
 ## 0.10.0.1
 
 * Instance for Data.Sequence.Seq is incorrect. [#83](https://github.com/snoyberg/mono-traversable/issues/83)
