@@ -1513,7 +1513,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     -- > 'unwords' ["abc","def","ghi"]
     -- "abc def ghi"
     -- @
-    unwords :: [t] -> t
+    unwords :: (Element seq ~ t, IsSequence seq) => seq -> t
 
     -- | Break up a textual sequence at newline characters.
     --
@@ -1530,7 +1530,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     -- > 'unlines' ["abc","def","ghi"]
     -- "abc\\ndef\\nghi"
     -- @
-    unlines :: [t] -> t
+    unlines :: (Element seq ~ t, IsSequence seq) => seq -> t
 
     -- | Convert a textual sequence to lower-case.
     --
@@ -1580,9 +1580,9 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
 
 instance (c ~ Char) => Textual [c] where
     words = List.words
-    unwords = List.unwords
+    unwords = List.unwords . otoList
     lines = List.lines
-    unlines = List.unlines
+    unlines = List.unlines . otoList
     toLower = TL.unpack . TL.toLower . TL.pack
     toUpper = TL.unpack . TL.toUpper . TL.pack
     toCaseFold = TL.unpack . TL.toCaseFold . TL.pack
@@ -1596,9 +1596,9 @@ instance (c ~ Char) => Textual [c] where
 
 instance Textual T.Text where
     words = T.words
-    unwords = T.unwords
+    unwords = T.unwords . otoList
     lines = T.lines
-    unlines = T.unlines
+    unlines = T.unlines . otoList
     toLower = T.toLower
     toUpper = T.toUpper
     toCaseFold = T.toCaseFold
@@ -1612,9 +1612,9 @@ instance Textual T.Text where
 
 instance Textual TL.Text where
     words = TL.words
-    unwords = TL.unwords
+    unwords = TL.unwords . otoList
     lines = TL.lines
-    unlines = TL.unlines
+    unlines = TL.unlines . otoList
     toLower = TL.toLower
     toUpper = TL.toUpper
     toCaseFold = TL.toCaseFold
