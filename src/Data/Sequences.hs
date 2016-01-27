@@ -1513,7 +1513,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     -- > 'unwords' ["abc","def","ghi"]
     -- "abc def ghi"
     -- @
-    unwords :: (Element seq ~ t, IsSequence seq) => seq -> t
+    unwords :: (Element seq ~ t, MonoFoldable seq) => seq -> t
 
     -- | Break up a textual sequence at newline characters.
     --
@@ -1530,7 +1530,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     -- > 'unlines' ["abc","def","ghi"]
     -- "abc\\ndef\\nghi"
     -- @
-    unlines :: (Element seq ~ t, IsSequence seq) => seq -> t
+    unlines :: (Element seq ~ t, MonoFoldable seq) => seq -> t
 
     -- | Convert a textual sequence to lower-case.
     --
