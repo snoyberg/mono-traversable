@@ -1,3 +1,7 @@
+# 1.0.3.1
+
+* Support for QuickCheck 2.8.2
+
 # 1.0.3
 
 * sourceRandomWith [#19](https://github.com/fpco/conduit-combinators/pull/19)

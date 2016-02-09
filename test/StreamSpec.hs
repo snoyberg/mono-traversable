@@ -223,8 +223,10 @@ spec = do
                 (sinkVectorNS n :: forall o. StreamConduitM Int o IO.IO (Vector Int))
                 (\xs -> sourceList xs $$ preventFusion (sinkVectorN n))
 
+#if !MIN_VERSION_QuickCheck(2,8,2)
 instance Arbitrary a => Arbitrary (Seq a) where
     arbitrary = Seq.fromList <$> arbitrary
+#endif
 
 repeatML :: Monad m => m a -> m [a]
 repeatML = Prelude.sequence . Prelude.repeat
