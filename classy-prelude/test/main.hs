@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -414,16 +415,12 @@ data DummyException = DummyException
     deriving (Show, Typeable)
 instance Exception DummyException
 
-instance Arbitrary (Map Int Char) where
-    arbitrary = mapFromList <$> arbitrary
 instance Arbitrary (HashMap Int Char) where
     arbitrary = mapFromList <$> arbitrary
 instance Arbitrary (Vector Int) where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary (UVector Int) where
     arbitrary = fromList <$> arbitrary
-instance Arbitrary (Set Int) where
-    arbitrary = setFromList <$> arbitrary
 instance Arbitrary (HashSet Int) where
     arbitrary = setFromList <$> arbitrary
 instance Arbitrary ByteString where
@@ -434,5 +431,12 @@ instance Arbitrary Text where
     arbitrary = fromList <$> arbitrary
 instance Arbitrary LText where
     arbitrary = fromList <$> arbitrary
+
+#if !MIN_VERSION_QuickCheck(2,8,2)
 instance Arbitrary (Seq Int) where
     arbitrary = fromList <$> arbitrary
+instance Arbitrary (Set Int) where
+    arbitrary = setFromList <$> arbitrary
+instance Arbitrary (Map Int Char) where
+    arbitrary = mapFromList <$> arbitrary
+#endif

@@ -1,3 +1,7 @@
+## 0.12.5.1
+
+* Support for QuickCheck 2.8.2
+
 ## 0.12.5
 
 * Expose `Alternative` and `optional`

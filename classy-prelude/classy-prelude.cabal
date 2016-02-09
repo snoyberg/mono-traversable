@@ -1,5 +1,5 @@
 name:                classy-prelude
-version:             0.12.5
+version:             0.12.5.1
 synopsis:            A typeclass-based Prelude.
 description:         Modern best practices without name collisions. No partial functions are exposed, but modern data structures are, without requiring import lists. Qualified modules also are not needed: instead operations are based on type-classes from the mono-traversable package.
 
