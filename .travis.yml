@@ -9,17 +9,8 @@ cache:
 
 matrix:
   include:
-  - env: BUILD=cabal GHCVER=7.4.1 CABALVER=1.16
-    compiler: ": #GHC 7.4.1"
-    addons: {apt: {packages: [cabal-install-1.16,ghc-7.4.1], sources: [hvr-ghc]}}
-  - env: BUILD=cabal GHCVER=7.4.2 CABALVER=1.16
-    compiler: ": #GHC 7.4.2"
-    addons: {apt: {packages: [cabal-install-1.16,ghc-7.4.2], sources: [hvr-ghc]}}
   # we have to use CABALVER=1.16 for GHC<7.6 as well, as there's
   # no package for earlier cabal versions in the PPA
-  #- env: BUILD=cabal GHCVER=7.6.1 CABALVER=1.16
-  #  compiler: ": #GHC 7.6.1"
-  #  addons: {apt: {packages: [cabal-install-1.16,ghc-7.6.1], sources: [hvr-ghc]}}
   - env: BUILD=cabal GHCVER=7.6.2 CABALVER=1.16
     compiler: ": #GHC 7.6.2"
     addons: {apt: {packages: [cabal-install-1.16,ghc-7.6.2], sources: [hvr-ghc]}}
