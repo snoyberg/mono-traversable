@@ -486,7 +486,6 @@ instance MonoFoldable L.ByteString where
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
-    {-# INLINE unsafeHead #-}
 instance MonoFoldable T.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr
@@ -508,12 +507,10 @@ instance MonoFoldable T.Text where
     {-# INLINE oany #-}
     {-# INLINE onull #-}
     {-# INLINE olength #-}
-    {-# INLINE omapM_ #-}
     {-# INLINE ofoldr1Ex #-}
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
-    {-# INLINE unsafeHead #-}
 instance MonoFoldable TL.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = TL.foldr
@@ -534,13 +531,10 @@ instance MonoFoldable TL.Text where
     {-# INLINE oall #-}
     {-# INLINE oany #-}
     {-# INLINE onull #-}
-    {-# INLINE olength #-}
-    {-# INLINE omapM_ #-}
     {-# INLINE ofoldr1Ex #-}
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
-    {-# INLINE unsafeHead #-}
 instance MonoFoldable IntSet where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = IntSet.foldr
@@ -554,16 +548,10 @@ instance MonoFoldable IntSet where
     {-# INLINE ofoldr #-}
     {-# INLINE ofoldl' #-}
     {-# INLINE otoList #-}
-    {-# INLINE oall #-}
-    {-# INLINE oany #-}
     {-# INLINE onull #-}
     {-# INLINE olength #-}
-    {-# INLINE omapM_ #-}
     {-# INLINE ofoldr1Ex #-}
     {-# INLINE ofoldl1Ex' #-}
-    {-# INLINE headEx #-}
-    {-# INLINE lastEx #-}
-    {-# INLINE unsafeHead #-}
 instance MonoFoldable [a] where
     otoList = id
     {-# INLINE otoList #-}
@@ -613,7 +601,6 @@ instance MonoFoldable (Vector a) where
     {-# INLINE oany #-}
     {-# INLINE onull #-}
     {-# INLINE olength #-}
-    {-# INLINE omapM_ #-}
     {-# INLINE ofoldr1Ex #-}
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
@@ -654,7 +641,6 @@ instance U.Unbox a => MonoFoldable (U.Vector a) where
     {-# INLINE oany #-}
     {-# INLINE onull #-}
     {-# INLINE olength #-}
-    {-# INLINE omapM_ #-}
     {-# INLINE ofoldr1Ex #-}
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
@@ -687,7 +673,6 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     {-# INLINE oany #-}
     {-# INLINE onull #-}
     {-# INLINE olength #-}
-    {-# INLINE omapM_ #-}
     {-# INLINE ofoldr1Ex #-}
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
@@ -728,9 +713,6 @@ instance MonoFoldable (Either a b) where
     {-# INLINE omapM_ #-}
     {-# INLINE ofoldr1Ex #-}
     {-# INLINE ofoldl1Ex' #-}
-    {-# INLINE headEx #-}
-    {-# INLINE lastEx #-}
-    {-# INLINE unsafeHead #-}
 instance MonoFoldable (a, b)
 instance MonoFoldable (Const m a)
 instance F.Foldable f => MonoFoldable (MaybeT f a)

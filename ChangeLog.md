@@ -1,3 +1,7 @@
+## 0.10.1.1
+
+* Remove unneeded INLINEs [#90](https://github.com/snoyberg/mono-traversable/issues/90)
+
 ## 0.10.1
 
 * Allow comonad-5 [#86](https://github.com/snoyberg/mono-traversable/issues/86)
