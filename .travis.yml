@@ -61,6 +61,8 @@ matrix:
 
 before_install:
  - unset CC
+ - CABALARGS=""
+ - if [ "x$GHCVER" = "xhead" ]; then CABALARGS=--allow-newer; fi
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:$PATH
  - mkdir -p ~/.local/bin
  - |
@@ -81,7 +83,7 @@ install:
      cabal)
        cabal --version;
        travis_retry cabal update;
-       cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1;;
+       cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS;;
    esac
 
 script:
