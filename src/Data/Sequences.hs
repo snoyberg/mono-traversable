@@ -574,11 +574,8 @@ instance IsSequence [a] where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
-    {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
-    {-# INLINE unsafeDrop #-}
     {-# INLINE partition #-}
     {-# INLINE uncons #-}
     {-# INLINE unsnoc #-}
@@ -588,12 +585,6 @@ instance IsSequence [a] where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
-    {-# INLINE tailEx #-}
-    {-# INLINE initEx #-}
-    {-# INLINE unsafeTail #-}
-    {-# INLINE unsafeInit #-}
     {-# INLINE intercalate #-}
     {-# INLINE splitWhen #-}
 
@@ -659,7 +650,6 @@ instance IsSequence S.ByteString where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
     {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
@@ -668,17 +658,11 @@ instance IsSequence S.ByteString where
     {-# INLINE uncons #-}
     {-# INLINE unsnoc #-}
     {-# INLINE filter #-}
-    {-# INLINE filterM #-}
     {-# INLINE replicate #-}
-    {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
-    {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
     {-# INLINE intercalate #-}
 
@@ -733,26 +717,16 @@ instance IsSequence T.Text where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
-    {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
-    {-# INLINE unsafeDrop #-}
     {-# INLINE partition #-}
     {-# INLINE uncons #-}
     {-# INLINE unsnoc #-}
     {-# INLINE filter #-}
-    {-# INLINE filterM #-}
     {-# INLINE replicate #-}
-    {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
-    {-# INLINE unsafeTail #-}
-    {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
     {-# INLINE intercalate #-}
 
@@ -808,32 +782,21 @@ instance IsSequence L.ByteString where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
-    {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
-    {-# INLINE unsafeDrop #-}
     {-# INLINE partition #-}
     {-# INLINE uncons #-}
     {-# INLINE unsnoc #-}
     {-# INLINE filter #-}
-    {-# INLINE filterM #-}
     {-# INLINE replicate #-}
-    {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
-    {-# INLINE unsafeTail #-}
-    {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
     {-# INLINE intercalate #-}
 
     indexEx = L.index
     unsafeIndex = L.index
-    {-# INLINE index #-}
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
@@ -879,32 +842,21 @@ instance IsSequence TL.Text where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
-    {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
-    {-# INLINE unsafeDrop #-}
     {-# INLINE partition #-}
     {-# INLINE uncons #-}
     {-# INLINE unsnoc #-}
     {-# INLINE filter #-}
-    {-# INLINE filterM #-}
     {-# INLINE replicate #-}
-    {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
-    {-# INLINE unsafeTail #-}
-    {-# INLINE unsafeInit #-}
     {-# INLINE splitWhen #-}
     {-# INLINE intercalate #-}
 
     indexEx = TL.index
     unsafeIndex = TL.index
-    {-# INLINE index #-}
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
@@ -955,26 +907,16 @@ instance IsSequence (Seq.Seq a) where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
-    {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
-    {-# INLINE unsafeDrop #-}
     {-# INLINE partition #-}
     {-# INLINE uncons #-}
     {-# INLINE unsnoc #-}
     {-# INLINE filter #-}
-    {-# INLINE filterM #-}
     {-# INLINE replicate #-}
     {-# INLINE replicateM #-}
-    {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
-    {-# INLINE unsafeTail #-}
-    {-# INLINE unsafeInit #-}
 
     index seq' i
         | i >= Seq.length seq' = Nothing
@@ -1058,7 +1000,6 @@ instance IsSequence (V.Vector a) where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
     {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
@@ -1070,10 +1011,6 @@ instance IsSequence (V.Vector a) where
     {-# INLINE filterM #-}
     {-# INLINE replicate #-}
     {-# INLINE replicateM #-}
-    {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
@@ -1137,7 +1074,6 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
     {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
@@ -1149,10 +1085,6 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     {-# INLINE filterM #-}
     {-# INLINE replicate #-}
     {-# INLINE replicateM #-}
-    {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
@@ -1216,7 +1148,6 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE dropWhile #-}
     {-# INLINE takeWhile #-}
     {-# INLINE splitAt #-}
-    {-# INLINE unsafeSplitAt #-}
     {-# INLINE take #-}
     {-# INLINE unsafeTake #-}
     {-# INLINE drop #-}
@@ -1228,10 +1159,6 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE filterM #-}
     {-# INLINE replicate #-}
     {-# INLINE replicateM #-}
-    {-# INLINE groupBy #-}
-    {-# INLINE groupAllOn #-}
-    {-# INLINE subsequences #-}
-    {-# INLINE permutations #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
@@ -1369,7 +1296,6 @@ instance Eq a => EqSequence [a] where
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
-    {-# INLINE groupAll #-}
     {-# INLINE isPrefixOf #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
@@ -1391,7 +1317,6 @@ instance EqSequence S.ByteString where
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
-    {-# INLINE groupAll #-}
     {-# INLINE isPrefixOf #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
@@ -1413,7 +1338,6 @@ instance EqSequence L.ByteString where
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
-    {-# INLINE groupAll #-}
     {-# INLINE isPrefixOf #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
@@ -1431,7 +1355,6 @@ instance EqSequence T.Text where
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
-    {-# INLINE groupAll #-}
     {-# INLINE isPrefixOf #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
@@ -1449,7 +1372,6 @@ instance EqSequence TL.Text where
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
-    {-# INLINE groupAll #-}
     {-# INLINE isPrefixOf #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
