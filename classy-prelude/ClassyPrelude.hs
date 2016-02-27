@@ -192,7 +192,7 @@ import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
 import Data.ChunkedZip
 import qualified Data.Char as Char
-import Data.Sequences hiding (elem)
+import Data.Sequences hiding (elem, intercalate)
 import Data.MonoTraversable
 import Data.Containers
 import Data.Builder
@@ -372,10 +372,8 @@ intersect = intersection
 unions :: (MonoFoldable c, SetContainer (Element c)) => c -> Element c
 unions = ofoldl' union Monoid.mempty
 
-#if !MIN_VERSION_mono_traversable(0, 9, 3)
-intercalate :: (Monoid (Element c), IsSequence c) => Element c -> c -> Element c
+intercalate :: (SemiSequence seq, Monoid (Element seq)) => Element seq -> seq -> Element seq
 intercalate xs xss = concat (intersperse xs xss)
-#endif
 
 asByteString :: ByteString -> ByteString
 asByteString = id
