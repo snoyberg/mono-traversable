@@ -193,6 +193,7 @@ import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
 import Data.ChunkedZip
 import qualified Data.Char as Char
 import Data.Sequences hiding (elem, intercalate)
+import qualified Data.Sequences (intercalate)
 import Data.MonoTraversable
 import Data.Containers
 import Data.Builder
@@ -372,8 +373,30 @@ intersect = intersection
 unions :: (MonoFoldable c, SetContainer (Element c)) => c -> Element c
 unions = ofoldl' union Monoid.mempty
 
-intercalate :: (SemiSequence seq, Monoid (Element seq)) => Element seq -> seq -> Element seq
-intercalate xs xss = concat (intersperse xs xss)
+intercalate :: (MonoFoldable mono, Monoid (Element mono))
+            => Element mono
+            -> mono
+            -> Element mono
+intercalate x = mconcat . intersperse x . otoList
+{-# INLINE [0] intercalate #-}
+{-# RULES "intercalate list" forall (x :: [a]).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate ByteString" forall (x :: ByteString).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate LByteString" forall (x :: LByteString).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate Text" forall (x :: Text).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate LText" forall (x :: LText).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate Seq" forall (x :: Seq a).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate Vector" forall (x :: Vector a).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate UVector" forall (x :: Unbox a => UVector a).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
+{-# RULES "intercalate SVector" forall (x :: Storable a => SVector a).
+        intercalate x = Data.Sequences.intercalate x . toList #-}
 
 asByteString :: ByteString -> ByteString
 asByteString = id
