@@ -639,27 +639,3 @@ asDList = id
 applyDList :: DList a -> [a] -> [a]
 applyDList = DList.apply
 {-# INLINE applyDList #-}
-
--- | Throw a monadic exception from a String
---
--- > erroM = throwM . userError
---
--- Since 0.12.1
-errorM :: (MonadThrow m) => String -> m a
-errorM = throwM . userError
-
--- | Throw a monadic exception from a Text
---
--- > terroM = errorM . unpack
---
--- Since 0.12.1
-terrorM :: (MonadThrow m) => Text -> m a
-terrorM = errorM . unpack
-
--- | Throw an error from a Text
---
--- > terror = error . unpack
---
--- Since 0.12.1
-terror :: Text -> a
-terror = error . unpack
