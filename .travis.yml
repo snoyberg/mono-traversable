@@ -28,12 +28,12 @@ matrix:
   include:
   # We grab the appropriate GHC and cabal-install versions from hvr's PPA. See:
   # https://github.com/hvr/multi-ghc-travis
-  #- env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18
-  #  compiler: ": #GHC 7.8.4"
-  #  addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
-  #- env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
-  #  compiler: ": #GHC 7.10.3"
-  #  addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18
+    compiler: ": #GHC 7.8.4"
+    addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
+  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
+    compiler: ": #GHC 7.10.3"
+    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3], sources: [hvr-ghc]}}
 
   # Build with the newest GHC and cabal-install. This is an accepted failure,
   # see below.
@@ -80,7 +80,8 @@ matrix:
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head
   - env: BUILD=stack ARGS="--resolver nightly"
-  - env: BUILD=stack ARGS="--resolver lts-2"
+  - env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18
+  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
