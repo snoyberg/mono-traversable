@@ -1,6 +1,7 @@
 ## 0.12.6
 
 * Regeneralize intercalate [#119](https://github.com/snoyberg/classy-prelude/pull/119)
+* Add missing exports for `traverse_` and `for_`
 
 ## 0.12.5.1
 
