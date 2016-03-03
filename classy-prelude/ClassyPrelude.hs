@@ -33,13 +33,10 @@ module ClassyPrelude
     , module Data.IORef.Lifted
     , module Data.Mutable
       -- ** Primitive (exported since 0.9.4)
-    , PrimMonad
-    , PrimState
     , primToPrim
     , primToIO
     , primToST
     , module Data.Primitive.MutVar
-    , Prim
       -- ** Debugging
     , trace
     , traceShow
@@ -225,9 +222,8 @@ import Data.Textual.Encoding
 import Data.Sequences.Lazy
 import GHC.Generics (Generic)
 
-import Control.Monad.Primitive (PrimMonad, PrimState, primToPrim, primToIO, primToST)
+import Control.Monad.Primitive (primToPrim, primToIO, primToST)
 import Data.Primitive.MutVar
-import Data.Primitive.Types (Prim)
 
 import Data.Functor.Identity (Identity (..))
 import Control.Monad.Reader (MonadReader, ask, ReaderT (..), Reader)
