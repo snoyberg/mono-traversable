@@ -2,6 +2,7 @@
 
 * Regeneralize intercalate [#119](https://github.com/snoyberg/classy-prelude/pull/119)
 * Add missing exports for `traverse_` and `for_`
+* Generalize `mapM_` and `forM_` for GHC 7.10
 
 ## 0.12.5.1
 

@@ -301,9 +301,28 @@ or = oor
 length :: MonoFoldable c => c -> Int
 length = olength
 
+-- Due to the Applicative-Monad-Proposal, from GHC 7.10 (base 4.8) we can
+-- generalize some Monad constraints to Applicative constraints
+#if MIN_VERSION_base(4,8,0)
+
+mapM_ :: (Applicative f, MonoFoldable c) => (Element c -> f ()) -> c -> f ()
+mapM_ = traverse_
+
+forM_ :: (Applicative f, MonoFoldable c) => c -> (Element c -> f ()) -> f ()
+forM_ = ofor_
+
+#else
+
 mapM_ :: (Monad m, MonoFoldable c) => (Element c -> m ()) -> c -> m ()
 mapM_ = omapM_
+
+forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m ()) -> m ()
+forM_ = oforM_
+
+#endif
+
 {-# INLINE mapM_ #-}
+{-# INLINE forM_ #-}
 
 traverse_ :: (Applicative f, MonoFoldable c) => (Element c -> f ()) -> c -> f ()
 traverse_ = otraverse_
@@ -312,10 +331,6 @@ traverse_ = otraverse_
 for_ :: (Applicative f, MonoFoldable c) => c -> (Element c -> f ()) -> f ()
 for_ = ofor_
 {-# INLINE for_ #-}
-
-forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m ()) -> m ()
-forM_ = oforM_
-{-# INLINE forM_ #-}
 
 concatMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
 concatMap = ofoldMap
