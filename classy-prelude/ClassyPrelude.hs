@@ -75,6 +75,39 @@ module ClassyPrelude
     , stdin
     , stdout
     , stderr
+      -- * Concurrency
+      -- ** Concurrent Haskell
+    , ThreadId
+      -- ** Basic concurrency operations
+    , myThreadId
+    , fork
+    , forkWithUnmask
+    , forkFinally
+    , killThread
+    , throwTo
+      -- ** Threads with affinity
+    , forkOn
+    , forkOnWithUnmask
+    , getNumCapabilities
+    , setNumCapabilities
+    , threadCapability
+      -- ** Scheduling
+    , yieldThread
+      -- ** Waiting
+    , threadDelay
+    , threadWaitRead
+    , threadWaitWrite
+      -- ** Communication abstractions
+    , module Control.Concurrent.QSem.Lifted
+    , module Control.Concurrent.QSemN.Lifted
+      -- ** Bound Threads
+    , rtsSupportsBoundThreads
+    , forkOS
+    , isCurrentThreadBound
+    , runInBoundThread
+    , runInUnboundThread
+      -- ** Weak references to ThreadIds
+    , mkWeakThreadId
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -175,8 +208,11 @@ import Data.Functor
 import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
+import Control.Concurrent.Lifted
 import Control.Concurrent.MVar.Lifted
 import Control.Concurrent.Chan.Lifted
+import Control.Concurrent.QSem.Lifted
+import Control.Concurrent.QSemN.Lifted
 import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
@@ -186,6 +222,7 @@ import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
 import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, MonadMask)
+import Control.Monad.Base
 
 import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
@@ -509,6 +546,11 @@ traceShowId a = trace (show a) a
 -- Since 0.5.9
 traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
+
+-- | Generalized version of 'yield'.
+yieldThread :: MonadBase IO m => m ()
+yieldThread = yield
+{-# INLINE yieldThread #-}
 
 fpToString :: FilePath -> String
 fpToString = id
