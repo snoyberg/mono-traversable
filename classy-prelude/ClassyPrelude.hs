@@ -76,38 +76,8 @@ module ClassyPrelude
     , stdout
     , stderr
       -- * Concurrency
-      -- ** Concurrent Haskell
-    , ThreadId
-      -- ** Basic concurrency operations
-    , myThreadId
-    , fork
-    , forkWithUnmask
-    , forkFinally
-    , killThread
-    , throwTo
-      -- ** Threads with affinity
-    , forkOn
-    , forkOnWithUnmask
-    , getNumCapabilities
-    , setNumCapabilities
-    , threadCapability
-      -- ** Scheduling
+    , module Control.Concurrent.Lifted
     , yieldThread
-      -- ** Waiting
-    , threadDelay
-    , threadWaitRead
-    , threadWaitWrite
-      -- ** Communication abstractions
-    , module Control.Concurrent.QSem.Lifted
-    , module Control.Concurrent.QSemN.Lifted
-      -- ** Bound Threads
-    , rtsSupportsBoundThreads
-    , forkOS
-    , isCurrentThreadBound
-    , runInBoundThread
-    , runInUnboundThread
-      -- ** Weak references to ThreadIds
-    , mkWeakThreadId
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -208,11 +178,10 @@ import Data.Functor
 import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
-import Control.Concurrent.Lifted
+import Control.Concurrent.Lifted hiding (yield)
+import qualified Control.Concurrent.Lifted as Conc (yield)
 import Control.Concurrent.MVar.Lifted
 import Control.Concurrent.Chan.Lifted
-import Control.Concurrent.QSem.Lifted
-import Control.Concurrent.QSemN.Lifted
 import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
@@ -547,9 +516,9 @@ traceShowId a = trace (show a) a
 traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
 
--- | Generalized version of 'yield'.
+-- | Originally 'Conc.yield'.
 yieldThread :: MonadBase IO m => m ()
-yieldThread = yield
+yieldThread = Conc.yield
 {-# INLINE yieldThread #-}
 
 fpToString :: FilePath -> String
