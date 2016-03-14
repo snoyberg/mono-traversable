@@ -40,6 +40,7 @@ library
                      , bifunctors
                      , mutable-containers >= 0.3 && < 0.4
                      , dlist >= 0.7
+                     , transformers-base
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test

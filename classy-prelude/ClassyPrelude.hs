@@ -75,6 +75,9 @@ module ClassyPrelude
     , stdin
     , stdout
     , stderr
+      -- * Concurrency
+    , module Control.Concurrent.Lifted
+    , yieldThread
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -175,6 +178,8 @@ import Data.Functor
 import Control.Exception (assert)
 import Control.Exception.Enclosed
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
+import Control.Concurrent.Lifted hiding (yield)
+import qualified Control.Concurrent.Lifted as Conc (yield)
 import Control.Concurrent.MVar.Lifted
 import Control.Concurrent.Chan.Lifted
 import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
@@ -186,6 +191,7 @@ import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
 import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, MonadMask)
+import Control.Monad.Base
 
 import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
@@ -509,6 +515,11 @@ traceShowId a = trace (show a) a
 -- Since 0.5.9
 traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
+
+-- | Originally 'Conc.yield'.
+yieldThread :: MonadBase IO m => m ()
+yieldThread = Conc.yield
+{-# INLINE yieldThread #-}
 
 fpToString :: FilePath -> String
 fpToString = id

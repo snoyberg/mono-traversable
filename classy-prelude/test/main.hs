@@ -378,22 +378,22 @@ main = hspec $ do
             failed <- newIORef 0
             tid <- forkIO $ do
                 catchAny
-                    (threadDelay 20000)
+                    (Control.Concurrent.threadDelay 20000)
                     (const $ writeIORef failed 1)
                 writeIORef failed 2
-            threadDelay 10000
-            throwTo tid DummyException
-            threadDelay 50000
+            Control.Concurrent.threadDelay 10000
+            Control.Concurrent.throwTo tid DummyException
+            Control.Concurrent.threadDelay 50000
             didFail <- readIORef failed
             liftIO $ didFail `shouldBe` (0 :: Int)
         it "tryAny" $ do
             failed <- newIORef False
             tid <- forkIO $ do
-                _ <- tryAny $ threadDelay 20000
+                _ <- tryAny $ Control.Concurrent.threadDelay 20000
                 writeIORef failed True
-            threadDelay 10000
-            throwTo tid DummyException
-            threadDelay 50000
+            Control.Concurrent.threadDelay 10000
+            Control.Concurrent.throwTo tid DummyException
+            Control.Concurrent.threadDelay 50000
             didFail <- readIORef failed
             liftIO $ didFail `shouldBe` False
         it "tryAnyDeep" $ do
