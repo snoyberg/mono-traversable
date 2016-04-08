@@ -1262,6 +1262,12 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     -- Equivalent to @'groupAllOn' id@
     groupAll :: seq -> [seq]
     groupAll = groupAllOn id
+
+    delete :: Element seq -> seq -> seq
+    delete = deleteBy (==)
+
+    deleteBy :: (Element seq -> Element seq -> Bool) -> Element seq -> seq -> seq
+    deleteBy eq x = fromList . List.deleteBy eq x . otoList
     {-# INLINE splitElem #-}
     {-# INLINE splitSeq #-}
     {-# INLINE isPrefixOf #-}
@@ -1271,6 +1277,8 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     {-# INLINE stripSuffix #-}
     {-# INLINE group #-}
     {-# INLINE groupAll #-}
+    {-# INLINE delete #-}
+    {-# INLINE deleteBy #-}
 
 {-# DEPRECATED elem "use oelem" #-}
 elem :: EqSequence seq => Element seq -> seq -> Bool
@@ -1292,6 +1300,8 @@ instance Eq a => EqSequence [a] where
     isPrefixOf = List.isPrefixOf
     isSuffixOf x y = List.isPrefixOf (List.reverse x) (List.reverse y)
     isInfixOf = List.isInfixOf
+    delete = List.delete
+    deleteBy = List.deleteBy
     {-# INLINE splitSeq #-}
     {-# INLINE stripPrefix #-}
     {-# INLINE stripSuffix #-}
@@ -1299,6 +1309,8 @@ instance Eq a => EqSequence [a] where
     {-# INLINE isPrefixOf #-}
     {-# INLINE isSuffixOf #-}
     {-# INLINE isInfixOf #-}
+    {-# INLINE delete #-}
+    {-# INLINE deleteBy #-}
 
 instance EqSequence S.ByteString where
     splitElem sep s | S.null s = [S.empty]
