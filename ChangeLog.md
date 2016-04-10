@@ -1,3 +1,7 @@
+## 0.10.2
+
+* Add `delete` and `deleteBy` methods to EqSequence [#94](https://github.com/snoyberg/mono-traversable/pull/94)
+
 ## 0.10.1.1
 
 * Remove unneeded INLINEs [#90](https://github.com/snoyberg/mono-traversable/issues/90)

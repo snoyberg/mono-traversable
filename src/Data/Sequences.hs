@@ -1263,9 +1263,15 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     groupAll :: seq -> [seq]
     groupAll = groupAllOn id
 
+    -- |
+    --
+    -- @since 0.10.2
     delete :: Element seq -> seq -> seq
     delete = deleteBy (==)
 
+    -- |
+    --
+    -- @since 0.10.2
     deleteBy :: (Element seq -> Element seq -> Bool) -> Element seq -> seq -> seq
     deleteBy eq x = fromList . List.deleteBy eq x . otoList
     {-# INLINE splitElem #-}
