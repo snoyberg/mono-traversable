@@ -1,3 +1,7 @@
+## 0.12.7
+
+* Concurrency: reexport `Control.Concurrent.Lifted` and provide `yieldThread`
+
 ## 0.12.6
 
 * Regeneralize intercalate [#119](https://github.com/snoyberg/classy-prelude/pull/119)
