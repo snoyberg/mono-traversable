@@ -1,8 +1,7 @@
-resolver: lts-3.9
+resolver: lts-5.10
 
 extra-deps:
-- basic-prelude-0.5.0
-- mono-traversable-0.10.1.1
+- mono-traversable-0.10.2
 
 packages:
   - 'classy-prelude'
