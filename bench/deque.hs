@@ -35,5 +35,5 @@ main = defaultMain
     , test "UDeque" asUDeque
     , test "SDeque" asSDeque
     , test "BDeque" asBDeque
-    , test "DList" asDList
+    , test "DLList" asDLList
     ]

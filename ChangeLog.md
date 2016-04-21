@@ -1,3 +1,7 @@
+## 0.3.2.1
+
+* Fix benchmark
+
 ## 0.3.2
 
 * Export IOPRef, IOSRef, IOBRef [#5](https://github.com/fpco/mutable-containers/pull/5)
