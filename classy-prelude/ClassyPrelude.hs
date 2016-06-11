@@ -16,6 +16,8 @@ module ClassyPrelude
     , module Data.Functor
       -- ** Applicative
     , module Control.Applicative
+    , (<&&>)
+    , (<||>)
       -- ** Monad
     , module Control.Monad
     , whenM
@@ -667,3 +669,15 @@ asDList = id
 applyDList :: DList a -> [a] -> [a]
 applyDList = DList.apply
 {-# INLINE applyDList #-}
+
+infixr 3 <&&>
+-- | '&&' lifted to an Applicative.
+(<&&>) :: Applicative a => a Bool -> a Bool -> a Bool
+(<&&>) = liftA2 (&&)
+{-# INLINE (<&&>) #-}
+
+infixr 2 <||>
+-- | '||' lifted to an Applicative.
+(<||>) :: Applicative a => a Bool -> a Bool -> a Bool
+(<||>) = liftA2 (||)
+{-# INLINE (<||>) #-}
