@@ -672,12 +672,16 @@ applyDList = DList.apply
 
 infixr 3 <&&>
 -- | '&&' lifted to an Applicative.
+--
+-- @since 0.12.8
 (<&&>) :: Applicative a => a Bool -> a Bool -> a Bool
 (<&&>) = liftA2 (&&)
 {-# INLINE (<&&>) #-}
 
 infixr 2 <||>
 -- | '||' lifted to an Applicative.
+--
+-- @since 0.12.8
 (<||>) :: Applicative a => a Bool -> a Bool -> a Bool
 (<||>) = liftA2 (||)
 {-# INLINE (<||>) #-}

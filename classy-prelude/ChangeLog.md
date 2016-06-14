@@ -1,3 +1,7 @@
+## 0.12.8
+
+* Add (<&&>),(<||>) [#125](https://github.com/snoyberg/classy-prelude/pull/125)
+
 ## 0.12.7
 
 * Concurrency: reexport `Control.Concurrent.Lifted` and provide `yieldThread`
