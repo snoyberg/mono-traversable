@@ -18,7 +18,8 @@ main = do
 
 mkGroup :: Int -> IO Benchmark
 mkGroup size = do
-    inputV <- MWC.withSystemRandom . MWC.asGenST $ flip MWC.uniformVector size
+    gen <- MWC.create
+    inputV <- MWC.uniformVector gen size
     let inputL = otoList (inputV :: V.Vector Int)
         inputVU = fromList inputL :: U.Vector Int
     return $ bgroup (show size)
