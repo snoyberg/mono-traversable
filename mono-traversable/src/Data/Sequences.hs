@@ -7,7 +7,7 @@
 module Data.Sequences where
 
 import Data.Maybe (fromJust, isJust)
-import Data.Monoid (Monoid, mappend, mconcat, mempty)
+import Data.Monoid (Monoid, mconcat, mempty)
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
@@ -411,13 +411,6 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     unsafeIndex :: seq -> Index seq -> Element seq
     unsafeIndex = indexEx
 
-    -- | 'intercalate' @seq seqs@ inserts @seq@ in between @seqs@ and
-    -- concatenates the result.
-    --
-    -- Since 0.9.3
-    intercalate :: seq -> [seq] -> seq
-    intercalate = defaultIntercalate
-
     -- | 'splitWhen' splits a sequence into components delimited by separators,
     -- where the predicate returns True for a separator element. The resulting
     -- components do not contain the separators. Two adjacent separators result
@@ -478,12 +471,6 @@ defaultReverse = fromList . List.reverse . otoList
 defaultSortBy :: IsSequence seq => (Element seq -> Element seq -> Ordering) -> seq -> seq
 defaultSortBy f = fromList . sortBy f . otoList
 {-# INLINE defaultSortBy #-}
-
--- | Default 'intercalate'
-defaultIntercalate :: (IsSequence seq) => seq -> [seq] -> seq
-defaultIntercalate _ [] = mempty
-defaultIntercalate s (seq:seqs) = mconcat (seq : List.map (s `mappend`) seqs)
-{-# INLINE defaultIntercalate #-}
 
 -- | Use 'splitWhen' from "Data.List.Split"
 defaultSplitWhen :: IsSequence seq => (Element seq -> Bool) -> seq -> [seq]
@@ -567,7 +554,6 @@ instance IsSequence [a] where
       where
         (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllOn _ [] = []
-    intercalate = List.intercalate
     splitWhen = List.splitWhen
     {-# INLINE fromList #-}
     {-# INLINE break #-}
@@ -586,7 +572,6 @@ instance IsSequence [a] where
     {-# INLINE replicateM #-}
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
-    {-# INLINE intercalate #-}
     {-# INLINE splitWhen #-}
 
 instance SemiSequence (NE.NonEmpty a) where
@@ -644,7 +629,6 @@ instance IsSequence S.ByteString where
     unsafeTail = SU.unsafeTail
     splitWhen f s | S.null s = [S.empty]
                   | otherwise = S.splitWith f s
-    intercalate = S.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -665,7 +649,6 @@ instance IsSequence S.ByteString where
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
     {-# INLINE splitWhen #-}
-    {-# INLINE intercalate #-}
 
     index bs i
         | i >= S.length bs = Nothing
@@ -711,7 +694,6 @@ instance IsSequence T.Text where
     tailEx = T.tail
     initEx = T.init
     splitWhen = T.split
-    intercalate = T.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -729,7 +711,6 @@ instance IsSequence T.Text where
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE splitWhen #-}
-    {-# INLINE intercalate #-}
 
     index t i
         | i >= T.length t = Nothing
@@ -776,7 +757,6 @@ instance IsSequence L.ByteString where
     initEx = L.init
     splitWhen f s | L.null s = [L.empty]
                   | otherwise = L.splitWith f s
-    intercalate = L.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -794,7 +774,6 @@ instance IsSequence L.ByteString where
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE splitWhen #-}
-    {-# INLINE intercalate #-}
 
     indexEx = L.index
     unsafeIndex = L.index
@@ -836,7 +815,6 @@ instance IsSequence TL.Text where
     tailEx = TL.tail
     initEx = TL.init
     splitWhen = TL.split
-    intercalate = TL.intercalate
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -854,7 +832,6 @@ instance IsSequence TL.Text where
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE splitWhen #-}
-    {-# INLINE intercalate #-}
 
     indexEx = TL.index
     unsafeIndex = TL.index

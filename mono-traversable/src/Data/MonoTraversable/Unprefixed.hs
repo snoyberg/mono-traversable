@@ -196,3 +196,10 @@ notElem = onotElem
 -- @since 1.0.0
 point :: MonoPointed mono => Element mono -> mono
 point = opoint
+
+-- | Synonym for 'ointercalate'
+--
+-- @since 1.0.0
+intercalate :: (MonoFoldable mono, Monoid (Element mono))
+            => Element mono -> mono -> Element mono
+intercalate = ointercalate

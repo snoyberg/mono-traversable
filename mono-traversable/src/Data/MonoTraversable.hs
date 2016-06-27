@@ -1307,3 +1307,24 @@ instance Ord v => GrowingAppend (Set.Set v)
 instance (Eq v, Hashable v) => GrowingAppend (HashSet.HashSet v)
 instance GrowingAppend IntSet.IntSet
 instance GrowingAppend (IntMap v)
+
+-- | 'intercalate' @seq seqs@ inserts @seq@ in between @seqs@ and
+-- concatenates the result.
+--
+-- @since 1.0.0
+ointercalate :: (MonoFoldable mono, Monoid (Element mono))
+             => Element mono
+             -> mono
+             -> Element mono
+ointercalate x = mconcat . List.intersperse x . otoList
+{-# INLINE [0] ointercalate #-}
+{-# RULES "ointercalate list" forall x.
+        ointercalate x = List.intercalate x . otoList #-}
+{-# RULES "intercalate ByteString" forall x.
+        ointercalate x = S.intercalate x . otoList #-}
+{-# RULES "intercalate LByteString" forall x.
+        ointercalate x = L.intercalate x . otoList #-}
+{-# RULES "intercalate Text" forall x.
+        ointercalate x = T.intercalate x . otoList #-}
+{-# RULES "intercalate LText" forall x.
+        ointercalate x = TL.intercalate x . otoList #-}
