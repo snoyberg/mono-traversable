@@ -65,13 +65,15 @@ module ClassyPrelude
     , module Data.Bifunctor
       -- * Mono hierarchy
     , module Data.MonoTraversable
+    , module Data.MonoTraversable.Unprefixed
     , module Data.Sequences
     , module Data.Sequences.Lazy
     , module Data.Textual.Encoding
     , module Data.Containers
     , module Data.Builder
-    , module Data.MinLen
-    , module Data.ByteVector
+    , module Data.NonNull
+    , toByteVector
+    , fromByteVector
       -- * I\/O
     , Handle
     , stdin
@@ -84,31 +86,14 @@ module ClassyPrelude
       -- ** List-like classes
     , map
     , concat
-    , concatMap
-    , foldMap
     , fold
-    , length
-    , null
     , pack
     , unpack
     , repack
-    , toList
-    , mapM_
-    , traverse_
-    , for_
     , sequence_
-    , forM_
-    , any
-    , all
-    , and
-    , or
-    , foldl'
-    , foldr
     , foldM
-    , elem
     --, split
     , readMay
-    , intercalate
     , zip, zip3, zip4, zip5, zip6, zip7
     , unzip, unzip3, unzip4, unzip5, unzip6, unzip7
     , zipWith, zipWith3, zipWith4, zipWith5, zipWith6, zipWith7
@@ -118,9 +103,6 @@ module ClassyPrelude
     , ordNubBy
 
     , sortWith
-    , compareLength
-    , sum
-    , product
     , Prelude.repeat
       -- ** Set-like
     , (\\)
@@ -138,13 +120,6 @@ module ClassyPrelude
     , IOData (..)
     , print
     , hClose
-      -- ** FilePath
-    , fpToString
-    , fpFromString
-    , fpToText
-    , fpFromText
-    , fpToTextWarn
-    , fpToTextEx
       -- ** Difference lists
     , DList
     , asDList
@@ -199,13 +174,16 @@ import Data.Vector.Instances ()
 import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
 import Data.ChunkedZip
 import qualified Data.Char as Char
-import Data.Sequences hiding (elem, intercalate)
-import qualified Data.Sequences (intercalate)
+import Data.Sequences
 import Data.MonoTraversable
+import Data.MonoTraversable.Unprefixed
+import Data.MonoTraversable.Instances ()
 import Data.Containers
 import Data.Builder
-import Data.MinLen
-import Data.ByteVector
+import Data.NonNull
+import Data.ByteString.Internal (ByteString (PS))
+import Data.Vector.Storable (unsafeToForeignPtr, unsafeFromForeignPtr)
+
 import System.IO (Handle, stdin, stdout, stderr, hClose)
 
 import Debug.Trace (trace, traceShow)
@@ -264,99 +242,12 @@ charToUpper = Char.toUpper
 pack :: IsSequence c => [Element c] -> c
 pack = fromList
 
-unpack, toList :: MonoFoldable c => c -> [Element c]
+unpack :: MonoFoldable c => c -> [Element c]
 unpack = otoList
-toList = otoList
-
-null :: MonoFoldable c => c -> Bool
-null = onull
-
-compareLength :: (Integral i, MonoFoldable c) => c -> i -> Ordering
-compareLength = ocompareLength
-
-sum :: (MonoFoldable c, Num (Element c)) => c -> Element c
-sum = osum
-
-product :: (MonoFoldable c, Num (Element c)) => c -> Element c
-product = oproduct
-
-all :: MonoFoldable c => (Element c -> Bool) -> c -> Bool
-all = oall
-{-# INLINE all #-}
-
-any :: MonoFoldable c => (Element c -> Bool) -> c -> Bool
-any = oany
-{-# INLINE any #-}
-
--- |
---
--- Since 0.9.2
-and :: (MonoFoldable mono, Element mono ~ Bool) => mono -> Bool
-and = oand
-{-# INLINE and #-}
-
--- |
---
--- Since 0.9.2
-or :: (MonoFoldable mono, Element mono ~ Bool) => mono -> Bool
-or = oor
-{-# INLINE or #-}
-
-length :: MonoFoldable c => c -> Int
-length = olength
-
--- Due to the Applicative-Monad-Proposal, from GHC 7.10 (base 4.8) we can
--- generalize some Monad constraints to Applicative constraints
-#if MIN_VERSION_base(4,8,0)
-
-mapM_ :: (Applicative f, MonoFoldable c) => (Element c -> f ()) -> c -> f ()
-mapM_ = traverse_
-
-forM_ :: (Applicative f, MonoFoldable c) => c -> (Element c -> f ()) -> f ()
-forM_ = ofor_
-
-#else
-
-mapM_ :: (Monad m, MonoFoldable c) => (Element c -> m ()) -> c -> m ()
-mapM_ = omapM_
-
-forM_ :: (Monad m, MonoFoldable c) => c -> (Element c -> m ()) -> m ()
-forM_ = oforM_
-
-#endif
-
-{-# INLINE mapM_ #-}
-{-# INLINE forM_ #-}
-
-traverse_ :: (Applicative f, MonoFoldable c) => (Element c -> f ()) -> c -> f ()
-traverse_ = otraverse_
-{-# INLINE traverse_ #-}
-
-for_ :: (Applicative f, MonoFoldable c) => c -> (Element c -> f ()) -> f ()
-for_ = ofor_
-{-# INLINE for_ #-}
-
-concatMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
-concatMap = ofoldMap
-{-# INLINE concatMap #-}
-
-elem :: (MonoFoldableEq c) => Element c -> c -> Bool
-elem = oelem
-{-# INLINE elem #-}
-
-foldMap :: (Monoid m, MonoFoldable c) => (Element c -> m) -> c -> m
-foldMap = ofoldMap
-{-# INLINE foldMap #-}
 
 fold :: (Monoid (Element c), MonoFoldable c) => c -> Element c
 fold = ofoldMap id
 {-# INLINE fold #-}
-
-foldr :: MonoFoldable c => (Element c -> b -> b) -> b -> c -> b
-foldr = ofoldr
-
-foldl' :: MonoFoldable c => (a -> Element c -> a) -> a -> c -> a
-foldl' = ofoldl'
 
 foldM :: (Monad m, MonoFoldable c) => (a -> Element c -> m a) -> a -> c -> m a
 foldM = ofoldlM
@@ -397,31 +288,6 @@ intersect = intersection
 
 unions :: (MonoFoldable c, SetContainer (Element c)) => c -> Element c
 unions = ofoldl' union Monoid.mempty
-
-intercalate :: (MonoFoldable mono, Monoid (Element mono))
-            => Element mono
-            -> mono
-            -> Element mono
-intercalate x = mconcat . intersperse x . otoList
-{-# INLINE [0] intercalate #-}
-{-# RULES "intercalate list" forall (x :: [a]).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate ByteString" forall (x :: ByteString).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate LByteString" forall (x :: LByteString).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate Text" forall (x :: Text).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate LText" forall (x :: LText).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate Seq" forall (x :: Seq a).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate Vector" forall (x :: Vector a).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate UVector" forall (x :: Unbox a => UVector a).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
-{-# RULES "intercalate SVector" forall (x :: Storable a => SVector a).
-        intercalate x = Data.Sequences.intercalate x . toList #-}
 
 asByteString :: ByteString -> ByteString
 asByteString = id
@@ -522,49 +388,6 @@ traceShowM = traceM . show
 yieldThread :: MonadBase IO m => m ()
 yieldThread = Conc.yield
 {-# INLINE yieldThread #-}
-
-fpToString :: FilePath -> String
-fpToString = id
-{-# DEPRECATED fpToString "Now same as id" #-}
-
-fpFromString :: String -> FilePath
-fpFromString = id
-{-# DEPRECATED fpFromString "Now same as id" #-}
-
--- | Translates a 'FilePath' to a 'Text'
---
--- Warns if there are non-unicode sequences in the file name
-fpToTextWarn :: Monad m => FilePath -> m Text
-fpToTextWarn = return . pack
-{-# DEPRECATED fpToTextWarn "Use pack" #-}
-
--- | Translates a 'FilePath' to a 'Text'
---
--- Throws an exception if there are non-unicode
--- sequences in the file name
---
--- Use this to assert that you know
--- a filename will translate properly into a 'Text'.
--- If you created the filename, this should be the case.
-fpToTextEx :: FilePath -> Text
-fpToTextEx = pack
-{-# DEPRECATED fpToTextEx "Use pack" #-}
-
--- | Translates a 'FilePath' to a 'Text'
--- This translation is not correct for a (unix) filename
--- which can contain arbitrary (non-unicode) bytes: those bytes will be discarded.
---
--- This means you cannot translate the 'Text' back to the original file name.
---
--- If you control or otherwise understand the filenames
--- and believe them to be unicode valid consider using 'fpToTextEx' or 'fpToTextWarn'
-fpToText :: FilePath -> Text
-fpToText = pack
-{-# DEPRECATED fpToText "Use pack" #-}
-
-fpFromText :: Text -> FilePath
-fpFromText = unpack
-{-# DEPRECATED fpFromText "Use unpack" #-}
 
 -- Below is a lot of coding for classy-prelude!
 -- These functions are restricted to lists right now.
@@ -685,3 +508,16 @@ infixr 2 <||>
 (<||>) :: Applicative a => a Bool -> a Bool -> a Bool
 (<||>) = liftA2 (||)
 {-# INLINE (<||>) #-}
+
+-- | Convert a 'ByteString' into a storable 'Vector'.
+toByteVector :: ByteString -> SVector Word8
+toByteVector (PS fptr offset idx) = unsafeFromForeignPtr fptr offset idx
+{-# INLINE toByteVector #-}
+
+-- | Convert a storable 'Vector' into a 'ByteString'.
+fromByteVector :: SVector Word8 -> ByteString
+fromByteVector v =
+    PS fptr offset idx
+  where
+    (fptr, offset, idx) = unsafeToForeignPtr v
+{-# INLINE fromByteVector #-}

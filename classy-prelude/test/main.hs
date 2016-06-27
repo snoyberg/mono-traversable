@@ -411,6 +411,13 @@ main = hspec $ do
             , fromList $ applyDList (singleton 5 ++ singleton 6) [7, 8]
             ]) `shouldBe` [1..8 :: Int]
 
+    describe "Data.ByteVector" $ do
+        prop "toByteVector" $ \ws ->
+            (otoList . toByteVector . fromList $ ws) `shouldBe` ws
+
+        prop "fromByteVector" $ \ws ->
+            (otoList . fromByteVector . fromList $ ws) `shouldBe` ws
+
 data DummyException = DummyException
     deriving (Show, Typeable)
 instance Exception DummyException

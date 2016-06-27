@@ -1,3 +1,7 @@
+## 1.0.0
+
+* Support for mono-traversable-1.0.0
+
 ## 0.12.8
 
 * Add (<&&>),(<||>) [#125](https://github.com/snoyberg/classy-prelude/pull/125)
