@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstrainedClassMethods #-}
+{-# LANGUAGE CPP                     #-}
 {-# LANGUAGE DefaultSignatures       #-}
 {-# LANGUAGE FlexibleContexts        #-}
 {-# LANGUAGE FlexibleInstances       #-}
@@ -397,11 +398,18 @@ instance MonoFoldable S.ByteString where
         let start = Unsafe.unsafeForeignPtrToPtr fptr `plusPtr` offset
             end = start `plusPtr` len
             loop ptr
-                | ptr >= end = Unsafe.accursedUnutterablePerformIO (touchForeignPtr fptr) `seq` return ()
+                | ptr >= end = evil (touchForeignPtr fptr) `seq` return ()
                 | otherwise = do
-                    _ <- f (Unsafe.accursedUnutterablePerformIO (peek ptr))
+                    _ <- f (evil (peek ptr))
                     loop (ptr `plusPtr` 1)
         loop start
+      where
+#if MIN_VERSION_bytestring(0,10,6)
+        evil = Unsafe.accursedUnutterablePerformIO
+#else
+        evil = Unsafe.inlinePerformIO
+#endif
+        {-# INLINE evil #-}
     ofoldr1Ex = S.foldr1
     ofoldl1Ex' = S.foldl1'
     headEx = S.head
