@@ -41,7 +41,7 @@ module Data.MinLen
     , minimumBy
     ) where
 
-import Prelude (Num (..), Maybe (..), Int, Ordering (..), Eq, Ord (..), Read, Show, Functor (..), ($), flip, const, Bool (..), otherwise)
+import Prelude (Num (..), Maybe (..), Int, Ordering (..), Eq, Ord (..), Read, Show, Functor (..), ($), flip, const)
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 import Control.Category
@@ -49,7 +49,6 @@ import Data.MonoTraversable
 import Data.Sequences
 import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup (..))
-import Data.NonNull (GrowingAppend)
 import Control.Monad (liftM)
 import Control.Monad.Trans.State.Strict (evalState, state)
 

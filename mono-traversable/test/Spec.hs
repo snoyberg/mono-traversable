@@ -17,7 +17,6 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.HUnit ((@?=))
 import Test.QuickCheck hiding (NonEmptyList(..))
-import qualified Test.QuickCheck as QC
 import qualified Test.QuickCheck.Modifiers as QCM
 
 import Data.Text (Text)
@@ -33,20 +32,21 @@ import qualified Data.Semigroup as SG
 import qualified Data.Map as Map
 import qualified Data.IntMap as IntMap
 import qualified Data.HashMap.Strict as HashMap
-import qualified Data.IntSet as IntSet
 import qualified Data.Set as Set
 import qualified Control.Foldl as Foldl
 
-import Control.Arrow (first, second)
+import Control.Arrow (second)
 import Control.Applicative
 import Control.Monad.Trans.Writer
 
-import Prelude (Bool (..), ($), IO, min, abs, Eq (..), (&&), fromIntegral, Ord (..), String, mod, Int, Integer, show,
-                return, asTypeOf, (.), Show, id, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, seq, maybe)
+import Prelude (Bool (..), ($), IO, Eq (..), fromIntegral, Ord (..), String, mod, Int, Integer, show,
+                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe)
 import qualified Prelude
 
-instance Arbitrary a => Arbitrary (NE.NonEmpty a) where
-    arbitrary = (NE.:|) <$> arbitrary <*> arbitrary
+newtype NonEmpty' a = NonEmpty' (NE.NonEmpty a)
+    deriving (Show, Eq)
+instance Arbitrary a => Arbitrary (NonEmpty' a) where
+    arbitrary = NonEmpty' <$> ((NE.:|) <$> arbitrary <*> arbitrary)
 
 -- | Arbitrary newtype for key-value pairs without any duplicate keys
 -- and is not empty
@@ -98,7 +98,7 @@ main = hspec $ do
 
     describe "osum" $ do
         prop "works on lists" $ \(Small x) (Small y) ->
-            y >= x ==> osum [x..y] @?= ((x + y) * (y - x + 1) `div` 2)
+            y >= x ==> osum [x..y] @?= ((x + y) * (y - x + 1) `div` (2 :: Int))
 
     describe "oproduct" $ do
         prop "works on lists" $ \(Positive x) (Positive y) ->
@@ -202,7 +202,7 @@ main = hspec $ do
 
     describe "NonNull" $ do
         describe "fromNonEmpty" $ do
-            prop "toMinList" $ \ne ->
+            prop "toMinList" $ \(NonEmpty' ne) ->
                 (NE.toList ne :: [Int]) @?= NN.toNullable (NN.toMinList ne)
 
         let -- | Type restricted 'NN.ncons'
@@ -308,15 +308,15 @@ main = hspec $ do
                      in updateMap f k (mapFromListAs xs dummy)
                             @?= mapFromList (updateMap f k xs)
 
-                prop "updateWithKey" $ \(DuplPairs xs) k ->
+                prop "updateWithKey" $ \(DuplPairs xs) k' ->
                     let f k i = if i < 0 then Nothing else Just $ i * k
-                     in updateWithKey f k (mapFromListAs xs dummy)
-                            @?= mapFromList (updateWithKey f k xs)
+                     in updateWithKey f k' (mapFromListAs xs dummy)
+                            @?= mapFromList (updateWithKey f k' xs)
 
-                prop "updateLookupWithKey" $ \(DuplPairs xs) k ->
+                prop "updateLookupWithKey" $ \(DuplPairs xs) k' ->
                     let f k i = if i < 0 then Nothing else Just $ i * k
-                     in updateLookupWithKey f k (mapFromListAs xs dummy)
-                            @?= second mapFromList (updateLookupWithKey f k xs)
+                     in updateLookupWithKey f k' (mapFromListAs xs dummy)
+                            @?= second mapFromList (updateLookupWithKey f k' xs)
 
                 prop "alter" $ \(DuplPairs xs) k ->
                     let m = mapFromListAs xs dummy
@@ -392,9 +392,9 @@ main = hspec $ do
     describe "Intercalate" $ do
         let test typ dummy = describe typ $ do
                 prop "intercalate === defaultIntercalate" $ \list lists ->
-                    let seq = fromListAs list dummy
+                    let seq' = fromListAs list dummy
                         seqs = map (`fromListAs` dummy) lists
-                    in intercalate seq seqs @?= defaultIntercalate seq seqs
+                    in intercalate seq' seqs @?= defaultIntercalate seq' seqs
         test "List" ([] :: [Int])
         test "Vector" (V.empty :: V.Vector Int)
         test "Storable Vector" (VS.empty :: VS.Vector Int)
@@ -447,7 +447,7 @@ main = hspec $ do
             headEx (1 : filter Prelude.odd [2,4..]) @?= (1 :: Int)
 
         it "#31 find doesn't infinitely loop on NonEmpty" $
-            find (== "a") ("a" NE.:| ["d","fgf"]) @?= Just "a"
+            find (== "a") ("a" NE.:| ["d","fgf"]) @?= Just ("a" :: String)
 
         it "#83 head on Seq works correctly" $ do
             headEx (Seq.fromList [1 :: Int,2,3]) @?= (1 :: Int)

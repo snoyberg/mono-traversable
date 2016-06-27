@@ -68,7 +68,6 @@ import qualified Control.Monad.Trans.State.Strict as Strict (StateT(..))
 import Control.Monad.Trans.RWS (RWST(..))
 import qualified Control.Monad.Trans.RWS.Strict as Strict (RWST(..))
 import Control.Monad.Trans.Reader (ReaderT)
-import Control.Monad.Trans.Error (ErrorT(..))
 import Control.Monad.Trans.Cont (ContT)
 import Data.Functor.Compose (Compose)
 import Data.Functor.Product (Product)
@@ -126,7 +125,6 @@ type instance Element (Strict.StateT s m a) = a
 type instance Element (RWST r w s m a) = a
 type instance Element (Strict.RWST r w s m a) = a
 type instance Element (ReaderT r m a) = a
-type instance Element (ErrorT e m a) = a
 type instance Element (ContT r m a) = a
 type instance Element (Compose f g a) = a
 type instance Element (Product f g a) = a
@@ -186,7 +184,6 @@ instance Functor m => MonoFunctor (Strict.StateT s m a)
 instance Functor m => MonoFunctor (RWST r w s m a)
 instance Functor m => MonoFunctor (Strict.RWST r w s m a)
 instance Functor m => MonoFunctor (ReaderT r m a)
-instance Functor m => MonoFunctor (ErrorT e m a)
 instance Functor m => MonoFunctor (ContT r m a)
 instance (Functor f, Functor g) => MonoFunctor (Compose f g a)
 instance (Functor f, Functor g) => MonoFunctor (Product f g a)
@@ -400,9 +397,9 @@ instance MonoFoldable S.ByteString where
         let start = Unsafe.unsafeForeignPtrToPtr fptr `plusPtr` offset
             end = start `plusPtr` len
             loop ptr
-                | ptr >= end = Unsafe.inlinePerformIO (touchForeignPtr fptr) `seq` return ()
+                | ptr >= end = Unsafe.accursedUnutterablePerformIO (touchForeignPtr fptr) `seq` return ()
                 | otherwise = do
-                    _ <- f (Unsafe.inlinePerformIO (peek ptr))
+                    _ <- f (Unsafe.accursedUnutterablePerformIO (peek ptr))
                     loop (ptr `plusPtr` 1)
         loop start
     ofoldr1Ex = S.foldr1
@@ -680,7 +677,6 @@ instance F.Foldable f => MonoFoldable (ListT f a)
 instance F.Foldable f => MonoFoldable (IdentityT f a)
 instance F.Foldable f => MonoFoldable (WriterT w f a)
 instance F.Foldable f => MonoFoldable (Strict.WriterT w f a)
-instance F.Foldable f => MonoFoldable (ErrorT e f a)
 instance (F.Foldable f, F.Foldable g) => MonoFoldable (Compose f g a)
 instance (F.Foldable f, F.Foldable g) => MonoFoldable (Product f g a)
 
@@ -787,7 +783,6 @@ instance (Eq a, F.Foldable f) => MonoFoldableEq (ListT f a)
 instance (Eq a, F.Foldable f) => MonoFoldableEq (IdentityT f a)
 instance (Eq a, F.Foldable f) => MonoFoldableEq (WriterT w f a)
 instance (Eq a, F.Foldable f) => MonoFoldableEq (Strict.WriterT w f a)
-instance (Eq a, F.Foldable f) => MonoFoldableEq (ErrorT e f a)
 instance (Eq a, F.Foldable f, F.Foldable g) => MonoFoldableEq (Compose f g a)
 instance (Eq a, F.Foldable f, F.Foldable g) => MonoFoldableEq (Product f g a)
 
@@ -897,7 +892,6 @@ instance (Ord a, F.Foldable f) => MonoFoldableOrd (ListT f a)
 instance (Ord a, F.Foldable f) => MonoFoldableOrd (IdentityT f a)
 instance (Ord a, F.Foldable f) => MonoFoldableOrd (WriterT w f a)
 instance (Ord a, F.Foldable f) => MonoFoldableOrd (Strict.WriterT w f a)
-instance (Ord a, F.Foldable f) => MonoFoldableOrd (ErrorT e f a)
 instance (Ord a, F.Foldable f, F.Foldable g) => MonoFoldableOrd (Compose f g a)
 instance (Ord a, F.Foldable f, F.Foldable g) => MonoFoldableOrd (Product f g a)
 
@@ -1022,7 +1016,6 @@ instance Traversable f => MonoTraversable (ListT f a)
 instance Traversable f => MonoTraversable (IdentityT f a)
 instance Traversable f => MonoTraversable (WriterT w f a)
 instance Traversable f => MonoTraversable (Strict.WriterT w f a)
-instance Traversable f => MonoTraversable (ErrorT e f a)
 instance (Traversable f, Traversable g) => MonoTraversable (Compose f g a)
 instance (Traversable f, Traversable g) => MonoTraversable (Product f g a)
 
@@ -1137,9 +1130,6 @@ instance MonoPointed (Set a) where
 instance Hashable a => MonoPointed (HashSet a) where
     opoint = HashSet.singleton
     {-# INLINE opoint #-}
-instance Applicative m => MonoPointed (ErrorT e m a) where
-    opoint = ErrorT . pure . Right
-    {-# INLINE opoint #-}
 instance Applicative f => MonoPointed (MaybeT f a) where
     opoint = MaybeT . fmap Just . pure
     {-# INLINE opoint #-}
@@ -1190,14 +1180,6 @@ class MonoFunctor mono => MonoComonad mono where
     -- mono@; that is, builds a new @mono@ from the old one by using pieces
     -- glimpsed from the given function.
     oextend :: (mono -> Element mono) -> mono -> mono
-
--- Comonad
-instance MonoComonad (Tree a)
-instance MonoComonad (NonEmpty a)
-instance MonoComonad (Identity a)
-instance Monoid m => MonoComonad (m -> a)
-instance MonoComonad (e, a)
-instance MonoComonad (Arg a b)
 
 -- Not Comonad
 instance MonoComonad (ViewL a) where

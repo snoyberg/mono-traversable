@@ -35,7 +35,7 @@ import Control.Arrow ((***))
 import GHC.Exts (Constraint)
 
 -- | A container whose values are stored in Key-Value pairs.
-class (Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), GrowingAppend set) => SetContainer set where
+class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), GrowingAppend set) => SetContainer set where
     -- | The type of the key
     type ContainerKey set
 

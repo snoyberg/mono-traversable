@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                     #-}
 {-# LANGUAGE TypeFamilies            #-}
+{-# OPTIONS_GHC -fno-warn-orphans    #-}
 module Data.MonoTraversable.Instances () where
 
 import Data.DList.Instances ()
@@ -17,6 +18,10 @@ import Data.MonoTraversable
 import Data.Sequences
 import Control.Monad (liftM)
 import Control.Monad.Trans.Identity (IdentityT)
+import Data.Semigroup (Arg)
+import Data.List.NonEmpty (NonEmpty)
+import Data.Functor.Identity (Identity)
+import Data.Tree (Tree)
 
 #if !MIN_VERSION_comonad(5,0,0)
 import Data.Functor.Coproduct (Coproduct)
@@ -76,25 +81,55 @@ instance MonoPointed (MaybeApply f a) where
     {-# INLINE opoint #-}
 
 type instance Element (TracedT m w a) = a
-instance (Comonad w, Monoid m) => MonoComonad (TracedT m w a)
+instance (Comonad w, Monoid m) => MonoComonad (TracedT m w a) where
+    oextract = extract
+    oextend = extend
 instance Functor w => MonoFunctor (TracedT m w a)
 
 type instance Element (StoreT s w a) = a
-instance Comonad w => MonoComonad (StoreT s w a)
+instance Comonad w => MonoComonad (StoreT s w a) where
+    oextract = extract
+    oextend = extend
 instance Functor w => MonoFunctor (StoreT s w a)
 
 type instance Element (EnvT e w a) = a
-instance Comonad w => MonoComonad (EnvT e w a)
+instance Comonad w => MonoComonad (EnvT e w a) where
+    oextract = extract
+    oextend = extend
 instance Functor w => MonoFunctor (EnvT e w a)
 
 #if !MIN_VERSION_comonad(5,0,0)
 type instance Element (Coproduct f g a) = a
 instance (Functor f, Functor g) => MonoFunctor (Coproduct f g a)
-instance (Comonad f, Comonad g) => MonoComonad (Coproduct f g a)
+instance (Comonad f, Comonad g) => MonoComonad (Coproduct f g a) where
+    oextract = extract
+    oextend = extend
 #endif
 
 type instance Element (Static f a b) = b
 instance Applicative f => MonoPointed (Static f a b)
 instance Functor f => MonoFunctor (Static f a b)
 
-instance Comonad w => MonoComonad (IdentityT w a)
+instance Comonad w => MonoComonad (IdentityT w a) where
+    oextract = extract
+    oextend = extend
+
+-- Comonad
+instance MonoComonad (Tree a) where
+    oextract = extract
+    oextend = extend
+instance MonoComonad (NonEmpty a) where
+    oextract = extract
+    oextend = extend
+instance MonoComonad (Identity a) where
+    oextract = extract
+    oextend = extend
+instance Monoid m => MonoComonad (m -> a) where
+    oextract = extract
+    oextend = extend
+instance MonoComonad (e, a) where
+    oextract = extract
+    oextend = extend
+instance MonoComonad (Arg a b) where
+    oextract = extract
+    oextend = extend
