@@ -1240,14 +1240,6 @@ class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq w
     {-# INLINE delete #-}
     {-# INLINE deleteBy #-}
 
-{-# DEPRECATED elem "use oelem" #-}
-elem :: EqSequence seq => Element seq -> seq -> Bool
-elem = oelem
-
-{-# DEPRECATED notElem "use onotElem" #-}
-notElem :: EqSequence seq => Element seq -> seq -> Bool
-notElem = onotElem
-
 -- | Use 'splitOn' from "Data.List.Split"
 defaultSplitOn :: EqSequence s => s -> s -> [s]
 defaultSplitOn sep = List.map fromList . List.splitOn (otoList sep) . otoList
