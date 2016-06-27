@@ -22,6 +22,9 @@ import Data.Semigroup (Arg)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Functor.Identity (Identity)
 import Data.Tree (Tree)
+import Data.Traversable (traverse)
+import Control.Applicative (Applicative)
+import Data.Monoid (Monoid)
 
 #if !MIN_VERSION_comonad(5,0,0)
 import Data.Functor.Coproduct (Coproduct)
@@ -34,7 +37,7 @@ instance MonoFoldable (DList a) where
     {-# INLINE otoList #-}
     {-# INLINE headEx #-}
 instance MonoTraversable (DList a) where
-     otraverse f = fmap DL.fromList . traverse f . DL.toList
+     otraverse f = fmap DL.fromList . Data.Traversable.traverse f . DL.toList
      omapM f = liftM DL.fromList . mapM f . DL.toList
 instance MonoFunctor (DList a)
 instance Eq a => MonoFoldableEq (DList a)
@@ -71,7 +74,7 @@ instance MonoFunctor (Cokleisli w a b)
 instance MonoPointed (Cokleisli w a b)
 
 type instance Element (WrappedApplicative f a) = a
-instance Applicative f => MonoPointed (WrappedApplicative f a)
+instance Control.Applicative.Applicative f => MonoPointed (WrappedApplicative f a)
 instance Functor f => MonoFunctor (WrappedApplicative f a)
 
 type instance Element (MaybeApply f a) = a
@@ -81,7 +84,7 @@ instance MonoPointed (MaybeApply f a) where
     {-# INLINE opoint #-}
 
 type instance Element (TracedT m w a) = a
-instance (Comonad w, Monoid m) => MonoComonad (TracedT m w a) where
+instance (Comonad w, Data.Monoid.Monoid m) => MonoComonad (TracedT m w a) where
     oextract = extract
     oextend = extend
 instance Functor w => MonoFunctor (TracedT m w a)

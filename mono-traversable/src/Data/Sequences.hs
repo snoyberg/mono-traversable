@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ConstraintKinds #-}
--- | Warning: This module should be considered highly experimental.
+-- | Abstractions over sequential data structures, like lists and vectors.
 module Data.Sequences where
 
 import Data.Maybe (fromJust, isJust)
@@ -33,10 +33,10 @@ import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Algorithms.Merge as VAM
 import Data.Ord (comparing)
 
--- | 'SemiSequence' was created to share code between 'IsSequence' and 'MinLen'.
+-- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 --
 -- @Semi@ means 'SemiGroup'
--- A 'SemiSequence' can accomodate a 'SemiGroup' such as 'NonEmpty' or 'MinLen'
+-- A 'SemiSequence' can accomodate a 'SemiGroup' such as 'NonEmpty' or 'NonNull'
 -- A Monoid should be able to fill out 'IsSequence'.
 --
 -- 'SemiSequence' operations maintain the same type because they all maintain the same number of elements or increase them.
@@ -45,6 +45,10 @@ import Data.Ord (comparing)
 -- This type-changing function exists on 'NonNull' as 'nfilter'
 --
 -- 'filter' and other such functions are placed in 'IsSequence'
+--
+-- /NOTE/: Like 'GrowingAppend', ideally we'd have a @Semigroup@ superclass
+-- constraint here, but that would pull in more dependencies to this package
+-- than desired.
 class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
     -- | The type of the index of a sequence.
     type Index seq
