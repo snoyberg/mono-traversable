@@ -1,0 +1,30 @@
+name:                mono-traversable-instances
+version:             0.1.0.0
+synopsis:            Extra typeclass instances for mono-traversable
+description:         Please see README.md
+homepage:            https://github.com/snoyberg/mono-traversable#readme
+license:             MIT
+license-file:        LICENSE
+author:              Michael Snoyman
+maintainer:          michael@fpcomplete.com
+category:            Data
+build-type:          Simple
+extra-source-files:  README.md ChangeLog.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Data.MonoTraversable.Instances
+  build-depends:       base >= 4.7 && < 5
+                     , mono-traversable >= 1.0 && < 1.1
+                     , semigroupoids >=3.0
+                     , comonad >= 3.0.3
+                     , vector-instances
+                     , dlist >= 0.6 && < 1.0
+                     , dlist-instances == 0.1.*
+                     , transformers
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/snoyberg/mono-traversable

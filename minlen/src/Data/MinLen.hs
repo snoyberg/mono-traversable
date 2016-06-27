@@ -180,7 +180,7 @@ deriving instance GrowingAppend mono => GrowingAppend (MinLen nat mono)
 unsafeMap :: (mono -> mono) -> MinLen nat mono -> MinLen nat mono
 unsafeMap f (MinLen x) = MinLen (f x)
 
-instance GrowingAppend mono => Semigroup (MinLen nat mono) where
+instance (Semigroup mono, GrowingAppend mono) => Semigroup (MinLen nat mono) where
     MinLen x <> MinLen y = MinLen (x <> y)
 
 instance SemiSequence seq => SemiSequence (MinLen nat seq) where
@@ -345,7 +345,7 @@ initML = MinLen . initEx . unMinLen
 -- > :i ys
 -- ys :: 'MinLen' ('Succ' 'Zero') ['Int']
 -- @
-mlunion :: GrowingAppend mono => MinLen x mono -> MinLen y mono -> MinLen (MaxNat x y) mono
+mlunion :: (Semigroup mono, GrowingAppend mono) => MinLen x mono -> MinLen y mono -> MinLen (MaxNat x y) mono
 mlunion (MinLen x) (MinLen y) = MinLen (x <> y)
 
 -- | Map each element of a monomorphic container to a semigroup, and combine the

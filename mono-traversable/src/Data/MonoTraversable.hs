@@ -1,5 +1,4 @@
 {-# LANGUAGE ConstrainedClassMethods #-}
-{-# LANGUAGE CPP                     #-}
 {-# LANGUAGE DefaultSignatures       #-}
 {-# LANGUAGE FlexibleContexts        #-}
 {-# LANGUAGE FlexibleInstances       #-}
@@ -36,7 +35,6 @@ import           Data.Monoid (Monoid (..), Any (..), All (..))
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
-import           Data.Traversable.Instances ()
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
@@ -63,15 +61,6 @@ import Data.HashMap.Strict (HashMap)
 import Data.Vector (Vector)
 import Control.Monad.Trans.Maybe (MaybeT (..))
 import Control.Monad.Trans.List (ListT)
-import Control.Monad.Trans.Identity (IdentityT)
-import Data.Functor.Apply (MaybeApply (..), WrappedApplicative)
-import Control.Comonad (Cokleisli, Comonad, extract, extend)
-import Control.Comonad.Store (StoreT)
-import Control.Comonad.Env (EnvT)
-import Control.Comonad.Traced (TracedT)
-#if !MIN_VERSION_comonad(5,0,0)
-import Data.Functor.Coproduct (Coproduct)
-#endif
 import Control.Monad.Trans.Writer (WriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Strict (WriterT)
 import Control.Monad.Trans.State (StateT(..))
@@ -83,7 +72,6 @@ import Control.Monad.Trans.Error (ErrorT(..))
 import Control.Monad.Trans.Cont (ContT)
 import Data.Functor.Compose (Compose)
 import Data.Functor.Product (Product)
-import Data.Semigroupoid.Static (Static)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.HashSet (HashSet)
@@ -95,8 +83,7 @@ import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
 import Data.Semigroup (Semigroup, Option (..), Arg)
 import qualified Data.ByteString.Unsafe as SU
-import Data.DList (DList)
-import qualified Data.DList as DL
+import Control.Monad.Trans.Identity (IdentityT)
 
 -- | Type family for getting the type of the elements
 -- of a monomorphic container.
@@ -111,7 +98,6 @@ type instance Element (ZipList a) = a
 type instance Element (Maybe a) = a
 type instance Element (Tree a) = a
 type instance Element (Seq a) = a
-type instance Element (DList a) = a
 type instance Element (ViewL a) = a
 type instance Element (ViewR a) = a
 type instance Element (IntMap a) = a
@@ -130,9 +116,6 @@ type instance Element (Set e) = e
 type instance Element (HashSet e) = e
 type instance Element (Vector a) = a
 type instance Element (WrappedArrow a b c) = c
-type instance Element (MaybeApply f a) = a
-type instance Element (WrappedApplicative f a) = a
-type instance Element (Cokleisli w a b) = b
 type instance Element (MaybeT m a) = a
 type instance Element (ListT m a) = a
 type instance Element (IdentityT m a) = a
@@ -147,16 +130,9 @@ type instance Element (ErrorT e m a) = a
 type instance Element (ContT r m a) = a
 type instance Element (Compose f g a) = a
 type instance Element (Product f g a) = a
-type instance Element (Static f a b) = b
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
 type instance Element (Arg a b) = b
-type instance Element (EnvT e w a) = a
-type instance Element (StoreT s w a) = a
-type instance Element (TracedT m w a) = a
-#if !MIN_VERSION_comonad(5,0,0)
-type instance Element (Coproduct f g a) = a
-#endif
 
 -- | Monomorphic containers that can be mapped over.
 class MonoFunctor mono where
@@ -184,7 +160,6 @@ instance MonoFunctor (ZipList a)
 instance MonoFunctor (Maybe a)
 instance MonoFunctor (Tree a)
 instance MonoFunctor (Seq a)
-instance MonoFunctor (DList a)
 instance MonoFunctor (ViewL a)
 instance MonoFunctor (ViewR a)
 instance MonoFunctor (IntMap a)
@@ -200,16 +175,7 @@ instance MonoFunctor (Map k v)
 instance MonoFunctor (HashMap k v)
 instance MonoFunctor (Vector a)
 instance MonoFunctor (Arg a b)
-instance Functor w => MonoFunctor (EnvT e w a)
-instance Functor w => MonoFunctor (StoreT s w a)
-instance Functor w => MonoFunctor (TracedT m w a)
-#if !MIN_VERSION_comonad(5,0,0)
-instance (Functor f, Functor g) => MonoFunctor (Coproduct f g a)
-#endif
 instance Arrow a => MonoFunctor (WrappedArrow a b c)
-instance Functor f => MonoFunctor (MaybeApply f a)
-instance Functor f => MonoFunctor (WrappedApplicative f a)
-instance MonoFunctor (Cokleisli w a b)
 instance Functor m => MonoFunctor (MaybeT m a)
 instance Functor m => MonoFunctor (ListT m a)
 instance Functor m => MonoFunctor (IdentityT m a)
@@ -224,7 +190,6 @@ instance Functor m => MonoFunctor (ErrorT e m a)
 instance Functor m => MonoFunctor (ContT r m a)
 instance (Functor f, Functor g) => MonoFunctor (Compose f g a)
 instance (Functor f, Functor g) => MonoFunctor (Product f g a)
-instance Functor f => MonoFunctor (Static f a b)
 instance U.Unbox a => MonoFunctor (U.Vector a) where
     omap = U.map
     {-# INLINE omap #-}
@@ -610,11 +575,6 @@ instance MonoFoldable (Vector a) where
     {-# INLINE minimumByEx #-}
 instance MonoFoldable (Set e)
 instance MonoFoldable (HashSet e)
-instance MonoFoldable (DList a) where
-    otoList = DL.toList
-    headEx = DL.head
-    {-# INLINE otoList #-}
-    {-# INLINE headEx #-}
 
 instance U.Unbox a => MonoFoldable (U.Vector a) where
     ofoldMap f = ofoldr (mappend . f) mempty
@@ -819,7 +779,6 @@ instance Eq a => MonoFoldableEq (Identity a)
 instance Eq v => MonoFoldableEq (Map k v)
 instance Eq v => MonoFoldableEq (HashMap k v)
 instance Eq a => MonoFoldableEq (HashSet a)
-instance Eq a => MonoFoldableEq (DList a)
 instance Eq b => MonoFoldableEq (Either a b)
 instance Eq b => MonoFoldableEq (a, b)
 instance Eq a => MonoFoldableEq (Const m a)
@@ -931,7 +890,6 @@ instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
     {-# INLINE maximumEx #-}
     {-# INLINE minimumEx #-}
 instance Ord b => MonoFoldableOrd (Either a b) where
-instance Ord a => MonoFoldableOrd (DList a)
 instance Ord b => MonoFoldableOrd (a, b)
 instance Ord a => MonoFoldableOrd (Const m a)
 instance (Ord a, F.Foldable f) => MonoFoldableOrd (MaybeT f a)
@@ -1036,9 +994,6 @@ instance MonoTraversable (ViewR a)
 instance MonoTraversable (IntMap a)
 instance MonoTraversable (Option a)
 instance MonoTraversable (NonEmpty a)
-instance MonoTraversable (DList a) where
-     otraverse f = fmap DL.fromList . traverse f . DL.toList
-     omapM f = liftM DL.fromList . mapM f . DL.toList
 instance MonoTraversable (Identity a)
 instance MonoTraversable (Map k v)
 instance MonoTraversable (HashMap k v)
@@ -1144,7 +1099,6 @@ instance MonoPointed (Option a)
 instance MonoPointed (NonEmpty a)
 instance MonoPointed (Identity a)
 instance MonoPointed (Vector a)
-instance MonoPointed (DList a)
 instance MonoPointed (IO a)
 instance MonoPointed (ZipList a)
 instance MonoPointed (r -> a)
@@ -1153,7 +1107,6 @@ instance Monoid m => MonoPointed (Const m a)
 instance Monad m => MonoPointed (WrappedMonad m a)
 instance Applicative m => MonoPointed (ListT m a)
 instance Applicative m => MonoPointed (IdentityT m a)
-instance Applicative f => MonoPointed (WrappedApplicative f a)
 instance Arrow a => MonoPointed (WrappedArrow a b c)
 instance (Monoid w, Applicative m) => MonoPointed (WriterT w m a)
 instance (Monoid w, Applicative m) => MonoPointed (Strict.WriterT w m a)
@@ -1161,8 +1114,6 @@ instance Applicative m => MonoPointed (ReaderT r m a)
 instance MonoPointed (ContT r m a)
 instance (Applicative f, Applicative g) => MonoPointed (Compose f g a)
 instance (Applicative f, Applicative g) => MonoPointed (Product f g a)
-instance MonoPointed (Cokleisli w a b)
-instance Applicative f => MonoPointed (Static f a b)
 
 -- Not Applicative
 instance MonoPointed (Seq a) where
@@ -1188,9 +1139,6 @@ instance Hashable a => MonoPointed (HashSet a) where
     {-# INLINE opoint #-}
 instance Applicative m => MonoPointed (ErrorT e m a) where
     opoint = ErrorT . pure . Right
-    {-# INLINE opoint #-}
-instance MonoPointed (MaybeApply f a) where
-    opoint = MaybeApply . Right
     {-# INLINE opoint #-}
 instance Applicative f => MonoPointed (MaybeT f a) where
     opoint = MaybeT . fmap Just . pure
@@ -1243,15 +1191,6 @@ class MonoFunctor mono => MonoComonad mono where
     -- glimpsed from the given function.
     oextend :: (mono -> Element mono) -> mono -> mono
 
-    default oextract :: (Comonad w, (w a) ~ mono, Element (w a) ~ a)
-                   => mono -> Element mono
-    oextract = extract
-    {-# INLINE oextract #-}
-    default oextend :: (Comonad w, (w a) ~ mono, Element (w a) ~ a)
-                   => (mono -> Element mono) -> mono -> mono
-    oextend = extend
-    {-# INLINE oextend #-}
-
 -- Comonad
 instance MonoComonad (Tree a)
 instance MonoComonad (NonEmpty a)
@@ -1259,13 +1198,6 @@ instance MonoComonad (Identity a)
 instance Monoid m => MonoComonad (m -> a)
 instance MonoComonad (e, a)
 instance MonoComonad (Arg a b)
-instance Comonad w => MonoComonad (IdentityT w a)
-instance Comonad w => MonoComonad (EnvT e w a)
-instance Comonad w => MonoComonad (StoreT s w a)
-instance (Comonad w, Monoid m) => MonoComonad (TracedT m w a)
-#if !MIN_VERSION_comonad(5,0,0)
-instance (Comonad f, Comonad g) => MonoComonad (Coproduct f g a)
-#endif
 
 -- Not Comonad
 instance MonoComonad (ViewL a) where
@@ -1288,3 +1220,36 @@ instance MonoComonad (ViewR a) where
                        EmptyR  -> Seq.empty
                        ys :> y -> ys Seq.|> y
         ) :> f w
+
+-- | Containers which, when two values are combined, the combined length is no
+-- less than the larger of the two inputs. In code:
+--
+-- @
+-- olength (x <> y) >= max (olength x) (olength y)
+-- @
+--
+-- This class has no methods, and is simply used to assert that this law holds,
+-- in order to provide guarantees of correctness (see, for instance,
+-- "Data.NonNull").
+--
+-- This should have a @Semigroup@ superclass constraint, however, due to
+-- @Semigroup@ only recently moving to base, some packages do not provide
+-- instances.
+class MonoFoldable mono => GrowingAppend mono
+
+instance GrowingAppend (Seq.Seq a)
+instance GrowingAppend [a]
+instance GrowingAppend (V.Vector a)
+instance U.Unbox a => GrowingAppend (U.Vector a)
+instance VS.Storable a => GrowingAppend (VS.Vector a)
+instance GrowingAppend S.ByteString
+instance GrowingAppend L.ByteString
+instance GrowingAppend T.Text
+instance GrowingAppend TL.Text
+instance GrowingAppend (NonEmpty a)
+instance Ord k => GrowingAppend (Map k v)
+instance (Eq k, Hashable k) => GrowingAppend (HashMap k v)
+instance Ord v => GrowingAppend (Set.Set v)
+instance (Eq v, Hashable v) => GrowingAppend (HashSet.HashSet v)
+instance GrowingAppend IntSet.IntSet
+instance GrowingAppend (IntMap v)

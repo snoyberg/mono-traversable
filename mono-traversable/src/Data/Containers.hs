@@ -22,7 +22,7 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup)
-import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element)
+import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element, GrowingAppend)
 import Data.Function (on)
 import qualified Data.List as List
 import qualified Data.IntSet as IntSet
@@ -32,7 +32,6 @@ import qualified Data.Text as Text
 import qualified Data.ByteString.Lazy as LByteString
 import qualified Data.ByteString as ByteString
 import Control.Arrow ((***))
-import Data.GrowingAppend
 import GHC.Exts (Constraint)
 
 -- | A container whose values are stored in Key-Value pairs.

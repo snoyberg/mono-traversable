@@ -1,8 +1,9 @@
 ## 1.0.0
 
 * Implement the cleanups described in [#95](https://github.com/snoyberg/mono-traversable/issues/95)
-    * Split out `Data.MinLen`, and have `Data.NonNull` stand on its own
+    * Split out `Data.MinLen` to `minlen` package, and have `Data.NonNull` stand on its own
     * Remove `Data.ByteVector`
+    * Split out extra typeclass instances to `mono-traversable-instances`
 
 ## 0.10.2
 

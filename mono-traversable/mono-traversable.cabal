@@ -13,29 +13,34 @@ extra-source-files:  README.md
                      ChangeLog.md
 cabal-version:       >=1.10
 
+flag base49
+  default: True
+  manual: False
+  description: Use base 4.9 or later
+
 library
   ghc-options: -Wall
   exposed-modules:     Data.MonoTraversable
                        Data.Containers
                        Data.Sequences
                        Data.NonNull
-  other-modules:       Data.GrowingAppend
   build-depends:       base >= 4.5 && < 5
                      , containers >= 0.4
                      , unordered-containers >=0.2
                      , hashable
                      , bytestring >= 0.9
                      , text >=0.11
-                     , semigroups >= 0.10
                      , transformers >=0.3
                      , vector >=0.10
-                     , semigroupoids >=3.0
-                     , comonad >=3.0.3
-                     , vector-instances
                      , vector-algorithms >= 0.6
-                     , dlist >= 0.6 && < 1.0
-                     , dlist-instances == 0.1.*
                      , split >= 0.2
+
+  if flag(base49)
+    build-depends:     base >= 4.9
+  else
+    build-depends:     base < 4.9
+                     , semigroups >= 0.10
+
   hs-source-dirs:      src
   default-language:    Haskell2010
 

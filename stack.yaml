@@ -2,3 +2,7 @@ resolver: lts-6.4
 packages:
 - minlen
 - mono-traversable
+- mono-traversable-instances
+flags:
+  mono-traversable:
+    base49: false

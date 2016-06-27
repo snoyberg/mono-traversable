@@ -50,7 +50,6 @@ import Data.Maybe (fromMaybe)
 import Data.MonoTraversable
 import Data.Sequences
 import Data.Semigroup (Semigroup (..))
-import Data.GrowingAppend
 import Control.Monad.Trans.State.Strict (evalState, state)
 
 data NullError = NullError String deriving (Show, Typeable)
@@ -74,7 +73,7 @@ instance MonoTraversable mono => MonoTraversable (NonNull mono) where
     {-# INLINE omapM #-}
 instance GrowingAppend mono => GrowingAppend (NonNull mono)
 
-instance GrowingAppend mono => Semigroup (NonNull mono) where
+instance (Semigroup mono, GrowingAppend mono) => Semigroup (NonNull mono) where
     NonNull x <> NonNull y = NonNull (x <> y)
 
 instance SemiSequence seq => SemiSequence (NonNull seq) where
