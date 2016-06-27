@@ -49,7 +49,7 @@ import Data.MonoTraversable
 import Data.Sequences
 import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup (..))
-import Data.GrowingAppend
+import Data.NonNull (GrowingAppend)
 import Control.Monad (liftM)
 import Control.Monad.Trans.State.Strict (evalState, state)
 

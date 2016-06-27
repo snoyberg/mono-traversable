@@ -1,3 +1,4 @@
 resolver: lts-6.4
 packages:
+- minlen
 - mono-traversable

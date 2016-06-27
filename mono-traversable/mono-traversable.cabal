@@ -1,5 +1,5 @@
 name:                mono-traversable
-version:             0.10.2
+version:             1.0.0
 synopsis:            Type classes for mapping, folding, and traversing monomorphic containers
 description:         Monomorphic variants of the Functor, Foldable, and Traversable typeclasses. If you understand Haskell's basic typeclasses, you understand mono-traversable. In addition to what you are used to, it adds on an IsSequence typeclass and has code for marking data structures as non-empty.
 homepage:            https://github.com/snoyberg/mono-traversable
@@ -19,7 +19,6 @@ library
                        Data.Containers
                        Data.Sequences
                        Data.NonNull
-                       Data.MinLen
                        Data.ByteVector
   other-modules:       Data.GrowingAppend
   build-depends:       base >= 4.5 && < 5

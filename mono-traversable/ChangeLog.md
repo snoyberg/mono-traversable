@@ -1,3 +1,7 @@
+## 1.0.0
+
+* Implement the cleanups described in [#95](https://github.com/snoyberg/mono-traversable/issues/95)
+
 ## 0.10.2
 
 * Add `delete` and `deleteBy` methods to EqSequence [#94](https://github.com/snoyberg/mono-traversable/pull/94)

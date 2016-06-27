@@ -2,6 +2,8 @@
 {-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- | Warning, this is Experimental!
 --
 -- "Data.NonNull" attempts to extend the concepts from
@@ -35,45 +37,98 @@ module Data.NonNull (
   , minimumBy
   , (<|)
   , toMinList
+  , GrowingAppend
 ) where
 
 import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate, maximum, minimum)
 import Control.Arrow (second)
 import Control.Exception.Base (Exception, throw)
+import Control.Monad (liftM)
 import Data.Data
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (fromMaybe)
-import Data.MinLen
 import Data.MonoTraversable
 import Data.Sequences
+import Data.Semigroup (Semigroup (..))
+import Data.GrowingAppend
+import Control.Monad.Trans.State.Strict (evalState, state)
 
 data NullError = NullError String deriving (Show, Typeable)
 instance Exception NullError
 
 -- | A monomorphic container that is not null.
-type NonNull mono = MinLen (Succ Zero) mono
+newtype NonNull mono = NonNull
+    { toNullable :: mono
+    -- ^ __Safely__ convert from a non-null monomorphic container to a nullable monomorphic container.
+    }
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
+type instance Element (NonNull mono) = Element mono
+deriving instance MonoFunctor mono => MonoFunctor (NonNull mono)
+deriving instance MonoFoldable mono => MonoFoldable (NonNull mono)
+deriving instance MonoFoldableEq mono => MonoFoldableEq (NonNull mono)
+deriving instance MonoFoldableOrd mono => MonoFoldableOrd (NonNull mono)
+instance MonoTraversable mono => MonoTraversable (NonNull mono) where
+    otraverse f (NonNull x) = fmap NonNull (otraverse f x)
+    {-# INLINE otraverse #-}
+    omapM f (NonNull x) = liftM NonNull (omapM f x)
+    {-# INLINE omapM #-}
+instance GrowingAppend mono => GrowingAppend (NonNull mono)
+
+instance GrowingAppend mono => Semigroup (NonNull mono) where
+    NonNull x <> NonNull y = NonNull (x <> y)
+
+instance SemiSequence seq => SemiSequence (NonNull seq) where
+    type Index (NonNull seq) = Index seq
+
+    intersperse e = unsafeMap $ intersperse e
+    reverse       = unsafeMap reverse
+    find f        = find f . toNullable
+    cons x        = unsafeMap $ cons x
+    snoc xs x     = unsafeMap (flip snoc x) xs
+    sortBy f      = unsafeMap $ sortBy f
+
+-- | This function is unsafe, and must not be exposed from this module.
+unsafeMap :: (mono -> mono) -> NonNull mono -> NonNull mono
+unsafeMap f (NonNull x) = NonNull (f x)
+
+instance MonoPointed mono => MonoPointed (NonNull mono) where
+    opoint = NonNull . opoint
+    {-# INLINE opoint #-}
+instance IsSequence mono => MonoComonad (NonNull mono) where
+        oextract  = head
+        oextend f (NonNull mono) = NonNull
+                                 . flip evalState mono
+                                 . ofor mono
+                                 . const
+                                 . state
+                                 $ \mono' -> (f (NonNull mono'), tailEx mono')
 
 -- | __Safely__ convert from an __unsafe__ monomorphic container to a __safe__
 -- non-null monomorphic container.
 fromNullable :: MonoFoldable mono => mono -> Maybe (NonNull mono)
-fromNullable = toMinLen
+fromNullable mono
+    | onull mono = Nothing
+    | otherwise = Just (NonNull mono)
 
 -- | __Unsafely__ convert from an __unsafe__ monomorphic container to a __safe__
 -- non-null monomorphic container.
 --
 -- Throws an exception if the monomorphic container is empty.
-nonNull :: MonoFoldable mono => mono -> NonNull mono
-nonNull nullable =
+--
+-- @since 1.0.0
+impureNonNull :: MonoFoldable mono => mono -> NonNull mono
+impureNonNull nullable =
   fromMaybe (throw $ NullError "Data.NonNull.nonNull (NonNull default): expected non-null")
           $ fromNullable nullable
 
--- | __Safely__ convert from a non-null monomorphic container to a nullable monomorphic container.
-toNullable :: NonNull mono -> mono
-toNullable = unMinLen
+-- | Old synonym for 'impureNonNull'
+nonNull :: MonoFoldable mono => mono -> NonNull mono
+nonNull = impureNonNull
+{-# DEPRECATED nonNull "Please use the more explicit impureNonNull instead" #-}
 
 -- | __Safely__ convert from a 'NonEmpty' list to a non-null monomorphic container.
 fromNonEmpty :: IsSequence seq => NE.NonEmpty (Element seq) -> NonNull seq
-fromNonEmpty = nonNull . fromList . NE.toList
+fromNonEmpty = impureNonNull . fromList . NE.toList
 {-# INLINE fromNonEmpty #-}
 
 -- | Specializes 'fromNonEmpty' to lists only.
@@ -139,3 +194,157 @@ infixr 5 <|
 -- | Prepend an element to a non-null 'SemiSequence'.
 (<|) :: SemiSequence seq => Element seq -> NonNull seq -> NonNull seq
 x <| y = ncons x (toNullable y)
+
+-- | Return the first element of a monomorphic container.
+--
+-- Safe version of 'headEx', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+head :: MonoFoldable mono => NonNull mono -> Element mono
+head = headEx . toNullable
+{-# INLINE head #-}
+
+-- | Return the last element of a monomorphic container.
+--
+-- Safe version of 'lastEx', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+last :: MonoFoldable mono => NonNull mono -> Element mono
+last = lastEx . toNullable
+{-# INLINE last #-}
+
+-- | Map each element of a monomorphic container to a semigroup, and combine the
+-- results.
+--
+-- Safe version of 'ofoldMap1Ex', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+--
+-- ==== __Examples__
+--
+-- @
+-- > let xs = ncons ("hello", 1 :: 'Integer') [(" world", 2)]
+-- > 'ofoldMap1' 'fst' xs
+-- "hello world"
+-- @
+ofoldMap1 :: (MonoFoldable mono, Semigroup m) => (Element mono -> m) -> NonNull mono -> m
+ofoldMap1 f = ofoldMap1Ex f . toNullable
+{-# INLINE ofoldMap1 #-}
+
+-- | Join a monomorphic container, whose elements are 'Semigroup's, together.
+--
+-- Safe, only works on monomorphic containers wrapped in a 'NonNull'.
+--
+-- ==== __Examples__
+--
+-- @
+-- > let xs = ncons "a" ["b", "c"]
+-- > xs
+-- 'NonNull' {toNullable = ["a","b","c"]}
+--
+-- > 'ofold1' xs
+-- "abc"
+-- @
+ofold1 :: (MonoFoldable mono, Semigroup (Element mono)) => NonNull mono -> Element mono
+ofold1 = ofoldMap1 id
+{-# INLINE ofold1 #-}
+
+-- | Right-associative fold of a monomorphic container with no base element.
+--
+-- Safe version of 'ofoldr1Ex', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+--
+-- @'foldr1' f = "Prelude".'Prelude.foldr1' f . 'otoList'@
+--
+-- ==== __Examples__
+--
+-- @
+-- > let xs = ncons "a" ["b", "c"]
+-- > 'ofoldr1' (++) xs
+-- "abc"
+-- @
+ofoldr1 :: MonoFoldable mono
+        => (Element mono -> Element mono -> Element mono)
+        -> NonNull mono
+        -> Element mono
+ofoldr1 f = ofoldr1Ex f . toNullable
+{-# INLINE ofoldr1 #-}
+
+-- | Strict left-associative fold of a monomorphic container with no base
+-- element.
+--
+-- Safe version of 'ofoldl1Ex'', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+--
+-- @'foldl1'' f = "Prelude".'Prelude.foldl1'' f . 'otoList'@
+--
+-- ==== __Examples__
+--
+-- @
+-- > let xs = ncons "a" ["b", "c"]
+-- > 'ofoldl1'' (++) xs
+-- "abc"
+-- @
+ofoldl1' :: MonoFoldable mono
+         => (Element mono -> Element mono -> Element mono)
+         -> NonNull mono
+         -> Element mono
+ofoldl1' f = ofoldl1Ex' f . toNullable
+{-# INLINE ofoldl1' #-}
+
+-- | Get the maximum element of a monomorphic container.
+--
+-- Safe version of 'maximumEx', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+--
+-- ==== __Examples__
+--
+-- @
+-- > let xs = ncons 1 [2, 3 :: Int]
+-- > 'maximum' xs
+-- 3
+-- @
+maximum :: MonoFoldableOrd mono
+        => NonNull mono
+        -> Element mono
+maximum = maximumEx . toNullable
+{-# INLINE maximum #-}
+
+-- | Get the minimum element of a monomorphic container.
+--
+-- Safe version of 'minimumEx', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+--
+-- ==== __Examples__
+--
+-- @
+-- > let xs = ncons 1 [2, 3 :: Int]
+-- > 'minimum' xs
+-- 1
+-- @
+minimum :: MonoFoldableOrd mono
+        => NonNull mono
+        -> Element mono
+minimum = minimumEx . toNullable
+{-# INLINE minimum #-}
+
+-- | Get the maximum element of a monomorphic container,
+-- using a supplied element ordering function.
+--
+-- Safe version of 'maximumByEx', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+maximumBy :: MonoFoldable mono
+          => (Element mono -> Element mono -> Ordering)
+          -> NonNull mono
+          -> Element mono
+maximumBy cmp = maximumByEx cmp . toNullable
+{-# INLINE maximumBy #-}
+
+-- | Get the minimum element of a monomorphic container,
+-- using a supplied element ordering function.
+--
+-- Safe version of 'minimumByEx', only works on monomorphic containers wrapped in a
+-- 'NonNull'.
+minimumBy :: MonoFoldable mono
+          => (Element mono -> Element mono -> Ordering)
+          -> NonNull mono
+          -> Element mono
+minimumBy cmp = minimumByEx cmp . toNullable
+{-# INLINE minimumBy #-}
