@@ -1,5 +1,5 @@
 name:                chunked-data
-version:             0.2.0
+version:             0.3.0
 synopsis:            Typeclasses for dealing with various chunked data representations
 description:         Originally present in classy-prelude.
 homepage:            https://github.com/fpco/chunked-data
@@ -15,7 +15,6 @@ extra-source-files:  README.md ChangeLog.md
 library
   exposed-modules:     Data.IOData
                        Data.Textual.Encoding
-                       Data.Sequences.Lazy
                        Data.Builder
                        Data.ChunkedZip
   build-depends:       base >= 4 && < 5
