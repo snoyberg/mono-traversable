@@ -453,6 +453,8 @@ instance MonoFoldable S.ByteString where
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
     {-# INLINE unsafeHead #-}
+{-# RULES "strict ByteString: ofoldMap = concatMap" ofoldMap = S.concatMap #-}
+
 instance MonoFoldable L.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = L.foldr
@@ -480,6 +482,8 @@ instance MonoFoldable L.ByteString where
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
+{-# RULES "lazy ByteString: ofoldMap = concatMap" ofoldMap = L.concatMap #-}
+
 instance MonoFoldable T.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = T.foldr
@@ -505,6 +509,8 @@ instance MonoFoldable T.Text where
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
+{-# RULES "strict Text: ofoldMap = concatMap" ofoldMap = T.concatMap #-}
+
 instance MonoFoldable TL.Text where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = TL.foldr
@@ -529,6 +535,8 @@ instance MonoFoldable TL.Text where
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
+{-# RULES "lazy Text: ofoldMap = concatMap" ofoldMap = TL.concatMap #-}
+
 instance MonoFoldable IntSet where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = IntSet.foldr
@@ -764,25 +772,11 @@ oor :: (Element mono ~ Bool, MonoFoldable mono) => mono -> Bool
 oor = oany id
 {-# INLINE oor #-}
 
--- | A typeclass for monomorphic containers that are 'Monoid's.
-class (MonoFoldable mono, Monoid mono) => MonoFoldableMonoid mono where -- FIXME is this really just MonoMonad?
-    -- | Map a function over a monomorphic container and combine the results.
-    oconcatMap :: (Element mono -> mono) -> mono -> mono
-    oconcatMap = ofoldMap
-    {-# INLINE oconcatMap #-}
-instance (MonoFoldable (t a), Monoid (t a)) => MonoFoldableMonoid (t a) -- FIXME
-instance MonoFoldableMonoid S.ByteString where
-    oconcatMap = S.concatMap
-    {-# INLINE oconcatMap #-}
-instance MonoFoldableMonoid L.ByteString where
-    oconcatMap = L.concatMap
-    {-# INLINE oconcatMap #-}
-instance MonoFoldableMonoid T.Text where
-    oconcatMap = T.concatMap
-    {-# INLINE oconcatMap #-}
-instance MonoFoldableMonoid TL.Text where
-    oconcatMap = TL.concatMap
-    {-# INLINE oconcatMap #-}
+-- | Synonym for 'ofoldMap'
+--
+-- @since 1.0.0
+oconcatMap :: (MonoFoldable mono, Monoid m) => (Element mono -> m) -> mono -> m
+oconcatMap = ofoldMap
 
 -- | A typeclass for monomorphic containers whose elements
 -- are an instance of 'Eq'.

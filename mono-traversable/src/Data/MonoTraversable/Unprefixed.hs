@@ -176,7 +176,7 @@ or = oor
 -- | Synonym for 'oconcatMap'
 --
 -- @since 1.0.0
-concatMap :: (MonoFoldableMonoid mono, Monoid mono) => (Element mono -> mono) -> mono -> mono
+concatMap :: (MonoFoldable mono, Monoid m) => (Element mono -> m) -> mono -> m
 concatMap = oconcatMap
 
 -- | Synonym for 'oelem'

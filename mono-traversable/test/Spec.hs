@@ -12,6 +12,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.NonNull as NN
 import Data.Monoid (mempty, mconcat)
 import Data.Maybe (fromMaybe)
+import qualified Data.List as List
 
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -394,7 +395,7 @@ main = hspec $ do
                 prop "intercalate === defaultIntercalate" $ \list lists ->
                     let seq' = fromListAs list dummy
                         seqs = map (`fromListAs` dummy) lists
-                    in intercalate seq' seqs @?= defaultIntercalate seq' seqs
+                    in ointercalate seq' seqs @?= fromList (List.intercalate list lists)
         test "List" ([] :: [Int])
         test "Vector" (V.empty :: V.Vector Int)
         test "Storable Vector" (VS.empty :: VS.Vector Int)
@@ -411,7 +412,7 @@ main = hspec $ do
                 prop "intercalate sep . splitSeq sep === id" $
                     \(fromList' -> sep) ->
                     \(mconcat . map (maybe sep fromList') -> xs) ->
-                    intercalate sep (splitSeq sep xs) @?= xs
+                    ointercalate sep (splitSeq sep xs) @?= xs
                 prop "splitSeq mempty xs === mempty : map singleton (otoList xs)" $
                     \input ->
                     splitSeq mempty (fromList' input) @?= mempty : map singleton input
@@ -420,7 +421,7 @@ main = hspec $ do
                     splitSeq sep mempty @?= [mempty]
                 prop "intercalate (singleton sep) . splitElem sep === id" $
                     \sep -> \(fromSepList sep -> xs) ->
-                    intercalate (singleton sep) (splitElem sep xs) @?= xs
+                    ointercalate (singleton sep) (splitElem sep xs) @?= xs
                 prop "length . splitElem sep === succ . length . filter (== sep)" $
                     \sep -> \(fromSepList sep -> xs) ->
                     olength (splitElem sep xs) @?= olength (filter (== sep) xs) + 1
