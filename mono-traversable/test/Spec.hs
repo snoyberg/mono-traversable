@@ -10,7 +10,6 @@ import Data.Containers
 import Data.Sequences
 import qualified Data.Sequence as Seq
 import qualified Data.NonNull as NN
-import Data.ByteVector
 import Data.Monoid (mempty, mconcat)
 import Data.Maybe (fromMaybe)
 
@@ -442,13 +441,6 @@ main = hspec $ do
         test "Lazy ByteString" L.empty
         test "Strict Text" T.empty
         test "Lazy Text" TL.empty
-
-    describe "Data.ByteVector" $ do
-        prop "toByteVector" $ \ws ->
-            (otoList . toByteVector . fromList $ ws) @?= ws
-
-        prop "fromByteVector" $ \ws ->
-            (otoList . fromByteVector . fromList $ ws) @?= ws
 
     describe "Other Issues" $ do
         it "#26 headEx on a list works" $
