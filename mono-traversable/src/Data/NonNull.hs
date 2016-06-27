@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
@@ -43,7 +44,9 @@ module Data.NonNull (
 import Prelude hiding (head, tail, init, last, reverse, seq, filter, replicate, maximum, minimum)
 import Control.Arrow (second)
 import Control.Exception.Base (Exception, throw)
+#if !MIN_VERSION_base(4,8,0)
 import Control.Monad (liftM)
+#endif
 import Data.Data
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe (fromMaybe)
@@ -69,8 +72,10 @@ deriving instance MonoFoldableOrd mono => MonoFoldableOrd (NonNull mono)
 instance MonoTraversable mono => MonoTraversable (NonNull mono) where
     otraverse f (NonNull x) = fmap NonNull (otraverse f x)
     {-# INLINE otraverse #-}
+#if !MIN_VERSION_base(4,8,0)
     omapM f (NonNull x) = liftM NonNull (omapM f x)
     {-# INLINE omapM #-}
+#endif
 instance GrowingAppend mono => GrowingAppend (NonNull mono)
 
 instance (Semigroup mono, GrowingAppend mono) => Semigroup (NonNull mono) where

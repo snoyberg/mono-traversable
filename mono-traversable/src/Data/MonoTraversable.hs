@@ -26,7 +26,11 @@ module Data.MonoTraversable where
 
 import           Control.Applicative
 import           Control.Category
+#if MIN_VERSION_base(4,8,0)
+import           Control.Monad        (Monad (..))
+#else
 import           Control.Monad        (Monad (..), liftM)
+#endif
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Foldable        as F
@@ -258,28 +262,38 @@ class MonoFoldable mono where
 
     -- | Map each element of a monomorphic container to an action,
     -- evaluate these actions from left to right, and ignore the results.
-    otraverse_ :: (MonoFoldable mono, Applicative f) => (Element mono -> f b) -> mono -> f ()
+    otraverse_ :: Applicative f => (Element mono -> f b) -> mono -> f ()
     otraverse_ f = ofoldr ((*>) . f) (pure ())
     {-# INLINE otraverse_ #-}
 
     -- | 'ofor_' is 'otraverse_' with its arguments flipped.
-    ofor_ :: (MonoFoldable mono, Applicative f) => mono -> (Element mono -> f b) -> f ()
+    ofor_ :: Applicative f => mono -> (Element mono -> f b) -> f ()
     ofor_ = flip otraverse_
     {-# INLINE ofor_ #-}
 
     -- | Map each element of a monomorphic container to a monadic action,
     -- evaluate these actions from left to right, and ignore the results.
-    omapM_ :: (MonoFoldable mono, Monad m) => (Element mono -> m ()) -> mono -> m ()
+#if MIN_VERSION_base(4,8,0)
+    omapM_ :: Applicative m => (Element mono -> m ()) -> mono -> m ()
+    omapM_ = otraverse_
+#else
+    omapM_ :: Monad m => (Element mono -> m ()) -> mono -> m ()
     omapM_ f = ofoldr ((>>) . f) (return ())
+#endif
     {-# INLINE omapM_ #-}
 
     -- | 'oforM_' is 'omapM_' with its arguments flipped.
-    oforM_ :: (MonoFoldable mono, Monad m) => mono -> (Element mono -> m ()) -> m ()
+#if MIN_VERSION_base(4,8,0)
+    oforM_ :: Applicative m => mono -> (Element mono -> m ()) -> m ()
     oforM_ = flip omapM_
+#else
+    oforM_ :: Monad m => mono -> (Element mono -> m ()) -> m ()
+    oforM_ = flip omapM_
+#endif
     {-# INLINE oforM_ #-}
 
     -- | Monadic fold over the elements of a monomorphic container, associating to the left.
-    ofoldlM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
+    ofoldlM :: Monad m => (a -> Element mono -> m a) -> a -> mono -> m a
     ofoldlM f z0 xs = ofoldr f' return xs z0
       where f' x k z = f z x >>= k
     {-# INLINE ofoldlM #-}
@@ -398,10 +412,20 @@ instance MonoFoldable S.ByteString where
         let start = Unsafe.unsafeForeignPtrToPtr fptr `plusPtr` offset
             end = start `plusPtr` len
             loop ptr
-                | ptr >= end = evil (touchForeignPtr fptr) `seq` return ()
-                | otherwise = do
-                    _ <- f (evil (peek ptr))
+                | ptr >= end = evil (touchForeignPtr fptr) `seq`
+#if MIN_VERSION_base(4,8,0)
+                    pure ()
+#else
+                    return ()
+#endif
+                | otherwise =
+#if MIN_VERSION_base(4,8,0)
+                    f (evil (peek ptr)) *>
                     loop (ptr `plusPtr` 1)
+#else
+                    f (evil (peek ptr)) >>
+                    loop (ptr `plusPtr` 1)
+#endif
         loop start
       where
 #if MIN_VERSION_bytestring(0,10,6)
@@ -531,7 +555,11 @@ instance MonoFoldable [a] where
         | i Prelude.<= 0 = GT
         | otherwise = ocompareLength xs (i - 1)
 instance MonoFoldable (Maybe a) where
+#if MIN_VERSION_base(4,8,0)
+    omapM_ _ Nothing = pure ()
+#else
     omapM_ _ Nothing = return ()
+#endif
     omapM_ f (Just x) = f x
     {-# INLINE omapM_ #-}
 instance MonoFoldable (Tree a)
@@ -665,7 +693,11 @@ instance MonoFoldable (Either a b) where
     ofoldr1Ex _ (Right x) = x
     ofoldl1Ex' _ (Left _) = Prelude.error "ofoldl1Ex' on Either"
     ofoldl1Ex' _ (Right x) = x
+#if MIN_VERSION_base(4,8,0)
+    omapM_ _ (Left _) = pure ()
+#else
     omapM_ _ (Left _) = return ()
+#endif
     omapM_ f (Right x) = f x
     {-# INLINE ofoldMap #-}
     {-# INLINE ofoldr #-}
@@ -961,32 +993,45 @@ class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
     -- | Map each element of a monomorphic container to a monadic action,
     -- evaluate these actions from left to right, and
     -- collect the results.
+#if MIN_VERSION_base(4,8,0)
+    omapM :: Applicative m => (Element mono -> m (Element mono)) -> mono -> m mono
+    omapM = otraverse
+#else
     omapM :: Monad m => (Element mono -> m (Element mono)) -> mono -> m mono
     default omapM :: (Traversable t, mono ~ t a, a ~ Element mono, Monad m) => (Element mono -> m (Element mono)) -> mono -> m mono
     omapM = mapM
+#endif
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
 
 instance MonoTraversable S.ByteString where
     otraverse f = fmap S.pack . traverse f . S.unpack
-    omapM f = liftM S.pack . mapM f . S.unpack
     {-# INLINE otraverse #-}
+#if !MIN_VERSION_base(4,8,0)
+    omapM f = liftM S.pack . mapM f . S.unpack
     {-# INLINE omapM #-}
+#endif
 instance MonoTraversable L.ByteString where
     otraverse f = fmap L.pack . traverse f . L.unpack
-    omapM f = liftM L.pack . mapM f . L.unpack
     {-# INLINE otraverse #-}
+#if !MIN_VERSION_base(4,8,0)
+    omapM f = liftM L.pack . mapM f . L.unpack
     {-# INLINE omapM #-}
+#endif
 instance MonoTraversable T.Text where
     otraverse f = fmap T.pack . traverse f . T.unpack
-    omapM f = liftM T.pack . mapM f . T.unpack
     {-# INLINE otraverse #-}
+#if !MIN_VERSION_base(4,8,0)
+    omapM f = liftM T.pack . mapM f . T.unpack
     {-# INLINE omapM #-}
+#endif
 instance MonoTraversable TL.Text where
     otraverse f = fmap TL.pack . traverse f . TL.unpack
-    omapM f = liftM TL.pack . mapM f . TL.unpack
     {-# INLINE otraverse #-}
+#if !MIN_VERSION_base(4,8,0)
+    omapM f = liftM TL.pack . mapM f . TL.unpack
     {-# INLINE omapM #-}
+#endif
 instance MonoTraversable [a]
 instance MonoTraversable (Maybe a)
 instance MonoTraversable (Tree a)
@@ -1001,20 +1046,35 @@ instance MonoTraversable (Map k v)
 instance MonoTraversable (HashMap k v)
 instance MonoTraversable (Vector a)
 instance U.Unbox a => MonoTraversable (U.Vector a) where
+    -- FIXME do something more efficient
     otraverse f = fmap U.fromList . traverse f . U.toList
+#if MIN_VERSION_base(4,8,0)
+    omapM = otraverse
+#else
     omapM = U.mapM
+#endif
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
 instance VS.Storable a => MonoTraversable (VS.Vector a) where
+    -- FIXME do something more efficient
     otraverse f = fmap VS.fromList . traverse f . VS.toList
+#if MIN_VERSION_base(4,8,0)
+    omapM = otraverse
+#else
     omapM = VS.mapM
+#endif
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
 instance MonoTraversable (Either a b) where
     otraverse _ (Left a) = pure (Left a)
     otraverse f (Right b) = fmap Right (f b)
+#if MIN_VERSION_base(4,8,0)
+    omapM _ (Left a) = pure (Left a)
+    omapM f (Right b) = fmap Right (f b)
+#else
     omapM _ (Left a) = return (Left a)
     omapM f (Right b) = liftM Right (f b)
+#endif
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
 instance MonoTraversable (a, b)
@@ -1033,7 +1093,11 @@ ofor = flip otraverse
 {-# INLINE ofor #-}
 
 -- | 'oforM' is 'omapM' with its arguments flipped.
+#if MIN_VERSION_base(4,8,0)
+oforM :: (MonoTraversable mono, Applicative f) => mono -> (Element mono -> f (Element mono)) -> f mono
+#else
 oforM :: (MonoTraversable mono, Monad f) => mono -> (Element mono -> f (Element mono)) -> f mono
+#endif
 oforM = flip omapM
 {-# INLINE oforM #-}
 
