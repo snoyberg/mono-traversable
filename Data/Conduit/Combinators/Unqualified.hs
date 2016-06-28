@@ -194,7 +194,6 @@ import           Data.IOData
 import           Data.Monoid                 (Monoid (..))
 import           Data.MonoTraversable
 import qualified Data.Sequences              as Seq
-import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import           Prelude                     (Bool (..), Eq (..), Int,
                                               Maybe (..), Monad (..), Num (..),
@@ -204,10 +203,17 @@ import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
-import qualified Data.Textual.Encoding as DTE
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified System.Random.MWC as MWC
+
+#if MIN_VERSION_mono_traversable(1,0,0)
+import qualified Data.Sequences as DTE
+import           Data.Sequences (LazySequence (..))
+#else
+import           Data.Sequences.Lazy
+import qualified Data.Textual.Encoding as DTE
+#endif
 
 
 -- END IMPORTS
@@ -316,7 +322,7 @@ replicateMC = CC.replicateM
 -- including @ByteString@ and @Text@.
 --
 -- Since 1.0.0
-sourceFile :: (MonadResource m, IOData a) => FilePath -> Producer m a
+sourceFile :: (MonadResource m, IOData a, MonoFoldable a) => FilePath -> Producer m a
 sourceFile = CC.sourceFile
 {-# INLINE sourceFile #-}
 
@@ -325,7 +331,7 @@ sourceFile = CC.sourceFile
 -- Does not close the @Handle@ at any point.
 --
 -- Since 1.0.0
-sourceHandle :: (MonadIO m, IOData a) => Handle -> Producer m a
+sourceHandle :: (MonadIO m, IOData a, MonoFoldable a) => Handle -> Producer m a
 sourceHandle = CC.sourceHandle
 {-# INLINE sourceHandle #-}
 
@@ -334,14 +340,14 @@ sourceHandle = CC.sourceHandle
 -- Automatically closes the file at completion.
 --
 -- Since 1.0.0
-sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
+sourceIOHandle :: (MonadResource m, IOData a, MonoFoldable a) => SIO.IO Handle -> Producer m a
 sourceIOHandle = CC.sourceIOHandle
 {-# INLINE sourceIOHandle #-}
 
 -- | @sourceHandle@ applied to @stdin@.
 --
 -- Since 1.0.0
-stdinC :: (MonadIO m, IOData a) => Producer m a
+stdinC :: (MonadIO m, IOData a, MonoFoldable a) => Producer m a
 stdinC = CC.stdin
 {-# INLINE stdinC #-}
 

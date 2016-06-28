@@ -216,7 +216,6 @@ import           Data.Maybe                  (isNothing, isJust)
 import           Data.Monoid                 (Monoid (..))
 import           Data.MonoTraversable
 import qualified Data.Sequences              as Seq
-import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic         as V
 import qualified Data.Vector.Generic.Mutable as VM
 import           Data.Void                   (absurd)
@@ -230,7 +229,6 @@ import Data.Word (Word8)
 import qualified Prelude
 import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
-import qualified Data.Textual.Encoding as DTE
 import qualified Data.Conduit.Text as CT
 import Data.ByteString (ByteString)
 import Data.Text (Text)
@@ -240,6 +238,14 @@ import Data.Conduit.Combinators.Stream
 import Data.Conduit.Internal.Fusion
 import           Data.Primitive.MutVar       (MutVar, newMutVar, readMutVar,
                                               writeMutVar)
+
+#if MIN_VERSION_mono_traversable(1,0,0)
+import qualified Data.Sequences as DTE
+import           Data.Sequences (LazySequence (..))
+#else
+import           Data.Sequences.Lazy
+import qualified Data.Textual.Encoding as DTE
+#endif
 
 -- Defines INLINE_RULE0, INLINE_RULE, STREAMING0, and STREAMING.
 #include "fusion-macros.h"
@@ -409,7 +415,7 @@ INLINE_RULE(replicateM, n m, CL.replicateM n m)
 -- including @ByteString@ and @Text@.
 --
 -- Since 1.0.0
-sourceFile :: (MonadResource m, IOData a) => FilePath -> Producer m a
+sourceFile :: (MonadResource m, IOData a, MonoFoldable a) => FilePath -> Producer m a
 sourceFile fp = sourceIOHandle (SIO.openFile fp SIO.ReadMode)
 {-# INLINE sourceFile #-}
 
@@ -420,7 +426,7 @@ sourceFile fp = sourceIOHandle (SIO.openFile fp SIO.ReadMode)
 -- Subject to fusion
 --
 -- Since 1.0.0
-sourceHandle, sourceHandleC :: (MonadIO m, IOData a) => Handle -> Producer m a
+sourceHandle, sourceHandleC :: (MonadIO m, IOData a, MonoFoldable a) => Handle -> Producer m a
 sourceHandleC h =
     loop
   where
@@ -437,7 +443,7 @@ STREAMING(sourceHandle, sourceHandleC, sourceHandleS, h)
 -- Automatically closes the file at completion.
 --
 -- Since 1.0.0
-sourceIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Producer m a
+sourceIOHandle :: (MonadResource m, IOData a, MonoFoldable a) => SIO.IO Handle -> Producer m a
 sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
 {-# INLINE sourceIOHandle #-}
 
@@ -446,7 +452,7 @@ sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
 -- Subject to fusion
 --
 -- Since 1.0.0
-stdin :: (MonadIO m, IOData a) => Producer m a
+stdin :: (MonadIO m, IOData a, MonoFoldable a) => Producer m a
 INLINE_RULE0(stdin, sourceHandle SIO.stdin)
 
 -- | Create an infinite stream of random values, seeding from the system random

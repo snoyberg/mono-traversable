@@ -56,11 +56,16 @@ import           Data.Monoid (Monoid (..))
 #endif
 import qualified Data.NonNull as NonNull
 import qualified Data.Sequences as Seq
-import           Data.Sequences.Lazy
 import qualified Data.Vector.Generic as V
 import qualified Data.Vector.Generic.Mutable as VM
 import           Prelude
 import           System.IO (Handle)
+
+#if MIN_VERSION_mono_traversable(1,0,0)
+import           Data.Sequences (LazySequence (..))
+#else
+import           Data.Sequences.Lazy
+#endif
 
 -- END IMPORTS
 
@@ -97,7 +102,7 @@ repeatWhileMS m f _ =
             else Stop ()
 {-# INLINE repeatWhileMS #-}
 
-sourceHandleS :: (MonadIO m, IOData a) => Handle -> StreamProducer m a
+sourceHandleS :: (MonadIO m, MonoFoldable a, IOData a) => Handle -> StreamProducer m a
 sourceHandleS h _ =
     Stream step (return ())
   where
