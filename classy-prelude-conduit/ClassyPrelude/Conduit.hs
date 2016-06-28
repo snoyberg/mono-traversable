@@ -9,4 +9,4 @@ module ClassyPrelude.Conduit
     ) where
 
 import ClassyPrelude
-import Conduit
+import Conduit hiding (throwM)

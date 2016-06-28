@@ -68,7 +68,6 @@ module ClassyPrelude
     , module Data.MonoTraversable
     , module Data.MonoTraversable.Unprefixed
     , module Data.Sequences
-    , module Data.Textual.Encoding
     , module Data.Containers
     , module Data.Builder
     , module Data.NonNull
@@ -85,7 +84,6 @@ module ClassyPrelude
       -- * Non-standard
       -- ** List-like classes
     , map
-    , sequence_
     --, split
     , readMay
     , zip, zip3, zip4, zip5, zip6, zip7
@@ -198,7 +196,6 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified Data.HashSet as HashSet
 
-import Data.Textual.Encoding
 import GHC.Generics (Generic)
 
 import Control.Monad.Primitive (primToPrim, primToIO, primToST)
