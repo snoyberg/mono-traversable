@@ -15,11 +15,12 @@ module Data.MonoTraversable.Unprefixed where
 import Data.Int (Int64)
 import Data.MonoTraversable
 import Data.Semigroup (Semigroup)
+import Data.Monoid (Monoid)
 
 -- | Synonym for 'ofoldMap'
 --
 -- @since 1.0.0
-foldMap :: (MonoFoldable mono, Monoid m) => (Element mono -> m) -> mono -> m
+foldMap :: (MonoFoldable mono, Data.Monoid.Monoid m) => (Element mono -> m) -> mono -> m
 foldMap = ofoldMap
 
 -- | Synonym for 'ofoldr'
