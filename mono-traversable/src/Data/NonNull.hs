@@ -119,7 +119,7 @@ fromNullable mono
 -- @since 1.0.0
 impureNonNull :: MonoFoldable mono => mono -> NonNull mono
 impureNonNull nullable =
-  fromMaybe (throw $ NullError "Data.NonNull.nonNull (NonNull default): expected non-null")
+  fromMaybe (throw $ NullError "Data.NonNull.impureNonNull (NonNull default): expected non-null")
           $ fromNullable nullable
 
 -- | Old synonym for 'impureNonNull'

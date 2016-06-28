@@ -810,162 +810,71 @@ osequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m (
 osequence_ = omapM_ id
 {-# INLINE osequence_ #-}
 
--- | A typeclass for monomorphic containers whose elements
--- are an instance of 'Eq'.
-class (MonoFoldable mono, Eq (Element mono)) => MonoFoldableEq mono where
-    -- | Checks if the monomorphic container includes the supplied element.
-    oelem :: Element mono -> mono -> Bool
-    oelem e = List.elem e . otoList
+-- | Checks if the monomorphic container includes the supplied element.
+oelem :: (MonoFoldable mono, Eq (Element mono)) => Element mono -> mono -> Bool
+oelem e = List.elem e . otoList
+{-# INLINE [0] oelem #-}
 
-    -- | Checks if the monomorphic container does not include the supplied element.
-    onotElem :: Element mono -> mono -> Bool
-    onotElem e = List.notElem e . otoList
-    {-# INLINE oelem #-}
-    {-# INLINE onotElem #-}
+-- | Checks if the monomorphic container does not include the supplied element.
+onotElem :: (MonoFoldable mono, Eq (Element mono)) => Element mono -> mono -> Bool
+onotElem e = List.notElem e . otoList
+{-# INLINE [0] onotElem #-}
 
-instance Eq a => MonoFoldableEq (Seq.Seq a)
-instance Eq a => MonoFoldableEq (V.Vector a)
-instance (Eq a, U.Unbox a) => MonoFoldableEq (U.Vector a)
-instance (Eq a, VS.Storable a) => MonoFoldableEq (VS.Vector a)
-instance Eq a => MonoFoldableEq (NonEmpty a)
-instance MonoFoldableEq T.Text
-instance MonoFoldableEq TL.Text
-instance MonoFoldableEq IntSet
-instance Eq a => MonoFoldableEq (Maybe a)
-instance Eq a => MonoFoldableEq (Tree a)
-instance Eq a => MonoFoldableEq (ViewL a)
-instance Eq a => MonoFoldableEq (ViewR a)
-instance Eq a => MonoFoldableEq (IntMap a)
-instance Eq a => MonoFoldableEq (Option a)
-instance Eq a => MonoFoldableEq (Identity a)
-instance Eq v => MonoFoldableEq (Map k v)
-instance Eq v => MonoFoldableEq (HashMap k v)
-instance Eq a => MonoFoldableEq (HashSet a)
-instance Eq b => MonoFoldableEq (Either a b)
-instance Eq b => MonoFoldableEq (a, b)
-instance Eq a => MonoFoldableEq (Const m a)
-instance (Eq a, F.Foldable f) => MonoFoldableEq (MaybeT f a)
-instance (Eq a, F.Foldable f) => MonoFoldableEq (ListT f a)
-instance (Eq a, F.Foldable f) => MonoFoldableEq (IdentityT f a)
-instance (Eq a, F.Foldable f) => MonoFoldableEq (WriterT w f a)
-instance (Eq a, F.Foldable f) => MonoFoldableEq (Strict.WriterT w f a)
-instance (Eq a, F.Foldable f, F.Foldable g) => MonoFoldableEq (Compose f g a)
-instance (Eq a, F.Foldable f, F.Foldable g) => MonoFoldableEq (Product f g a)
+{-# RULES "strict ByteString elem" oelem = S.elem #-}
+{-# RULES "strict ByteString notElem" oelem = S.notElem #-}
 
-instance Eq a => MonoFoldableEq [a] where
-    oelem = List.elem
-    onotElem = List.notElem
-    {-# INLINE oelem #-}
-    {-# INLINE onotElem #-}
+{-# RULES "lazy ByteString elem" oelem = L.elem #-}
+{-# RULES "lazy ByteString notElem" oelem = L.notElem #-}
 
-instance MonoFoldableEq S.ByteString where
-    oelem = S.elem
-    onotElem = S.notElem
-    {-# INLINE oelem #-}
-    {-# INLINE onotElem #-}
+{-# RULES "Set elem" forall (k :: Ord k => k). oelem k = Set.member k #-}
+{-# RULES "Set notElem" forall (k :: Ord k => k). oelem k = Set.notMember k #-}
 
-instance MonoFoldableEq L.ByteString where
-    oelem = L.elem
-    onotElem = L.notElem
-    {-# INLINE oelem #-}
-    {-# INLINE onotElem #-}
+-- | Get the minimum element of a monomorphic container.
+--
+-- Note: this is a partial function. On an empty 'MonoFoldable', it will
+-- throw an exception.
+--
+-- /See 'Data.NonNull.maximum' from "Data.NonNull" for a total version of this function./
+maximumEx :: (MonoFoldable mono, Ord (Element mono)) => mono -> Element mono
+maximumEx = maximumByEx compare
+{-# INLINE [0] maximumEx #-}
 
-instance (Eq a, Ord a) => MonoFoldableEq (Set a) where
-    oelem = Set.member
-    onotElem = Set.notMember
-    {-# INLINE oelem #-}
-    {-# INLINE onotElem #-}
+-- | Get the maximum element of a monomorphic container.
+--
+-- Note: this is a partial function. On an empty 'MonoFoldable', it will
+-- throw an exception.
+--
+-- /See 'Data.NonNull.minimum' from "Data.NonNull" for a total version of this function./
+minimumEx :: (MonoFoldable mono, Ord (Element mono)) => mono -> Element mono
+minimumEx = minimumByEx compare
+{-# INLINE [0] minimumEx #-}
 
+{-# RULES "strict ByteString maximumEx" maximumEx = S.maximum #-}
+{-# RULES "strict ByteString minimumEx" minimumEx = S.minimum #-}
 
--- | A typeclass for monomorphic containers whose elements
--- are an instance of 'Ord'.
-class (MonoFoldable mono, Ord (Element mono)) => MonoFoldableOrd mono where
-    -- | Get the minimum element of a monomorphic container.
-    --
-    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
-    -- throw an exception.
-    --
-    -- /See 'Data.NonNull.maximum' from "Data.NonNull" for a total version of this function./
-    maximumEx :: mono -> Element mono
-    maximumEx = maximumByEx compare
-    {-# INLINE maximumEx #-}
+{-# RULES "lazy ByteString maximumEx" maximumEx = L.maximum #-}
+{-# RULES "lazy ByteString minimumEx" minimumEx = L.minimum #-}
 
-    -- | Get the maximum element of a monomorphic container.
-    --
-    -- Note: this is a partial function. On an empty 'MonoFoldable', it will
-    -- throw an exception.
-    --
-    -- /See 'Data.NonNull.minimum' from "Data.NonNull" for a total version of this function./
-    minimumEx :: mono -> Element mono
-    minimumEx = minimumByEx compare
-    {-# INLINE minimumEx #-}
+{-# RULES "strict Text maximumEx" maximumEx = T.maximum #-}
+{-# RULES "strict Text minimumEx" minimumEx = T.minimum #-}
 
-instance MonoFoldableOrd S.ByteString where
-    maximumEx = S.maximum
-    {-# INLINE maximumEx #-}
-    minimumEx = S.minimum
-    {-# INLINE minimumEx #-}
-instance MonoFoldableOrd L.ByteString where
-    maximumEx = L.maximum
-    {-# INLINE maximumEx #-}
-    minimumEx = L.minimum
-    {-# INLINE minimumEx #-}
-instance MonoFoldableOrd T.Text where
-    maximumEx = T.maximum
-    {-# INLINE maximumEx #-}
-    minimumEx = T.minimum
-    {-# INLINE minimumEx #-}
-instance MonoFoldableOrd TL.Text where
-    maximumEx = TL.maximum
-    {-# INLINE maximumEx #-}
-    minimumEx = TL.minimum
-    {-# INLINE minimumEx #-}
-instance MonoFoldableOrd IntSet
-instance Ord a => MonoFoldableOrd [a]
-instance Ord a => MonoFoldableOrd (Maybe a)
-instance Ord a => MonoFoldableOrd (Tree a)
-instance Ord a => MonoFoldableOrd (Seq a)
-instance Ord a => MonoFoldableOrd (ViewL a)
-instance Ord a => MonoFoldableOrd (ViewR a)
-instance Ord a => MonoFoldableOrd (IntMap a)
-instance Ord a => MonoFoldableOrd (Option a)
-instance Ord a => MonoFoldableOrd (NonEmpty a)
-instance Ord a => MonoFoldableOrd (Identity a)
-instance Ord v => MonoFoldableOrd (Map k v)
-instance Ord v => MonoFoldableOrd (HashMap k v)
-instance Ord a => MonoFoldableOrd (Vector a) where
-    maximumEx   = V.maximum
-    minimumEx   = V.minimum
-    {-# INLINE maximumEx #-}
-    {-# INLINE minimumEx #-}
-instance Ord e => MonoFoldableOrd (Set e)
-instance Ord e => MonoFoldableOrd (HashSet e)
-instance (U.Unbox a, Ord a) => MonoFoldableOrd (U.Vector a) where
-    maximumEx   = U.maximum
-    minimumEx   = U.minimum
-    {-# INLINE maximumEx #-}
-    {-# INLINE minimumEx #-}
-instance (Ord a, VS.Storable a) => MonoFoldableOrd (VS.Vector a) where
-    maximumEx   = VS.maximum
-    minimumEx   = VS.minimum
-    {-# INLINE maximumEx #-}
-    {-# INLINE minimumEx #-}
-instance Ord b => MonoFoldableOrd (Either a b) where
-instance Ord b => MonoFoldableOrd (a, b)
-instance Ord a => MonoFoldableOrd (Const m a)
-instance (Ord a, F.Foldable f) => MonoFoldableOrd (MaybeT f a)
-instance (Ord a, F.Foldable f) => MonoFoldableOrd (ListT f a)
-instance (Ord a, F.Foldable f) => MonoFoldableOrd (IdentityT f a)
-instance (Ord a, F.Foldable f) => MonoFoldableOrd (WriterT w f a)
-instance (Ord a, F.Foldable f) => MonoFoldableOrd (Strict.WriterT w f a)
-instance (Ord a, F.Foldable f, F.Foldable g) => MonoFoldableOrd (Compose f g a)
-instance (Ord a, F.Foldable f, F.Foldable g) => MonoFoldableOrd (Product f g a)
+{-# RULES "lazy Text maximumEx" maximumEx = TL.maximum #-}
+{-# RULES "lazy Text minimumEx" minimumEx = TL.minimum #-}
+
+{-# RULES "boxed Vector maximumEx" maximumEx = V.maximum #-}
+{-# RULES "boxed Vector minimumEx" minimumEx = V.minimum #-}
+
+{-# RULES "unboxed Vector maximumEx" forall (u :: U.Unbox a => U.Vector a). maximumEx u = U.maximum u #-}
+{-# RULES "unboxed Vector minimumEx" forall (u :: U.Unbox a => U.Vector a). minimumEx u = U.minimum u #-}
+
+{-# RULES "storable Vector maximumEx" forall (v :: VS.Storable a => VS.Vector a). maximumEx v = VS.maximum v #-}
+{-# RULES "storable Vector minimumEx" forall (v :: VS.Storable a => VS.Vector a). minimumEx v = VS.minimum v #-}
 
 -- | Safe version of 'maximumEx'.
 --
 -- Returns 'Nothing' instead of throwing an exception when
 -- encountering an empty monomorphic container.
-maximumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+maximumMay :: (MonoFoldable mono, Ord (Element mono)) => mono -> Maybe (Element mono)
 maximumMay mono
     | onull mono = Nothing
     | otherwise = Just (maximumEx mono)
@@ -988,7 +897,7 @@ maximumByMay f mono
 --
 -- Returns 'Nothing' instead of throwing an exception when
 -- encountering an empty monomorphic container.
-minimumMay :: MonoFoldableOrd mono => mono -> Maybe (Element mono)
+minimumMay :: (MonoFoldable mono, Ord (Element mono)) => mono -> Maybe (Element mono)
 minimumMay mono
     | onull mono = Nothing
     | otherwise = Just (minimumEx mono)
