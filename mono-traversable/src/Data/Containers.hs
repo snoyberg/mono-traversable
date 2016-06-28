@@ -22,7 +22,7 @@ import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup)
-import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element, GrowingAppend)
+import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element, GrowingAppend, ofoldl', otoList)
 import Data.Function (on)
 import qualified Data.List as List
 import qualified Data.IntSet as IntSet
@@ -50,6 +50,14 @@ class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey
     -- | Get the union of two containers.
     union :: set -> set -> set
 
+    -- | Combine a collection of @SetContainer@s, with left-most values overriding
+    -- when there are matching keys.
+    --
+    -- @since 1.0.0
+    unions :: (MonoFoldable mono, Element mono ~ set) => mono -> set
+    unions = ofoldl' union Data.Monoid.mempty
+    {-# INLINE unions #-}
+
     -- | Get the difference of two containers.
     difference :: set -> set -> set
 
@@ -70,6 +78,8 @@ instance Ord k => SetContainer (Map.Map k v) where
     {-# INLINE notMember #-}
     union = Map.union
     {-# INLINE union #-}
+    unions = Map.unions . otoList
+    {-# INLINE unions #-}
     difference = Map.difference
     {-# INLINE difference #-}
     intersection = Map.intersection
@@ -88,6 +98,8 @@ instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) wher
     {-# INLINE notMember #-}
     union = HashMap.union
     {-# INLINE union #-}
+    unions = HashMap.unions . otoList
+    {-# INLINE unions #-}
     difference = HashMap.difference
     {-# INLINE difference #-}
     intersection = HashMap.intersection
@@ -106,6 +118,8 @@ instance SetContainer (IntMap.IntMap value) where
     {-# INLINE notMember #-}
     union = IntMap.union
     {-# INLINE union #-}
+    unions = IntMap.unions . otoList
+    {-# INLINE unions #-}
     difference = IntMap.difference
     {-# INLINE difference #-}
     intersection = IntMap.intersection
@@ -121,6 +135,8 @@ instance Ord element => SetContainer (Set.Set element) where
     {-# INLINE notMember #-}
     union = Set.union
     {-# INLINE union #-}
+    unions = Set.unions . otoList
+    {-# INLINE unions #-}
     difference = Set.difference
     {-# INLINE difference #-}
     intersection = Set.intersection
