@@ -56,6 +56,7 @@ module ClassyPrelude
     , Identity (..)
     , MonadReader
     , ask
+    , asks
     , ReaderT (..)
     , Reader
       -- * Poly hierarchy
@@ -67,7 +68,6 @@ module ClassyPrelude
     , module Data.MonoTraversable
     , module Data.MonoTraversable.Unprefixed
     , module Data.Sequences
-    , module Data.Sequences.Lazy
     , module Data.Textual.Encoding
     , module Data.Containers
     , module Data.Builder
@@ -85,13 +85,7 @@ module ClassyPrelude
       -- * Non-standard
       -- ** List-like classes
     , map
-    , concat
-    , fold
-    , pack
-    , unpack
-    , repack
     , sequence_
-    , foldM
     --, split
     , readMay
     , zip, zip3, zip4, zip5, zip6, zip7
@@ -107,7 +101,6 @@ module ClassyPrelude
       -- ** Set-like
     , (\\)
     , intersect
-    , unions
     -- FIXME , mapSet
       -- ** Text-like
     , Show (..)
@@ -163,7 +156,6 @@ import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry,
 import qualified Control.Concurrent.STM as STM
 import Data.IORef.Lifted
 import Data.Mutable
-import qualified Data.Monoid as Monoid
 import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
@@ -205,14 +197,13 @@ import qualified Data.Map as Map
 import qualified Data.HashSet as HashSet
 
 import Data.Textual.Encoding
-import Data.Sequences.Lazy
 import GHC.Generics (Generic)
 
 import Control.Monad.Primitive (primToPrim, primToIO, primToST)
 import Data.Primitive.MutVar
 
 import Data.Functor.Identity (Identity (..))
-import Control.Monad.Reader (MonadReader, ask, ReaderT (..), Reader)
+import Control.Monad.Reader (MonadReader, ask, asks, ReaderT (..), Reader)
 import Data.Bifunctor
 import Data.DList (DList)
 import qualified Data.DList as DList
@@ -237,35 +228,11 @@ charToLower = Char.toLower
 charToUpper :: Char -> Char
 charToUpper = Char.toUpper
 
--- Renames from mono-traversable
-
-pack :: IsSequence c => [Element c] -> c
-pack = fromList
-
-unpack :: MonoFoldable c => c -> [Element c]
-unpack = otoList
-
-fold :: (Monoid (Element c), MonoFoldable c) => c -> Element c
-fold = ofoldMap id
-{-# INLINE fold #-}
-
-foldM :: (Monad m, MonoFoldable c) => (a -> Element c -> m a) -> a -> c -> m a
-foldM = ofoldlM
-
-concat :: (MonoFoldable c, Monoid (Element c)) => c -> Element c
-concat = ofoldMap id
-
 readMay :: (Element c ~ Char, MonoFoldable c, Read a) => c -> Maybe a
 readMay a = -- FIXME replace with safe-failure stuff
     case [x | (x, t) <- Prelude.reads (otoList a :: String), onull t] of
         [x] -> Just x
         _ -> Nothing
-
--- | Repack from one type to another, dropping to a list in the middle.
---
--- @repack = pack . unpack@.
-repack :: (MonoFoldable a, IsSequence b, Element a ~ Element b) => a -> b
-repack = fromList . toList
 
 map :: Functor f => (a -> b) -> f a -> f b
 map = fmap
@@ -285,9 +252,6 @@ infixl 9 \\{-This comment teaches CPP correct behaviour -}
 intersect :: SetContainer a => a -> a -> a
 intersect = intersection
 {-# INLINE intersect #-}
-
-unions :: (MonoFoldable c, SetContainer (Element c)) => c -> Element c
-unions = ofoldl' union Monoid.mempty
 
 asByteString :: ByteString -> ByteString
 asByteString = id
