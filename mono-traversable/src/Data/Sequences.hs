@@ -1550,3 +1550,25 @@ instance LazySequence TL.Text T.Text where
     fromChunks = TL.fromChunks
     toStrict = TL.toStrict
     fromStrict = TL.fromStrict
+
+-- | Synonym for 'fromList'
+--
+-- @since 1.0.0
+pack :: IsSequence seq => [Element seq] -> seq
+pack = fromList
+{-# INLINE pack #-}
+
+-- | Synonym for 'otoList'
+--
+-- @since 1.0.0
+unpack :: MonoFoldable mono => mono -> [Element mono]
+unpack = otoList
+{-# INLINE unpack #-}
+
+-- | Repack from one type to another, dropping to a list in the middle.
+--
+-- @repack = pack . unpack@.
+--
+-- @since 1.0.0
+repack :: (MonoFoldable a, IsSequence b, Element a ~ Element b) => a -> b
+repack = pack . unpack
