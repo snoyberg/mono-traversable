@@ -34,6 +34,10 @@ import qualified Data.ByteString.Unsafe as SU
 import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Algorithms.Merge as VAM
 import Data.Ord (comparing)
+import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy.Encoding as TL
+import Data.Text.Encoding.Error (lenientDecode)
+import Data.Word (Word8)
 
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 --
@@ -1572,3 +1576,26 @@ unpack = otoList
 -- @since 1.0.0
 repack :: (MonoFoldable a, IsSequence b, Element a ~ Element b) => a -> b
 repack = pack . unpack
+
+-- | Textual data which can be encoded to and decoded from UTF8.
+--
+-- @since 1.0.0
+class (Textual textual, IsSequence binary) => Utf8 textual binary | textual -> binary, binary -> textual where
+    -- | Encode from textual to binary using UTF-8 encoding
+    --
+    -- @since 1.0.0
+    encodeUtf8 :: textual -> binary
+    -- | Note that this function is required to be pure. In the case of
+    -- a decoding error, Unicode replacement characters must be used.
+    --
+    -- @since 1.0.0
+    decodeUtf8 :: binary -> textual
+instance (c ~ Char, w ~ Word8) => Utf8 [c] [w] where
+    encodeUtf8 = L.unpack . TL.encodeUtf8 . TL.pack
+    decodeUtf8 = TL.unpack . TL.decodeUtf8With lenientDecode . L.pack
+instance Utf8 T.Text S.ByteString where
+    encodeUtf8 = T.encodeUtf8
+    decodeUtf8 = T.decodeUtf8With lenientDecode
+instance Utf8 TL.Text L.ByteString where
+    encodeUtf8 = TL.encodeUtf8
+    decodeUtf8 = TL.decodeUtf8With lenientDecode
