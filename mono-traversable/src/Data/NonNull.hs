@@ -5,13 +5,10 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
--- | Warning, this is Experimental!
---
--- "Data.NonNull" attempts to extend the concepts from
+-- | "Data.NonNull" extends the concepts from
 -- "Data.List.NonEmpty" to any 'MonoFoldable'.
 --
--- 'NonNull' is a typeclass for a container with 1 or more elements.
--- "Data.List.NonEmpty" and 'NotEmpty a' are members of the typeclass
+-- 'NonNull' is a newtype wrapper for a container with 1 or more elements.
 module Data.NonNull (
     NonNull
   , fromNullable
