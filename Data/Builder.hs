@@ -22,14 +22,20 @@ import qualified Data.Text.Lazy.Builder as TB
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
-import qualified Blaze.ByteString.Builder as BB
-import qualified Blaze.ByteString.Builder.Char.Utf8 as BB
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Builder.Extra as BB (flush)
+
+import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy.Encoding as TLE
 
 -- | Since 0.1.0.0
 type TextBuilder = TB.Builder
 
 -- | Since 0.1.0.0
 type BlazeBuilder = BB.Builder
+
+-- | Since 0.3.0.0
+type ByteStringBuilder = BB.Builder
 
 -- | Since 0.1.0.0
 class Monoid builder => Builder builder lazy | builder -> lazy, lazy -> builder where
@@ -68,18 +74,18 @@ instance (a ~ Char) => ToBuilder [a] TB.Builder where
 instance ToBuilder BB.Builder BB.Builder where
     toBuilder = id
 instance ToBuilder T.Text BB.Builder where
-    toBuilder = BB.fromText
+    toBuilder = TE.encodeUtf8Builder
 instance ToBuilder TL.Text BB.Builder where
-    toBuilder = BB.fromLazyText
+    toBuilder = TLE.encodeUtf8Builder
 instance ToBuilder Char BB.Builder where
-    toBuilder = BB.fromChar
+    toBuilder = toBuilder . T.singleton
 instance (a ~ Char) => ToBuilder [a] BB.Builder where
-    toBuilder = BB.fromString
+    toBuilder = toBuilder . TL.pack
 
 instance ToBuilder S.ByteString BB.Builder where
-    toBuilder = BB.fromByteString
+    toBuilder = BB.byteString
 instance ToBuilder L.ByteString BB.Builder where
-    toBuilder = BB.fromLazyByteString
+    toBuilder = BB.lazyByteString
 
 -- | Provided for type disambiguation in the presence of OverloadedStrings.
 --
