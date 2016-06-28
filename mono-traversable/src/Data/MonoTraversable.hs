@@ -799,6 +799,17 @@ ofoldM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mon
 ofoldM = ofoldlM
 {-# INLINE ofoldM #-}
 
+-- | Perform all actions in the given container
+--
+-- @since 1.0.0
+#if MIN_VERSION_base(4,8,0)
+osequence_ :: (Applicative m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m ()
+#else
+osequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m ()
+#endif
+osequence_ = omapM_ id
+{-# INLINE osequence_ #-}
+
 -- | A typeclass for monomorphic containers whose elements
 -- are an instance of 'Eq'.
 class (MonoFoldable mono, Eq (Element mono)) => MonoFoldableEq mono where

@@ -221,3 +221,13 @@ concat = oconcat
 -- @since 1.0.0
 foldM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
 foldM = ofoldM
+
+-- | Synonym for 'osequence_'
+--
+-- @since 1.0.0
+#if MIN_VERSION_base(4,8,0)
+sequence_ :: (Applicative m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m ()
+#else
+sequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m ()
+#endif
+sequence_ = osequence_
