@@ -16,6 +16,7 @@ import Data.Int (Int64)
 import Data.MonoTraversable
 import Data.Semigroup (Semigroup)
 import Data.Monoid (Monoid)
+import Control.Applicative (Applicative)
 
 -- | Synonym for 'ofoldMap'
 --
@@ -80,7 +81,7 @@ compareLength = ocompareLength
 -- | Synonym for 'otraverse_'
 --
 -- @since 1.0.0
-traverse_ :: (MonoFoldable mono, Applicative f) => (Element mono -> f b) -> mono -> f ()
+traverse_ :: (MonoFoldable mono, Control.Applicative.Applicative f) => (Element mono -> f b) -> mono -> f ()
 traverse_ = otraverse_
 
 -- | Synonym for 'ofor_'
