@@ -3,6 +3,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 -- | Abstractions over sequential data structures, like lists and vectors.
 module Data.Sequences where
 
@@ -1527,3 +1529,24 @@ catMaybes = fmap fromJust . filter isJust
 sortOn :: (Ord o, SemiSequence seq) => (Element seq -> o) -> seq -> seq
 sortOn = sortBy . comparing
 {-# INLINE sortOn #-}
+
+-- | Lazy sequences containing strict chunks of data.
+--
+-- @since 1.0.0
+class (IsSequence lazy, IsSequence strict) => LazySequence lazy strict | lazy -> strict, strict -> lazy where
+    toChunks :: lazy -> [strict]
+    fromChunks :: [strict] -> lazy
+    toStrict :: lazy -> strict
+    fromStrict :: strict -> lazy
+
+instance LazySequence L.ByteString S.ByteString where
+    toChunks = L.toChunks
+    fromChunks = L.fromChunks
+    toStrict = S.concat . L.toChunks
+    fromStrict = L.fromChunks . return
+
+instance LazySequence TL.Text T.Text where
+    toChunks = TL.toChunks
+    fromChunks = TL.fromChunks
+    toStrict = TL.toStrict
+    fromStrict = TL.fromStrict
