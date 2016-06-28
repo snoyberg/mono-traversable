@@ -9,7 +9,6 @@ import qualified Data.ByteString.Char8         as ByteString8
 import qualified Data.ByteString.Lazy          as LByteString
 import           Data.ByteString.Lazy.Internal (defaultChunkSize)
 import           Data.Sequences                (IsSequence)
-import           Data.Sequences.Lazy           (fromStrict)
 import qualified Data.Text                     as Text
 import qualified Data.Text.IO                  as Text
 import qualified Data.Text.Lazy                as LText
@@ -49,14 +48,14 @@ instance IOData ByteString.ByteString where
 instance IOData LByteString.ByteString where
     readFile = liftIO . LByteString.readFile
     writeFile fp = liftIO . LByteString.writeFile fp
-    getLine = liftM fromStrict (liftIO ByteString.getLine)
+    getLine = liftM LByteString.fromStrict (liftIO ByteString.getLine)
     hGetContents = liftIO . LByteString.hGetContents
-    hGetLine = liftM fromStrict . liftIO . ByteString.hGetLine
+    hGetLine = liftM LByteString.fromStrict . liftIO . ByteString.hGetLine
     hPut h = liftIO . LByteString.hPut h
     hPutStrLn h lbs = liftIO $ do
         LByteString.hPutStr h lbs
         ByteString8.hPutStrLn h ByteString.empty
-    hGetChunk = liftM fromStrict . hGetChunk
+    hGetChunk = liftM LByteString.fromStrict . hGetChunk
 instance IOData Text.Text where
     readFile = liftIO . Text.readFile
     writeFile fp = liftIO . Text.writeFile fp
@@ -85,7 +84,7 @@ instance IOData LText.Text where
     hGetLine = liftIO . LText.hGetLine
     hPut h = liftIO . LText.hPutStr h
     hPutStrLn h = liftIO . LText.hPutStrLn h
-    hGetChunk = liftM fromStrict . hGetChunk
+    hGetChunk = liftM LText.fromStrict . hGetChunk
 instance (Char ~ c) => IOData [c] where
     readFile = liftIO . Prelude.readFile
     writeFile fp = liftIO . Prelude.writeFile fp
