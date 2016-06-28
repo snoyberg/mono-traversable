@@ -118,10 +118,7 @@ module ClassyPrelude
     , asDList
     , applyDList
       -- ** Exceptions
-    , module Control.Exception.Enclosed
-    , MonadThrow (throwM)
-    , MonadCatch
-    , MonadMask
+    , module Control.Exception.Safe
       -- ** Force types
       -- | Helper functions for situations where type inferer gets confused.
     , asByteString
@@ -146,9 +143,9 @@ import qualified Prelude
 import Control.Applicative ((<**>),liftA,liftA2,liftA3,Alternative (..), optional)
 import Data.Functor
 import Control.Exception (assert)
-import Control.Exception.Enclosed
+import Control.Exception.Safe
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
-import Control.Concurrent.Lifted hiding (yield)
+import Control.Concurrent.Lifted hiding (yield, throwTo)
 import qualified Control.Concurrent.Lifted as Conc (yield)
 import Control.Concurrent.MVar.Lifted
 import Control.Concurrent.Chan.Lifted
@@ -159,11 +156,16 @@ import Data.Mutable
 import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
-import Control.Monad.Catch (MonadThrow (throwM), MonadCatch, MonadMask)
 import Control.Monad.Base
 
 import Data.Vector.Instances ()
-import CorePrelude hiding (print, undefined, (<>), catMaybes, first, second)
+import CorePrelude hiding
+    ( print, undefined, (<>), catMaybes, first, second
+    , try, throwIO, onException, mask, mask_
+    , handle, finally, catch, bracket, bracket_, bracketOnError
+    , catchIOError
+    , uninterruptibleMask, uninterruptibleMask_
+    )
 import Data.ChunkedZip
 import qualified Data.Char as Char
 import Data.Sequences
@@ -438,10 +440,6 @@ whenM mbool action = mbool >>= flip when action
 -- Since 0.9.2
 unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM mbool action = mbool >>= flip unless action
-
-sequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m a)) => mono -> m ()
-sequence_ = mapM_ (>> return ())
-{-# INLINE sequence_ #-}
 
 -- | Force type to a 'DList'
 --

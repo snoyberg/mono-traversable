@@ -33,7 +33,6 @@ library
                      , time
                      , time-locale-compat
                      , chunked-data                  >= 0.3
-                     , enclosed-exceptions
                      , ghc-prim
                      , stm
                      , primitive
@@ -42,6 +41,7 @@ library
                      , mutable-containers >= 0.3 && < 0.4
                      , dlist >= 0.7
                      , transformers-base
+                     , safe-exceptions
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
