@@ -778,6 +778,27 @@ oor = oany id
 oconcatMap :: (MonoFoldable mono, Monoid m) => (Element mono -> m) -> mono -> m
 oconcatMap = ofoldMap
 
+-- | Monoidally combine all values in the container
+--
+-- @since 1.0.0
+ofold :: (MonoFoldable mono, Monoid (Element mono)) => mono -> Element mono
+ofold = ofoldMap id
+{-# INLINE ofold #-}
+
+-- | Synonym for 'ofold'
+--
+-- @since 1.0.0
+oconcat :: (MonoFoldable mono, Monoid (Element mono)) => mono -> Element mono
+oconcat = ofold
+{-# INLINE oconcat #-}
+
+-- | Synonym for 'ofoldlM'
+--
+-- @since 1.0.0
+ofoldM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
+ofoldM = ofoldlM
+{-# INLINE ofoldM #-}
+
 -- | A typeclass for monomorphic containers whose elements
 -- are an instance of 'Eq'.
 class (MonoFoldable mono, Eq (Element mono)) => MonoFoldableEq mono where

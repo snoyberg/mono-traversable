@@ -203,3 +203,21 @@ point = opoint
 intercalate :: (MonoFoldable mono, Monoid (Element mono))
             => Element mono -> mono -> Element mono
 intercalate = ointercalate
+
+-- | Synonym for 'ofold'
+--
+-- @since 1.0.0
+fold :: (MonoFoldable mono, Monoid (Element mono)) => mono -> Element mono
+fold = ofold
+
+-- | Synonym for 'oconcat'
+--
+-- @since 1.0.0
+concat :: (MonoFoldable mono, Monoid (Element mono)) => mono -> Element mono
+concat = oconcat
+
+-- | Synonym for 'ofoldM'
+--
+-- @since 1.0.0
+foldM :: (MonoFoldable mono, Monad m) => (a -> Element mono -> m a) -> a -> mono -> m a
+foldM = ofoldM
