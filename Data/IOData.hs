@@ -8,7 +8,6 @@ import qualified Data.ByteString               as ByteString
 import qualified Data.ByteString.Char8         as ByteString8
 import qualified Data.ByteString.Lazy          as LByteString
 import           Data.ByteString.Lazy.Internal (defaultChunkSize)
-import           Data.Sequences                (IsSequence)
 import qualified Data.Text                     as Text
 import qualified Data.Text.IO                  as Text
 import qualified Data.Text.Lazy                as LText
@@ -27,7 +26,7 @@ import           System.IO.Error               (isEOFError)
 --
 -- Note that, for lazy sequences, these operations may perform
 -- lazy I\/O.
-class IsSequence a => IOData a where
+class IOData a where
     readFile     :: MonadIO m => FilePath -> m a
     writeFile    :: MonadIO m => FilePath -> a -> m ()
     getLine      :: MonadIO m => m a
