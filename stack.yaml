@@ -11,15 +11,18 @@ packages:
   - location:
       git: https://github.com/snoyberg/mono-traversable
       commit: 678c27bf4926525a5cfb431a45cbd2c0bb029e78
+    extra-dep: true
     subdirs:
     - mono-traversable
     - mono-traversable-instances
   - location:
       git: https://github.com/fpco/chunked-data
       commit: f553a114eac5e742b80c438ec05269523dd57873
+    extra-dep: true
   - location:
       git: https://github.com/fpco/conduit-combinators
       commit: 3b88c85219a3b716415069314dbe73afbea3c392
+    extra-dep: true
 
 flags:
   mono-traversable:

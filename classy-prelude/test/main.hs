@@ -13,7 +13,7 @@ import ClassyPrelude hiding (undefined)
 import Test.QuickCheck.Arbitrary
 import Prelude (undefined)
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
-import Control.Concurrent (throwTo, threadDelay, forkIO)
+import Control.Concurrent (forkIO)
 import Control.Exception (throw)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
@@ -61,7 +61,6 @@ mapProps map' pack' dummy f g = do
 concatMapProps :: ( MonoFoldable c
                   , IsSequence c
                   , Eq c
-                  , MonoFoldableMonoid c
                   , Arbitrary c
                   , Show c
                   )
@@ -378,26 +377,26 @@ main = hspec $ do
             failed <- newIORef 0
             tid <- forkIO $ do
                 catchAny
-                    (Control.Concurrent.threadDelay 20000)
+                    (threadDelay 20000)
                     (const $ writeIORef failed 1)
                 writeIORef failed 2
-            Control.Concurrent.threadDelay 10000
-            Control.Concurrent.throwTo tid DummyException
-            Control.Concurrent.threadDelay 50000
+            threadDelay 10000
+            throwTo tid DummyException
+            threadDelay 50000
             didFail <- readIORef failed
             liftIO $ didFail `shouldBe` (0 :: Int)
         it "tryAny" $ do
             failed <- newIORef False
             tid <- forkIO $ do
-                _ <- tryAny $ Control.Concurrent.threadDelay 20000
+                _ <- tryAny $ threadDelay 20000
                 writeIORef failed True
-            Control.Concurrent.threadDelay 10000
-            Control.Concurrent.throwTo tid DummyException
-            Control.Concurrent.threadDelay 50000
+            threadDelay 10000
+            throwTo tid DummyException
+            threadDelay 50000
             didFail <- readIORef failed
             liftIO $ didFail `shouldBe` False
         it "tryAnyDeep" $ do
-            eres <- tryAnyDeep $ return $ throw DummyException
+            eres <- tryAny $ return $!! impureThrow DummyException
             case eres of
                 Left e
                     | Just DummyException <- fromException e -> return ()

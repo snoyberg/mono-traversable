@@ -42,6 +42,7 @@ library
                      , dlist >= 0.7
                      , transformers-base
                      , safe-exceptions
+                     , deepseq
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test

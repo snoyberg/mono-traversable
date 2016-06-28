@@ -117,6 +117,7 @@ module ClassyPrelude
     , applyDList
       -- ** Exceptions
     , module Control.Exception.Safe
+    , module Control.DeepSeq
       -- ** Force types
       -- | Helper functions for situations where type inferer gets confused.
     , asByteString
@@ -142,6 +143,7 @@ import Control.Applicative ((<**>),liftA,liftA2,liftA3,Alternative (..), optiona
 import Data.Functor
 import Control.Exception (assert)
 import Control.Exception.Safe
+import Control.DeepSeq (deepseq, ($!!), force, NFData (..))
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
 import Control.Concurrent.Lifted hiding (yield, throwTo)
 import qualified Control.Concurrent.Lifted as Conc (yield)
