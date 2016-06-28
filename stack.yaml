@@ -1,10 +1,26 @@
-resolver: lts-5.10
+resolver: lts-6.4
 
 extra-deps:
 - basic-prelude-0.5.1
-- mono-traversable-0.10.2
+- safe-exceptions-0.1.0.0
 
 packages:
   - 'classy-prelude'
   - 'classy-prelude-conduit'
   - 'classy-prelude-yesod'
+  - location:
+      git: https://github.com/snoyberg/mono-traversable
+      commit: 678c27bf4926525a5cfb431a45cbd2c0bb029e78
+    subdirs:
+    - mono-traversable
+    - mono-traversable-instances
+  - location:
+      git: https://github.com/fpco/chunked-data
+      commit: f553a114eac5e742b80c438ec05269523dd57873
+  - location:
+      git: https://github.com/fpco/conduit-combinators
+      commit: 3b88c85219a3b716415069314dbe73afbea3c392
+
+flags:
+  mono-traversable:
+    base49: false
