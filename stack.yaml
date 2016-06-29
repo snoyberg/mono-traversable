@@ -10,7 +10,7 @@ packages:
   - 'classy-prelude-yesod'
   - location:
       git: https://github.com/snoyberg/mono-traversable
-      commit: 678c27bf4926525a5cfb431a45cbd2c0bb029e78
+      commit: c5f0ef772ac8904b4f8c199e32afe1769779c020
     extra-dep: true
     subdirs:
     - mono-traversable
