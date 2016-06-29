@@ -1179,7 +1179,7 @@ splitSeq sep = List.map fromList . List.splitOn (otoList sep) . otoList
 -- 'Nothing'
 -- @
 stripPrefix :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Maybe seq
-stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
+stripPrefix x y = fmap fromList (otoList x `List.stripPrefix` otoList y)
 
 -- | 'stripSuffix' drops the given suffix from a sequence.
 -- It returns 'Nothing' if the sequence did not end with the suffix
@@ -1192,22 +1192,26 @@ stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
 -- 'Nothing'
 -- @
 stripSuffix :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Maybe seq
-stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
+stripSuffix x y =
+    fmap fromList (otoList x `stripSuffixList` otoList y)
+  where
+    stripSuffixList :: Eq a => [a] -> [a] -> Maybe [a]
+    stripSuffixList x' y' = fmap reverse (stripPrefix (reverse x') (reverse y'))
 
 -- | 'isPrefixOf' takes two sequences and returns 'True' if the first
 -- sequence is a prefix of the second.
 isPrefixOf :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Bool
-isPrefixOf x y = otoList x `isPrefixOf` otoList y
+isPrefixOf x y = otoList x `List.isPrefixOf` otoList y
 
 -- | 'isSuffixOf' takes two sequences and returns 'True' if the first
 -- sequence is a suffix of the second.
 isSuffixOf :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Bool
-isSuffixOf x y = otoList x `isSuffixOf` otoList y
+isSuffixOf x y = otoList x `List.isSuffixOf` otoList y
 
 -- | 'isInfixOf' takes two sequences and returns 'true' if the first
 -- sequence is contained, wholly and intact, anywhere within the second.
 isInfixOf :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Bool
-isInfixOf x y = otoList x `isInfixOf` otoList y
+isInfixOf x y = otoList x `List.isInfixOf` otoList y
 
 -- | Equivalent to @'groupBy' (==)@
 group :: (IsSequence seq, Eq (Element seq)) => seq -> [seq]
