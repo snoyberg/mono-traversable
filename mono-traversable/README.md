@@ -9,7 +9,11 @@ mono-traversable also adds
 
   * `IsSequence`, etc for operating over sequential data types
   * `IsSet`, `IsMap`, etc for unifying set and map APIs
-  * `MinLen` for making partial functions (head, tail) total
+  * `NonNull` for making partial functions (head, tail) total
+
+In addition to this package, the
+[mono-traversable-instances](https://www.stackage.org/package/mono-traversable-instances)
+pacakge provides a number of orphan instances.
 
 
 Using Typeclasses
