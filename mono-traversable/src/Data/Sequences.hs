@@ -1133,260 +1133,209 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
--- | A typeclass for sequences whose elements have the 'Eq' typeclass
-class (MonoFoldableEq seq, IsSequence seq, Eq (Element seq)) => EqSequence seq where
+-- | @'splitElem'@ splits a sequence into components delimited by separator
+-- element. It's equivalent to 'splitWhen' with equality predicate:
+--
+-- > splitElem sep === splitWhen (== sep)
+--
+-- Since 0.9.3
+splitElem :: (IsSequence seq, Eq (Element seq)) => Element seq -> seq -> [seq]
+splitElem x = splitWhen (== x)
 
-    -- | @'splitElem'@ splits a sequence into components delimited by separator
-    -- element. It's equivalent to 'splitWhen' with equality predicate:
-    --
-    -- > splitElem sep === splitWhen (== sep)
-    --
-    -- Since 0.9.3
-    splitElem :: Element seq -> seq -> [seq]
-    splitElem x = splitWhen (== x)
+-- | @'splitSeq'@ splits a sequence into components delimited by
+-- separator subsequence. 'splitSeq' is the right inverse of 'intercalate':
+--
+-- > intercalate x . splitSeq x === id
+--
+-- 'splitElem' can be considered a special case of 'splitSeq'
+--
+-- > splitSeq (singleton sep) === splitElem sep
+--
+-- @'splitSeq' mempty@ is another special case: it splits just before each
+-- element, and in line with 'splitWhen' rules, it has at least one output
+-- component:
+--
+-- @
+-- > 'splitSeq' "" ""
+-- [""]
+-- > 'splitSeq' "" "a"
+-- ["", "a"]
+-- > 'splitSeq' "" "ab"
+-- ["", "a", "b"]
+-- @
+--
+-- Since 0.9.3
+splitSeq :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> [seq]
+splitSeq sep = List.map fromList . List.splitOn (otoList sep) . otoList
 
-    -- | @'splitSeq'@ splits a sequence into components delimited by
-    -- separator subsequence. 'splitSeq' is the right inverse of 'intercalate':
-    --
-    -- > intercalate x . splitSeq x === id
-    --
-    -- 'splitElem' can be considered a special case of 'splitSeq'
-    --
-    -- > splitSeq (singleton sep) === splitElem sep
-    --
-    -- @'splitSeq' mempty@ is another special case: it splits just before each
-    -- element, and in line with 'splitWhen' rules, it has at least one output
-    -- component:
-    --
-    -- @
-    -- > 'splitSeq' "" ""
-    -- [""]
-    -- > 'splitSeq' "" "a"
-    -- ["", "a"]
-    -- > 'splitSeq' "" "ab"
-    -- ["", "a", "b"]
-    -- @
-    --
-    -- Since 0.9.3
-    splitSeq :: seq -> seq -> [seq]
-    splitSeq = defaultSplitOn
+-- | 'stripPrefix' drops the given prefix from a sequence.
+-- It returns 'Nothing' if the sequence did not start with the prefix
+-- given, or 'Just' the sequence after the prefix, if it does.
+--
+-- @
+-- > 'stripPrefix' "foo" "foobar"
+-- 'Just' "foo"
+-- > 'stripPrefix' "abc" "foobar"
+-- 'Nothing'
+-- @
+stripPrefix :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Maybe seq
+stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
 
-    -- | 'stripPrefix' drops the given prefix from a sequence.
-    -- It returns 'Nothing' if the sequence did not start with the prefix
-    -- given, or 'Just' the sequence after the prefix, if it does.
-    --
-    -- @
-    -- > 'stripPrefix' "foo" "foobar"
-    -- 'Just' "foo"
-    -- > 'stripPrefix' "abc" "foobar"
-    -- 'Nothing'
-    -- @
-    stripPrefix :: seq -> seq -> Maybe seq
-    stripPrefix x y = fmap fromList (otoList x `stripPrefix` otoList y)
+-- | 'stripSuffix' drops the given suffix from a sequence.
+-- It returns 'Nothing' if the sequence did not end with the suffix
+-- given, or 'Just' the sequence before the suffix, if it does.
+--
+-- @
+-- > 'stripSuffix' "bar" "foobar"
+-- 'Just' "foo"
+-- > 'stripSuffix' "abc" "foobar"
+-- 'Nothing'
+-- @
+stripSuffix :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Maybe seq
+stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
 
-    -- | 'stripSuffix' drops the given suffix from a sequence.
-    -- It returns 'Nothing' if the sequence did not end with the suffix
-    -- given, or 'Just' the sequence before the suffix, if it does.
-    --
-    -- @
-    -- > 'stripSuffix' "bar" "foobar"
-    -- 'Just' "foo"
-    -- > 'stripSuffix' "abc" "foobar"
-    -- 'Nothing'
-    -- @
-    stripSuffix :: seq -> seq -> Maybe seq
-    stripSuffix x y = fmap fromList (otoList x `stripSuffix` otoList y)
+-- | 'isPrefixOf' takes two sequences and returns 'True' if the first
+-- sequence is a prefix of the second.
+isPrefixOf :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Bool
+isPrefixOf x y = otoList x `isPrefixOf` otoList y
 
-    -- | 'isPrefixOf' takes two sequences and returns 'True' if the first
-    -- sequence is a prefix of the second.
-    isPrefixOf :: seq -> seq -> Bool
-    isPrefixOf x y = otoList x `isPrefixOf` otoList y
+-- | 'isSuffixOf' takes two sequences and returns 'True' if the first
+-- sequence is a suffix of the second.
+isSuffixOf :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Bool
+isSuffixOf x y = otoList x `isSuffixOf` otoList y
 
-    -- | 'isSuffixOf' takes two sequences and returns 'True' if the first
-    -- sequence is a suffix of the second.
-    isSuffixOf :: seq -> seq -> Bool
-    isSuffixOf x y = otoList x `isSuffixOf` otoList y
+-- | 'isInfixOf' takes two sequences and returns 'true' if the first
+-- sequence is contained, wholly and intact, anywhere within the second.
+isInfixOf :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> Bool
+isInfixOf x y = otoList x `isInfixOf` otoList y
 
-    -- | 'isInfixOf' takes two sequences and returns 'true' if the first
-    -- sequence is contained, wholly and intact, anywhere within the second.
-    isInfixOf :: seq -> seq -> Bool
-    isInfixOf x y = otoList x `isInfixOf` otoList y
+-- | Equivalent to @'groupBy' (==)@
+group :: (IsSequence seq, Eq (Element seq)) => seq -> [seq]
+group = groupBy (==)
 
-    -- | Equivalent to @'groupBy' (==)@
-    group :: seq -> [seq]
-    group = groupBy (==)
+-- | Similar to standard 'group', but operates on the whole collection,
+-- not just the consecutive items.
+--
+-- Equivalent to @'groupAllOn' id@
+groupAll :: (IsSequence seq, Eq (Element seq)) => seq -> [seq]
+groupAll = groupAllOn id
 
-    -- | Similar to standard 'group', but operates on the whole collection,
-    -- not just the consecutive items.
-    --
-    -- Equivalent to @'groupAllOn' id@
-    groupAll :: seq -> [seq]
-    groupAll = groupAllOn id
+-- |
+--
+-- @since 0.10.2
+delete :: (IsSequence seq, Eq (Element seq)) => Element seq -> seq -> seq
+delete = deleteBy (==)
 
-    -- |
-    --
-    -- @since 0.10.2
-    delete :: Element seq -> seq -> seq
-    delete = deleteBy (==)
+-- |
+--
+-- @since 0.10.2
+deleteBy :: (IsSequence seq, Eq (Element seq)) => (Element seq -> Element seq -> Bool) -> Element seq -> seq -> seq
+deleteBy eq x = fromList . List.deleteBy eq x . otoList
+{-# INLINE [0] splitElem #-}
+{-# INLINE [0] splitSeq #-}
+{-# INLINE [0] isPrefixOf #-}
+{-# INLINE [0] isSuffixOf #-}
+{-# INLINE [0] isInfixOf #-}
+{-# INLINE [0] stripPrefix #-}
+{-# INLINE [0] stripSuffix #-}
+{-# INLINE [0] group #-}
+{-# INLINE [0] groupAll #-}
+{-# INLINE [0] delete #-}
+{-# INLINE [0] deleteBy #-}
 
-    -- |
-    --
-    -- @since 0.10.2
-    deleteBy :: (Element seq -> Element seq -> Bool) -> Element seq -> seq -> seq
-    deleteBy eq x = fromList . List.deleteBy eq x . otoList
-    {-# INLINE splitElem #-}
-    {-# INLINE splitSeq #-}
-    {-# INLINE isPrefixOf #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
-    {-# INLINE stripPrefix #-}
-    {-# INLINE stripSuffix #-}
-    {-# INLINE group #-}
-    {-# INLINE groupAll #-}
-    {-# INLINE delete #-}
-    {-# INLINE deleteBy #-}
+{-# RULES "list splitSeq" splitSeq = List.splitOn #-}
+{-# RULES "list stripPrefix" stripPrefix = List.stripPrefix #-}
+{-# RULES "list isPrefixOf" isPrefixOf = List.isPrefixOf #-}
+{-# RULES "list isSuffixOf" isSuffixOf = List.isSuffixOf #-}
+{-# RULES "list isInfixOf" isInfixOf = List.isInfixOf #-}
+{-# RULES "list delete" delete = List.delete #-}
+{-# RULES "list deleteBy" deleteBy = List.deleteBy #-}
 
--- | Use 'splitOn' from "Data.List.Split"
-defaultSplitOn :: EqSequence s => s -> s -> [s]
-defaultSplitOn sep = List.map fromList . List.splitOn (otoList sep) . otoList
+{-# RULES "strict ByteString splitElem" splitElem = splitElemStrictBS #-}
+{-# RULES "strict ByteString stripPrefix" stripPrefix = stripPrefixStrictBS #-}
+{-# RULES "strict ByteString stripSuffix" stripSuffix = stripSuffixStrictBS #-}
+{-# RULES "strict ByteString group" group = S.group #-}
+{-# RULES "strict ByteString isPrefixOf" isPrefixOf = S.isPrefixOf #-}
+{-# RULES "strict ByteString isSuffixOf" isSuffixOf = S.isSuffixOf #-}
+{-# RULES "strict ByteString isInfixOf" isInfixOf = S.isInfixOf #-}
 
-instance Eq a => EqSequence [a] where
-    splitSeq = List.splitOn
-    stripPrefix = List.stripPrefix
-    stripSuffix x y = fmap reverse (List.stripPrefix (reverse x) (reverse y))
-    group = List.group
-    isPrefixOf = List.isPrefixOf
-    isSuffixOf x y = List.isPrefixOf (List.reverse x) (List.reverse y)
-    isInfixOf = List.isInfixOf
-    delete = List.delete
-    deleteBy = List.deleteBy
-    {-# INLINE splitSeq #-}
-    {-# INLINE stripPrefix #-}
-    {-# INLINE stripSuffix #-}
-    {-# INLINE group #-}
-    {-# INLINE isPrefixOf #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
-    {-# INLINE delete #-}
-    {-# INLINE deleteBy #-}
+splitElemStrictBS :: Word8 -> S.ByteString -> [S.ByteString]
+splitElemStrictBS sep s
+  | S.null s = [S.empty]
+  | otherwise = S.split sep s
 
-instance EqSequence S.ByteString where
-    splitElem sep s | S.null s = [S.empty]
-                    | otherwise = S.split sep s
-    stripPrefix x y
-        | x `S.isPrefixOf` y = Just (S.drop (S.length x) y)
-        | otherwise = Nothing
-    stripSuffix x y
-        | x `S.isSuffixOf` y = Just (S.take (S.length y - S.length x) y)
-        | otherwise = Nothing
-    group = S.group
-    isPrefixOf = S.isPrefixOf
-    isSuffixOf = S.isSuffixOf
-    isInfixOf = S.isInfixOf
-    {-# INLINE splitElem #-}
-    {-# INLINE stripPrefix #-}
-    {-# INLINE stripSuffix #-}
-    {-# INLINE group #-}
-    {-# INLINE isPrefixOf #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
+stripPrefixStrictBS :: S.ByteString -> S.ByteString -> Maybe S.ByteString
+stripPrefixStrictBS x y
+    | x `S.isPrefixOf` y = Just (S.drop (S.length x) y)
+    | otherwise = Nothing
 
-instance EqSequence L.ByteString where
-    splitElem sep s | L.null s = [L.empty]
-                    | otherwise = L.split sep s
-    stripPrefix x y
-        | x `L.isPrefixOf` y = Just (L.drop (L.length x) y)
-        | otherwise = Nothing
-    stripSuffix x y
-        | x `L.isSuffixOf` y = Just (L.take (L.length y - L.length x) y)
-        | otherwise = Nothing
-    group = L.group
-    isPrefixOf = L.isPrefixOf
-    isSuffixOf = L.isSuffixOf
-    isInfixOf x y = L.unpack x `List.isInfixOf` L.unpack y
-    {-# INLINE splitElem #-}
-    {-# INLINE stripPrefix #-}
-    {-# INLINE stripSuffix #-}
-    {-# INLINE group #-}
-    {-# INLINE isPrefixOf #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
+stripSuffixStrictBS :: S.ByteString -> S.ByteString -> Maybe S.ByteString
+stripSuffixStrictBS x y
+    | x `S.isSuffixOf` y = Just (S.take (S.length y - S.length x) y)
+    | otherwise = Nothing
 
-instance EqSequence T.Text where
-    splitSeq sep | T.null sep = (:) T.empty . List.map singleton . T.unpack
-                 | otherwise = T.splitOn sep
-    stripPrefix = T.stripPrefix
-    stripSuffix = T.stripSuffix
-    group = T.group
-    isPrefixOf = T.isPrefixOf
-    isSuffixOf = T.isSuffixOf
-    isInfixOf = T.isInfixOf
-    {-# INLINE splitSeq #-}
-    {-# INLINE stripPrefix #-}
-    {-# INLINE stripSuffix #-}
-    {-# INLINE group #-}
-    {-# INLINE isPrefixOf #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
+{-# RULES "lazy ByteString splitElem" splitElem = splitSeqLazyBS #-}
+{-# RULES "lazy ByteString stripPrefix" stripPrefix = stripPrefixLazyBS #-}
+{-# RULES "lazy ByteString stripSuffix" stripSuffix = stripSuffixLazyBS #-}
+{-# RULES "lazy ByteString group" group = L.group #-}
+{-# RULES "lazy ByteString isPrefixOf" isPrefixOf = L.isPrefixOf #-}
+{-# RULES "lazy ByteString isSuffixOf" isSuffixOf = L.isSuffixOf #-}
 
-instance EqSequence TL.Text where
-    splitSeq sep | TL.null sep = (:) TL.empty . List.map singleton . TL.unpack
-                 | otherwise = TL.splitOn sep
-    stripPrefix = TL.stripPrefix
-    stripSuffix = TL.stripSuffix
-    group = TL.group
-    isPrefixOf = TL.isPrefixOf
-    isSuffixOf = TL.isSuffixOf
-    isInfixOf = TL.isInfixOf
-    {-# INLINE splitSeq #-}
-    {-# INLINE stripPrefix #-}
-    {-# INLINE stripSuffix #-}
-    {-# INLINE group #-}
-    {-# INLINE isPrefixOf #-}
-    {-# INLINE isSuffixOf #-}
-    {-# INLINE isInfixOf #-}
+splitSeqLazyBS :: Word8 -> L.ByteString -> [L.ByteString]
+splitSeqLazyBS sep s
+  | L.null s = [L.empty]
+  | otherwise = L.split sep s
 
-instance Eq a => EqSequence (Seq.Seq a)
-instance Eq a => EqSequence (V.Vector a)
-instance (Eq a, U.Unbox a) => EqSequence (U.Vector a)
-instance (Eq a, VS.Storable a) => EqSequence (VS.Vector a)
+stripPrefixLazyBS :: L.ByteString -> L.ByteString -> Maybe L.ByteString
+stripPrefixLazyBS x y
+    | x `L.isPrefixOf` y = Just (L.drop (L.length x) y)
+    | otherwise = Nothing
 
--- | A typeclass for sequences whose elements have the 'Ord' typeclass
-class (EqSequence seq, MonoFoldableOrd seq) => OrdSequence seq where
-    -- | Sort a ordered sequence.
-    --
-    -- @
-    -- > 'sort' [4,3,1,2]
-    -- [1,2,3,4]
-    -- @
-    sort :: seq -> seq
-    sort = fromList . sort . otoList
-    {-# INLINE sort #-}
+stripSuffixLazyBS :: L.ByteString -> L.ByteString -> Maybe L.ByteString
+stripSuffixLazyBS x y
+    | x `L.isSuffixOf` y = Just (L.take (L.length y - L.length x) y)
+    | otherwise = Nothing
 
-instance Ord a => OrdSequence [a] where
-    sort = V.toList . sort . V.fromList
-    {-# INLINE sort #-}
+{-# RULES "strict Text splitSeq" splitSeq = splitSeqStrictText #-}
+{-# RULES "strict Text stripPrefix" stripPrefix = T.stripPrefix #-}
+{-# RULES "strict Text stripSuffix" stripSuffix = T.stripSuffix #-}
+{-# RULES "strict Text group" group = T.group #-}
+{-# RULES "strict Text isPrefixOf" isPrefixOf = T.isPrefixOf #-}
+{-# RULES "strict Text isSuffixOf" isSuffixOf = T.isSuffixOf #-}
+{-# RULES "strict Text isInfixOf" isInfixOf = T.isInfixOf #-}
 
-instance OrdSequence S.ByteString where
-    sort = S.sort
-    {-# INLINE sort #-}
+splitSeqStrictText :: T.Text -> T.Text -> [T.Text]
+splitSeqStrictText sep
+    | T.null sep = (:) T.empty . List.map singleton . T.unpack
+    | otherwise = T.splitOn sep
 
-instance OrdSequence L.ByteString
-instance OrdSequence T.Text
-instance OrdSequence TL.Text
-instance Ord a => OrdSequence (Seq.Seq a)
+{-# RULES "lazy Text splitSeq" splitSeq = splitSeqLazyText #-}
+{-# RULES "lazy Text stripPrefix" stripPrefix = TL.stripPrefix #-}
+{-# RULES "lazy Text stripSuffix" stripSuffix = TL.stripSuffix #-}
+{-# RULES "lazy Text group" group = TL.group #-}
+{-# RULES "lazy Text isPrefixOf" isPrefixOf = TL.isPrefixOf #-}
+{-# RULES "lazy Text isSuffixOf" isSuffixOf = TL.isSuffixOf #-}
+{-# RULES "lazy Text isInfixOf" isInfixOf = TL.isInfixOf #-}
 
-instance Ord a => OrdSequence (V.Vector a) where
-    sort = vectorSort
-    {-# INLINE sort #-}
+splitSeqLazyText :: TL.Text -> TL.Text -> [TL.Text]
+splitSeqLazyText sep
+    | TL.null sep = (:) TL.empty . List.map singleton . TL.unpack
+    | otherwise = TL.splitOn sep
 
-instance (Ord a, U.Unbox a) => OrdSequence (U.Vector a) where
-    sort = vectorSort
-    {-# INLINE sort #-}
+-- | Sort a ordered sequence.
+--
+-- @
+-- > 'sort' [4,3,1,2]
+-- [1,2,3,4]
+-- @
+sort :: (IsSequence seq, Ord (Element seq)) => seq -> seq
+sort = fromList . V.toList . vectorSort . V.fromList . otoList
+{-# INLINE [0] sort #-}
 
-instance (Ord a, VS.Storable a) => OrdSequence (VS.Vector a) where
-    sort = vectorSort
-    {-# INLINE sort #-}
+{-# RULES "strict ByteString sort" sort = S.sort #-}
+{-# RULES "boxed Vector sort" forall (v :: V.Vector a). sort v = vectorSort v #-}
+{-# RULES "unboxed Vector sort" forall (v :: U.Unbox a => U.Vector a). sort v = vectorSort v #-}
+{-# RULES "storable Vector sort" forall (v :: VS.Storable a => VS.Vector a). sort v = vectorSort v #-}
 
 -- | A typeclass for sequences whose elements are 'Char's.
 class (IsSequence t, IsString t, Element t ~ Char) => Textual t where

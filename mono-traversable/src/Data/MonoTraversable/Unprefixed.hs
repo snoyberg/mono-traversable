@@ -184,13 +184,13 @@ concatMap = oconcatMap
 -- | Synonym for 'oelem'
 --
 -- @since 1.0.0
-elem :: MonoFoldableEq mono => Element mono -> mono -> Bool
+elem :: (MonoFoldable mono, Eq (Element mono)) => Element mono -> mono -> Bool
 elem = oelem
 
 -- | Synonym for 'onotElem'
 --
 -- @since 1.0.0
-notElem :: MonoFoldableEq mono => Element mono -> mono -> Bool
+notElem :: (MonoFoldable mono, Eq (Element mono)) => Element mono -> mono -> Bool
 notElem = onotElem
 
 -- | Synonym for 'opoint'

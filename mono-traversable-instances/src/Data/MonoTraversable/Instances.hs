@@ -44,8 +44,6 @@ instance MonoTraversable (DList a) where
      omapM f = liftM DL.fromList . mapM f . DL.toList
 #endif
 instance MonoFunctor (DList a)
-instance Eq a => MonoFoldableEq (DList a)
-instance Ord a => MonoFoldableOrd (DList a)
 instance MonoPointed (DList a)
 instance GrowingAppend (DList a)
 

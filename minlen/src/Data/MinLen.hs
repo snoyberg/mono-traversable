@@ -169,8 +169,6 @@ newtype MinLen nat mono =
 type instance Element (MinLen nat mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (MinLen nat mono)
 deriving instance MonoFoldable mono => MonoFoldable (MinLen nat mono)
-deriving instance MonoFoldableEq mono => MonoFoldableEq (MinLen nat mono)
-deriving instance MonoFoldableOrd mono => MonoFoldableOrd (MinLen nat mono)
 instance MonoTraversable mono => MonoTraversable (MinLen nat mono) where
     otraverse f (MinLen x) = fmap MinLen (otraverse f x)
     {-# INLINE otraverse #-}
@@ -442,7 +440,7 @@ ofoldl1' f = ofoldl1Ex' f . unMinLen
 -- > 'fmap' 'maximum' xs
 -- 'Just' 3
 -- @
-maximum :: MonoFoldableOrd mono
+maximum :: (MonoFoldable mono, Ord (Element mono))
         => MinLen (Succ nat) mono
         -> Element mono
 maximum = maximumEx . unMinLen
@@ -460,7 +458,7 @@ maximum = maximumEx . unMinLen
 -- > 'fmap' 'minimum' xs
 -- 'Just' 1
 -- @
-minimum :: MonoFoldableOrd mono
+minimum :: (MonoFoldable mono, Ord (Element mono))
         => MinLen (Succ nat) mono
         -> Element mono
 minimum = minimumEx . unMinLen

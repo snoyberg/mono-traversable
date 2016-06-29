@@ -64,8 +64,6 @@ newtype NonNull mono = NonNull
 type instance Element (NonNull mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (NonNull mono)
 deriving instance MonoFoldable mono => MonoFoldable (NonNull mono)
-deriving instance MonoFoldableEq mono => MonoFoldableEq (NonNull mono)
-deriving instance MonoFoldableOrd mono => MonoFoldableOrd (NonNull mono)
 instance MonoTraversable mono => MonoTraversable (NonNull mono) where
     otraverse f (NonNull x) = fmap NonNull (otraverse f x)
     {-# INLINE otraverse #-}
@@ -302,7 +300,7 @@ ofoldl1' f = ofoldl1Ex' f . toNullable
 -- > 'maximum' xs
 -- 3
 -- @
-maximum :: MonoFoldableOrd mono
+maximum :: (MonoFoldable mono, Ord (Element mono))
         => NonNull mono
         -> Element mono
 maximum = maximumEx . toNullable
@@ -320,7 +318,7 @@ maximum = maximumEx . toNullable
 -- > 'minimum' xs
 -- 1
 -- @
-minimum :: MonoFoldableOrd mono
+minimum :: (MonoFoldable mono, Ord (Element mono))
         => NonNull mono
         -> Element mono
 minimum = minimumEx . toNullable

@@ -210,7 +210,7 @@ main = hspec $ do
             nconsAs :: IsSequence seq => Element seq -> [Element seq] -> seq -> NN.NonNull seq
             nconsAs x xs _ = NN.ncons x (fromList xs)
 
-            test :: (OrdSequence typ, Arbitrary (Element typ), Show (Element typ), Show typ, Eq typ, Eq (Element typ))
+            test :: (IsSequence typ, Ord (Element typ), Arbitrary (Element typ), Show (Element typ), Show typ, Eq typ, Eq (Element typ))
                  => String -> typ -> Spec
             test typ du = describe typ $ do
                 prop "head" $ \x xs ->
