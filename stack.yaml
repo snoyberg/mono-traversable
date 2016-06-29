@@ -10,7 +10,7 @@ packages:
   - 'classy-prelude-yesod'
   - location:
       git: https://github.com/snoyberg/mono-traversable
-      commit: c5f0ef772ac8904b4f8c199e32afe1769779c020
+      commit: 267778ce2884c59e3948fb9269ec0b40c7bc5a83
     extra-dep: true
     subdirs:
     - mono-traversable
@@ -21,7 +21,7 @@ packages:
     extra-dep: true
   - location:
       git: https://github.com/fpco/conduit-combinators
-      commit: 3b88c85219a3b716415069314dbe73afbea3c392
+      commit: add9751e53e6dad56a160dfcb9fd54ff9a6acd95
     extra-dep: true
 
 flags:

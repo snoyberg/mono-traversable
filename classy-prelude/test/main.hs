@@ -190,7 +190,8 @@ chunkProps dummy = do
 stripSuffixProps :: ( Eq c
                     , Show c
                     , Arbitrary c
-                    , EqSequence c
+                    , IsSequence c
+                    , Eq (Element c)
                     )
                  => c
                  -> Spec
@@ -237,7 +238,8 @@ compareLengthProps dummy = do
         compare (length c) i == compareLength (c `asTypeOf` dummy) i
 
 prefixProps :: ( Eq c
-               , EqSequence c
+               , IsSequence c
+               , Eq (Element c)
                , Arbitrary c
                , Show c
                )
