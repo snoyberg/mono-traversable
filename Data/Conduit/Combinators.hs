@@ -855,7 +855,11 @@ INLINE_RULE(elem, x, any (== x))
 -- Subject to fusion
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+elemE :: (Monad m, Seq.IsSequence seq, Eq (Element seq))
+#else
 elemE :: (Monad m, Seq.EqSequence seq)
+#endif
       => Element seq
       -> Consumer seq m Bool
 #if MIN_VERSION_mono_traversable(0,8,0)
@@ -881,7 +885,11 @@ INLINE_RULE(notElem, x, all (/= x))
 -- Subject to fusion
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+notElemE :: (Monad m, Seq.IsSequence seq, Eq (Element seq))
+#else
 notElemE :: (Monad m, Seq.EqSequence seq)
+#endif
          => Element seq
          -> Consumer seq m Bool
 #if MIN_VERSION_mono_traversable(0,8,0)
@@ -1130,7 +1138,11 @@ INLINE_RULE0(maximum, foldl1 max)
 -- Subject to fusion
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+maximumE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => Consumer seq m (Maybe (Element seq))
+#else
 maximumE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
+#endif
 INLINE_RULE0(maximumE, foldl1E max)
 
 -- | Get the smallest value in the stream, if present.
@@ -1146,7 +1158,11 @@ INLINE_RULE0(minimum, foldl1 min)
 -- Subject to fusion
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+minimumE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => Consumer seq m (Maybe (Element seq))
+#else
 minimumE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
+#endif
 INLINE_RULE0(minimumE, foldl1E min)
 
 -- | True if there are no values in the stream.

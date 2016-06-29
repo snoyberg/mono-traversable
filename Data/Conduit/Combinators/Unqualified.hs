@@ -656,7 +656,11 @@ elemC = CC.elem
 -- Stops consuming as soon as a match is found.
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+elemCE :: (Monad m, Seq.IsSequence seq, Eq (Element seq))
+#else
 elemCE :: (Monad m, Seq.EqSequence seq)
+#endif
       => Element seq
       -> Consumer seq m Bool
 elemCE = CC.elemE
@@ -676,7 +680,11 @@ notElemC = CC.notElem
 -- Stops consuming as soon as a match is found.
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+notElemCE :: (Monad m, Seq.IsSequence seq, Eq (Element seq))
+#else
 notElemCE :: (Monad m, Seq.EqSequence seq)
+#endif
          => Element seq
          -> Consumer seq m Bool
 notElemCE = CC.notElemE
@@ -843,7 +851,11 @@ maximumC = CC.maximum
 -- | Get the largest element in the chunked stream, if present.
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+maximumCE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => Consumer seq m (Maybe (Element seq))
+#else
 maximumCE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
+#endif
 maximumCE = CC.maximumE
 {-# INLINE maximumCE #-}
 
@@ -857,7 +869,11 @@ minimumC = CC.minimum
 -- | Get the smallest element in the chunked stream, if present.
 --
 -- Since 1.0.0
+#if MIN_VERSION_mono_traversable(1,0,0)
+minimumCE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => Consumer seq m (Maybe (Element seq))
+#else
 minimumCE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
+#endif
 minimumCE = CC.minimumE
 {-# INLINE minimumCE #-}
 

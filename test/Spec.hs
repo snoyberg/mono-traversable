@@ -28,8 +28,12 @@ import Data.Monoid (Monoid (..))
 import Control.Applicative ((<$>), (<*>))
 #endif
 import Data.Builder
+#if MIN_VERSION_mono_traversable(1,0,0)
+import Data.Sequences (LazySequence (..), Utf8 (..))
+#else
 import Data.Sequences.Lazy
 import Data.Textual.Encoding
+#endif
 import qualified Data.NonNull as NN
 import System.IO.Silently (hCapture)
 import GHC.IO.Handle (hDuplicateTo)
