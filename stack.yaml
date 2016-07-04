@@ -3,3 +3,4 @@ packages:
 - minlen
 - mono-traversable
 - mono-traversable-instances
+- chunked-data
