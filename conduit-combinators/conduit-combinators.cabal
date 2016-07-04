@@ -42,7 +42,7 @@ library
   else
       build-depends:   unix
   include-dirs:        .
-  ghc-options:         -Wall -O2 -rtsopts
+  ghc-options:         -Wall -O2
 
 test-suite test
   hs-source-dirs: test
