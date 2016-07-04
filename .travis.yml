@@ -167,7 +167,8 @@ script:
       for dir in $PACKAGES
       do
         cd $dir
-        cabal check || [ "$CABALVER" == "1.16" ]
+        # We have a valid -O2 in a .cabal file, so don't call this
+        # cabal check || [ "$CABALVER" == "1.16" ]
         cabal sdist
         PKGVER=$(cabal info . | awk '{print $2;exit}')
         SRC_TGZ=$PKGVER.tar.gz
