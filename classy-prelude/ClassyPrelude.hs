@@ -82,6 +82,13 @@ module ClassyPrelude
       -- * Concurrency
     , module Control.Concurrent.Lifted
     , yieldThread
+    , module Control.Concurrent.Async.Lifted.Safe
+    , waitAsync
+    , pollAsync
+    , waitCatchAsync
+    , cancelWith
+    , linkAsync
+    , link2Async
       -- * Non-standard
       -- ** List-like classes
     , map
@@ -159,6 +166,17 @@ import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
 import Control.Monad.Base
 import Control.Monad.Trans.Unlift
+import qualified Control.Concurrent.Async as Async
+import Control.Concurrent.Async.Lifted.Safe
+    ( Async, Pure, Forall
+    , async, asyncBound, asyncOn, asyncWithUnmask, asyncOnWithUnmask
+    , withAsync, withAsyncBound, withAsyncOn, withAsyncWithUnmask, withAsyncOnWithUnmask
+    , waitSTM, pollSTM, waitCatchSTM
+    , waitAnySTM, waitAnyCatchSTM, waitEitherSTM, waitEitherCatchSTM
+    , waitEitherSTM_, waitBothSTM
+    , cancel, asyncThreadId
+    , race, race_, concurrently, mapConcurrently, Concurrently (..)
+    )
 
 import Data.Vector.Instances ()
 import CorePrelude hiding
@@ -484,3 +502,40 @@ fromByteVector v =
   where
     (fptr, offset, idx) = unsafeToForeignPtr v
 {-# INLINE fromByteVector #-}
+
+-- | 'waitSTM' for any 'MonadIO'
+--
+-- @since 1.0.0
+waitAsync :: MonadIO m => Async a -> m a
+waitAsync = atomically . waitSTM
+
+-- | 'pollSTM' for any 'MonadIO'
+--
+-- @since 1.0.0
+pollAsync :: MonadIO m => Async a -> m (Maybe (Either SomeException a))
+pollAsync = atomically . pollSTM
+
+-- | 'waitCatchSTM' for any 'MonadIO'
+--
+-- @since 1.0.0
+waitCatchAsync :: MonadIO m => Async a -> m (Either SomeException a)
+waitCatchAsync = atomically . waitCatchSTM
+
+-- | 'cancel' an 'Async' with the given exception. It is converted to
+-- an async exception via 'toAsyncException' first.
+--
+-- @since 1.0.0
+cancelWith :: (MonadIO m, Exception e) => Async a -> e -> m ()
+cancelWith a e = liftIO (Async.cancelWith a (toAsyncException e))
+
+-- | 'Async.link' generalized to any 'MonadIO'
+--
+-- @since 1.0.0
+linkAsync :: MonadIO m => Async a -> m ()
+linkAsync = liftIO . Async.link
+
+-- | 'Async.link2' generalized to any 'MonadIO'
+--
+-- @since 1.0.0
+link2Async :: MonadIO m => Async a -> Async b -> m ()
+link2Async a = liftIO . Async.link2 a

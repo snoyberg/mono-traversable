@@ -25,6 +25,8 @@ library
                      , unordered-containers
                      , hashable
                      , lifted-base                   >= 0.2
+                     , lifted-async                  >= 0.3
+                     , async
                      , mono-traversable              >= 1.0
                      , mono-traversable-instances
                      , exceptions                    >= 0.5

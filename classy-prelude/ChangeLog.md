@@ -2,6 +2,7 @@
 
 * Support for mono-traversable-1.0.0
 * Switch to safe-exceptions
+* Add monad-unlift and lifted-async
 
 ## 0.12.8
 
