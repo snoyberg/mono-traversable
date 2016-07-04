@@ -82,10 +82,12 @@ module ClassyPrelude
       -- * Concurrency
     , module Control.Concurrent.Lifted
     , yieldThread
+    , module Control.Concurrent.Async
     , module Control.Concurrent.Async.Lifted.Safe
     , waitAsync
     , pollAsync
     , waitCatchAsync
+    , cancel
     , cancelWith
     , linkAsync
     , link2Async
@@ -167,14 +169,17 @@ import Data.IOData (IOData (..))
 import Control.Monad.Base
 import Control.Monad.Trans.Unlift
 import qualified Control.Concurrent.Async as Async
-import Control.Concurrent.Async.Lifted.Safe
-    ( Async, Pure, Forall
-    , async, asyncBound, asyncOn, asyncWithUnmask, asyncOnWithUnmask
-    , withAsync, withAsyncBound, withAsyncOn, withAsyncWithUnmask, withAsyncOnWithUnmask
+import Control.Concurrent.Async
+    ( Async
     , waitSTM, pollSTM, waitCatchSTM
     , waitAnySTM, waitAnyCatchSTM, waitEitherSTM, waitEitherCatchSTM
     , waitEitherSTM_, waitBothSTM
-    , cancel, asyncThreadId
+    )
+import Control.Concurrent.Async.Lifted.Safe
+    ( Pure, Forall
+    , async, asyncBound, asyncOn, asyncWithUnmask, asyncOnWithUnmask
+    , withAsync, withAsyncBound, withAsyncOn, withAsyncWithUnmask, withAsyncOnWithUnmask
+    , asyncThreadId
     , race, race_, concurrently, mapConcurrently, Concurrently (..)
     )
 
@@ -520,6 +525,12 @@ pollAsync = atomically . pollSTM
 -- @since 1.0.0
 waitCatchAsync :: MonadIO m => Async a -> m (Either SomeException a)
 waitCatchAsync = atomically . waitCatchSTM
+
+-- | 'Async.cancel' generalized to any 'MonadIO'
+--
+-- @since 1.0.0
+cancel :: MonadIO m => Async a -> m ()
+cancel = liftIO . Async.cancel
 
 -- | 'cancel' an 'Async' with the given exception. It is converted to
 -- an async exception via 'toAsyncException' first.
