@@ -4,6 +4,8 @@
     * Split out `Data.MinLen` to `minlen` package, and have `Data.NonNull` stand on its own
     * Remove `Data.ByteVector`
     * Split out extra typeclass instances to `mono-traversable-instances`
+* Remove the `Eq` and `Ord` specific classes, and instead use rewrite rules
+* Provide the `Data.MonoTraversable.Unprefixed` module
 
 ## 0.10.2
 
