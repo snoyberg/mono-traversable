@@ -6,6 +6,7 @@
     * Split out extra typeclass instances to `mono-traversable-instances`
 * Remove the `Eq` and `Ord` specific classes, and instead use rewrite rules
 * Provide the `Data.MonoTraversable.Unprefixed` module
+* Generalize `unwords` and `unlines` [#87](https://github.com/snoyberg/mono-traversable/pull/87)
 
 ## 0.10.2
 
