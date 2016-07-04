@@ -1,0 +1,9 @@
+dist
+.stack-work/
+dist_*/
+cabal-dev
+*.o
+*.hi
+*.chi
+*.chs.h
+*.swp

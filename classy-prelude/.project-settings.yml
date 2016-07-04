@@ -1,0 +1,25 @@
+module-template: ! 'module MODULE_NAME where
+
+'
+extensions: {}
+environment: ghc-7.4.2-stable-13.09
+cabal-file: project.cabal
+hidden-packages: ''
+modules:
+  Data.Sequences.Lazy:
+    filename: classy-prelude/Data/Sequences/Lazy.hs
+  Main(test/main.hs):
+    filename: classy-prelude/test/main.hs
+  Main(Setup.hs):
+    filename: classy-prelude/Setup.hs
+  Data.Textual.Encoding:
+    filename: classy-prelude/Data/Textual/Encoding.hs
+  ClassyPrelude.Classes:
+    filename: classy-prelude/ClassyPrelude/Classes.hs
+  ClassyPrelude:
+    filename: classy-prelude/ClassyPrelude.hs
+version: 1
+extra-packages: ! 'Git: https://github.com/snoyberg/mono-traversable.git c15cc98a83b9550f24f9363f88b0fdc5e3c0bc82'
+ghc-args:
+- -hide-package
+- hashmap
