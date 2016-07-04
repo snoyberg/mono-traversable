@@ -1,3 +1,0 @@
-./classy-prelude
-./classy-prelude-conduit
-./classy-prelude-yesod
