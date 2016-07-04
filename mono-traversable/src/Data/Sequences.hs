@@ -375,6 +375,18 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     tailEx :: seq -> seq
     tailEx = snd . maybe (error "Data.Sequences.tailEx") id . uncons
 
+    -- | Safe version of 'tailEx'.
+    --
+    -- Returns 'Nothing' instead of throwing an exception when encountering
+    -- an empty monomorphic container.
+    --
+    -- @since 1.0.0
+    tailMay :: seq -> Maybe seq
+    tailMay seq
+        | onull seq = Nothing
+        | otherwise = Just (tailEx seq)
+    {-# INLINE tailMay #-}
+
     -- | __Unsafe__
     --
     -- Get the init of a sequence, throw an exception if the sequence is empty.
@@ -385,6 +397,18 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- @
     initEx :: seq -> seq
     initEx = fst . maybe (error "Data.Sequences.initEx") id . unsnoc
+
+    -- | Safe version of 'initEx'.
+    --
+    -- Returns 'Nothing' instead of throwing an exception when encountering
+    -- an empty monomorphic container.
+    --
+    -- @since 1.0.0
+    initMay :: IsSequence seq => seq -> Maybe seq
+    initMay seq
+        | onull seq = Nothing
+        | otherwise = Just (initEx seq)
+    {-# INLINE initMay #-}
 
     -- | Equivalent to 'tailEx'.
     unsafeTail :: seq -> seq

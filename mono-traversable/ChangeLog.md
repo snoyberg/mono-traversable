@@ -7,6 +7,7 @@
 * Remove the `Eq` and `Ord` specific classes, and instead use rewrite rules
 * Provide the `Data.MonoTraversable.Unprefixed` module
 * Generalize `unwords` and `unlines` [#87](https://github.com/snoyberg/mono-traversable/pull/87)
+* Add `tailMay` and `initMay` [#89](https://github.com/snoyberg/mono-traversable/issues/89)
 
 ## 0.10.2
 
