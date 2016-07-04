@@ -2,7 +2,7 @@ name:                classy-prelude-yesod
 version:             1.0.0
 synopsis:            Provide a classy prelude including common Yesod functionality.
 description:         This is an extension of classy-prelude-conduit, adding in commonly used functions and data types from Yesod.
-homepage:            https://github.com/snoyberg/classy-prelude
+homepage:            https://github.com/snoyberg/mono-traversable
 license:             MIT
 license-file:        LICENSE
 author:              Michael Snoyman
@@ -10,6 +10,7 @@ maintainer:          michael@snoyman.com
 category:            Control
 build-type:          Simple
 cabal-version:       >=1.8
+extra-source-files:  README.md ChangeLog.md
 
 library
   exposed-modules:     ClassyPrelude.Yesod
@@ -24,3 +25,7 @@ library
                      , persistent >= 1.1
                      , aeson
                      , data-default
+
+source-repository head
+  type:     git
+  location: https://github.com/snoyberg/mono-traversable.git

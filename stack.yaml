@@ -4,3 +4,8 @@ packages:
 - mono-traversable
 - mono-traversable-instances
 - chunked-data
+- classy-prelude
+- classy-prelude-conduit
+- classy-prelude-yesod
+extra-deps:
+- safe-exceptions-0.1.0.0

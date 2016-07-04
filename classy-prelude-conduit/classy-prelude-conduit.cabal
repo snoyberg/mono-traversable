@@ -2,7 +2,7 @@ name:                classy-prelude-conduit
 version:             1.0.0
 synopsis:            conduit instances for classy-prelude
 description:         conduit instances for classy-prelude
-homepage:            https://github.com/snoyberg/classy-prelude
+homepage:            https://github.com/snoyberg/mono-traversable
 license:             MIT
 license-file:        LICENSE
 author:              Michael Snoyman
@@ -10,6 +10,7 @@ maintainer:          michael@snoyman.com
 category:            Control, Prelude
 build-type:          Simple
 cabal-version:       >=1.8
+extra-source-files:  README.md ChangeLog.md
 
 library
   exposed-modules:     ClassyPrelude.Conduit
@@ -38,4 +39,4 @@ test-suite spec
 
 source-repository head
   type:     git
-  location: git://github.com/snoyberg/classy-prelude.git
+  location: https://github.com/snoyberg/mono-traversable.git
