@@ -20,6 +20,7 @@ module ClassyPrelude
     , (<||>)
       -- ** Monad
     , module Control.Monad
+    , module Control.Monad.Trans.Unlift
     , whenM
     , unlessM
       -- ** Mutable references
@@ -157,6 +158,7 @@ import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
 import Data.IOData (IOData (..))
 import Control.Monad.Base
+import Control.Monad.Trans.Unlift
 
 import Data.Vector.Instances ()
 import CorePrelude hiding

@@ -43,6 +43,7 @@ library
                      , transformers-base
                      , safe-exceptions               >= 0.1.1
                      , deepseq
+                     , monad-unlift                  >= 0.2
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
