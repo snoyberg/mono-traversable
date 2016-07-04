@@ -1,4 +1,6 @@
-## mono-traversable and classy-prelude mega-repo
+## mono-traversable mega-repo
+
+[![Build Status](https://travis-ci.org/snoyberg/mono-traversable.svg?branch=master)](https://travis-ci.org/snoyberg/mono-traversable)
 
 This repository contains packages in the mono-traversable and classy-prelude
 families. Please see the individual READMEs for more details:
@@ -17,6 +19,8 @@ Additional packages in this repository:
   providing typeclasses for dealing with various chunked data representations
 * [mutable-containers](https://github.com/snoyberg/mono-traversable/tree/master/mutable-containers#readme),
   abstactions and concrete implementations of mutable containers
+* [conduit-combinators](https://github.com/snoyberg/mono-traversable/tree/master/conduit-combinators#readme),
+  commonly used conduit functions, for both chunked and unchunked data
 * [classy-prelude](https://github.com/snoyberg/mono-traversable/tree/master/classy-prelude#readme),
   a Prelude replacement based around the above packages (and many others)
     * [classy-prelude-conduit](https://github.com/snoyberg/mono-traversable/tree/master/classy-prelude-conduit#readme),
