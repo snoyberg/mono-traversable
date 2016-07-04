@@ -1,0 +1,69 @@
+name:                mutable-containers
+version:             0.3.2.1
+synopsis:            Abstactions and concrete implementations of mutable containers
+description:         See docs and README at <http://www.stackage.org/package/mutable-containers>
+homepage:            https://github.com/fpco/mutable-containers
+license:             MIT
+license-file:        LICENSE
+author:              Michael Snoyman
+maintainer:          michael@fpcomplete.com
+category:            Data
+build-type:          Simple
+extra-source-files:  README.md ChangeLog.md
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Data.Mutable
+  other-modules:       Data.Mutable.SRef
+                       Data.Mutable.Class
+                       Data.Mutable.URef
+                       Data.Mutable.PRef
+                       Data.Mutable.BRef
+                       Data.Mutable.DLList
+                       Data.Mutable.Deque
+  build-depends:       base >= 4.7 && < 5
+                     , primitive >= 0.5.2.1
+                     , containers
+                     , vector
+                     , mono-traversable
+                     , ghc-prim
+  default-language:    Haskell2010
+  ghc-options:         -O2
+
+test-suite test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , mutable-containers
+                     , hspec
+                     , QuickCheck
+                     , vector
+                     , primitive
+                     , containers
+  default-language:    Haskell2010
+
+benchmark deque
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      bench
+  main-is:             deque.hs
+  build-depends:       base
+                     , mutable-containers
+                     , criterion
+                     , containers
+  ghc-options:         -Wall -O2 -rtsopts
+  default-language:    Haskell2010
+
+benchmark ref
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      bench
+  main-is:             ref.hs
+  build-depends:       base
+                     , mutable-containers
+                     , criterion
+  ghc-options:         -Wall -O2 -rtsopts
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: git://github.com/fpco/mutable-containers.git
