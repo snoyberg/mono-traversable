@@ -26,7 +26,7 @@ Additional packages in this repository:
     * [classy-prelude-conduit](https://github.com/snoyberg/mono-traversable/tree/master/classy-prelude-conduit#readme),
       extends classy-prelude with [conduit support](https://github.com/snoyberg/conduit)
     * [classy-prelude-yesod](https://github.com/snoyberg/mono-traversable/tree/master/classy-prelude-yesod#readme),
-      extends classy-prelude-conduit with [Yesod web frameworksupport](http://www.yesodweb.com)
+      extends classy-prelude-conduit with [Yesod web framework support](http://www.yesodweb.com)
 * [minlen](https://github.com/snoyberg/mono-traversable/tree/master/minlen#readme),
   provided a newtype wrapper with type-level annotation of minimum container
   length. This is a generalization of the `Data.NonNull` module in `mono-traversable`
