@@ -374,6 +374,8 @@ main = hspec $ do
         describe "Vector" $ prefixProps (undefined :: Vector Int)
         describe "UVector" $ prefixProps (undefined :: UVector Int)
         describe "Seq" $ prefixProps (undefined :: Seq Int)
+    {- This tests depend on timing and are unreliable. Instead, we're relying
+       on the test suite in safe-exceptions itself.
     describe "any exceptions" $ do
         it "catchAny" $ do
             failed <- newIORef 0
@@ -404,6 +406,7 @@ main = hspec $ do
                     | Just DummyException <- fromException e -> return ()
                     | otherwise -> error "Expected a DummyException"
                 Right () -> error "Expected an exception" :: IO ()
+    -}
     it "basic DList functionality" $
         (toList $ asDList $ mconcat
             [ fromList [1, 2]
