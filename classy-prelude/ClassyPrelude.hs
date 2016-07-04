@@ -172,8 +172,6 @@ import qualified Control.Concurrent.Async as Async
 import Control.Concurrent.Async
     ( Async
     , waitSTM, pollSTM, waitCatchSTM
-    , waitAnySTM, waitAnyCatchSTM, waitEitherSTM, waitEitherCatchSTM
-    , waitEitherSTM_, waitBothSTM
     )
 import Control.Concurrent.Async.Lifted.Safe
     ( Pure, Forall
