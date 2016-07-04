@@ -1,5 +1,12 @@
-This is a mega-repo containing multiple subpackages. Please see the `README.md`
-files in the subdirectories for details on each package.
+## mono-traversable mega-repo
 
-**TODO** After the splitup is complete, fill in descriptions here better with
-links to the relevant READMEs.
+You probably want to view [the README for mono-traversable
+itself](https://github.com/snoyberg/mono-traversable/tree/master/mono-traversable#readme).
+
+Additional packages in this repository:
+
+* [mono-traversable-instances](https://github.com/snoyberg/mono-traversable/tree/master/mono-traversable-instances#readme),
+  containing orphans instances for mono-traversable classes
+* [minlen](https://github.com/snoyberg/mono-traversable/tree/master/minlen#readme),
+  provided a newtype wrapper with type-level annotation of minimum container
+  length. This is a generalization of the `Data.NonNull` module in `mono-traversable`
