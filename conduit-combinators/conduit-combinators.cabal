@@ -2,7 +2,7 @@ name:                conduit-combinators
 version:             1.0.3.1
 synopsis:            Commonly used conduit functions, for both chunked and unchunked data
 description:         Provides a replacement for Data.Conduit.List, as well as a convenient Conduit module.
-homepage:            https://github.com/fpco/conduit-combinators
+homepage:            https://github.com/snoyberg/mono-traversable
 license:             MIT
 license-file:        LICENSE
 author:              Michael Snoyman
@@ -74,4 +74,4 @@ test-suite test
 
 source-repository head
   type:     git
-  location: git://github.com/fpco/conduit-combinators.git
+  location: https://github.com/snoyberg/mono-traversable.git

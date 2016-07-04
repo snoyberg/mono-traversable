@@ -7,5 +7,6 @@ packages:
 - classy-prelude
 - classy-prelude-conduit
 - classy-prelude-yesod
+- conduit-combinators
 extra-deps:
 - safe-exceptions-0.1.0.0
