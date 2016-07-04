@@ -15,6 +15,8 @@ Additional packages in this repository:
       containing orphans instances for mono-traversable classes
 * [chunked-data](https://github.com/snoyberg/mono-traversable/tree/master/chunked-data#readme),
   providing typeclasses for dealing with various chunked data representations
+* [mutable-containers](https://github.com/snoyberg/mono-traversable/tree/master/mutable-containers#readme),
+  abstactions and concrete implementations of mutable containers
 * [classy-prelude](https://github.com/snoyberg/mono-traversable/tree/master/classy-prelude#readme),
   a Prelude replacement based around the above packages (and many others)
     * [classy-prelude-conduit](https://github.com/snoyberg/mono-traversable/tree/master/classy-prelude-conduit#readme),

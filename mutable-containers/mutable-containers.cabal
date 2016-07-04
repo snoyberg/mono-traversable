@@ -2,7 +2,7 @@ name:                mutable-containers
 version:             0.3.2.1
 synopsis:            Abstactions and concrete implementations of mutable containers
 description:         See docs and README at <http://www.stackage.org/package/mutable-containers>
-homepage:            https://github.com/fpco/mutable-containers
+homepage:            https://github.com/snoyberg/mono-traversable
 license:             MIT
 license-file:        LICENSE
 author:              Michael Snoyman
@@ -66,4 +66,4 @@ benchmark ref
 
 source-repository head
   type:     git
-  location: git://github.com/fpco/mutable-containers.git
+  location: https://github.com/snoyberg/mono-traversable.git
