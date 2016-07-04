@@ -11,3 +11,4 @@ packages:
 - mutable-containers
 extra-deps:
 - safe-exceptions-0.1.1.0
+- basic-prelude-0.5.2
