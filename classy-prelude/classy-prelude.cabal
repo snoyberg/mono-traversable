@@ -41,7 +41,7 @@ library
                      , mutable-containers >= 0.3 && < 0.4
                      , dlist >= 0.7
                      , transformers-base
-                     , safe-exceptions
+                     , safe-exceptions               >= 0.1.1
                      , deepseq
   ghc-options:         -Wall -fno-warn-orphans
 

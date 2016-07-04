@@ -9,4 +9,4 @@ packages:
 - classy-prelude-yesod
 - conduit-combinators
 extra-deps:
-- safe-exceptions-0.1.0.0
+- safe-exceptions-0.1.1.0
