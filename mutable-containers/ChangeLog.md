@@ -1,3 +1,7 @@
+## 0.3.3
+
+* Move into mono-traversable repo
+
 ## 0.3.2.1
 
 * Fix benchmark

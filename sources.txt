@@ -1,0 +1,9 @@
+minlen
+mono-traversable
+mono-traversable-instances
+chunked-data
+classy-prelude
+classy-prelude-conduit
+classy-prelude-yesod
+conduit-combinators
+mutable-containers

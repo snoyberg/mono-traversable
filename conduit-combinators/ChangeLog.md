@@ -1,3 +1,7 @@
+# 1.0.4
+
+* Move into mono-traversable repo, support mono-traversable 1.0
+
 # 1.0.3.1
 
 * Support for QuickCheck 2.8.2
