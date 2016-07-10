@@ -1,3 +1,7 @@
+## 1.0.0.1
+
+* Add missing export [#101](https://github.com/snoyberg/mono-traversable/pull/101)
+
 ## 1.0.0
 
 * Implement the cleanups described in [#95](https://github.com/snoyberg/mono-traversable/issues/95)
