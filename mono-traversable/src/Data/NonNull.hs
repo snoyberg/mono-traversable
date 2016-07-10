@@ -12,6 +12,7 @@
 module Data.NonNull (
     NonNull
   , fromNullable
+  , impureNonNull
   , nonNull
   , toNullable
   , fromNonEmpty
