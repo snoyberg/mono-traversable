@@ -188,6 +188,9 @@ import CorePrelude hiding
     , handle, finally, catch, bracket, bracket_, bracketOnError
     , catchIOError
     , uninterruptibleMask, uninterruptibleMask_
+#if MIN_VERSION_safe_exceptions(0,1,4)
+    , catchJust, handleJust, tryJust
+#endif
     )
 import Data.ChunkedZip
 import qualified Data.Char as Char

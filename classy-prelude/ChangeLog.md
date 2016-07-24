@@ -1,3 +1,7 @@
+## 1.0.0.1
+
+* Support for safe-exceptions-0.1.4.0
+
 ## 1.0.0
 
 * Support for mono-traversable-1.0.0
