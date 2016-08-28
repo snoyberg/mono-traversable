@@ -89,10 +89,13 @@ module Data.Conduit.Combinators
     , sinkLazyBuilder
     , sinkNull
     , awaitNonNull
+    , head
+    , headDef
     , headE
     , peek
     , peekE
     , last
+    , lastDef
     , lastE
     , length
     , lengthE
@@ -212,7 +215,7 @@ import qualified Data.Conduit.Filesystem as CF
 import           Data.Conduit.Internal       (ConduitM (..), Pipe (..))
 import qualified Data.Conduit.List           as CL
 import           Data.IOData
-import           Data.Maybe                  (isNothing, isJust)
+import           Data.Maybe                  (fromMaybe, isNothing, isJust)
 import           Data.Monoid                 (Monoid (..))
 import           Data.MonoTraversable
 import qualified Data.Sequences              as Seq
@@ -1029,6 +1032,18 @@ awaitNonNull =
     go' = maybe go (return . Just) . NonNull.fromNullable
 {-# INLINE awaitNonNull #-}
 
+-- | Take a single value from the stream, if available.
+--
+-- Since 1.0.5
+head :: Monad m => Consumer a m (Maybe a)
+head = CL.head
+
+-- | Same as 'head', but returns a default value if none are available from the stream.
+--
+-- Since 1.0.5
+headDef :: Monad m => a -> Consumer a m a
+headDef a = fromMaybe a <$> head
+
 -- | Get the next element in the chunked stream.
 --
 -- Since 1.0.0
@@ -1079,6 +1094,12 @@ lastC =
   where
     loop prev = await >>= maybe (return $ Just prev) loop
 STREAMING0(last, lastC, lastS)
+
+-- | Same as 'last', but returns a default value if none are available from the stream.
+--
+-- Since 1.0.5
+lastDef :: Monad m => a -> Consumer a m a
+lastDef a = fromMaybe a <$> last
 
 -- | Retrieve the last element in the chunked stream, if present.
 --

@@ -75,10 +75,13 @@ module Data.Conduit.Combinators.Unqualified
     , sinkLazyBuilder
     , sinkNull
     , awaitNonNull
+    , headC
+    , headDefC
     , headCE
     , peekC
     , peekCE
     , lastC
+    , lastDefC
     , lastCE
     , lengthC
     , lengthCE
@@ -183,6 +186,8 @@ import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
 #if ! MIN_VERSION_base(4,8,0)
 import           Control.Applicative         ((<$>))
+#else
+import           Prelude                     ((<$>))
 #endif
 import           Control.Monad.Base          (MonadBase (..))
 import           Control.Monad.IO.Class      (MonadIO (..))
@@ -191,6 +196,7 @@ import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
 import qualified Data.Conduit.List           as CL
 import           Data.IOData
+import           Data.Maybe                  (fromMaybe)
 import           Data.Monoid                 (Monoid (..))
 import           Data.MonoTraversable
 import qualified Data.Sequences              as Seq
@@ -777,6 +783,18 @@ awaitNonNull :: (Monad m, MonoFoldable a) => Consumer a m (Maybe (NonNull.NonNul
 awaitNonNull = CC.awaitNonNull
 {-# INLINE awaitNonNull #-}
 
+-- | Take a single value from the stream, if available.
+--
+-- Since 1.0.5
+headC :: Monad m => Consumer a m (Maybe a)
+headC = CC.head
+
+-- | Same as 'headC', but returns a default value if none are available from the stream.
+--
+-- Since 1.0.5
+headDefC :: Monad m => a -> Consumer a m a
+headDefC = CC.headDef
+
 -- | Get the next element in the chunked stream.
 --
 -- Since 1.0.0
@@ -804,6 +822,12 @@ peekCE = CC.peekE
 lastC :: Monad m => Consumer a m (Maybe a)
 lastC = CC.last
 {-# INLINE lastC #-}
+
+-- | Same as 'lastC', but returns a default value if none are available from the stream.
+--
+-- Since 1.0.5
+lastDefC :: Monad m => a -> Consumer a m a
+lastDefC = CC.lastDef
 
 -- | Retrieve the last element in the chunked stream, if present.
 --
