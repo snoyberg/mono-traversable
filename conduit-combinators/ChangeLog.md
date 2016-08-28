@@ -1,3 +1,7 @@
+# 1.0.5
+
+* Add head, headDef and lastDef combinators
+
 # 1.0.4
 
 * Move into mono-traversable repo, support mono-traversable 1.0
