@@ -1,4 +1,4 @@
-resolver: lts-6.4
+resolver: lts-6.14
 packages:
 - minlen
 - mono-traversable
@@ -10,6 +10,6 @@ packages:
 - conduit-combinators
 - mutable-containers
 extra-deps:
-- safe-exceptions-0.1.1.0
+- safe-exceptions-0.1.4.0
 - basic-prelude-0.5.2
 - monad-unlift-0.2.0

@@ -190,6 +190,7 @@ module Data.Conduit.Combinators
     , vectorBuilder
     , mapAccumS
     , peekForever
+    , peekForeverE
     ) where
 
 -- BEGIN IMPORTS
@@ -2148,6 +2149,27 @@ peekForever inner =
   where
     loop = do
         mx <- peek
+        case mx of
+            Nothing -> return ()
+            Just _ -> inner >> loop
+
+-- | Run a consuming conduit repeatedly, only stopping when there is no more
+-- data available from upstream.
+--
+-- In contrast to 'peekForever', this function will ignore empty
+-- chunks of data. So for example, if a stream of data contains an
+-- empty @ByteString@, it is still treated as empty, and the consuming
+-- function is not called.
+--
+-- @since 1.0.6
+peekForeverE :: (Monad m, MonoFoldable i)
+             => ConduitM i o m ()
+             -> ConduitM i o m ()
+peekForeverE inner =
+    loop
+  where
+    loop = do
+        mx <- peekE
         case mx of
             Nothing -> return ()
             Just _ -> inner >> loop

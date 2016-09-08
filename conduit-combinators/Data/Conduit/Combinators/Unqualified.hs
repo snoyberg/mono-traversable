@@ -174,6 +174,7 @@ module Data.Conduit.Combinators.Unqualified
     , vectorBuilderC
     , CC.mapAccumS
     , CC.peekForever
+    , CC.peekForeverE
     ) where
 
 -- BEGIN IMPORTS
