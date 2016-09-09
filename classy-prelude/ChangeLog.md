@@ -1,3 +1,7 @@
+## 1.0.0.2
+
+* Allow basic-prelude 0.6
+
 ## 1.0.0.1
 
 * Support for safe-exceptions-0.1.4.0
