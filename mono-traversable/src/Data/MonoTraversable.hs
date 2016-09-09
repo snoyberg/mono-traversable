@@ -45,7 +45,7 @@ import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           Prelude              (Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
                                        (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
-                                       seq, otherwise, Eq, Ord, (-), (*))
+                                       (==), seq, otherwise, Eq, Ord, (-), (*))
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
@@ -198,6 +198,19 @@ instance U.Unbox a => MonoFunctor (U.Vector a) where
 instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
     {-# INLINE omap #-}
+
+-- | @'replaceElem' old new@ replaces all @old@ elements with @new@.
+replaceElem :: (MonoFunctor mono, Eq (Element mono)) => Element mono -> Element mono -> mono -> mono
+replaceElem old new = omap (\x -> if x == old then new else x)
+
+{-# INLINE [0] replaceElem #-}
+{-# RULES "strict Text replaceElem" replaceElem = replaceElemStrictText #-}
+replaceElemStrictText :: Char -> Char -> T.Text -> T.Text
+replaceElemStrictText old new = T.replace (T.singleton old) (T.singleton new)
+{-# RULES "lazy Text replaceElem" replaceElem = replaceElemLazyText #-}
+replaceElemLazyText :: Char -> Char -> TL.Text -> TL.Text
+replaceElemLazyText old new = TL.replace (TL.singleton old) (TL.singleton new)
+
 
 -- | Monomorphic containers that can be folded.
 class MonoFoldable mono where

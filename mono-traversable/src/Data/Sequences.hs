@@ -1169,7 +1169,7 @@ splitElem x = splitWhen (== x)
 -- | @'splitSeq'@ splits a sequence into components delimited by
 -- separator subsequence. 'splitSeq' is the right inverse of 'intercalate':
 --
--- > intercalate x . splitSeq x === id
+-- > ointercalate x . splitSeq x === id
 --
 -- 'splitElem' can be considered a special case of 'splitSeq'
 --
@@ -1191,6 +1191,13 @@ splitElem x = splitWhen (== x)
 -- Since 0.9.3
 splitSeq :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> [seq]
 splitSeq sep = List.map fromList . List.splitOn (otoList sep) . otoList
+
+-- | @'replaceSeq' old new@ replaces all @old@ subsequences with @new@.
+--
+-- > replaceSeq old new === ointercalate new . splitSeq old
+
+replaceSeq :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> seq -> seq
+replaceSeq old new = ointercalate new . splitSeq old
 
 -- | 'stripPrefix' drops the given prefix from a sequence.
 -- It returns 'Nothing' if the sequence did not start with the prefix
@@ -1259,8 +1266,10 @@ delete = deleteBy (==)
 -- @since 0.10.2
 deleteBy :: (IsSequence seq, Eq (Element seq)) => (Element seq -> Element seq -> Bool) -> Element seq -> seq -> seq
 deleteBy eq x = fromList . List.deleteBy eq x . otoList
+
 {-# INLINE [0] splitElem #-}
 {-# INLINE [0] splitSeq #-}
+{-# INLINE [0] replaceSeq #-}
 {-# INLINE [0] isPrefixOf #-}
 {-# INLINE [0] isSuffixOf #-}
 {-# INLINE [0] isInfixOf #-}
@@ -1325,6 +1334,7 @@ stripSuffixLazyBS x y
     | otherwise = Nothing
 
 {-# RULES "strict Text splitSeq" splitSeq = splitSeqStrictText #-}
+{-# RULES "strict Text replaceSeq" replaceSeq = replaceSeqStrictText #-}
 {-# RULES "strict Text stripPrefix" stripPrefix = T.stripPrefix #-}
 {-# RULES "strict Text stripSuffix" stripSuffix = T.stripSuffix #-}
 {-# RULES "strict Text group" group = T.group #-}
@@ -1337,7 +1347,13 @@ splitSeqStrictText sep
     | T.null sep = (:) T.empty . List.map singleton . T.unpack
     | otherwise = T.splitOn sep
 
+replaceSeqStrictText :: T.Text -> T.Text -> T.Text -> T.Text
+replaceSeqStrictText old new
+    | T.null old = T.intercalate new . splitSeqStrictText old
+    | otherwise = T.replace old new
+
 {-# RULES "lazy Text splitSeq" splitSeq = splitSeqLazyText #-}
+{-# RULES "lazy Text replaceSeq" replaceSeq = replaceSeqLazyText #-}
 {-# RULES "lazy Text stripPrefix" stripPrefix = TL.stripPrefix #-}
 {-# RULES "lazy Text stripSuffix" stripSuffix = TL.stripSuffix #-}
 {-# RULES "lazy Text group" group = TL.group #-}
@@ -1349,6 +1365,11 @@ splitSeqLazyText :: TL.Text -> TL.Text -> [TL.Text]
 splitSeqLazyText sep
     | TL.null sep = (:) TL.empty . List.map singleton . TL.unpack
     | otherwise = TL.splitOn sep
+
+replaceSeqLazyText :: TL.Text -> TL.Text -> TL.Text -> TL.Text
+replaceSeqLazyText old new
+    | TL.null old = TL.intercalate new . splitSeqLazyText old
+    | otherwise = TL.replace old new
 
 -- | Sort a ordered sequence.
 --
