@@ -1,3 +1,7 @@
+## 1.0.1
+
+* Add `replaceElem` and `replaceSeq` [#107](https://github.com/snoyberg/mono-traversable/pull/107)
+
 ## 1.0.0.1
 
 * Add missing export [#101](https://github.com/snoyberg/mono-traversable/pull/101)

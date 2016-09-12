@@ -200,6 +200,8 @@ instance VS.Storable a => MonoFunctor (VS.Vector a) where
     {-# INLINE omap #-}
 
 -- | @'replaceElem' old new@ replaces all @old@ elements with @new@.
+--
+-- @since 1.0.1
 replaceElem :: (MonoFunctor mono, Eq (Element mono)) => Element mono -> Element mono -> mono -> mono
 replaceElem old new = omap (\x -> if x == old then new else x)
 

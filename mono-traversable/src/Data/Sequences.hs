@@ -1195,6 +1195,8 @@ splitSeq sep = List.map fromList . List.splitOn (otoList sep) . otoList
 -- | @'replaceSeq' old new@ replaces all @old@ subsequences with @new@.
 --
 -- > replaceSeq old new === ointercalate new . splitSeq old
+--
+-- @since 1.0.1
 
 replaceSeq :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> seq -> seq
 replaceSeq old new = ointercalate new . splitSeq old
