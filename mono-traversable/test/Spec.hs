@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE CPP #-}
 
 module Spec where
 
@@ -373,6 +374,32 @@ main = hspec $ do
             let x1 = Foldl.fold Foldl.length (xs :: [Int])
                 x2 = Foldl.purely ofoldlUnwrap Foldl.length xs
             x2 @?= x1
+
+    describe "Replacing" $ do
+        let test typ dummy = describe typ $ do
+                prop "replaceElem old new === omap (\\x -> if x == old then new else x)" $
+                    -- replace random element or any random value with random new value
+                    \x list new -> forAll (elements (x:list)) $ \old ->
+                    let seq' = fromListAs list dummy
+                    in replaceElem old new seq' @?= omap (\x -> if x == old then new else x) seq'
+#if MIN_VERSION_QuickCheck(2,8,0)
+                prop "replaceSeq old new === ointercalate new . splitSeq old" $
+                    -- replace random subsequence with random new sequence
+                    \list new -> forAll (sublistOf list) $ \old ->
+                    let [seq', old', new'] = map (`fromListAs` dummy) [list, old, new]
+                    in replaceSeq old' new' seq' @?= ointercalate new' (splitSeq old' seq')
+                prop "replaceSeq old old === id" $ \list -> forAll (sublistOf list) $ \old ->
+                    let [seq', old'] = map (`fromListAs` dummy) [list, old]
+                    in replaceSeq old' old' seq' @?= seq'
+#endif
+        test "List" ([] :: [Int])
+        test "Vector" (V.empty :: V.Vector Int)
+        test "Storable Vector" (VS.empty :: VS.Vector Int)
+        test "Unboxed Vector" (U.empty :: U.Vector Int)
+        test "Strict ByteString" S.empty
+        test "Lazy ByteString" L.empty
+        test "Strict Text" T.empty
+        test "Lazy Text" TL.empty
 
     describe "Sorting" $ do
         let test typ dummy = describe typ $ do
