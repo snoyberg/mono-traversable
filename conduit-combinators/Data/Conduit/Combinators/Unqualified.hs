@@ -25,6 +25,7 @@ module Data.Conduit.Combinators.Unqualified
 
       -- *** I\/O
     , sourceFile
+    , CC.sourceFileBS
     , sourceHandle
     , sourceIOHandle
     , stdinC
@@ -109,6 +110,7 @@ module Data.Conduit.Combinators.Unqualified
 
       -- *** I\/O
     , sinkFile
+    , CC.sinkFileBS
     , sinkHandle
     , sinkIOHandle
     , printC

@@ -1,3 +1,7 @@
+# 1.0.7
+
+* Add `sourceFileBS` and `sinkFileBS`
+
 # 1.0.6
 
 * Add `peekForeverE` combinator

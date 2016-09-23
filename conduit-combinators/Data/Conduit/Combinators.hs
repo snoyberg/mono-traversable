@@ -38,6 +38,7 @@ module Data.Conduit.Combinators
 
       -- ** I\/O
     , sourceFile
+    , sourceFileBS
     , sourceHandle
     , sourceIOHandle
     , stdin
@@ -123,6 +124,7 @@ module Data.Conduit.Combinators
 
       -- ** I\/O
     , sinkFile
+    , sinkFileBS
     , sinkHandle
     , sinkIOHandle
     , print
@@ -422,6 +424,14 @@ INLINE_RULE(replicateM, n m, CL.replicateM n m)
 sourceFile :: (MonadResource m, IOData a, MonoFoldable a) => FilePath -> Producer m a
 sourceFile fp = sourceIOHandle (SIO.openFile fp SIO.ReadMode)
 {-# INLINE sourceFile #-}
+
+-- | 'sourceFile' specialized to 'ByteString' to help with type
+-- inference.
+--
+-- @since 1.0.7
+sourceFileBS :: MonadResource m => FilePath -> Producer m ByteString
+sourceFileBS = sourceFile
+{-# INLINE sourceFileBS #-}
 
 -- | Read all data from the given @Handle@.
 --
@@ -1321,6 +1331,14 @@ INLINE_RULE(foldMapME, f, CL.foldM (ofoldlM (\accum e -> mappend accum `liftM` f
 sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
 sinkFile fp = sinkIOHandle (SIO.openFile fp SIO.WriteMode)
 {-# INLINE sinkFile #-}
+
+-- | 'sinkFile' specialized to 'ByteString' to help with type
+-- inference.
+--
+-- @since 1.0.7
+sinkFileBS :: MonadResource m => FilePath -> Consumer ByteString m ()
+sinkFileBS = sinkFile
+{-# INLINE sinkFileBS #-}
 
 -- | Print all incoming values to stdout.
 --
