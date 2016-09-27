@@ -1,3 +1,8 @@
+# 1.0.8
+
+* Add lower bound on conduit 1.2.8 (make it easier to follow [the
+  reskin](http://www.snoyman.com/blog/2016/09/proposed-conduit-reskin).
+
 # 1.0.7
 
 * Add `sourceFileBS` and `sinkFileBS`
