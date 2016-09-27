@@ -13,3 +13,4 @@ extra-deps:
 - safe-exceptions-0.1.4.0
 - basic-prelude-0.5.2
 - monad-unlift-0.2.0
+- conduit-1.2.8
