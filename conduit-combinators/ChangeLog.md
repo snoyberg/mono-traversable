@@ -1,3 +1,8 @@
+# 1.0.8.1
+
+* Break on single elements and defer monoid concatenation until yield
+  [#111](https://github.com/snoyberg/mono-traversable/pull/111)
+
 # 1.0.8
 
 * Add lower bound on conduit 1.2.8 (make it easier to follow [the
