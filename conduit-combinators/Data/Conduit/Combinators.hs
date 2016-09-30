@@ -2015,16 +2015,17 @@ splitOnUnboundedE, splitOnUnboundedEC
 splitOnUnboundedEC f =
     start
   where
-    start = await >>= maybe (return ()) loop
+    start = await >>= maybe (return ()) (loop id)
 
-    loop t =
+    loop bldr t =
         if onull y
             then do
                 mt <- await
                 case mt of
-                    Nothing -> unless (onull t) $ yield t
-                    Just t' -> loop (t `mappend` t')
-            else yield x >> loop (Seq.drop 1 y)
+                    Nothing -> let finalChunk = mconcat $ bldr [t]
+                               in  unless (onull finalChunk) $ yield finalChunk
+                    Just t' -> loop (bldr . (t:)) t'
+            else yield (mconcat $ bldr [x]) >> loop id (Seq.drop 1 y)
       where
         (x, y) = Seq.break f t
 STREAMING(splitOnUnboundedE, splitOnUnboundedEC, splitOnUnboundedES, f)
