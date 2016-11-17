@@ -79,6 +79,7 @@ module ClassyPrelude
     , stdin
     , stdout
     , stderr
+    , module Say
       -- * Concurrency
     , module Control.Concurrent.Lifted
     , yieldThread
@@ -234,6 +235,7 @@ import Control.Monad.Reader (MonadReader, ask, asks, ReaderT (..), Reader)
 import Data.Bifunctor
 import Data.DList (DList)
 import qualified Data.DList as DList
+import Say
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show

@@ -14,3 +14,4 @@ extra-deps:
 - basic-prelude-0.5.2
 - monad-unlift-0.2.0
 - conduit-1.2.8
+- say-0.1.0.0

@@ -1,3 +1,7 @@
+## 1.0.1
+
+* Add the `say` package reexports
+
 ## 1.0.0.2
 
 * Allow basic-prelude 0.6

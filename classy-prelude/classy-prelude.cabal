@@ -1,5 +1,5 @@
 name:                classy-prelude
-version:             1.0.0.2
+version:             1.0.1
 synopsis:            A typeclass-based Prelude.
 description:         Modern best practices without name collisions. No partial functions are exposed, but modern data structures are, without requiring import lists. Qualified modules also are not needed: instead operations are based on type-classes from the mono-traversable package.
 
@@ -46,6 +46,7 @@ library
                      , safe-exceptions               >= 0.1.1
                      , deepseq
                      , monad-unlift                  >= 0.2
+                     , say
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test
