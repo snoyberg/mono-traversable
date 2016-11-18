@@ -47,6 +47,7 @@ library
                      , deepseq
                      , monad-unlift                  >= 0.2
                      , say
+                     , stm-chans                     >= 3
   ghc-options:         -Wall -fno-warn-orphans
 
 test-suite test

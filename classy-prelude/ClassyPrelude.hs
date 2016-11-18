@@ -35,6 +35,12 @@ module ClassyPrelude
     , checkSTM
     , module Data.IORef.Lifted
     , module Data.Mutable
+      -- ** STM Channels
+    , module Control.Concurrent.STM.TBChan
+    , module Control.Concurrent.STM.TBMChan
+    , module Control.Concurrent.STM.TBMQueue
+    , module Control.Concurrent.STM.TMChan
+    , module Control.Concurrent.STM.TMQueue
       -- ** Primitive (exported since 0.9.4)
     , primToPrim
     , primToIO
@@ -236,6 +242,11 @@ import Data.Bifunctor
 import Data.DList (DList)
 import qualified Data.DList as DList
 import Say
+import Control.Concurrent.STM.TBChan
+import Control.Concurrent.STM.TBMChan
+import Control.Concurrent.STM.TBMQueue
+import Control.Concurrent.STM.TMChan
+import Control.Concurrent.STM.TMQueue
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
