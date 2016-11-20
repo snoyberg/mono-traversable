@@ -717,7 +717,7 @@ foldl1, foldl1C :: Monad m => (a -> a -> a) -> Consumer a m (Maybe a)
 foldl1C f =
     await >>= maybe (return Nothing) loop
   where
-    loop prev = await >>= maybe (return $ Just prev) (loop . f prev)
+    loop !prev = await >>= maybe (return $ Just prev) (loop . f prev)
 STREAMING(foldl1, foldl1C, foldl1S, f)
 
 -- | A strict left fold on a chunked stream, with no starting value.
