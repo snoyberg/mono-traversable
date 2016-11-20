@@ -1,3 +1,8 @@
+# 1.0.8.2
+
+* Fix foldl1 not being "a strict left fold" as advertised.
+  [#115](https://github.com/snoyberg/mono-traversable/pull/115)
+
 # 1.0.8.1
 
 * Break on single elements and defer monoid concatenation until yield
