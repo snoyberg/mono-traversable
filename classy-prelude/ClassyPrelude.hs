@@ -223,6 +223,9 @@ import Data.Time
     , fromGregorian
     , formatTime
     , parseTime
+#if MIN_VERSION_time(1,5,0)
+    , parseTimeM
+#endif
     , getCurrentTime
     )
 import Data.Time.Locale.Compat (defaultTimeLocale)
