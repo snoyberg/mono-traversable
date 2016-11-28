@@ -1,3 +1,7 @@
+## 1.0.2
+
+* Export `parseTimeM` for `time >= 1.5`
+
 ## 1.0.1
 
 * Add the `say` package reexports
