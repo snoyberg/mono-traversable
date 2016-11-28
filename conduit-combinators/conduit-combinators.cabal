@@ -1,5 +1,5 @@
 name:                conduit-combinators
-version:             1.0.8.2
+version:             1.0.8.3
 synopsis:            Commonly used conduit functions, for both chunked and unchunked data
 description:         Provides a replacement for Data.Conduit.List, as well as a convenient Conduit module.
 homepage:            https://github.com/snoyberg/mono-traversable
@@ -12,6 +12,11 @@ build-type:          Simple
 cabal-version:       >=1.8
 extra-source-files:  test/subdir/dummyfile.txt fusion-macros.h ChangeLog.md README.md
 
+flag monotrav1
+  default: True
+  manual: False
+  description: Use mono-traversable 1.0 or later
+
 library
   exposed-modules:     Conduit
                        Data.Conduit.Combinators
@@ -19,13 +24,11 @@ library
                        Data.Conduit.Combinators.Stream
   other-modules:       Data.Conduit.Combinators.Unqualified
   build-depends:       base >= 4 && < 5
-                     , chunked-data
                      , conduit >= 1.2.8
                      , conduit-extra >= 1.1.1
                      , transformers
                      , transformers-base
                      , primitive
-                     , mono-traversable >= 0.5
                      , vector
                      , text
                      , bytestring
@@ -37,6 +40,14 @@ library
                      , resourcet
                      , monad-control
                      , filepath
+
+  if flag(monotrav1)
+    build-depends:     chunked-data     >= 0.3
+                     , mono-traversable >= 1.0
+  else
+    build-depends:     chunked-data     < 0.3
+                     , mono-traversable >= 0.5 && < 1.0
+
   if os(windows)
       cpp-options:     -DWINDOWS
   else

@@ -1,3 +1,7 @@
+# 1.0.8.3
+
+* Fix version bounds for chunked-data/mono-traversable combos
+
 # 1.0.8.2
 
 * Fix foldl1 not being "a strict left fold" as advertised.
