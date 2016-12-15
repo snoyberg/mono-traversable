@@ -1,5 +1,5 @@
 name:                classy-prelude-yesod
-version:             1.0.2
+version:             1.1.0
 synopsis:            Provide a classy prelude including common Yesod functionality.
 description:         This is an extension of classy-prelude-conduit, adding in commonly used functions and data types from Yesod.
 homepage:            https://github.com/snoyberg/mono-traversable
