@@ -40,7 +40,7 @@ Using classy-prelude
 ====================
 
 * use the NoImplicitPrelude extension (you can place this in your cabal file) and `import ClassyPrelude`
-* use [base-noprelude](https://github.com/hvr/base-noprelude) in your project and define a Prelude module that re-exports `ClassyPrelue`.
+* use [base-noprelude](https://github.com/hvr/base-noprelude) in your project and define a Prelude module that re-exports `ClassyPrelude`.
 
 
 Appendix
