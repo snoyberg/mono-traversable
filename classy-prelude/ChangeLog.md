@@ -1,3 +1,9 @@
+## 1.2.0
+
+* Don't generalize I/O functions to `IOData`, instead specialize to
+  `ByteString`. See:
+  http://www.snoyman.com/blog/2016/12/beware-of-readfile#real-world-failures
+
 ## 1.0.2
 
 * Export `parseTimeM` for `time >= 1.5`
