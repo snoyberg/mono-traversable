@@ -24,10 +24,10 @@ module Data.Conduit.Combinators.Unqualified
     , replicateMC
 
       -- *** I\/O
-    , sourceFile
+    , CC.sourceFile
     , CC.sourceFileBS
-    , sourceHandle
-    , sourceIOHandle
+    , CC.sourceHandle
+    , CC.sourceIOHandle
     , stdinC
 
       -- *** Random numbers
@@ -109,10 +109,10 @@ module Data.Conduit.Combinators.Unqualified
     , foldMapMCE
 
       -- *** I\/O
-    , sinkFile
+    , CC.sinkFile
     , CC.sinkFileBS
-    , sinkHandle
-    , sinkIOHandle
+    , CC.sinkHandle
+    , CC.sinkIOHandle
     , printC
     , stdoutC
     , stderrC
@@ -187,19 +187,11 @@ import qualified Data.Conduit.Combinators as CC
 import Data.Builder
 import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
-#if ! MIN_VERSION_base(4,8,0)
-import           Control.Applicative         ((<$>))
-#else
-import           Prelude                     ((<$>))
-#endif
 import           Control.Monad.Base          (MonadBase (..))
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
-import qualified Data.Conduit.List           as CL
-import           Data.IOData
-import           Data.Maybe                  (fromMaybe)
 import           Data.Monoid                 (Monoid (..))
 import           Data.MonoTraversable
 import qualified Data.Sequences              as Seq
@@ -209,8 +201,6 @@ import           Prelude                     (Bool (..), Eq (..), Int,
                                               Ord (..), Functor (..), Either (..),
                                               Enum, Show, Char, FilePath)
 import Data.Word (Word8)
-import qualified Prelude
-import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 import Data.ByteString (ByteString)
 import Data.Text (Text)
@@ -324,39 +314,10 @@ replicateMC :: Monad m
 replicateMC = CC.replicateM
 {-# INLINE replicateMC #-}
 
--- | Read all data from the given file.
---
--- This function automatically opens and closes the file handle, and ensures
--- exception safety via @MonadResource. It works for all instances of @IOData@,
--- including @ByteString@ and @Text@.
---
--- Since 1.0.0
-sourceFile :: (MonadResource m, IOData a, MonoFoldable a) => FilePath -> Producer m a
-sourceFile = CC.sourceFile
-{-# INLINE sourceFile #-}
-
--- | Read all data from the given @Handle@.
---
--- Does not close the @Handle@ at any point.
---
--- Since 1.0.0
-sourceHandle :: (MonadIO m, IOData a, MonoFoldable a) => Handle -> Producer m a
-sourceHandle = CC.sourceHandle
-{-# INLINE sourceHandle #-}
-
--- | Open a @Handle@ using the given function and stream data from it.
---
--- Automatically closes the file at completion.
---
--- Since 1.0.0
-sourceIOHandle :: (MonadResource m, IOData a, MonoFoldable a) => SIO.IO Handle -> Producer m a
-sourceIOHandle = CC.sourceIOHandle
-{-# INLINE sourceIOHandle #-}
-
 -- | @sourceHandle@ applied to @stdin@.
 --
 -- Since 1.0.0
-stdinC :: (MonadIO m, IOData a, MonoFoldable a) => Producer m a
+stdinC :: MonadIO m => Producer m ByteString
 stdinC = CC.stdin
 {-# INLINE stdinC #-}
 
@@ -1007,35 +968,6 @@ foldMapMCE :: (Monad m, MonoFoldable mono, Monoid w)
 foldMapMCE = CC.foldMapME
 {-# INLINE foldMapMCE #-}
 
--- | Write all data to the given file.
---
--- This function automatically opens and closes the file handle, and ensures
--- exception safety via @MonadResource. It works for all instances of @IOData@,
--- including @ByteString@ and @Text@.
---
--- Since 1.0.0
-sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
-sinkFile = CC.sinkFile
-{-# INLINE sinkFile #-}
-
--- | Write all data to the given @Handle@.
---
--- Does not close the @Handle@ at any point.
---
--- Since 1.0.0
-sinkHandle :: (MonadIO m, IOData a) => Handle -> Consumer a m ()
-sinkHandle = CC.sinkHandle
-{-# INLINE sinkHandle #-}
-
--- | Open a @Handle@ using the given function and stream data to it.
---
--- Automatically closes the file at completion.
---
--- Since 1.0.0
-sinkIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Consumer a m ()
-sinkIOHandle = CC.sinkIOHandle
-{-# INLINE sinkIOHandle #-}
-
 -- | Print all incoming values to stdout.
 --
 -- Since 1.0.0
@@ -1046,14 +978,14 @@ printC = CC.print
 -- | @sinkHandle@ applied to @stdout@.
 --
 -- Since 1.0.0
-stdoutC :: (MonadIO m, IOData a) => Consumer a m ()
+stdoutC :: MonadIO m => Consumer ByteString m ()
 stdoutC = CC.stdout
 {-# INLINE stdoutC #-}
 
 -- | @sinkHandle@ applied to @stderr@.
 --
 -- Since 1.0.0
-stderrC :: (MonadIO m, IOData a) => Consumer a m ()
+stderrC :: MonadIO m => Consumer ByteString m ()
 stderrC = CC.stderr
 {-# INLINE stderrC #-}
 

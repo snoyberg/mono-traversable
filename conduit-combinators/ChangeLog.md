@@ -1,3 +1,9 @@
+# 1.1.0
+
+* Don't generalize I/O functions to `IOData`, instead specialize to
+  `ByteString`. See:
+  http://www.snoyman.com/blog/2016/12/beware-of-readfile#real-world-failures
+
 # 1.0.8.3
 
 * Fix version bounds for chunked-data/mono-traversable combos

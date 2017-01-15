@@ -15,6 +15,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Encoding as TL
 import Data.IORef
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as VU
@@ -112,20 +113,20 @@ main = hspec $ do
             fp = "tmp"
         writeFile fp contents
         res <- runResourceT $ sourceFile fp $$ sinkLazy
-        res `shouldBe` TL.pack contents
+        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     it "sourceHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         res <- IO.withBinaryFile "tmp" IO.ReadMode $ \h -> sourceHandle h $$ sinkLazy
-        res `shouldBe` TL.pack contents
+        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     it "sourceIOHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         let open = IO.openBinaryFile "tmp" IO.ReadMode
         res <- runResourceT $ sourceIOHandle open $$ sinkLazy
-        res `shouldBe` TL.pack contents
+        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     prop "stdin" $ \(S.pack -> content) -> do
         S.writeFile "tmp" content
         IO.withBinaryFile "tmp" IO.ReadMode $ \h -> do
@@ -326,23 +327,23 @@ main = hspec $ do
             res = runIdentity $ src $$ foldMapMCE (return . return)
          in res `shouldBe` [1..10]
     it "sinkFile" $ do
-        let contents = concat $ replicate 1000 $ "this is some content\n"
+        let contents = mconcat $ replicate 1000 $ "this is some content\n"
             fp = "tmp"
         runResourceT $ yield contents $$ sinkFile fp
-        res <- readFile fp
+        res <- S.readFile fp
         res `shouldBe` contents
     it "sinkHandle" $ do
-        let contents = concat $ replicate 1000 $ "this is some content\n"
+        let contents = mconcat $ replicate 1000 $ "this is some content\n"
             fp = "tmp"
         IO.withBinaryFile "tmp" IO.WriteMode $ \h -> yield contents $$ sinkHandle h
-        res <- readFile fp
+        res <- S.readFile fp
         res `shouldBe` contents
     it "sinkIOHandle" $ do
-        let contents = concat $ replicate 1000 $ "this is some content\n"
+        let contents = mconcat $ replicate 1000 $ "this is some content\n"
             fp = "tmp"
             open = IO.openBinaryFile "tmp" IO.WriteMode
         runResourceT $ yield contents $$ sinkIOHandle open
-        res <- readFile fp
+        res <- S.readFile fp
         res `shouldBe` contents
     prop "print" $ \vals -> do
         let expected = Prelude.unlines $ map showInt vals
@@ -350,11 +351,11 @@ main = hspec $ do
         actual `shouldBe` expected
     prop "stdout" $ \ (vals :: [String]) -> do
         let expected = concat vals
-        (actual, ()) <- hCapture [IO.stdout] $ yieldMany vals $$ stdoutC
+        (actual, ()) <- hCapture [IO.stdout] $ yieldMany (map T.pack vals) $$ encodeUtf8C =$ stdoutC
         actual `shouldBe` expected
     prop "stderr" $ \ (vals :: [String]) -> do
         let expected = concat vals
-        (actual, ()) <- hCapture [IO.stderr] $ yieldMany vals $$ stderrC
+        (actual, ()) <- hCapture [IO.stderr] $ yieldMany (map T.pack vals) $$ encodeUtf8C =$ stderrC
         actual `shouldBe` expected
     prop "map" $ \input ->
         runIdentity (yieldMany input $$ mapC succChar =$ sinkList)
