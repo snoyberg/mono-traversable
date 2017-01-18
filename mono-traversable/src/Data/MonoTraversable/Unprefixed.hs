@@ -81,13 +81,13 @@ compareLength = ocompareLength
 -- | Synonym for 'otraverse_'
 --
 -- @since 1.0.0
-traverse_ :: (MonoFoldable mono, Control.Applicative.Applicative f) => (Element mono -> f b) -> mono -> f ()
+traverse_ :: (MonoFoldable mono, Control.Applicative.Applicative f) => (Element mono -> f ()) -> mono -> f ()
 traverse_ = otraverse_
 
 -- | Synonym for 'ofor_'
 --
 -- @since 1.0.0
-for_ :: (MonoFoldable mono, Applicative f) => mono -> (Element mono -> f b) -> f ()
+for_ :: (MonoFoldable mono, Applicative f) => mono -> (Element mono -> f ()) -> f ()
 for_ = ofor_
 
 -- | Synonym for 'omapM_'
