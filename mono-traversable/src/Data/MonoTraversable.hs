@@ -277,12 +277,17 @@ class MonoFoldable mono where
 
     -- | Map each element of a monomorphic container to an action,
     -- evaluate these actions from left to right, and ignore the results.
-    otraverse_ :: Applicative f => (Element mono -> f b) -> mono -> f ()
-    otraverse_ f = ofoldr ((*>) . f) (pure ())
+    otraverse_ :: Applicative f => (Element mono -> f ()) -> mono -> f ()
+    otraverse_ f =
+        go . otoList
+      where
+        go [] = pure ()
+        go [x] = f x
+        go (x:xs) = f x *> go xs
     {-# INLINE otraverse_ #-}
 
     -- | 'ofor_' is 'otraverse_' with its arguments flipped.
-    ofor_ :: Applicative f => mono -> (Element mono -> f b) -> f ()
+    ofor_ :: Applicative f => mono -> (Element mono -> f ()) -> f ()
     ofor_ = flip otraverse_
     {-# INLINE ofor_ #-}
 

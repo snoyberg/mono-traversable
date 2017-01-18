@@ -16,7 +16,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Data.MonoTraversable.Instances
   build-depends:       base >= 4.7 && < 5
-                     , mono-traversable >= 1.0 && < 1.1
+                     , mono-traversable >= 1.0 && < 1.2
                      , semigroupoids >=3.0
                      , comonad >= 3.0.3
                      , vector-instances

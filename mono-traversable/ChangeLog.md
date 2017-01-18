@@ -1,3 +1,8 @@
+## 1.1.0
+
+* Specialized the `otraverse_` and `ofor_` functions in the same way we
+  previously did to `mapM_` and `forM_`
+
 ## 1.0.1
 
 * Add `replaceElem` and `replaceSeq` [#107](https://github.com/snoyberg/mono-traversable/pull/107)
