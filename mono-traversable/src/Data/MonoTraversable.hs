@@ -836,7 +836,7 @@ onotElem e = List.notElem e . otoList
 {-# INLINE [0] onotElem #-}
 
 {-# RULES "strict ByteString elem" oelem = S.elem #-}
-{-# RULES "strict ByteString notElem" oelem = S.notElem #-}
+{-# RULES "strict ByteString notElem" onotElem = S.notElem #-}
 
 {-# RULES "lazy ByteString elem" oelem = L.elem #-}
 {-# RULES "lazy ByteString notElem" oelem = L.notElem #-}

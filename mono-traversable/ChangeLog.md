@@ -1,3 +1,7 @@
+## 1.0.1.1
+
+* Fix typo in rewrite rule
+
 ## 1.0.1
 
 * Add `replaceElem` and `replaceSeq` [#107](https://github.com/snoyberg/mono-traversable/pull/107)
