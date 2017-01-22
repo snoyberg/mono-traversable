@@ -214,10 +214,11 @@ import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Class   (lift)
 import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
+import           Data.Conduit.Binary         (sourceFile, sourceHandle, sourceIOHandle,
+                                              sinkFile, sinkHandle, sinkIOHandle)
 import qualified Data.Conduit.Filesystem as CF
 import           Data.Conduit.Internal       (ConduitM (..), Pipe (..))
 import qualified Data.Conduit.List           as CL
-import           Data.IOData
 import           Data.Maybe                  (fromMaybe, isNothing, isJust)
 import           Data.Monoid                 (Monoid (..))
 import           Data.MonoTraversable
@@ -414,17 +415,6 @@ replicateM :: Monad m
            -> Producer m a
 INLINE_RULE(replicateM, n m, CL.replicateM n m)
 
--- | Read all data from the given file.
---
--- This function automatically opens and closes the file handle, and ensures
--- exception safety via @MonadResource@. It works for all instances of @IOData@,
--- including @ByteString@ and @Text@.
---
--- Since 1.0.0
-sourceFile :: (MonadResource m, IOData a, MonoFoldable a) => FilePath -> Producer m a
-sourceFile fp = sourceIOHandle (SIO.openFile fp SIO.ReadMode)
-{-# INLINE sourceFile #-}
-
 -- | 'sourceFile' specialized to 'ByteString' to help with type
 -- inference.
 --
@@ -433,40 +423,12 @@ sourceFileBS :: MonadResource m => FilePath -> Producer m ByteString
 sourceFileBS = sourceFile
 {-# INLINE sourceFileBS #-}
 
--- | Read all data from the given @Handle@.
---
--- Does not close the @Handle@ at any point.
---
--- Subject to fusion
---
--- Since 1.0.0
-sourceHandle, sourceHandleC :: (MonadIO m, IOData a, MonoFoldable a) => Handle -> Producer m a
-sourceHandleC h =
-    loop
-  where
-    loop = do
-        x <- liftIO (hGetChunk h)
-        if onull x
-            then return ()
-            else yield x >> loop
-{-# INLINEABLE sourceHandleC #-}
-STREAMING(sourceHandle, sourceHandleC, sourceHandleS, h)
-
--- | Open a @Handle@ using the given function and stream data from it.
---
--- Automatically closes the file at completion.
---
--- Since 1.0.0
-sourceIOHandle :: (MonadResource m, IOData a, MonoFoldable a) => SIO.IO Handle -> Producer m a
-sourceIOHandle alloc = bracketP alloc SIO.hClose sourceHandle
-{-# INLINE sourceIOHandle #-}
-
 -- | @sourceHandle@ applied to @stdin@.
 --
 -- Subject to fusion
 --
 -- Since 1.0.0
-stdin :: (MonadIO m, IOData a, MonoFoldable a) => Producer m a
+stdin :: MonadIO m => Producer m ByteString
 INLINE_RULE0(stdin, sourceHandle SIO.stdin)
 
 -- | Create an infinite stream of random values, seeding from the system random
@@ -1321,17 +1283,6 @@ foldMapME :: (Monad m, MonoFoldable mono, Monoid w)
           -> Consumer mono m w
 INLINE_RULE(foldMapME, f, CL.foldM (ofoldlM (\accum e -> mappend accum `liftM` f e)) mempty)
 
--- | Write all data to the given file.
---
--- This function automatically opens and closes the file handle, and ensures
--- exception safety via @MonadResource@. It works for all instances of @IOData@,
--- including @ByteString@ and @Text@.
---
--- Since 1.0.0
-sinkFile :: (MonadResource m, IOData a) => FilePath -> Consumer a m ()
-sinkFile fp = sinkIOHandle (SIO.openFile fp SIO.WriteMode)
-{-# INLINE sinkFile #-}
-
 -- | 'sinkFile' specialized to 'ByteString' to help with type
 -- inference.
 --
@@ -1353,7 +1304,7 @@ INLINE_RULE0(print, mapM_ (liftIO . Prelude.print))
 -- Subject to fusion
 --
 -- Since 1.0.0
-stdout :: (MonadIO m, IOData a) => Consumer a m ()
+stdout :: MonadIO m => Consumer ByteString m ()
 INLINE_RULE0(stdout, sinkHandle SIO.stdout)
 
 -- | @sinkHandle@ applied to @stderr@.
@@ -1361,27 +1312,8 @@ INLINE_RULE0(stdout, sinkHandle SIO.stdout)
 -- Subject to fusion
 --
 -- Since 1.0.0
-stderr :: (MonadIO m, IOData a) => Consumer a m ()
+stderr :: MonadIO m => Consumer ByteString m ()
 INLINE_RULE0(stderr, sinkHandle SIO.stderr)
-
--- | Write all data to the given @Handle@.
---
--- Does not close the @Handle@ at any point.
---
--- Subject to fusion
---
--- Since 1.0.0
-sinkHandle :: (MonadIO m, IOData a) => Handle -> Consumer a m ()
-INLINE_RULE(sinkHandle, h, CL.mapM_ (hPut h))
-
--- | Open a @Handle@ using the given function and stream data to it.
---
--- Automatically closes the file at completion.
---
--- Since 1.0.0
-sinkIOHandle :: (MonadResource m, IOData a) => SIO.IO Handle -> Consumer a m ()
-sinkIOHandle alloc = bracketP alloc SIO.hClose sinkHandle
-{-# INLINE sinkIOHandle #-}
 
 -- | Apply a transformation to all values in a stream.
 --

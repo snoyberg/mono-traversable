@@ -125,7 +125,13 @@ module ClassyPrelude
     , charToLower
     , charToUpper
       -- ** IO
-    , IOData (..)
+    , readFile
+    , readFileUtf8
+    , writeFile
+    , writeFileUtf8
+    , hGetContents
+    , hPut
+    , hGetChunk
     , print
     , hClose
       -- ** Difference lists
@@ -172,7 +178,6 @@ import Data.IORef.Lifted
 import Data.Mutable
 import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
-import Data.IOData (IOData (..))
 import Control.Monad.Base
 import Control.Monad.Trans.Unlift
 import qualified Control.Concurrent.Async as Async
@@ -208,7 +213,9 @@ import Data.MonoTraversable.Instances ()
 import Data.Containers
 import Data.Builder
 import Data.NonNull
+import qualified Data.ByteString
 import Data.ByteString.Internal (ByteString (PS))
+import Data.ByteString.Lazy.Internal (defaultChunkSize)
 import Data.Vector.Storable (unsafeToForeignPtr, unsafeFromForeignPtr)
 
 import System.IO (Handle, stdin, stdout, stderr, hClose)
@@ -567,3 +574,52 @@ linkAsync = liftIO . Async.link
 -- @since 1.0.0
 link2Async :: MonadIO m => Async a -> Async b -> m ()
 link2Async a = liftIO . Async.link2 a
+
+-- | Strictly read a file into a 'ByteString'.
+--
+-- @since 1.2.0
+readFile :: MonadIO m => FilePath -> m ByteString
+readFile = liftIO . Data.ByteString.readFile
+
+-- | Strictly read a file into a 'Text' using a UTF-8 character
+-- encoding. In the event of a character encoding error, a Unicode
+-- replacement character will be used (a.k.a., @lenientDecode@).
+--
+-- @since 1.2.0
+readFileUtf8 :: MonadIO m => FilePath -> m Text
+readFileUtf8 = liftM decodeUtf8 . readFile
+
+-- | Write a 'ByteString' to a file.
+--
+-- @since 1.2.0
+writeFile :: MonadIO m => FilePath -> ByteString -> m ()
+writeFile fp = liftIO . Data.ByteString.writeFile fp
+
+-- | Write a 'Text' to a file using a UTF-8 character encoding.
+--
+-- @since 1.2.0
+writeFileUtf8 :: MonadIO m => FilePath -> Text -> m ()
+writeFileUtf8 fp = writeFile fp . encodeUtf8
+
+-- | Strictly read the contents of the given 'Handle' into a
+-- 'ByteString'.
+--
+-- @since 1.2.0
+hGetContents :: MonadIO m => Handle -> m ByteString
+hGetContents = liftIO . Data.ByteString.hGetContents
+
+-- | Write a 'ByteString' to the given 'Handle'.
+--
+-- @since 1.2.0
+hPut :: MonadIO m => Handle -> ByteString -> m ()
+hPut h = liftIO . Data.ByteString.hPut h
+
+-- | Read a single chunk of data as a 'ByteString' from the given
+-- 'Handle'.
+--
+-- Under the surface, this uses 'Data.ByteString.hGetSome' with the
+-- default chunk size.
+--
+-- @since 1.2.0
+hGetChunk :: MonadIO m => Handle -> m ByteString
+hGetChunk = liftIO . flip Data.ByteString.hGetSome defaultChunkSize

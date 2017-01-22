@@ -12,7 +12,6 @@ module Data.Conduit.Combinators.Stream
   ( yieldManyS
   , repeatMS
   , repeatWhileMS
-  , sourceHandleS
   , foldl1S
   , allS
   , anyS
@@ -43,12 +42,10 @@ module Data.Conduit.Combinators.Stream
 
 import           Control.Monad (liftM)
 import           Control.Monad.Base (MonadBase (liftBase))
-import           Control.Monad.IO.Class (MonadIO (..))
 import           Control.Monad.Primitive (PrimMonad)
 import           Data.Builder
 import           Data.Conduit.Internal.Fusion
 import           Data.Conduit.Internal.List.Stream (foldS)
-import           Data.IOData
 import           Data.Maybe (isNothing, isJust)
 import           Data.MonoTraversable
 #if ! MIN_VERSION_base(4,8,0)
@@ -59,7 +56,6 @@ import qualified Data.Sequences as Seq
 import qualified Data.Vector.Generic as V
 import qualified Data.Vector.Generic.Mutable as VM
 import           Prelude
-import           System.IO (Handle)
 
 #if MIN_VERSION_mono_traversable(1,0,0)
 import           Data.Sequences (LazySequence (..))
@@ -101,17 +97,6 @@ repeatWhileMS m f _ =
             then Emit () x
             else Stop ()
 {-# INLINE repeatWhileMS #-}
-
-sourceHandleS :: (MonadIO m, MonoFoldable a, IOData a) => Handle -> StreamProducer m a
-sourceHandleS h _ =
-    Stream step (return ())
-  where
-    step () = do
-        x <- liftIO (hGetChunk h)
-        return $ if onull x
-            then Stop ()
-            else Emit () x
-{-# INLINE sourceHandleS #-}
 
 foldl1S :: Monad m
         => (a -> a -> a)

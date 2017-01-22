@@ -42,14 +42,6 @@ import           Test.QuickCheck
 
 spec :: Spec
 spec = do
-    it "sourceHandleS works" $ do
-        let contents = Prelude.concat $ Prelude.replicate 10000 $ "this is some content\n"
-            fp = "tmp"
-        IO.writeFile fp contents
-        (res, ()) <- IO.withBinaryFile "tmp" IO.ReadMode $ \h ->
-            evalStream $ sourceHandleS h emptyStream
-        (TL.concat res) `shouldBe` TL.pack contents
-        removeFile "tmp"
     describe "Comparing list function to" $ do
         qit "yieldMany" $
             \(mono :: Seq Int) ->
