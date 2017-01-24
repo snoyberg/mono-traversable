@@ -115,7 +115,7 @@ However, in addition to these instances, this package also provides two
 additional data structures: double-ended queues and doubly-linked lists. The
 former is based around mutable vectors, and therefore as unboxed (`UDeque`),
 storable (`SDeque`), and boxed (`BDeque`) variants. Doubly-linked lists have no
-such variety, and are simply `DList`s.
+such variety, and are simply `DLList`s.
 
 For general purpose queue-like structures, `UDeque` or `SDeque` is likely to
 give you best performance. As usual, benchmark your own program to be certain,
