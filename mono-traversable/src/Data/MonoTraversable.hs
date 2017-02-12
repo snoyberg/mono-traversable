@@ -141,7 +141,8 @@ type instance Element (Arg a b) = b
 class MonoFunctor mono where
     -- | Map over a monomorphic container
     omap :: (Element mono -> Element mono) -> mono -> mono
-    default omap :: (Functor f, Element (f a) ~ a, f a ~ mono) => (a -> a) -> f a -> f a
+    default omap :: (Functor f, Element (f a) ~ a, f a ~ mono)
+                 => (Element mono -> Element mono) -> mono -> mono
     omap = fmap
     {-# INLINE omap #-}
 
@@ -332,7 +333,7 @@ class MonoFoldable mono where
     -- /See 'Data.NonNull.ofoldr1Ex' from "Data.NonNull" for a total version of this function./
     ofoldr1Ex :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldr1Ex :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
-                           => (a -> a -> a) -> mono -> a
+                      => (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     ofoldr1Ex = F.foldr1
     {-# INLINE ofoldr1Ex #-}
 
@@ -345,7 +346,7 @@ class MonoFoldable mono where
     -- /See 'Data.NonNull.ofoldl1Ex'' from "Data.NonNull" for a total version of this function./
     ofoldl1Ex' :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldl1Ex' :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
-                            => (a -> a -> a) -> mono -> a
+                       => (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     ofoldl1Ex' = F.foldl1
     {-# INLINE ofoldl1Ex' #-}
 
