@@ -1,3 +1,7 @@
+## 1.0.1.2
+
+* Support for GHC 8.2
+
 ## 1.0.1.1
 
 * Fix typo in rewrite rule
