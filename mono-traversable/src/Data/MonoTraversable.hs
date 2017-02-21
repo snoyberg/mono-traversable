@@ -62,6 +62,7 @@ import qualified Data.List as List
 import Data.List.NonEmpty (NonEmpty)
 import Data.Functor.Identity (Identity)
 import Data.Map (Map)
+import qualified Data.Map.Strict as Map
 import Data.HashMap.Strict (HashMap)
 import Data.Vector (Vector)
 import Control.Monad.Trans.Maybe (MaybeT (..))
@@ -598,7 +599,9 @@ instance MonoFoldable (IntMap a)
 instance MonoFoldable (Option a)
 instance MonoFoldable (NonEmpty a)
 instance MonoFoldable (Identity a)
-instance MonoFoldable (Map k v)
+instance MonoFoldable (Map k v) where
+    olength = Map.size
+    {-# INLINE olength #-}
 instance MonoFoldable (HashMap k v)
 instance MonoFoldable (Vector a) where
     ofoldr = V.foldr
@@ -630,7 +633,9 @@ instance MonoFoldable (Vector a) where
     {-# INLINE unsafeHead #-}
     {-# INLINE maximumByEx #-}
     {-# INLINE minimumByEx #-}
-instance MonoFoldable (Set e)
+instance MonoFoldable (Set e) where
+    olength = Set.size
+    {-# INLINE olength #-}
 instance MonoFoldable (HashSet e)
 
 instance U.Unbox a => MonoFoldable (U.Vector a) where
