@@ -1,3 +1,11 @@
+## 1.0.2
+
+* `IsSequence` class: add `lengthIndex` [#127](https://github.com/snoyberg/mono-traversable/pull/127)
+
+## 1.0.1.3
+
+* Make 'olength' for Set and Map O(1) [#125](https://github.com/snoyberg/mono-traversable/pull/125)
+
 ## 1.0.1.2
 
 * Support for GHC 8.2

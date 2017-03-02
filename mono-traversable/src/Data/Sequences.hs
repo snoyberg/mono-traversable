@@ -146,6 +146,8 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     fromList = mconcat . fmap singleton
 
     -- | 'lengthIndex' returns the length of a sequence as @'Index' seq@.
+    --
+    -- @since 1.0.2
     lengthIndex :: seq -> Index seq;
     lengthIndex = fromIntegral . olength64;
 
