@@ -145,6 +145,10 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- However, all the instances define their own fromList
     fromList = mconcat . fmap singleton
 
+    -- | 'lengthIndex' returns the length of a sequence as @'Index' seq@.
+    lengthIndex :: seq -> Index seq;
+    lengthIndex = fromIntegral . olength64;
+
     -- below functions change type fron the perspective of NonEmpty
 
     -- | 'break' applies a predicate to a sequence, and returns a tuple where
@@ -558,6 +562,7 @@ instance SemiSequence [a] where
 
 instance IsSequence [a] where
     fromList = id
+    lengthIndex = List.length
     filter = List.filter
     filterM = Control.Monad.filterM
     break = List.break
@@ -637,6 +642,7 @@ instance SemiSequence S.ByteString where
 
 instance IsSequence S.ByteString where
     fromList = S.pack
+    lengthIndex = S.length
     replicate = S.replicate
     filter = S.filter
     break = S.break
@@ -706,6 +712,7 @@ instance SemiSequence T.Text where
 
 instance IsSequence T.Text where
     fromList = T.pack
+    lengthIndex = T.length
     replicate i c = T.replicate i (T.singleton c)
     filter = T.filter
     break = T.break
@@ -768,6 +775,7 @@ instance SemiSequence L.ByteString where
 
 instance IsSequence L.ByteString where
     fromList = L.pack
+    lengthIndex = L.length
     replicate = L.replicate
     filter = L.filter
     break = L.break
@@ -827,6 +835,7 @@ instance SemiSequence TL.Text where
 
 instance IsSequence TL.Text where
     fromList = TL.pack
+    lengthIndex = TL.length
     replicate i c = TL.replicate i (TL.singleton c)
     filter = TL.filter
     break = TL.break
@@ -886,6 +895,7 @@ instance SemiSequence (Seq.Seq a) where
 
 instance IsSequence (Seq.Seq a) where
     fromList = Seq.fromList
+    lengthIndex = Seq.length
     replicate = Seq.replicate
     replicateM = Seq.replicateM
     filter = Seq.filter
@@ -953,6 +963,7 @@ instance SemiSequence (V.Vector a) where
 
 instance IsSequence (V.Vector a) where
     fromList = V.fromList
+    lengthIndex = V.length
     replicate = V.replicate
     replicateM = V.replicateM
     filter = V.filter
@@ -1027,6 +1038,7 @@ instance U.Unbox a => SemiSequence (U.Vector a) where
 
 instance U.Unbox a => IsSequence (U.Vector a) where
     fromList = U.fromList
+    lengthIndex = U.length
     replicate = U.replicate
     replicateM = U.replicateM
     filter = U.filter
@@ -1101,6 +1113,7 @@ instance VS.Storable a => SemiSequence (VS.Vector a) where
 
 instance VS.Storable a => IsSequence (VS.Vector a) where
     fromList = VS.fromList
+    lengthIndex = VS.length
     replicate = VS.replicate
     replicateM = VS.replicateM
     filter = VS.filter
