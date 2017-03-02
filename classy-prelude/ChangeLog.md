@@ -1,3 +1,7 @@
+## 1.2.0.1
+
+* Use `HasCallStack` in `undefined`
+
 ## 1.2.0
 
 * Don't generalize I/O functions to `IOData`, instead specialize to
