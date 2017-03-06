@@ -1,3 +1,7 @@
+# 1.1.1
+
+* Add `asum` combinator
+
 # 1.1.0
 
 * Don't generalize I/O functions to `IOData`, instead specialize to
