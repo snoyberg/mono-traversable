@@ -78,6 +78,7 @@ module Data.Conduit.Combinators
     , andE
     , or
     , orE
+    , asum
     , elem
     , elemE
     , notElem
@@ -204,7 +205,7 @@ import qualified Data.ByteString as S
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Base64.URL as B64U
-import           Control.Applicative         ((<$>))
+import           Control.Applicative         (Alternative(..), (<$>))
 import           Control.Exception           (assert)
 import           Control.Category            (Category (..))
 import           Control.Monad               (unless, when, (>=>), liftM, forever)
@@ -813,6 +814,13 @@ INLINE_RULE0(orE, anyE id)
 orE = anyE id
 {-# INLINE orE #-}
 #endif
+
+-- | 'Alternative'ly combine all values in the stream.
+--
+-- Since 1.1.1
+asum :: (Monad m, Alternative f)
+     => Consumer (f a) m (f a)
+INLINE_RULE0(asum, foldl (<|>) empty)
 
 -- | Are any values in the stream equal to the given value?
 --

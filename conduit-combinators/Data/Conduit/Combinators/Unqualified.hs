@@ -64,6 +64,7 @@ module Data.Conduit.Combinators.Unqualified
     , andCE
     , orC
     , orCE
+    , asumC
     , elemC
     , elemCE
     , notElemC
@@ -611,6 +612,11 @@ orCE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
     => Consumer mono m Bool
 orCE = CC.orE
 {-# INLINE orCE #-}
+
+-- | 'Alternative'ly combine all values in the stream.
+--
+-- Since 1.1.1
+asumC = CC.asum
 
 -- | Are any values in the stream equal to the given value?
 --
