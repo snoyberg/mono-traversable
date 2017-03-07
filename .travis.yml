@@ -12,7 +12,7 @@
 sudo: false
 
 # Choose a lightweight base image; we provide our own build tools.
-language: c
+language: generic
 
 # Caching so the next build will be fast too.
 cache:
@@ -53,9 +53,9 @@ matrix:
   - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22 HAPPYVER=1.19.5 ALEXVER=3.1.7
     compiler: ": #GHC 7.10.3"
     addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
-  - env: BUILD=cabal GHCVER=8.0.1 CABALVER=1.24 HAPPYVER=1.19.5 ALEXVER=3.1.7
+  - env: BUILD=cabal GHCVER=8.0.1 CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7
     compiler: ": #GHC 8.0.1"
-    addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
+    addons: {apt: {packages: [cabal-install-head,ghc-8.0.1,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
 
   # Build with the newest GHC and cabal-install. This is an accepted failure,
   # see below.
@@ -95,6 +95,7 @@ matrix:
     compiler: ": #stack default osx"
     os: osx
 
+  # Travis includes an OS X which is incompatible with GHC 7.8.4
   #- env: BUILD=stack ARGS="--resolver lts-2"
   #  compiler: ": #stack 7.8.4 osx"
   #  os: osx
@@ -153,9 +154,28 @@ install:
 - if [ -f configure.ac ]; then autoreconf -i; fi
 - |
   set -ex
+  if [ "$ARGS" = "--resolver nightly" ]
+  then
+    stack --install-ghc $ARGS build cabal-install
+    stack --install-ghc $ARGS solver --update-config
+  fi
+  set +ex
+
+script:
+- |
+  set -ex
   case "$BUILD" in
     stack)
-      stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
+      if [ `uname` = "Darwin" ]
+      then
+        # Build dependencies with -O0 as well
+        echo "apply-ghc-options: everything" >> stack.yaml
+
+        # Use slightly less intensive options on OS X due to Travis timeouts
+        stack --install-ghc --no-terminal $ARGS test --fast
+      else
+        stack --install-ghc --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps --pedantic
+      fi
       ;;
     cabal)
       cabal --version
@@ -164,19 +184,6 @@ install:
       # Get the list of packages from the stack.yaml file
       PACKAGES=$(stack --install-ghc query locals | grep '^ *path' | sed 's@^ *path:@@')
 
-      cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
-      ;;
-  esac
-  set +ex
-
-script:
-- |
-  set -ex
-  case "$BUILD" in
-    stack)
-      stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps
-      ;;
-    cabal)
       cabal install --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
       ORIGDIR=$(pwd)
