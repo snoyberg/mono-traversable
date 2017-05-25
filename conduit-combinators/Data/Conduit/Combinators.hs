@@ -912,6 +912,10 @@ INLINE_RULE0(sinkList, CL.consume)
 -- Note that using this function is more memory efficient than @sinkList@ and
 -- then converting to a @Vector@, as it avoids intermediate list constructors.
 --
+-- Note that if you want to go from source to vector it's better to use
+-- sourceToList (from Data.Conduit) with fromList (from Data.Vector). This is
+-- more memory efficient and also faster.
+--
 -- Subject to fusion
 --
 -- Since 1.0.0
