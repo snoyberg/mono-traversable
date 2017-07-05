@@ -295,10 +295,10 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- or 'Nothing' if the sequence is empty.
     --
     -- @
-    -- > 'uncons' ('fromList' [1,2,3,4] :: 'Vector' 'Int')
+    -- > 'unsnoc' ('fromList' [1,2,3,4] :: 'Vector' 'Int')
     -- 'Just' (fromList [1,2,3],4)
     --
-    -- > 'uncons' ([] :: ['Int'])
+    -- > 'unsnoc' ([] :: ['Int'])
     -- 'Nothing'
     -- @
     unsnoc :: seq -> Maybe (seq, Element seq)
