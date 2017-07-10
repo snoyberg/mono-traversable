@@ -1222,7 +1222,7 @@ replaceSeq old new = ointercalate new . splitSeq old
 --
 -- @
 -- > 'stripPrefix' "foo" "foobar"
--- 'Just' "foo"
+-- 'Just' "bar"
 -- > 'stripPrefix' "abc" "foobar"
 -- 'Nothing'
 -- @
