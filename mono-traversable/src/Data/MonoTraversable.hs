@@ -845,10 +845,10 @@ onotElem e = List.notElem e . otoList
 {-# RULES "strict ByteString notElem" onotElem = S.notElem #-}
 
 {-# RULES "lazy ByteString elem" oelem = L.elem #-}
-{-# RULES "lazy ByteString notElem" oelem = L.notElem #-}
+{-# RULES "lazy ByteString notElem" onotElem = L.notElem #-}
 
 {-# RULES "Set elem" forall (k :: Ord k => k). oelem k = Set.member k #-}
-{-# RULES "Set notElem" forall (k :: Ord k => k). oelem k = Set.notMember k #-}
+{-# RULES "Set notElem" forall (k :: Ord k => k). onotElem k = Set.notMember k #-}
 
 -- | Get the minimum element of a monomorphic container.
 --
