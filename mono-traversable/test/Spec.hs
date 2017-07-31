@@ -367,8 +367,13 @@ main = hspec $ do
 
     describe "Foldl Integration" $ do
         prop "vector" $ \xs -> do
+#if MIN_VERSION_foldl(1,3,0)
+            let x1 = Foldl.fold Foldl.vector (xs :: [Int])
+                x2 = Foldl.purely ofoldlUnwrap Foldl.vector xs
+#else
             x1 <- Foldl.foldM Foldl.vector (xs :: [Int])
             x2 <- Foldl.impurely ofoldMUnwrap Foldl.vector xs
+#endif
             x2 @?= (x1 :: V.Vector Int)
         prop "length" $ \xs -> do
             let x1 = Foldl.fold Foldl.length (xs :: [Int])

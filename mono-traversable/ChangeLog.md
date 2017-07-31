@@ -1,3 +1,7 @@
+## 1.0.2.1
+
+* Fix test suite for foldl 1.3
+
 ## 1.0.2
 
 * `IsSequence` class: add `lengthIndex` [#127](https://github.com/snoyberg/mono-traversable/pull/127)
