@@ -220,7 +220,7 @@ import Data.Vector.Storable (unsafeToForeignPtr, unsafeFromForeignPtr)
 
 import System.IO (Handle, stdin, stdout, stderr, hClose)
 
-import Debug.Trace (trace, traceShow)
+import qualified Debug.Trace as Trace
 import Data.Semigroup (Semigroup (..), WrappedMonoid (..))
 import Prelude (Show (..))
 import Data.Time
@@ -382,27 +382,42 @@ undefined :: a
 undefined = error "ClassyPrelude.undefined"
 {-# DEPRECATED undefined "It is highly recommended that you either avoid partial functions or provide meaningful error messages" #-}
 
+-- | We define our own 'trace' (and also its variants) which provides a warning
+-- when used. So that tracing is available during development, but the compiler
+-- reminds you to not leave them in the code for production.
+{-# WARNING trace "Leaving traces in the code" #-}
+trace :: String -> a -> a
+trace = Trace.trace
+
+{-# WARNING traceShow "Leaving traces in the code" #-}
+traceShow :: Show a => a -> b -> b
+traceShow = Trace.traceShow
+
 -- |
 --
 -- Since 0.5.9
+{-# WARNING traceId "Leaving traces in the code" #-}
 traceId :: String -> String
-traceId a = trace a a
+traceId a = Trace.trace a a
 
 -- |
 --
 -- Since 0.5.9
+{-# WARNING traceM "Leaving traces in the code" #-}
 traceM :: (Monad m) => String -> m ()
-traceM string = trace string $ return ()
+traceM string = Trace.trace string $ return ()
 
 -- |
 --
 -- Since 0.5.9
+{-# WARNING traceShowId "Leaving traces in the code" #-}
 traceShowId :: (Show a) => a -> a
-traceShowId a = trace (show a) a
+traceShowId a = Trace.trace (show a) a
 
 -- |
 --
 -- Since 0.5.9
+{-# WARNING traceShowM "Leaving traces in the code" #-}
 traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
 
