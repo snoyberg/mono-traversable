@@ -1,3 +1,7 @@
+## 1.3.0
+
+* Tracing functions leave warnings when used
+
 ## 1.2.0.1
 
 * Use `HasCallStack` in `undefined`
