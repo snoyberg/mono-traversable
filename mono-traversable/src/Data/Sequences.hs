@@ -9,7 +9,7 @@
 module Data.Sequences where
 
 import Data.Maybe (fromJust, isJust)
-import Data.Monoid (Monoid, mconcat, mempty)
+import Data.Monoid (Monoid, mconcat, mempty, (<>))
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
 import qualified Data.List as List
@@ -1245,6 +1245,29 @@ stripSuffix x y =
   where
     stripSuffixList :: Eq a => [a] -> [a] -> Maybe [a]
     stripSuffixList x' y' = fmap reverse (stripPrefix (reverse x') (reverse y'))
+
+-- | 'ensurePrefix' will add a prefix to a sequence if it doesn't
+-- exist, and otherwise have no effect.
+--
+-- @
+-- > 'ensurePrefix' "foo" "foobar"
+-- "foobar"
+-- > 'ensurePrefix' "abc" "foobar"
+-- "abcfoobar"
+-- @
+ensurePrefix :: (Eq (Element seq), IsSequence seq) => seq -> seq -> seq
+ensurePrefix prefix seq = if isPrefixOf prefix seq then seq else prefix <> seq
+
+-- | Append a suffix to a sequence, unless it already has that suffix.
+--
+-- @
+-- > 'ensureSuffix' "bar" "foobar"
+-- "foobar"
+-- > 'ensureSuffix' "abc" "foobar"
+-- "foobarabc"
+-- @
+ensureSuffix :: (Eq (Element seq), IsSequence seq) => seq -> seq -> seq
+ensureSuffix suffix seq = if isSuffixOf suffix seq then seq else seq <> suffix
 
 -- | 'isPrefixOf' takes two sequences and returns 'True' if the first
 -- sequence is a prefix of the second.
