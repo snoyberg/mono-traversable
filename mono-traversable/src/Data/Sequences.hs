@@ -1255,6 +1255,8 @@ stripSuffix x y =
 -- > 'ensurePrefix' "abc" "foobar"
 -- "abcfoobar"
 -- @
+--
+-- @since 1.0.3
 ensurePrefix :: (Eq (Element seq), IsSequence seq) => seq -> seq -> seq
 ensurePrefix prefix seq = if isPrefixOf prefix seq then seq else prefix <> seq
 
@@ -1266,6 +1268,8 @@ ensurePrefix prefix seq = if isPrefixOf prefix seq then seq else prefix <> seq
 -- > 'ensureSuffix' "abc" "foobar"
 -- "foobarabc"
 -- @
+--
+-- @since 1.0.3
 ensureSuffix :: (Eq (Element seq), IsSequence seq) => seq -> seq -> seq
 ensureSuffix suffix seq = if isSuffixOf suffix seq then seq else seq <> suffix
 
