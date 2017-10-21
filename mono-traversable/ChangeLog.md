@@ -1,3 +1,7 @@
+## 1.0.3.0
+
+* Add `ensurePrefix` and `ensureSuffix` functions [#141](https://github.com/snoyberg/mono-traversable/pull/141)
+
 ## 1.0.2.1
 
 * Fix test suite for foldl 1.3
