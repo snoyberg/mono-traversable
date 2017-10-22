@@ -174,6 +174,7 @@ std dev              1.281 ns   (1.016 ns .. 1.653 ns)
 ### Deque benchmark
 
 ```
+benchmarking IORef [Int]
 time                 8.371 ms   (8.362 ms .. 8.382 ms)
                      1.000 R²   (1.000 R² .. 1.000 R²)
 mean                 8.386 ms   (8.378 ms .. 8.398 ms)
