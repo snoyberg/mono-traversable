@@ -1,3 +1,7 @@
+## 1.0.4.0
+
+* Add `dropEnd` function to the `IsSequence` class, and a specialized implementation for `Text`
+
 ## 1.0.3.0
 
 * Add `ensurePrefix` and `ensureSuffix` functions [#141](https://github.com/snoyberg/mono-traversable/pull/141)
