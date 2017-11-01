@@ -277,6 +277,8 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- > 'dropEnd' 4 ('fromList' [1,2,3,4,5,6] :: 'Vector' 'Int')
     -- fromList [1,2]
     -- @
+    --
+    -- @since 1.0.4.0
     dropEnd :: Index seq -> seq -> seq
     dropEnd i s = fst $ splitAt (lengthIndex s - i) s
 
