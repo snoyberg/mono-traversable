@@ -269,6 +269,19 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     unsafeDrop :: Index seq -> seq -> seq
     unsafeDrop = drop
 
+    -- | Same as 'drop' but drops from the end of the sequence instead.
+    --
+    -- @
+    -- > 'dropEnd' 3 "abcdefg"
+    -- "abcd"
+    -- > 'dropEnd' 4 ('fromList' [1,2,3,4,5,6] :: 'Vector' 'Int')
+    -- fromList [1,2]
+    -- @
+    --
+    -- @since 1.0.4.0
+    dropEnd :: Index seq -> seq -> seq
+    dropEnd i s = fst $ splitAt (lengthIndex s - i) s
+
     -- | 'partition' takes a predicate and a sequence and returns the pair of
     -- sequences of elements which do and do not satisfy the predicate.
     --
@@ -724,6 +737,7 @@ instance IsSequence T.Text where
     splitAt = T.splitAt
     take = T.take
     drop = T.drop
+    dropEnd = T.dropEnd
     partition = T.partition
     uncons = T.uncons
     unsnoc t
