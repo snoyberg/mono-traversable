@@ -7,7 +7,7 @@ import Conduit
 import Prelude hiding (FilePath)
 import Data.Maybe (listToMaybe)
 import Data.Conduit.Combinators.Internal
-import Data.Conduit.Combinators (slidingWindow)
+import Data.Conduit.Combinators (slidingWindow, chunksOfE, chunksOfExactlyE)
 import Data.List (intersperse, sort, find, mapAccumL)
 import Safe (tailSafe)
 import System.FilePath (takeExtension)
@@ -640,6 +640,21 @@ main = hspec $ do
     it "slidingWindow 6" $
         let res = runIdentity $ yieldMany [1..5] $= slidingWindow 6 $$ sinkList
         in res `shouldBe` [[1,2,3,4,5]]
+    it "chunksOfE 1" $
+        let res = runIdentity $ yieldMany [[1,2], [3,4], [5,6]] $= chunksOfE 3 $$ sinkList
+        in res `shouldBe` [[1,2,3], [4,5,6]]
+    it "chunksOfE 2 (last smaller)" $
+        let res = runIdentity $ yieldMany [[1,2], [3,4], [5,6,7]] $= chunksOfE 3 $$ sinkList
+        in res `shouldBe` [[1,2,3], [4,5,6], [7]]
+    it "chunksOfE (ByteString)" $
+        let res = runIdentity $ yieldMany [S8.pack "01234", "56789ab", "cdef", "h"] $= chunksOfE 4 $$ sinkList
+        in res `shouldBe` ["0123", "4567", "89ab", "cdef", "h"]
+    it "chunksOfExactlyE 1" $
+        let res = runIdentity $ yieldMany [[1,2], [3,4], [5,6]] $= chunksOfExactlyE 3 $$ sinkList
+        in res `shouldBe` [[1,2,3], [4,5,6]]
+    it "chunksOfExactlyE 2 (last smaller; thus not yielded)" $
+        let res = runIdentity $ yieldMany [[1,2], [3,4], [5,6,7]] $= chunksOfExactlyE 3 $$ sinkList
+        in res `shouldBe` [[1,2,3], [4,5,6]]
     prop "vectorBuilder" $ \(values :: [[Int]]) ((+1) . (`mod` 30) . abs -> size) -> do
         let res = runST
                 $ yieldMany values

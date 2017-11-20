@@ -1,3 +1,7 @@
+# 1.1.2
+
+* Add `chunksOfE` and `chunksOfExactlyE` combinators
+
 # 1.1.1
 
 * Add `asum` combinator
