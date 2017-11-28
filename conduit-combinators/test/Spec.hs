@@ -42,6 +42,7 @@ import GHC.IO.Handle (hDuplicateTo)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy.Char8 as L8
 import System.Random.MWC (createSystemRandom)
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as B16L
@@ -114,20 +115,20 @@ main = hspec $ do
             fp = "tmp"
         writeFile fp contents
         res <- runResourceT $ sourceFile fp $$ sinkLazy
-        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
+        nocrBL res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     it "sourceHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         res <- IO.withBinaryFile "tmp" IO.ReadMode $ \h -> sourceHandle h $$ sinkLazy
-        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
+        nocrBL res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     it "sourceIOHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         let open = IO.openBinaryFile "tmp" IO.ReadMode
         res <- runResourceT $ sourceIOHandle open $$ sinkLazy
-        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
+        nocrBL res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     prop "stdin" $ \(S.pack -> content) -> do
         S.writeFile "tmp" content
         IO.withBinaryFile "tmp" IO.ReadMode $ \h -> do
@@ -703,3 +704,6 @@ succChar = succ
 
 showInt :: Int -> String
 showInt = Prelude.show
+
+nocrBL :: L8.ByteString -> L8.ByteString
+nocrBL = L8.filter (/= '\r')
