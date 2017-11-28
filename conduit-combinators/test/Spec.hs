@@ -23,6 +23,7 @@ import qualified Data.Vector.Storable as VS
 import Control.Monad (liftM)
 import Control.Monad.ST (runST)
 import Control.Monad.Trans.Writer
+import System.FilePath ((</>))
 import qualified System.IO as IO
 #if ! MIN_VERSION_base(4,8,0)
 import Data.Monoid (Monoid (..))
@@ -151,13 +152,21 @@ main = hspec $ do
     it "sourceDirectory" $ do
         res <- runResourceT
              $ sourceDirectory "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
-        sort res `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir"]
+        sort res `shouldBe`
+          [ "test" </> "Spec.hs"
+          , "test" </> "StreamSpec.hs"
+          , "test" </> "subdir"
+          ]
     it "sourceDirectoryDeep" $ do
         res1 <- runResourceT
               $ sourceDirectoryDeep False "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
         res2 <- runResourceT
               $ sourceDirectoryDeep True "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
-        sort res1 `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir/dummyfile.txt"]
+        sort res1 `shouldBe`
+          [ "test" </> "Spec.hs"
+          , "test" </> "StreamSpec.hs"
+          , "test" </> "subdir" </> "dummyfile.txt"
+          ]
         sort res1 `shouldBe` sort res2
     prop "drop" $ \(T.pack -> input) count ->
         runIdentity (yieldMany input $$ (dropC count >>= \() -> sinkList))
@@ -349,6 +358,7 @@ main = hspec $ do
         let expected = Prelude.unlines $ map showInt vals
         (actual, ()) <- hCapture [IO.stdout] $ yieldMany vals $$ printC
         actual `shouldBe` expected
+#ifndef WINDOWS
     prop "stdout" $ \ (vals :: [String]) -> do
         let expected = concat vals
         (actual, ()) <- hCapture [IO.stdout] $ yieldMany (map T.pack vals) $$ encodeUtf8C =$ stdoutC
@@ -357,6 +367,7 @@ main = hspec $ do
         let expected = concat vals
         (actual, ()) <- hCapture [IO.stderr] $ yieldMany (map T.pack vals) $$ encodeUtf8C =$ stderrC
         actual `shouldBe` expected
+#endif
     prop "map" $ \input ->
         runIdentity (yieldMany input $$ mapC succChar =$ sinkList)
         `shouldBe` map succChar input
