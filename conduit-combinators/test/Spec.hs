@@ -23,6 +23,7 @@ import qualified Data.Vector.Storable as VS
 import Control.Monad (liftM)
 import Control.Monad.ST (runST)
 import Control.Monad.Trans.Writer
+import System.FilePath ((</>))
 import qualified System.IO as IO
 #if ! MIN_VERSION_base(4,8,0)
 import Data.Monoid (Monoid (..))
@@ -41,6 +42,7 @@ import GHC.IO.Handle (hDuplicateTo)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Lazy.Char8 as L8
 import System.Random.MWC (createSystemRandom)
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base16.Lazy as B16L
@@ -113,20 +115,20 @@ main = hspec $ do
             fp = "tmp"
         writeFile fp contents
         res <- runResourceT $ sourceFile fp $$ sinkLazy
-        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
+        nocrBL res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     it "sourceHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         res <- IO.withBinaryFile "tmp" IO.ReadMode $ \h -> sourceHandle h $$ sinkLazy
-        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
+        nocrBL res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     it "sourceIOHandle" $ do
         let contents = concat $ replicate 10000 $ "this is some content\n"
             fp = "tmp"
         writeFile fp contents
         let open = IO.openBinaryFile "tmp" IO.ReadMode
         res <- runResourceT $ sourceIOHandle open $$ sinkLazy
-        res `shouldBe` TL.encodeUtf8 (TL.pack contents)
+        nocrBL res `shouldBe` TL.encodeUtf8 (TL.pack contents)
     prop "stdin" $ \(S.pack -> content) -> do
         S.writeFile "tmp" content
         IO.withBinaryFile "tmp" IO.ReadMode $ \h -> do
@@ -151,13 +153,21 @@ main = hspec $ do
     it "sourceDirectory" $ do
         res <- runResourceT
              $ sourceDirectory "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
-        sort res `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir"]
+        sort res `shouldBe`
+          [ "test" </> "Spec.hs"
+          , "test" </> "StreamSpec.hs"
+          , "test" </> "subdir"
+          ]
     it "sourceDirectoryDeep" $ do
         res1 <- runResourceT
               $ sourceDirectoryDeep False "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
         res2 <- runResourceT
               $ sourceDirectoryDeep True "test" $$ filterC (not . hasExtension' ".swp") =$ sinkList
-        sort res1 `shouldBe` ["test/Spec.hs", "test/StreamSpec.hs", "test/subdir/dummyfile.txt"]
+        sort res1 `shouldBe`
+          [ "test" </> "Spec.hs"
+          , "test" </> "StreamSpec.hs"
+          , "test" </> "subdir" </> "dummyfile.txt"
+          ]
         sort res1 `shouldBe` sort res2
     prop "drop" $ \(T.pack -> input) count ->
         runIdentity (yieldMany input $$ (dropC count >>= \() -> sinkList))
@@ -349,6 +359,7 @@ main = hspec $ do
         let expected = Prelude.unlines $ map showInt vals
         (actual, ()) <- hCapture [IO.stdout] $ yieldMany vals $$ printC
         actual `shouldBe` expected
+#ifndef WINDOWS
     prop "stdout" $ \ (vals :: [String]) -> do
         let expected = concat vals
         (actual, ()) <- hCapture [IO.stdout] $ yieldMany (map T.pack vals) $$ encodeUtf8C =$ stdoutC
@@ -357,6 +368,7 @@ main = hspec $ do
         let expected = concat vals
         (actual, ()) <- hCapture [IO.stderr] $ yieldMany (map T.pack vals) $$ encodeUtf8C =$ stderrC
         actual `shouldBe` expected
+#endif
     prop "map" $ \input ->
         runIdentity (yieldMany input $$ mapC succChar =$ sinkList)
         `shouldBe` map succChar input
@@ -692,3 +704,6 @@ succChar = succ
 
 showInt :: Int -> String
 showInt = Prelude.show
+
+nocrBL :: L8.ByteString -> L8.ByteString
+nocrBL = L8.filter (/= '\r')

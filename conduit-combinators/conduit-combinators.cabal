@@ -82,6 +82,8 @@ test-suite test
                 , directory
                 , filepath
   ghc-options:    -Wall
+  if os(windows)
+      cpp-options:     -DWINDOWS
 
 source-repository head
   type:     git
