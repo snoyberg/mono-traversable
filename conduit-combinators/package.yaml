@@ -1,0 +1,89 @@
+name: conduit-combinators
+version: '1.1.1'
+synopsis: Commonly used conduit functions, for both chunked and unchunked data
+description: Provides a replacement for Data.Conduit.List, as well as a convenient
+  Conduit module.
+category: Data, Conduit
+author: Michael Snoyman
+maintainer: michael@snoyman.com
+license: MIT
+github: snoyberg/mono-traversable.git
+extra-source-files:
+- test/subdir/dummyfile.txt
+- fusion-macros.h
+- ChangeLog.md
+- README.md
+dependencies:
+- transformers
+- vector
+- text
+- bytestring
+- mwc-random
+- base16-bytestring
+- filepath
+library:
+  ghc-options:
+  - -Wall
+  - -O2
+  include-dirs:
+  - ./.
+  exposed-modules:
+  - Conduit
+  - Data.Conduit.Combinators
+  - Data.Conduit.Combinators.Internal
+  - Data.Conduit.Combinators.Stream
+  dependencies:
+  - base >=4 && <5
+  - conduit >=1.2.8
+  - conduit-extra >=1.1.1
+  - transformers-base
+  - primitive
+  - void
+  - unix-compat
+  - base64-bytestring >=0.1.1.1
+  - resourcet
+  - monad-control
+  when:
+  - condition: flag(monotrav1)
+    then:
+      dependencies:
+      - chunked-data >=0.3
+      - mono-traversable >=1.0
+    else:
+      dependencies:
+      - chunked-data <0.3
+      - mono-traversable >=0.5 && <1.0
+  - condition: os(windows)
+    then:
+      cpp-options: -DWINDOWS
+    else:
+      dependencies:
+      - unix
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    cpp-options: -DTEST
+    dependencies:
+    - conduit-combinators
+    - base
+    - hspec >=1.3
+    - chunked-data
+    - mono-traversable
+    - silently
+    - base64-bytestring
+    - mtl
+    - conduit
+    - containers
+    - safe
+    - QuickCheck >=2.5
+    - directory
+    when:
+    - condition: os(windows)
+      cpp-options: -DWINDOWS
+flags:
+  monotrav1:
+    description: Use mono-traversable 1.0 or later
+    manual: false
+    default: true

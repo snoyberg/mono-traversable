@@ -1,0 +1,25 @@
+name: chunked-data
+version: '0.3.0'
+synopsis: Typeclasses for dealing with various chunked data representations
+description: Originally present in classy-prelude.
+category: Data
+author: Michael Snoyman
+maintainer: michael@snoyman.com
+license: MIT
+github: snoyberg/mono-traversable.git
+extra-source-files:
+- README.md
+- ChangeLog.md
+dependencies:
+- base >=4 && <5
+- transformers
+- bytestring >=0.10.2
+- text >=1.2
+- containers
+- vector
+- semigroups
+library:
+  exposed-modules:
+  - Data.IOData
+  - Data.Builder
+  - Data.ChunkedZip
