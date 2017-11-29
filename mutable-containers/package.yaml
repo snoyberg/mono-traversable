@@ -1,25 +1,29 @@
-name: mutable-containers
-version: '0.3.3'
-synopsis: Abstactions and concrete implementations of mutable containers
+name:        mutable-containers
+version:     0.3.3
+synopsis:    Abstactions and concrete implementations of mutable containers
 description: See docs and README at <http://www.stackage.org/package/mutable-containers>
-category: Data
-author: Michael Snoyman
-maintainer: michael@fpcomplete.com
-license: MIT
-github: snoyberg/mono-traversable.git
+category:    Data
+author:      Michael Snoyman
+maintainer:  michael@fpcomplete.com
+license:     MIT
+github:      snoyberg/mono-traversable
+
 extra-source-files:
 - README.md
 - ChangeLog.md
+
 dependencies:
+- base >=4.7 && <5
 - containers
+- vector
+
 library:
   ghc-options: -O2
+  source-dirs: src
   exposed-modules:
   - Data.Mutable
   dependencies:
-  - base >=4.7 && <5
   - primitive >=0.5.2.1
-  - vector
   - mono-traversable
   - ghc-prim
 tests:
@@ -27,11 +31,9 @@ tests:
     main: Spec.hs
     source-dirs: test
     dependencies:
-    - base
     - mutable-containers
     - hspec
     - QuickCheck
-    - vector
     - primitive
 benchmarks:
   deque:
@@ -42,7 +44,6 @@ benchmarks:
     - -O2
     - -rtsopts
     dependencies:
-    - base
     - mutable-containers
     - criterion
   ref:
@@ -53,6 +54,5 @@ benchmarks:
     - -O2
     - -rtsopts
     dependencies:
-    - base
     - mutable-containers
     - criterion

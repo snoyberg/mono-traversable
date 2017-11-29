@@ -1,15 +1,17 @@
-name: mono-traversable-instances
-version: '0.1.0.0'
-synopsis: Extra typeclass instances for mono-traversable
-description: Please see README.md
-category: Data
-author: Michael Snoyman
-maintainer: michael@fpcomplete.com
-license: MIT
-github: snoyberg/mono-traversable
+name:        mono-traversable-instances
+version:     0.1.0.0
+synopsis:    Extra typeclass instances for mono-traversable
+description: See docs and README at <http://www.stackage.org/package/mono-traversable-instance>
+category:    Data
+author:      Michael Snoyman
+maintainer:  michael@fpcomplete.com
+license:     MIT
+github:      snoyberg/mono-traversable
+
 extra-source-files:
 - README.md
 - ChangeLog.md
+
 dependencies:
 - base >=4.7 && <5
 - mono-traversable >=1.0 && <1.1
@@ -23,5 +25,3 @@ dependencies:
 - containers
 library:
   source-dirs: src
-  exposed-modules:
-  - Data.MonoTraversable.Instances

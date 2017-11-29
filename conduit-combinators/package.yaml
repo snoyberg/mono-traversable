@@ -1,18 +1,19 @@
-name: conduit-combinators
-version: '1.1.1'
-synopsis: Commonly used conduit functions, for both chunked and unchunked data
-description: Provides a replacement for Data.Conduit.List, as well as a convenient
-  Conduit module.
-category: Data, Conduit
-author: Michael Snoyman
-maintainer: michael@snoyman.com
-license: MIT
-github: snoyberg/mono-traversable.git
+name:        conduit-combinators
+version:     1.1.1
+synopsis:    Commonly used conduit functions, for both chunked and unchunked data
+description: See docs and README at <http://www.stackage.org/package/conduit-combinators>
+category:    Data, Conduit
+author:      Michael Snoyman
+maintainer:  michael@snoyman.com
+license:     MIT
+github:      snoyberg/mono-traversable
+
 extra-source-files:
 - test/subdir/dummyfile.txt
 - fusion-macros.h
 - ChangeLog.md
 - README.md
+
 dependencies:
 - transformers
 - vector
@@ -25,13 +26,9 @@ library:
   ghc-options:
   - -Wall
   - -O2
-  include-dirs:
-  - ./.
-  exposed-modules:
-  - Conduit
-  - Data.Conduit.Combinators
-  - Data.Conduit.Combinators.Internal
-  - Data.Conduit.Combinators.Stream
+  source-dirs: src
+  other-modules:
+  - Data.Conduit.Combinators.Unqualified
   dependencies:
   - base >=4 && <5
   - conduit >=1.2.8
@@ -43,6 +40,7 @@ library:
   - base64-bytestring >=0.1.1.1
   - resourcet
   - monad-control
+  include-dirs: .
   when:
   - condition: flag(monotrav1)
     then:

@@ -1,15 +1,17 @@
-name: minlen
-version: '0.1.0.0'
-synopsis: Express the minimum length of a container in its type
-description: Please see README.md
-category: Data
-author: Michael Snoyman
-maintainer: michael@snoyman.com
-license: MIT
-github: snoyberg/mono-traversable
+name:        minlen
+version:     0.1.0.0
+synopsis:    Express the minimum length of a container in its type
+description: See docs and README at <http://www.stackage.org/package/minlen>
+category:    Data
+author:      Michael Snoyman
+maintainer:  michael@snoyman.com
+license:     MIT
+github:      snoyberg/mono-traversable
+
 extra-source-files:
 - README.md
 - ChangeLog.md
+
 dependencies:
 - base >=4.7 && <5
 - mono-traversable
@@ -17,5 +19,3 @@ dependencies:
 - transformers
 library:
   source-dirs: src
-  exposed-modules:
-  - Data.MinLen
