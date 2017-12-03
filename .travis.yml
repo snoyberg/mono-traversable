@@ -176,6 +176,7 @@ install:
       # Add in extra-deps for older snapshots, as necessary
       stack --no-terminal --install-ghc $ARGS test --bench --dry-run || ( \
         stack --no-terminal $ARGS build cabal-install && \
+        cp stack.yaml tmp && grep -v yesod tmp > stack.yaml && rm tmp &&
         stack --no-terminal $ARGS solver --update-config)
 
       # Build the dependencies
