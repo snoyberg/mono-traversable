@@ -1,5 +1,5 @@
 name:        conduit-combinators
-version:     1.1.1
+version:     1.1.2
 synopsis:    Commonly used conduit functions, for both chunked and unchunked data
 description: See docs and README at <http://www.stackage.org/package/conduit-combinators>
 category:    Data, Conduit

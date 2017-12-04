@@ -141,6 +141,8 @@ module Data.Conduit.Combinators.Unqualified
     , concatMapAccumC
     , intersperseC
     , slidingWindowC
+    , chunksOfCE
+    , chunksOfExactlyCE
 
       -- **** Binary base encoding
     , encodeBase64C
@@ -1202,6 +1204,27 @@ intersperseC = CC.intersperse
 slidingWindowC :: (Monad m, Seq.IsSequence seq, Element seq ~ a) => Int -> Conduit a m seq
 slidingWindowC = CC.slidingWindow
 {-# INLINE slidingWindowC #-}
+
+
+-- | Split input into chunk of size 'chunkSize'
+--
+-- The last element may be smaller than the 'chunkSize' (see also
+-- 'chunksOfExactlyE' which will not yield this last element)
+--
+-- @since 1.1.2
+chunksOfCE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> Conduit seq m seq
+chunksOfCE = CC.chunksOfE
+{-# INLINE chunksOfCE #-}
+
+-- | Split input into chunk of size 'chunkSize'
+--
+-- If the input does not split into chunks exactly, the remainder will be
+-- leftover (see also 'chunksOfE')
+--
+-- @since 1.1.2
+chunksOfExactlyCE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> Conduit seq m seq
+chunksOfExactlyCE = CC.chunksOfExactlyE
+{-# INLINE chunksOfExactlyCE #-}
 
 -- | Apply base64-encoding to the stream.
 --

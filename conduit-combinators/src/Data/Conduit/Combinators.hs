@@ -155,6 +155,8 @@ module Data.Conduit.Combinators
     , concatMapAccum
     , intersperse
     , slidingWindow
+    , chunksOfE
+    , chunksOfExactlyE
 
       -- *** Binary base encoding
     , encodeBase64
@@ -1629,6 +1631,42 @@ slidingWindowC sz = go (max 1 sz) mempty
                        Nothing -> yield st
                        Just x -> go (n-1) (Seq.snoc st x)
 STREAMING(slidingWindow, slidingWindowC, slidingWindowS, sz)
+
+
+-- | Split input into chunk of size 'chunkSize'
+--
+-- The last element may be smaller than the 'chunkSize' (see also
+-- 'chunksOfExactlyE' which will not yield this last element)
+--
+-- @since 1.1.2
+chunksOfE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> Conduit seq m seq
+chunksOfE chunkSize = chunksOfExactlyE chunkSize >> (await >>= maybe (return ()) yield)
+
+-- | Split input into chunk of size 'chunkSize'
+--
+-- If the input does not split into chunks exactly, the remainder will be
+-- leftover (see also 'chunksOfE')
+--
+-- @since 1.1.2
+chunksOfExactlyE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> Conduit seq m seq
+chunksOfExactlyE chunkSize = await >>= maybe (return ()) start
+    where
+        start b
+            | onull b = chunksOfE chunkSize
+            | Seq.lengthIndex b < chunkSize = continue (Seq.lengthIndex b) [b]
+            | otherwise = let (first,rest) = Seq.splitAt chunkSize b in
+                            yield first >> start rest
+        continue !sofar bs = do
+            next <- await
+            case next of
+                Nothing -> leftover (mconcat $ Prelude.reverse bs)
+                Just next' ->
+                    let !sofar' = Seq.lengthIndex next' + sofar
+                        bs' = next':bs
+                    in if sofar' < chunkSize
+                            then continue sofar' bs'
+                            else start (mconcat (Prelude.reverse bs'))
+
 
 codeWith :: Monad m
          => Int
