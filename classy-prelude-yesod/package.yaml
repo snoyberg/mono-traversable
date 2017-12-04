@@ -1,0 +1,28 @@
+name:        classy-prelude-yesod
+version:     1.3.0
+synopsis:    Provide a classy prelude including common Yesod functionality.
+description: See docs and README at <http://www.stackage.org/package/classy-prelude-yesod>
+category:    Control, Yesod
+author:      Michael Snoyman
+maintainer:  michael@snoyman.com
+license:     MIT
+github:      snoyberg/mono-traversable
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+dependencies:
+- base >=4 && <5
+- classy-prelude >=1.3.0 && <1.3.1
+- classy-prelude-conduit >=1.3.0 && <1.3.1
+- yesod >=1.2
+- yesod-newsfeed
+- yesod-static
+- http-types
+- http-conduit
+- persistent >=1.1
+- aeson
+- data-default
+library:
+  source-dirs: src

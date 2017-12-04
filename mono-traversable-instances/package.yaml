@@ -1,0 +1,27 @@
+name:        mono-traversable-instances
+version:     0.1.0.0
+synopsis:    Extra typeclass instances for mono-traversable
+description: See docs and README at <http://www.stackage.org/package/mono-traversable-instance>
+category:    Data
+author:      Michael Snoyman
+maintainer:  michael@fpcomplete.com
+license:     MIT
+github:      snoyberg/mono-traversable
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+dependencies:
+- base >=4.7 && <5
+- mono-traversable >=1.0 && <1.1
+- semigroupoids >=3.0
+- comonad >=3.0.3
+- vector-instances
+- dlist >=0.6 && <1.0
+- dlist-instances ==0.1.*
+- transformers
+- semigroups
+- containers
+library:
+  source-dirs: src

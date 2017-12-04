@@ -1,0 +1,25 @@
+name:        chunked-data
+version:     0.3.0
+synopsis:    Typeclasses for dealing with various chunked data representations
+description: See docs and README at <http://www.stackage.org/package/chunked-data>
+category:    Data
+author:      Michael Snoyman
+maintainer:  michael@snoyman.com
+license:     MIT
+github:      snoyberg/mono-traversable
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+dependencies:
+- base >=4 && <5
+- transformers
+- bytestring >=0.10.2
+- text >=1.2
+- containers
+- vector
+- semigroups
+
+library:
+  source-dirs: src
