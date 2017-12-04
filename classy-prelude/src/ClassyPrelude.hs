@@ -665,18 +665,24 @@ putChar = liftIO . Prelude.putChar
 -- | Write a Text to stdout
 --
 -- Uses system locale settings
+--
+-- @since 1.3.1
 putStr :: MonadIO m => Text -> m ()
 putStr = liftIO . TextIO.putStr
 
 -- | Write a Text followed by a newline to stdout
 --
 -- Uses system locale settings
+--
+-- @since 1.3.1
 putStrLn :: MonadIO m => Text -> m ()
 putStrLn = liftIO . TextIO.putStrLn
 
 -- | Read a character from stdin
 --
 -- Uses system locale settings
+--
+-- @since 1.3.1
 getChar :: MonadIO m => m Char
 getChar = liftIO Prelude.getChar
 
@@ -689,6 +695,8 @@ getLine = liftIO TextIO.getLine
 -- | Read all input from stdin into a Text
 --
 -- Uses system locale settings
+--
+-- @since 1.3.1
 getContents :: MonadIO m => m Text
 getContents = liftIO TextIO.getContents
 
@@ -696,5 +704,7 @@ getContents = liftIO TextIO.getContents
 -- to it, then prints result to stdout
 --
 -- Uses system locale settings
+--
+-- @since 1.3.1
 interact :: MonadIO m => (Text -> Text) -> m ()
 interact = liftIO . TextIO.interact

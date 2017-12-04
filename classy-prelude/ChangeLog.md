@@ -1,3 +1,7 @@
+## 1.3.1
+
+* Add terminal IO functions
+
 ## 1.3.0
 
 * Tracing functions leave warnings when used
