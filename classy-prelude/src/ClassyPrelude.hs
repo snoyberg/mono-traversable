@@ -134,6 +134,14 @@ module ClassyPrelude
     , hGetChunk
     , print
     , hClose
+    -- Prelude IO operations
+    , putChar
+    , putStr
+    , putStrLn
+    , getChar
+    , getLine
+    , getContents
+    , interact
       -- ** Difference lists
     , DList
     , asDList
@@ -195,7 +203,7 @@ import Control.Concurrent.Async.Lifted.Safe
 
 import Data.Vector.Instances ()
 import CorePrelude hiding
-    ( print, undefined, (<>), catMaybes, first, second
+    ( putStr, putStrLn, print, undefined, (<>), catMaybes, first, second
     , try, throwIO, onException, mask, mask_
     , handle, finally, catch, bracket, bracket_, bracketOnError
     , catchIOError
@@ -214,6 +222,7 @@ import Data.Containers
 import Data.Builder
 import Data.NonNull
 import qualified Data.ByteString
+import qualified Data.Text.IO as TextIO
 import Data.ByteString.Internal (ByteString (PS))
 import Data.ByteString.Lazy.Internal (defaultChunkSize)
 import Data.Vector.Storable (unsafeToForeignPtr, unsafeFromForeignPtr)
@@ -646,3 +655,46 @@ hPut h = liftIO . Data.ByteString.hPut h
 -- @since 1.2.0
 hGetChunk :: MonadIO m => Handle -> m ByteString
 hGetChunk = liftIO . flip Data.ByteString.hGetSome defaultChunkSize
+
+-- | Write a character to stdout
+--
+-- Uses system locale settings
+putChar :: MonadIO m => Char -> m ()
+putChar = liftIO . Prelude.putChar
+
+-- | Write a Text to stdout
+--
+-- Uses system locale settings
+putStr :: MonadIO m => Text -> m ()
+putStr = liftIO . TextIO.putStr
+
+-- | Write a Text followed by a newline to stdout
+--
+-- Uses system locale settings
+putStrLn :: MonadIO m => Text -> m ()
+putStrLn = liftIO . TextIO.putStrLn
+
+-- | Read a character from stdin
+--
+-- Uses system locale settings
+getChar :: MonadIO m => m Char
+getChar = liftIO Prelude.getChar
+
+-- | Read a line from stdin
+--
+-- Uses system locale settings
+getLine :: MonadIO m => m Text
+getLine = liftIO TextIO.getLine
+
+-- | Read all input from stdin into a Text
+--
+-- Uses system locale settings
+getContents :: MonadIO m => m Text
+getContents = liftIO TextIO.getContents
+
+-- | Takes a function of type 'Text -> Text' and passes all input on stdin
+-- to it, then prints result to stdout
+--
+-- Uses system locale settings
+interact :: MonadIO m => (Text -> Text) -> m ()
+interact = liftIO . TextIO.interact
