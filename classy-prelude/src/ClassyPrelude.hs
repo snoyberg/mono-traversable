@@ -134,6 +134,14 @@ module ClassyPrelude
     , hGetChunk
     , print
     , hClose
+    -- Prelude IO operations
+    , putChar
+    , putStr
+    , putStrLn
+    , getChar
+    , getLine
+    , getContents
+    , interact
       -- ** Difference lists
     , DList
     , asDList
@@ -195,7 +203,7 @@ import Control.Concurrent.Async.Lifted.Safe
 
 import Data.Vector.Instances ()
 import CorePrelude hiding
-    ( print, undefined, (<>), catMaybes, first, second
+    ( putStr, putStrLn, print, undefined, (<>), catMaybes, first, second
     , try, throwIO, onException, mask, mask_
     , handle, finally, catch, bracket, bracket_, bracketOnError
     , catchIOError
@@ -214,6 +222,8 @@ import Data.Containers
 import Data.Builder
 import Data.NonNull
 import qualified Data.ByteString
+import qualified Data.Text.IO as TextIO
+import qualified Data.Text.Lazy.IO as LTextIO
 import Data.ByteString.Internal (ByteString (PS))
 import Data.ByteString.Lazy.Internal (defaultChunkSize)
 import Data.Vector.Storable (unsafeToForeignPtr, unsafeFromForeignPtr)
@@ -646,3 +656,61 @@ hPut h = liftIO . Data.ByteString.hPut h
 -- @since 1.2.0
 hGetChunk :: MonadIO m => Handle -> m ByteString
 hGetChunk = liftIO . flip Data.ByteString.hGetSome defaultChunkSize
+
+-- | Write a character to stdout
+--
+-- Uses system locale settings
+--
+-- @since 1.3.1
+putChar :: MonadIO m => Char -> m ()
+putChar = liftIO . Prelude.putChar
+
+-- | Write a Text to stdout
+--
+-- Uses system locale settings
+--
+-- @since 1.3.1
+putStr :: MonadIO m => Text -> m ()
+putStr = liftIO . TextIO.putStr
+
+-- | Write a Text followed by a newline to stdout
+--
+-- Uses system locale settings
+--
+-- @since 1.3.1
+putStrLn :: MonadIO m => Text -> m ()
+putStrLn = liftIO . TextIO.putStrLn
+
+-- | Read a character from stdin
+--
+-- Uses system locale settings
+--
+-- @since 1.3.1
+getChar :: MonadIO m => m Char
+getChar = liftIO Prelude.getChar
+
+-- | Read a line from stdin
+--
+-- Uses system locale settings
+--
+-- @since 1.3.1
+getLine :: MonadIO m => m Text
+getLine = liftIO TextIO.getLine
+
+-- | Read all input from stdin into a lazy Text ('LText')
+--
+-- Uses system locale settings
+--
+-- @since 1.3.1
+getContents :: MonadIO m => m LText
+getContents = liftIO LTextIO.getContents
+
+-- | Takes a function of type 'LText -> LText' and passes all input on stdin
+-- to it, then prints result to stdout
+--
+-- Uses lazy IO
+-- Uses system locale settings
+--
+-- @since 1.3.1
+interact :: MonadIO m => (LText -> LText) -> m ()
+interact = liftIO . LTextIO.interact
