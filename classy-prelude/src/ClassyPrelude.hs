@@ -660,6 +660,8 @@ hGetChunk = liftIO . flip Data.ByteString.hGetSome defaultChunkSize
 -- | Write a character to stdout
 --
 -- Uses system locale settings
+--
+-- @since 1.3.1
 putChar :: MonadIO m => Char -> m ()
 putChar = liftIO . Prelude.putChar
 
@@ -690,6 +692,8 @@ getChar = liftIO Prelude.getChar
 -- | Read a line from stdin
 --
 -- Uses system locale settings
+--
+-- @since 1.3.1
 getLine :: MonadIO m => m Text
 getLine = liftIO TextIO.getLine
 
