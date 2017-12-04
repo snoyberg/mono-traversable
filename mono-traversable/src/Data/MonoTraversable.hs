@@ -415,6 +415,16 @@ class MonoFoldable mono where
                 _  -> x
     {-# INLINE minimumByEx #-}
 
+    -- | Checks if the monomorphic container includes the supplied element.
+    oelem :: Eq (Element mono) => Element mono -> mono -> Bool
+    oelem e = List.elem e . otoList
+    {-# INLINE [0] oelem #-}
+
+    -- | Checks if the monomorphic container does not include the supplied element.
+    onotElem :: Eq (Element mono) => Element mono -> mono -> Bool
+    onotElem e = List.notElem e . otoList
+    {-# INLINE [0] onotElem #-}
+
 instance MonoFoldable S.ByteString where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr = S.foldr
@@ -424,6 +434,8 @@ instance MonoFoldable S.ByteString where
     oany = S.any
     onull = S.null
     olength = S.length
+    oelem = S.elem
+    onotElem = S.notElem
 
     omapM_ f (Unsafe.PS fptr offset len) = do
         let start = Unsafe.unsafeForeignPtrToPtr fptr `plusPtr` offset
@@ -470,6 +482,8 @@ instance MonoFoldable S.ByteString where
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
     {-# INLINE unsafeHead #-}
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
 {-# RULES "strict ByteString: ofoldMap = concatMap" ofoldMap = S.concatMap #-}
 
 instance MonoFoldable L.ByteString where
@@ -486,6 +500,9 @@ instance MonoFoldable L.ByteString where
     ofoldl1Ex' = L.foldl1'
     headEx = L.head
     lastEx = L.last
+    oelem = L.elem
+    onotElem = L.notElem
+
     {-# INLINE ofoldMap #-}
     {-# INLINE ofoldr #-}
     {-# INLINE ofoldl' #-}
@@ -499,6 +516,8 @@ instance MonoFoldable L.ByteString where
     {-# INLINE ofoldl1Ex' #-}
     {-# INLINE headEx #-}
     {-# INLINE lastEx #-}
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
 {-# RULES "lazy ByteString: ofoldMap = concatMap" ofoldMap = L.concatMap #-}
 
 instance MonoFoldable T.Text where
@@ -633,9 +652,13 @@ instance MonoFoldable (Vector a) where
     {-# INLINE unsafeHead #-}
     {-# INLINE maximumByEx #-}
     {-# INLINE minimumByEx #-}
-instance MonoFoldable (Set e) where
+instance Ord e => MonoFoldable (Set e) where
     olength = Set.size
+    oelem = Set.member
+    onotElem = Set.notMember
     {-# INLINE olength #-}
+    {-# INLINE oelem #-}
+    {-# INLINE onotElem #-}
 instance MonoFoldable (HashSet e)
 
 instance U.Unbox a => MonoFoldable (U.Vector a) where
@@ -830,25 +853,6 @@ osequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m (
 #endif
 osequence_ = omapM_ id
 {-# INLINE osequence_ #-}
-
--- | Checks if the monomorphic container includes the supplied element.
-oelem :: (MonoFoldable mono, Eq (Element mono)) => Element mono -> mono -> Bool
-oelem e = List.elem e . otoList
-{-# INLINE [0] oelem #-}
-
--- | Checks if the monomorphic container does not include the supplied element.
-onotElem :: (MonoFoldable mono, Eq (Element mono)) => Element mono -> mono -> Bool
-onotElem e = List.notElem e . otoList
-{-# INLINE [0] onotElem #-}
-
-{-# RULES "strict ByteString elem" oelem = S.elem #-}
-{-# RULES "strict ByteString notElem" onotElem = S.notElem #-}
-
-{-# RULES "lazy ByteString elem" oelem = L.elem #-}
-{-# RULES "lazy ByteString notElem" onotElem = L.notElem #-}
-
-{-# RULES "Set elem" forall (k :: Ord k => k). oelem k = Set.member k #-}
-{-# RULES "Set notElem" forall (k :: Ord k => k). onotElem k = Set.notMember k #-}
 
 -- | Get the minimum element of a monomorphic container.
 --
