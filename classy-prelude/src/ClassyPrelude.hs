@@ -223,6 +223,7 @@ import Data.Builder
 import Data.NonNull
 import qualified Data.ByteString
 import qualified Data.Text.IO as TextIO
+import qualified Data.Text.Lazy.IO as LTextIO
 import Data.ByteString.Internal (ByteString (PS))
 import Data.ByteString.Lazy.Internal (defaultChunkSize)
 import Data.Vector.Storable (unsafeToForeignPtr, unsafeFromForeignPtr)
@@ -692,19 +693,20 @@ getChar = liftIO Prelude.getChar
 getLine :: MonadIO m => m Text
 getLine = liftIO TextIO.getLine
 
--- | Read all input from stdin into a Text
+-- | Read all input from stdin into a lazy Text ('LText')
 --
 -- Uses system locale settings
 --
 -- @since 1.3.1
-getContents :: MonadIO m => m Text
-getContents = liftIO TextIO.getContents
+getContents :: MonadIO m => m LText
+getContents = liftIO LTextIO.getContents
 
--- | Takes a function of type 'Text -> Text' and passes all input on stdin
+-- | Takes a function of type 'LText -> LText' and passes all input on stdin
 -- to it, then prints result to stdout
 --
+-- Uses lazy IO
 -- Uses system locale settings
 --
 -- @since 1.3.1
-interact :: MonadIO m => (Text -> Text) -> m ()
-interact = liftIO . TextIO.interact
+interact :: MonadIO m => (LText -> LText) -> m ()
+interact = liftIO . LTextIO.interact
