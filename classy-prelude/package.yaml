@@ -23,7 +23,7 @@ library:
   - -fno-warn-orphans
   source-dirs: src
   dependencies:
-  - basic-prelude >=0.4 && <0.7
+  - basic-prelude >=0.4
   - containers >=0.4.2
   - text
   - bytestring
