@@ -1,3 +1,8 @@
+## 1.0.5.0
+
+* Move `oelem` and `onotElem` into the `MonoFoldable` class [#133](https://github.com/snoyberg/mono-traversable/issues/133)
+    * Change `instance MonoFoldable (Set e)` to `instance Ord e => MonoFoldable (Set e)`
+
 ## 1.0.4.0
 
 * Add `dropEnd` function to the `IsSequence` class, and a specialized implementation for `Text`
