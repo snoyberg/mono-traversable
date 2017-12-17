@@ -352,6 +352,8 @@ minimumBy cmp = minimumByEx cmp . toNullable
 
 -- | 'fmap' over the underlying container in a 'NonNull'.
 --
+-- @since 1.0.6.0
+
 -- ==== __Examples__
 --
 -- @
