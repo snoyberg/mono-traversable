@@ -45,8 +45,7 @@ import Control.Applicative
 import Control.Monad.Trans.Writer
 
 import Prelude (Bool (..), ($), IO, Eq (..), fromIntegral, Ord (..), String, mod, Int, Integer, show,
-                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe,
-                Double)
+                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe)
 import qualified Prelude
 
 newtype NonEmpty' a = NonEmpty' (NE.NonEmpty a)
@@ -216,7 +215,7 @@ main = hspec $ do
                 let nonNull = NN.ncons x (xs :: [Int])
                 in NN.mapNonNull Prelude.id nonNull @?= nonNull
             prop "mapNonNull (f . g) == mapNonNull f . mapNonNull g" $
-                \(Fn (f :: Double -> String)) (Fn (g :: Int -> Double)) x xs ->
+                \(Fn (f :: Integer -> String)) (Fn (g :: Int -> Integer)) x xs ->
                     let nns = NN.ncons x (xs :: [Int])
                     in NN.mapNonNull (f . g) nns @?= NN.mapNonNull f (NN.mapNonNull g nns)
 
