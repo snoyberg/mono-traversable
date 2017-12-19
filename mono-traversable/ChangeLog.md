@@ -1,3 +1,7 @@
+## 1.0.6.0
+
+* Add `mapNonNull` function to `Data.NonNull` [#150](https://github.com/snoyberg/mono-traversable/issues/150)
+
 ## 1.0.5.0
 
 * Move `oelem` and `onotElem` into the `MonoFoldable` class [#133](https://github.com/snoyberg/mono-traversable/issues/133)

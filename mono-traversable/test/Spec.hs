@@ -3,6 +3,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module Spec where
 
@@ -19,6 +21,7 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.HUnit ((@?=))
 import Test.QuickCheck hiding (NonEmptyList(..))
+import Test.QuickCheck.Function (pattern Fn)
 import qualified Test.QuickCheck.Modifiers as QCM
 
 import Data.Text (Text)
@@ -206,6 +209,15 @@ main = hspec $ do
         describe "fromNonEmpty" $ do
             prop "toMinList" $ \(NonEmpty' ne) ->
                 (NE.toList ne :: [Int]) @?= NN.toNullable (NN.toMinList ne)
+
+        describe "mapNonNull" $ do
+            prop "mapNonNull id == id" $ \x xs ->
+                let nonNull = NN.ncons x (xs :: [Int])
+                in NN.mapNonNull Prelude.id nonNull @?= nonNull
+            prop "mapNonNull (f . g) == mapNonNull f . mapNonNull g" $
+                \(Fn (f :: Integer -> String)) (Fn (g :: Int -> Integer)) x xs ->
+                    let nns = NN.ncons x (xs :: [Int])
+                    in NN.mapNonNull (f . g) nns @?= NN.mapNonNull f (NN.mapNonNull g nns)
 
         let -- | Type restricted 'NN.ncons'
             nconsAs :: IsSequence seq => Element seq -> [Element seq] -> seq -> NN.NonNull seq
