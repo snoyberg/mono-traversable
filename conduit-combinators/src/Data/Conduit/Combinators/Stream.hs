@@ -41,7 +41,6 @@ module Data.Conduit.Combinators.Stream
 -- BEGIN IMPORTS
 
 import           Control.Monad (liftM)
-import           Control.Monad.Base (MonadBase (liftBase))
 import           Control.Monad.Primitive (PrimMonad)
 import           Data.Builder
 import           Data.Conduit.Internal.Fusion
@@ -132,48 +131,48 @@ sinkLazyS :: (Monad m, LazySequence lazy strict)
 sinkLazyS = fmapS (fromChunks . ($ [])) $ foldS (\front next -> front . (next:)) id
 {-# INLINE sinkLazyS #-}
 
-sinkVectorS :: (MonadBase base m, V.Vector v a, PrimMonad base)
+sinkVectorS :: (V.Vector v a, PrimMonad m)
             => StreamConsumer a m (v a)
 sinkVectorS (Stream step ms0) = do
     Stream step' $ do
         s0 <- ms0
-        mv0 <- liftBase $ VM.new initSize
+        mv0 <- VM.new initSize
         return (initSize, 0, mv0, s0)
   where
     initSize = 10
     step' (maxSize, i, mv, s) = do
         res <- step s
         case res of
-            Stop () -> liftM (Stop . V.slice 0 i) $ liftBase (V.unsafeFreeze mv)
+            Stop () -> liftM (Stop . V.slice 0 i) $ V.unsafeFreeze mv
             Skip s' -> return $ Skip (maxSize, i, mv, s')
             Emit s' x -> do
-                liftBase $ VM.write mv i x
+                VM.write mv i x
                 let i' = i + 1
                 if i' >= maxSize
                     then do
                         let newMax = maxSize * 2
-                        mv' <- liftBase $ VM.grow mv maxSize
+                        mv' <- VM.grow mv maxSize
                         return $ Skip (newMax, i', mv', s')
                     else return $ Skip (maxSize, i', mv, s')
 {-# INLINE sinkVectorS #-}
 
-sinkVectorNS :: (MonadBase base m, V.Vector v a, PrimMonad base)
+sinkVectorNS :: (V.Vector v a, PrimMonad m)
              => Int -- ^ maximum allowed size
              -> StreamConsumer a m (v a)
 sinkVectorNS maxSize (Stream step ms0) = do
     Stream step' $ do
         s0 <- ms0
-        mv0 <- liftBase $ VM.new maxSize
+        mv0 <- VM.new maxSize
         return (0, mv0, s0)
   where
-    step' (i, mv, _) | i >= maxSize = liftM Stop $ liftBase $ V.unsafeFreeze mv
+    step' (i, mv, _) | i >= maxSize = liftM Stop $ V.unsafeFreeze mv
     step' (i, mv, s) = do
         res <- step s
         case res of
-            Stop () -> liftM (Stop . V.slice 0 i) $ liftBase (V.unsafeFreeze mv)
+            Stop () -> liftM (Stop . V.slice 0 i) $ V.unsafeFreeze mv
             Skip s' -> return $ Skip (i, mv, s')
             Emit s' x -> do
-                liftBase $ VM.write mv i x
+                VM.write mv i x
                 let i' = i + 1
                 return $ Skip (i', mv, s')
 {-# INLINE sinkVectorNS #-}

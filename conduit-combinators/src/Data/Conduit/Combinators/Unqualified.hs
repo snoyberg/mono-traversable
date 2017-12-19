@@ -29,6 +29,7 @@ module Data.Conduit.Combinators.Unqualified
     , CC.sourceHandle
     , CC.sourceIOHandle
     , stdinC
+    , CC.withSourceFile
 
       -- *** Random numbers
     , sourceRandom
@@ -117,6 +118,10 @@ module Data.Conduit.Combinators.Unqualified
     , printC
     , stdoutC
     , stderrC
+    , CC.withSinkFile
+    , CC.withSinkFileBuilder
+    , CC.sinkHandleBuilder
+    , CC.sinkHandleFlush
 
       -- ** Transformers
       -- *** Pure
@@ -190,7 +195,7 @@ import qualified Data.Conduit.Combinators as CC
 import Data.Builder
 import qualified Data.NonNull as NonNull
 import qualified Data.Traversable
-import           Control.Monad.Base          (MonadBase (..))
+import           Control.Applicative         (Alternative)
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
@@ -346,8 +351,8 @@ sourceRandomN = CC.sourceRandomN
 -- generator.
 --
 -- Since 1.0.0
-sourceRandomGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                => MWC.Gen (PrimState base)
+sourceRandomGen :: (MWC.Variate a, PrimMonad m)
+                => MWC.Gen (PrimState m)
                 -> Producer m a
 sourceRandomGen = CC.sourceRandomGen
 {-# INLINE sourceRandomGen #-}
@@ -356,8 +361,8 @@ sourceRandomGen = CC.sourceRandomGen
 -- random number.
 --
 -- Since 1.0.0
-sourceRandomNGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                 => MWC.Gen (PrimState base)
+sourceRandomNGen :: (MWC.Variate a, PrimMonad m)
+                 => MWC.Gen (PrimState m)
                  -> Int -- ^ count
                  -> Producer m a
 sourceRandomNGen = CC.sourceRandomNGen
@@ -392,9 +397,9 @@ sourceRandomNWith = CC.sourceRandomNWith
 -- Subject to fusion
 --
 -- Since 1.0.3
-sourceRandomGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                    => MWC.Gen (PrimState base)
-                    -> (MWC.Gen (PrimState base) -> base a)
+sourceRandomGenWith :: (MWC.Variate a, PrimMonad m)
+                    => MWC.Gen (PrimState m)
+                    -> (MWC.Gen (PrimState m) -> m a)
                     -> Producer m a
 sourceRandomGenWith = CC.sourceRandomGenWith
 {-# INLINE sourceRandomGenWith #-}
@@ -405,10 +410,10 @@ sourceRandomGenWith = CC.sourceRandomGenWith
 -- Subject to fusion
 --
 -- Since 1.0.3
-sourceRandomNGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                     => MWC.Gen (PrimState base)
+sourceRandomNGenWith :: (MWC.Variate a, PrimMonad m)
+                     => MWC.Gen (PrimState m)
                      -> Int -- ^ count
-                     -> (MWC.Gen (PrimState base) -> base a)
+                     -> (MWC.Gen (PrimState m) -> m a)
                      -> Producer m a
 sourceRandomNGenWith= CC.sourceRandomNGenWith
 {-# INLINE sourceRandomNGenWith #-}
@@ -618,6 +623,8 @@ orCE = CC.orE
 -- | 'Alternative'ly combine all values in the stream.
 --
 -- Since 1.1.1
+asumC :: (Monad m, Alternative f)
+      => Consumer (f a) m (f a)
 asumC = CC.asum
 
 -- | Are any values in the stream equal to the given value?
@@ -695,7 +702,7 @@ sinkList = CC.sinkList
 -- then converting to a @Vector@, as it avoids intermediate list constructors.
 --
 -- Since 1.0.0
-sinkVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+sinkVector :: (V.Vector v a, PrimMonad m)
            => Consumer a m (v a)
 sinkVector = CC.sinkVector
 {-# INLINE sinkVector #-}
@@ -708,7 +715,7 @@ sinkVector = CC.sinkVector
 -- then converting to a @Vector@, as it avoids intermediate list constructors.
 --
 -- Since 1.0.0
-sinkVectorN :: (MonadBase base m, V.Vector v a, PrimMonad base)
+sinkVectorN :: (V.Vector v a, PrimMonad m)
             => Int -- ^ maximum allowed size
             -> Consumer a m (v a)
 sinkVectorN = CC.sinkVectorN
@@ -1158,7 +1165,7 @@ mapWhileC = CC.mapWhile
 -- n. No empty vectors will be yielded.
 --
 -- Since 1.0.0
-conduitVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+conduitVector :: (V.Vector v a, PrimMonad m)
               => Int -- ^ maximum allowed size
               -> Conduit a m (v a)
 conduitVector = CC.conduitVector
@@ -1454,7 +1461,7 @@ linesUnboundedAsciiC = CC.linesUnboundedAscii
 -- <https://www.fpcomplete.com/user/snoyberg/library-documentation/vectorbuilder>
 --
 -- Since 1.0.0
-vectorBuilderC :: (PrimMonad base, MonadBase base m, V.Vector v e, MonadBase base n)
+vectorBuilderC :: (PrimMonad m, PrimMonad n, V.Vector v e, PrimState m ~ PrimState n)
               => Int -- ^ size
               -> ((e -> n ()) -> Sink i m r)
               -> ConduitM i (v e) m r

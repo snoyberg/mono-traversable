@@ -42,6 +42,7 @@ module Data.Conduit.Combinators
     , sourceHandle
     , sourceIOHandle
     , stdin
+    , CB.withSourceFile
 
       -- ** Random numbers
     , sourceRandom
@@ -131,6 +132,10 @@ module Data.Conduit.Combinators
     , print
     , stdout
     , stderr
+    , CB.withSinkFile
+    , CB.withSinkFileBuilder
+    , CB.sinkHandleBuilder
+    , CB.sinkHandleFlush
 
       -- * Transformers
       -- ** Pure
@@ -211,7 +216,6 @@ import           Control.Applicative         (Alternative(..), (<$>))
 import           Control.Exception           (assert)
 import           Control.Category            (Category (..))
 import           Control.Monad               (unless, when, (>=>), liftM, forever)
-import           Control.Monad.Base          (MonadBase (liftBase))
 import           Control.Monad.IO.Class      (MonadIO (..))
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Control.Monad.Trans.Class   (lift)
@@ -219,6 +223,7 @@ import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
 import           Data.Conduit.Binary         (sourceFile, sourceHandle, sourceIOHandle,
                                               sinkFile, sinkHandle, sinkIOHandle)
+import qualified Data.Conduit.Binary     as CB
 import qualified Data.Conduit.Filesystem as CF
 import           Data.Conduit.Internal       (ConduitM (..), Pipe (..))
 import qualified Data.Conduit.List           as CL
@@ -237,7 +242,6 @@ import           Prelude                     (Bool (..), Eq (..), Int,
                                               ($!), succ, FilePath)
 import Data.Word (Word8)
 import qualified Prelude
-import           System.IO                   (Handle)
 import qualified System.IO                   as SIO
 import qualified Data.Conduit.Text as CT
 import Data.ByteString (ByteString)
@@ -462,8 +466,8 @@ sourceRandomN cnt = sourceRandomNWith cnt MWC.uniform
 -- Subject to fusion
 --
 -- Since 1.0.0
-sourceRandomGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                => MWC.Gen (PrimState base)
+sourceRandomGen :: (MWC.Variate a, PrimMonad m)
+                => MWC.Gen (PrimState m)
                 -> Producer m a
 sourceRandomGen gen = sourceRandomGenWith gen MWC.uniform
 {-# INLINE sourceRandomGen #-}
@@ -474,8 +478,8 @@ sourceRandomGen gen = sourceRandomGenWith gen MWC.uniform
 -- Subject to fusion
 --
 -- Since 1.0.0
-sourceRandomNGen :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                 => MWC.Gen (PrimState base)
+sourceRandomNGen :: (MWC.Variate a, PrimMonad m)
+                 => MWC.Gen (PrimState m)
                  -> Int -- ^ count
                  -> Producer m a
 sourceRandomNGen gen cnt = sourceRandomNGenWith gen cnt MWC.uniform
@@ -508,11 +512,11 @@ INLINE_RULE(sourceRandomNWith, cnt f, initReplicate (liftIO MWC.createSystemRand
 -- Subject to fusion
 --
 -- Since 1.0.3
-sourceRandomGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                    => MWC.Gen (PrimState base)
-                    -> (MWC.Gen (PrimState base) -> base a)
+sourceRandomGenWith :: (MWC.Variate a, PrimMonad m)
+                    => MWC.Gen (PrimState m)
+                    -> (MWC.Gen (PrimState m) -> m a)
                     -> Producer m a
-INLINE_RULE(sourceRandomGenWith, gen f, initRepeat (return gen) (liftBase . f))
+INLINE_RULE(sourceRandomGenWith, gen f, initRepeat (return gen) f)
 
 -- | Create a stream of random values of length n from an arbitrary
 -- distribution, seeding from the system random number.
@@ -520,12 +524,12 @@ INLINE_RULE(sourceRandomGenWith, gen f, initRepeat (return gen) (liftBase . f))
 -- Subject to fusion
 --
 -- Since 1.0.3
-sourceRandomNGenWith :: (MWC.Variate a, MonadBase base m, PrimMonad base)
-                     => MWC.Gen (PrimState base)
+sourceRandomNGenWith :: (MWC.Variate a, PrimMonad m)
+                     => MWC.Gen (PrimState m)
                      -> Int -- ^ count
-                     -> (MWC.Gen (PrimState base) -> base a)
+                     -> (MWC.Gen (PrimState m) -> m a)
                      -> Producer m a
-INLINE_RULE(sourceRandomNGenWith, gen cnt f, initReplicate (return gen) (liftBase . f) cnt)
+INLINE_RULE(sourceRandomNGenWith, gen cnt f, initReplicate (return gen) f cnt)
 
 -- | Stream the contents of the given directory, without traversing deeply.
 --
@@ -917,21 +921,21 @@ INLINE_RULE0(sinkList, CL.consume)
 -- Subject to fusion
 --
 -- Since 1.0.0
-sinkVector, sinkVectorC :: (MonadBase base m, V.Vector v a, PrimMonad base)
+sinkVector, sinkVectorC :: (V.Vector v a, PrimMonad m)
                         => Consumer a m (v a)
 sinkVectorC = do
     let initSize = 10
-    mv0 <- liftBase $ VM.new initSize
+    mv0 <- VM.new initSize
     let go maxSize i mv | i >= maxSize = do
             let newMax = maxSize * 2
-            mv' <- liftBase $ VM.grow mv maxSize
+            mv' <- VM.grow mv maxSize
             go newMax i mv'
         go maxSize i mv = do
             mx <- await
             case mx of
-                Nothing -> V.slice 0 i <$> liftBase (V.unsafeFreeze mv)
+                Nothing -> V.slice 0 i <$> V.unsafeFreeze mv
                 Just x -> do
-                    liftBase $ VM.write mv i x
+                    VM.write mv i x
                     go maxSize (i + 1) mv
     go initSize 0 mv0
 {-# INLINEABLE sinkVectorC #-}
@@ -947,18 +951,18 @@ STREAMING0(sinkVector, sinkVectorC, sinkVectorS)
 -- Subject to fusion
 --
 -- Since 1.0.0
-sinkVectorN, sinkVectorNC :: (MonadBase base m, V.Vector v a, PrimMonad base)
+sinkVectorN, sinkVectorNC :: (V.Vector v a, PrimMonad m)
                           => Int -- ^ maximum allowed size
                           -> Consumer a m (v a)
 sinkVectorNC maxSize = do
-    mv <- liftBase $ VM.new maxSize
-    let go i | i >= maxSize = liftBase $ V.unsafeFreeze mv
+    mv <- VM.new maxSize
+    let go i | i >= maxSize = V.unsafeFreeze mv
         go i = do
             mx <- await
             case mx of
-                Nothing -> V.slice 0 i <$> liftBase (V.unsafeFreeze mv)
+                Nothing -> V.slice 0 i <$> V.unsafeFreeze mv
                 Just x -> do
-                    liftBase $ VM.write mv i x
+                    VM.write mv i x
                     go (i + 1)
     go 0
 {-# INLINEABLE sinkVectorNC #-}
@@ -1540,7 +1544,7 @@ mapWhile f =
 -- n. No empty vectors will be yielded.
 --
 -- Since 1.0.0
-conduitVector :: (MonadBase base m, V.Vector v a, PrimMonad base)
+conduitVector :: (V.Vector v a, PrimMonad m)
               => Int -- ^ maximum allowed size
               -> Conduit a m (v a)
 conduitVector size =
@@ -2055,16 +2059,16 @@ linesUnboundedAscii = splitOnUnboundedE (== 10)
 -- <https://www.fpcomplete.com/user/snoyberg/library-documentation/vectorbuilder>
 --
 -- Since 1.0.0
-vectorBuilder :: (PrimMonad base, MonadBase base m, V.Vector v e, MonadBase base n)
+vectorBuilder :: (PrimMonad m, PrimMonad n, V.Vector v e, PrimState m ~ PrimState n)
               => Int -- ^ size
               -> ((e -> n ()) -> Sink i m r)
               -> ConduitM i (v e) m r
 vectorBuilder size inner = do
-    ref <- liftBase $ do
+    ref <- do
         mv <- VM.new size
         newMutVar $! S 0 mv id
-    res <- onAwait (yieldS ref) (inner (liftBase . addE ref))
-    vs <- liftBase $ do
+    res <- onAwait (yieldS ref) (inner (addE ref))
+    vs <- do
         S idx mv front <- readMutVar ref
         end <-
             if idx == 0
@@ -2095,13 +2099,13 @@ onAwait (ConduitM callback) (ConduitM sink0) = ConduitM $ \rest -> let
     in go (sink0 Done)
 {-# INLINE onAwait #-}
 
-yieldS :: (PrimMonad base, MonadBase base m)
-       => MutVar (PrimState base) (S (PrimState base) v e)
+yieldS :: PrimMonad m
+       => MutVar (PrimState m) (S (PrimState m) v e)
        -> Producer m (v e)
 yieldS ref = do
-    S idx mv front <- liftBase $ readMutVar ref
+    S idx mv front <- readMutVar ref
     Prelude.mapM_ yield (front [])
-    liftBase $ writeMutVar ref $! S idx mv id
+    writeMutVar ref $! S idx mv id
 {-# INLINE yieldS #-}
 
 addE :: (PrimMonad m, V.Vector v e)

@@ -24,9 +24,12 @@ module Conduit
       -- * Monadic lifting
     , MonadIO (..)
     , MonadTrans (..)
-    , MonadBase (..)
     , MonadThrow (..)
-    , MonadBaseControl
+    , MonadUnliftIO (..)
+    , PrimMonad (..)
+    , UIO.withRunInIO
+    , UIO.withUnliftIO
+    , UIO.unliftIO
       -- * ResourceT
     , MonadResource
     , ResourceT
@@ -44,10 +47,10 @@ import Data.Conduit
 #if !MIN_VERSION_conduit(1,1,0)
 import Data.Conduit.Util hiding (zip)
 #endif
-import Control.Monad.IO.Class (MonadIO (..))
+import Control.Monad.IO.Unlift (MonadIO (..), MonadUnliftIO (..))
+import qualified Control.Monad.IO.Unlift as UIO
 import Control.Monad.Trans.Class (MonadTrans (..))
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Base (MonadBase (..))
+import Control.Monad.Primitive (PrimMonad (..), PrimState)
 #if MIN_VERSION_conduit(1, 0, 11)
 import Data.Conduit.Lift
 #endif
@@ -58,6 +61,6 @@ import Control.Monad.Trans.Resource (MonadResource, MonadThrow (..), runResource
 import Data.Acquire hiding (with)
 import qualified Data.Acquire
 
-withAcquire :: MonadBaseControl IO m => Acquire a -> (a -> m b) -> m b
-withAcquire = Data.Acquire.with
+withAcquire :: MonadUnliftIO m => Acquire a -> (a -> m b) -> m b
+withAcquire a inner = UIO.withRunInIO $ \run -> Data.Acquire.with a (run . inner)
 #endif

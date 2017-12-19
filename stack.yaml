@@ -9,3 +9,6 @@ packages:
 - classy-prelude-yesod
 - conduit-combinators
 - mutable-containers
+extra-deps:
+- conduit-extra-1.2.2
+- typed-process-0.2.0.0

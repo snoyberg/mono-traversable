@@ -1,3 +1,7 @@
+# 1.2.0
+
+* Switch over to `MonadUnliftIO`
+
 # 1.1.2
 
 * Add `chunksOfE` and `chunksOfExactlyE` combinators
