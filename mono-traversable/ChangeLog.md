@@ -1,3 +1,7 @@
+## 1.0.7.0
+
+* Change `sort` implementation [#153](https://github.com/snoyberg/mono-traversable/issues/153)
+
 ## 1.0.6.0
 
 * Add `mapNonNull` function to `Data.NonNull` [#150](https://github.com/snoyberg/mono-traversable/issues/150)

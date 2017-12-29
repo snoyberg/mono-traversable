@@ -1435,8 +1435,8 @@ replaceSeqLazyText old new
 -- > 'sort' [4,3,1,2]
 -- [1,2,3,4]
 -- @
-sort :: (IsSequence seq, Ord (Element seq)) => seq -> seq
-sort = fromList . V.toList . vectorSort . V.fromList . otoList
+sort :: (SemiSequence seq, Ord (Element seq)) => seq -> seq
+sort = sortBy compare
 {-# INLINE [0] sort #-}
 
 {-# RULES "strict ByteString sort" sort = S.sort #-}
