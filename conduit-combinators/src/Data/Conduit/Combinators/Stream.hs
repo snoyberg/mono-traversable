@@ -299,7 +299,7 @@ scanlMS f seed0 (Stream step ms0) =
 {-# INLINE scanlMS #-}
 
 mapAccumWhileS :: Monad m =>
-    (a -> s -> Either s (s, b)) -> s -> StreamConduitM a b m s
+    (a -> s -> Either s (s, b)) -> s -> StreamConduitT a b m s
 mapAccumWhileS f initial (Stream step ms0) =
     Stream step' (liftM (initial, ) ms0)
   where
@@ -314,7 +314,7 @@ mapAccumWhileS f initial (Stream step ms0) =
 {-# INLINE mapAccumWhileS #-}
 
 mapAccumWhileMS :: Monad m =>
-    (a -> s -> m (Either s (s, b))) -> s -> StreamConduitM a b m s
+    (a -> s -> m (Either s (s, b))) -> s -> StreamConduitT a b m s
 mapAccumWhileMS f initial (Stream step ms0) =
     Stream step' (liftM (initial, ) ms0)
   where
@@ -468,8 +468,8 @@ initRepeatS mseed f _ =
 -- | Utility function
 fmapS :: Monad m
       => (a -> b)
-      -> StreamConduitM i o m a
-      -> StreamConduitM i o m b
+      -> StreamConduitT i o m a
+      -> StreamConduitT i o m b
 fmapS f s inp =
     case s inp of
         Stream step ms0 -> Stream (fmap (liftM (fmap f)) step) ms0

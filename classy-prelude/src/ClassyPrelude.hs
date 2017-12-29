@@ -186,20 +186,7 @@ import Data.IORef.Lifted
 import Data.Mutable
 import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
-import Control.Monad.Base
-import Control.Monad.Trans.Unlift
-import qualified Control.Concurrent.Async as Async
-import Control.Concurrent.Async
-    ( Async
-    , waitSTM, pollSTM, waitCatchSTM
-    )
-import Control.Concurrent.Async.Lifted.Safe
-    ( Pure, Forall
-    , async, asyncBound, asyncOn, asyncWithUnmask, asyncOnWithUnmask
-    , withAsync, withAsyncBound, withAsyncOn, withAsyncWithUnmask, withAsyncOnWithUnmask
-    , asyncThreadId
-    , race, race_, concurrently, mapConcurrently, Concurrently (..)
-    )
+import UnliftIO
 
 import Data.Vector.Instances ()
 import CorePrelude hiding
@@ -208,9 +195,7 @@ import CorePrelude hiding
     , handle, finally, catch, bracket, bracket_, bracketOnError
     , catchIOError
     , uninterruptibleMask, uninterruptibleMask_
-#if MIN_VERSION_safe_exceptions(0,1,4)
     , catchJust, handleJust, tryJust
-#endif
     )
 import Data.ChunkedZip
 import qualified Data.Char as Char
@@ -240,12 +225,10 @@ import Data.Time
     , fromGregorian
     , formatTime
     , parseTime
-#if MIN_VERSION_time(1,5,0)
     , parseTimeM
-#endif
     , getCurrentTime
+    , defaultTimeLocale
     )
-import Data.Time.Locale.Compat (defaultTimeLocale)
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map

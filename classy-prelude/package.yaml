@@ -1,5 +1,5 @@
 name:          classy-prelude
-version:       1.3.1
+version:       1.4.0
 synopsis:      A typeclass-based Prelude.
 description:   See docs and README at <http://www.stackage.org/package/classy-prelude>
 category:      Control, Prelude
@@ -29,16 +29,16 @@ library:
   - bytestring
   - vector
   - hashable
-  - lifted-base >=0.2
-  - lifted-async >=0.3
+  #- lifted-base >=0.2
+  #- lifted-async >=0.3
   - async
   - mono-traversable >=1.0
   - mono-traversable-instances
-  - exceptions >=0.5
+  #- exceptions >=0.5
   - semigroups
   - vector-instances
-  - time
-  - time-locale-compat
+  - time >= 1.5
+  #- time-locale-compat
   - chunked-data >=0.3
   - ghc-prim
   - stm
@@ -47,12 +47,13 @@ library:
   - bifunctors
   - mutable-containers >=0.3 && <0.4
   - dlist >=0.7
-  - transformers-base
-  - safe-exceptions >=0.1.1
+  #- transformers-base
+  #- safe-exceptions >=0.1.1
   - deepseq
-  - monad-unlift >=0.2
+  #- monad-unlift >=0.2
   - say
   - stm-chans >=3
+  - unliftio >= 0.2.1.0
 
 tests:
   test:

@@ -9,7 +9,7 @@ module Data.Conduit.Combinators.Internal
     ) where
 
 import Data.Conduit
-import Data.Conduit.Internal (ConduitM (..), Pipe (..), injectLeftovers)
+import Data.Conduit.Internal (ConduitT (..), Pipe (..), injectLeftovers)
 import Data.Void (absurd)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (replicateM_, forever)
@@ -25,7 +25,12 @@ import Data.Conduit.Internal.Fusion
 -- Subject to fusion
 --
 -- Since 0.2.1
-initReplicate, initReplicateC :: Monad m => m seed -> (seed -> m a) -> Int -> Producer m a
+initReplicate, initReplicateC
+  :: Monad m
+  => m seed
+  -> (seed -> m o)
+  -> Int
+  -> ConduitT i o m ()
 initReplicateC mseed f cnt = do
     seed <- lift mseed
     replicateM_ cnt (lift (f seed) >>= yield)
@@ -38,11 +43,11 @@ STREAMING(initReplicate, initReplicateC, initReplicateS, mseed f cnt)
 -- Since 0.2.1
 initReplicateConnect :: Monad m
                      => m seed
-                     -> (seed -> m a)
+                     -> (seed -> m i)
                      -> Int
-                     -> Sink a m b
-                     -> m b
-initReplicateConnect mseed f cnt0 (ConduitM sink0) = do
+                     -> ConduitT i Void m r
+                     -> m r
+initReplicateConnect mseed f cnt0 (ConduitT sink0) = do
     seed <- mseed
     let loop cnt sink | cnt <= 0 = finish sink
         loop _ (Done r) = return r
@@ -58,7 +63,7 @@ initReplicateConnect mseed f cnt0 (ConduitM sink0) = do
     finish (PipeM mp) = mp >>= finish
     finish (Leftover _ i) = absurd i
 {-# RULES "initReplicateConnect" forall mseed f cnt sink.
-    initReplicate mseed f cnt $$ sink
+    runConduit (initReplicate mseed f cnt .| sink)
     = initReplicateConnect mseed f cnt sink
   #-}
 
@@ -68,7 +73,11 @@ initReplicateConnect mseed f cnt0 (ConduitM sink0) = do
 -- Subject to fusion
 --
 -- Since 0.2.1
-initRepeat, initRepeatC :: Monad m => m seed -> (seed -> m a) -> Producer m a
+initRepeat, initRepeatC
+  :: Monad m
+  => m seed
+  -> (seed -> m o)
+  -> ConduitT i o m ()
 initRepeatC mseed f = do
     seed <- lift mseed
     forever $ lift (f seed) >>= yield
@@ -81,10 +90,10 @@ STREAMING(initRepeat, initRepeatC, initRepeatS, mseed f)
 -- Since 0.2.1
 initRepeatConnect :: Monad m
                   => m seed
-                  -> (seed -> m a)
-                  -> Sink a m b
-                  -> m b
-initRepeatConnect mseed f (ConduitM sink0) = do
+                  -> (seed -> m i)
+                  -> ConduitT i Void m r
+                  -> m r
+initRepeatConnect mseed f (ConduitT sink0) = do
     seed <- mseed
     let loop (Done r) = return r
         loop (NeedInput p _) = f seed >>= loop . p
@@ -93,6 +102,6 @@ initRepeatConnect mseed f (ConduitM sink0) = do
         loop (Leftover _ i) = absurd i
     loop (injectLeftovers (sink0 Done))
 {-# RULES "initRepeatConnect" forall mseed f sink.
-    initRepeat mseed f $$ sink
+    runConduit (initRepeat mseed f .| sink)
     = initRepeatConnect mseed f sink
   #-}

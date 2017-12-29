@@ -1,5 +1,5 @@
 name:        conduit-combinators
-version:     1.2.0
+version:     1.3.0
 synopsis:    Commonly used conduit functions, for both chunked and unchunked data
 description: See docs and README at <http://www.stackage.org/package/conduit-combinators>
 category:    Data, Conduit
@@ -15,6 +15,7 @@ extra-source-files:
 - README.md
 
 dependencies:
+- base >=4.9 && <5
 - transformers
 - vector
 - text
@@ -23,6 +24,14 @@ dependencies:
 - base16-bytestring
 - filepath
 - unliftio-core
+- chunked-data >=0.3 # FIXME needed?
+- conduit >=1.3
+- conduit-extra >=1.3
+- mono-traversable >=1.0
+- primitive
+- unix-compat
+- base64-bytestring >=0.1.1.1
+- resourcet
 library:
   ghc-options:
   - -Wall
@@ -30,16 +39,6 @@ library:
   source-dirs: src
   other-modules:
   - Data.Conduit.Combinators.Unqualified
-  dependencies:
-  - base >=4 && <5
-  - chunked-data >=0.3
-  - conduit >=1.2.8
-  - conduit-extra >=1.2.2
-  - mono-traversable >=1.0
-  - primitive
-  - unix-compat
-  - base64-bytestring >=0.1.1.1
-  - resourcet
   include-dirs: .
   when:
   - condition: os(windows)
@@ -59,14 +58,9 @@ tests:
     cpp-options: -DTEST
     dependencies:
     - conduit-combinators
-    - base
     - hspec >=1.3
-    - chunked-data
-    - mono-traversable
     - silently
-    - base64-bytestring
     - mtl
-    - conduit
     - containers
     - safe
     - QuickCheck >=2.5

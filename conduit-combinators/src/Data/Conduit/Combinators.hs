@@ -125,10 +125,10 @@ module Data.Conduit.Combinators
     , foldMapME
 
       -- ** I\/O
-    , sinkFile
+    , CB.sinkFile
     , sinkFileBS
-    , sinkHandle
-    , sinkIOHandle
+    , CB.sinkHandle
+    , CB.sinkIOHandle
     , print
     , stdout
     , stderr
@@ -222,10 +222,10 @@ import           Control.Monad.Trans.Class   (lift)
 import           Control.Monad.Trans.Resource (MonadResource, MonadThrow)
 import           Data.Conduit
 import           Data.Conduit.Binary         (sourceFile, sourceHandle, sourceIOHandle,
-                                              sinkFile, sinkHandle, sinkIOHandle)
+                                              sinkFile, sinkHandle)
 import qualified Data.Conduit.Binary     as CB
 import qualified Data.Conduit.Filesystem as CF
-import           Data.Conduit.Internal       (ConduitM (..), Pipe (..))
+import           Data.Conduit.Internal       (ConduitT (..), Pipe (..))
 import qualified Data.Conduit.List           as CL
 import           Data.Maybe                  (fromMaybe, isNothing, isJust)
 import           Data.Monoid                 (Monoid (..))
@@ -253,13 +253,8 @@ import Data.Conduit.Internal.Fusion
 import           Data.Primitive.MutVar       (MutVar, newMutVar, readMutVar,
                                               writeMutVar)
 
-#if MIN_VERSION_mono_traversable(1,0,0)
 import qualified Data.Sequences as DTE
 import           Data.Sequences (LazySequence (..))
-#else
-import           Data.Sequences.Lazy
-import qualified Data.Textual.Encoding as DTE
-#endif
 
 -- Defines INLINE_RULE0, INLINE_RULE, STREAMING0, and STREAMING.
 #include "fusion-macros.h"
@@ -314,7 +309,7 @@ import qualified Data.Textual.Encoding as DTE
 -- Since 1.0.0
 yieldMany, yieldManyC :: (Monad m, MonoFoldable mono)
                       => mono
-                      -> Producer m (Element mono)
+                      -> ConduitT i (Element mono) m ()
 yieldManyC = ofoldMap yield
 {-# INLINE yieldManyC #-}
 STREAMING(yieldMany, yieldManyC, yieldManyS, x)
@@ -327,7 +322,7 @@ STREAMING(yieldMany, yieldManyC, yieldManyS, x)
 unfold :: Monad m
        => (b -> Maybe (a, b))
        -> b
-       -> Producer m a
+       -> ConduitT i a m ()
 INLINE_RULE(unfold, f x, CL.unfold f x)
 
 -- | Enumerate from a value to a final value, inclusive, via 'succ'.
@@ -339,7 +334,7 @@ INLINE_RULE(unfold, f x, CL.unfold f x)
 -- Subject to fusion
 --
 -- Since 1.0.0
-enumFromTo :: (Monad m, Enum a, Ord a) => a -> a -> Producer m a
+enumFromTo :: (Monad m, Enum a, Ord a) => a -> a -> ConduitT i a m ()
 INLINE_RULE(enumFromTo, f t, CL.enumFromTo f t)
 
 -- | Produces an infinite stream of repeated applications of f to x.
@@ -347,7 +342,7 @@ INLINE_RULE(enumFromTo, f t, CL.enumFromTo f t)
 -- Subject to fusion
 --
 -- Since 1.0.0
-iterate :: Monad m => (a -> a) -> a -> Producer m a
+iterate :: Monad m => (a -> a) -> a -> ConduitT i a m ()
 INLINE_RULE(iterate, f t, CL.iterate f t)
 
 -- | Produce an infinite stream consisting entirely of the given value.
@@ -355,7 +350,7 @@ INLINE_RULE(iterate, f t, CL.iterate f t)
 -- Subject to fusion
 --
 -- Since 1.0.0
-repeat :: Monad m => a -> Producer m a
+repeat :: Monad m => a -> ConduitT i a m ()
 INLINE_RULE(repeat, x, iterate id x)
 
 -- | Produce a finite stream consisting of n copies of the given value.
@@ -366,7 +361,7 @@ INLINE_RULE(repeat, x, iterate id x)
 replicate :: Monad m
           => Int
           -> a
-          -> Producer m a
+          -> ConduitT i a m ()
 INLINE_RULE(replicate, n x, CL.replicate n x)
 
 -- | Generate a producer by yielding each of the strict chunks in a @LazySequence@.
@@ -378,7 +373,7 @@ INLINE_RULE(replicate, n x, CL.replicate n x)
 -- Since 1.0.0
 sourceLazy :: (Monad m, LazySequence lazy strict)
            => lazy
-           -> Producer m strict
+           -> ConduitT i strict m ()
 INLINE_RULE(sourceLazy, x, yieldMany (toChunks x))
 
 -- | Repeatedly run the given action and yield all values it produces.
@@ -388,7 +383,7 @@ INLINE_RULE(sourceLazy, x, yieldMany (toChunks x))
 -- Since 1.0.0
 repeatM, repeatMC :: Monad m
                   => m a
-                  -> Producer m a
+                  -> ConduitT i a m ()
 repeatMC m = forever $ lift m >>= yield
 {-# INLINE repeatMC #-}
 STREAMING(repeatM, repeatMC, repeatMS, m)
@@ -402,7 +397,7 @@ STREAMING(repeatM, repeatMC, repeatMS, m)
 repeatWhileM, repeatWhileMC :: Monad m
                             => m a
                             -> (a -> Bool)
-                            -> Producer m a
+                            -> ConduitT i a m ()
 repeatWhileMC m f =
     loop
   where
@@ -419,14 +414,14 @@ STREAMING(repeatWhileM, repeatWhileMC, repeatWhileMS, m f)
 replicateM :: Monad m
            => Int
            -> m a
-           -> Producer m a
+           -> ConduitT i a m ()
 INLINE_RULE(replicateM, n m, CL.replicateM n m)
 
 -- | 'sourceFile' specialized to 'ByteString' to help with type
 -- inference.
 --
 -- @since 1.0.7
-sourceFileBS :: MonadResource m => FilePath -> Producer m ByteString
+sourceFileBS :: MonadResource m => FilePath -> ConduitT i ByteString m ()
 sourceFileBS = sourceFile
 {-# INLINE sourceFileBS #-}
 
@@ -435,7 +430,7 @@ sourceFileBS = sourceFile
 -- Subject to fusion
 --
 -- Since 1.0.0
-stdin :: MonadIO m => Producer m ByteString
+stdin :: MonadIO m => ConduitT i ByteString m ()
 INLINE_RULE0(stdin, sourceHandle SIO.stdin)
 
 -- | Create an infinite stream of random values, seeding from the system random
@@ -444,7 +439,7 @@ INLINE_RULE0(stdin, sourceHandle SIO.stdin)
 -- Subject to fusion
 --
 -- Since 1.0.0
-sourceRandom :: (MWC.Variate a, MonadIO m) => Producer m a
+sourceRandom :: (MWC.Variate a, MonadIO m) => ConduitT i a m ()
 sourceRandom = sourceRandomWith MWC.uniform
 {-# INLINE sourceRandom #-}
 
@@ -456,7 +451,7 @@ sourceRandom = sourceRandomWith MWC.uniform
 -- Since 1.0.0
 sourceRandomN :: (MWC.Variate a, MonadIO m)
               => Int -- ^ count
-              -> Producer m a
+              -> ConduitT i a m ()
 sourceRandomN cnt = sourceRandomNWith cnt MWC.uniform
 {-# INLINE sourceRandomN #-}
 
@@ -468,7 +463,7 @@ sourceRandomN cnt = sourceRandomNWith cnt MWC.uniform
 -- Since 1.0.0
 sourceRandomGen :: (MWC.Variate a, PrimMonad m)
                 => MWC.Gen (PrimState m)
-                -> Producer m a
+                -> ConduitT i a m ()
 sourceRandomGen gen = sourceRandomGenWith gen MWC.uniform
 {-# INLINE sourceRandomGen #-}
 
@@ -481,7 +476,7 @@ sourceRandomGen gen = sourceRandomGenWith gen MWC.uniform
 sourceRandomNGen :: (MWC.Variate a, PrimMonad m)
                  => MWC.Gen (PrimState m)
                  -> Int -- ^ count
-                 -> Producer m a
+                 -> ConduitT i a m ()
 sourceRandomNGen gen cnt = sourceRandomNGenWith gen cnt MWC.uniform
 {-# INLINE sourceRandomNGen #-}
 
@@ -491,7 +486,7 @@ sourceRandomNGen gen cnt = sourceRandomNGenWith gen cnt MWC.uniform
 -- Subject to fusion
 --
 -- Since 1.0.3
-sourceRandomWith :: (MWC.Variate a, MonadIO m) => (MWC.GenIO -> SIO.IO a) -> Producer m a
+sourceRandomWith :: (MWC.Variate a, MonadIO m) => (MWC.GenIO -> SIO.IO a) -> ConduitT i a m ()
 INLINE_RULE(sourceRandomWith, f, initRepeat (liftIO MWC.createSystemRandom) (liftIO . f))
 
 -- | Create a stream of random values of length n from an arbitrary
@@ -503,7 +498,7 @@ INLINE_RULE(sourceRandomWith, f, initRepeat (liftIO MWC.createSystemRandom) (lif
 sourceRandomNWith :: (MWC.Variate a, MonadIO m)
                   => Int -- ^ count
                   -> (MWC.GenIO -> SIO.IO a)
-                  -> Producer m a
+                  -> ConduitT i a m ()
 INLINE_RULE(sourceRandomNWith, cnt f, initReplicate (liftIO MWC.createSystemRandom) (liftIO . f) cnt)
 
 -- | Create an infinite stream of random values from an arbitrary distribution,
@@ -515,7 +510,7 @@ INLINE_RULE(sourceRandomNWith, cnt f, initReplicate (liftIO MWC.createSystemRand
 sourceRandomGenWith :: (MWC.Variate a, PrimMonad m)
                     => MWC.Gen (PrimState m)
                     -> (MWC.Gen (PrimState m) -> m a)
-                    -> Producer m a
+                    -> ConduitT i a m ()
 INLINE_RULE(sourceRandomGenWith, gen f, initRepeat (return gen) f)
 
 -- | Create a stream of random values of length n from an arbitrary
@@ -528,7 +523,7 @@ sourceRandomNGenWith :: (MWC.Variate a, PrimMonad m)
                      => MWC.Gen (PrimState m)
                      -> Int -- ^ count
                      -> (MWC.Gen (PrimState m) -> m a)
-                     -> Producer m a
+                     -> ConduitT i a m ()
 INLINE_RULE(sourceRandomNGenWith, gen cnt f, initReplicate (return gen) f cnt)
 
 -- | Stream the contents of the given directory, without traversing deeply.
@@ -542,7 +537,7 @@ INLINE_RULE(sourceRandomNGenWith, gen cnt f, initReplicate (return gen) f cnt)
 -- @foo/bar@ and @foo/baz@.
 --
 -- Since 1.0.0
-sourceDirectory :: MonadResource m => FilePath -> Producer m FilePath
+sourceDirectory :: MonadResource m => FilePath -> ConduitT i FilePath m ()
 sourceDirectory = CF.sourceDirectory
 
 -- | Deeply stream the contents of the given directory.
@@ -555,7 +550,7 @@ sourceDirectory = CF.sourceDirectory
 sourceDirectoryDeep :: MonadResource m
                     => Bool -- ^ Follow directory symlinks
                     -> FilePath -- ^ Root directory
-                    -> Producer m FilePath
+                    -> ConduitT i FilePath m ()
 sourceDirectoryDeep = CF.sourceDirectoryDeep
 
 -- | Ignore a certain number of values in the stream.
@@ -563,7 +558,7 @@ sourceDirectoryDeep = CF.sourceDirectoryDeep
 -- Since 1.0.0
 drop :: Monad m
      => Int
-     -> Consumer a m ()
+     -> ConduitT a o m ()
 INLINE_RULE(drop, n, CL.drop n)
 
 -- | Drop a certain number of elements from a chunked stream.
@@ -571,7 +566,7 @@ INLINE_RULE(drop, n, CL.drop n)
 -- Since 1.0.0
 dropE :: (Monad m, Seq.IsSequence seq)
       => Seq.Index seq
-      -> Consumer seq m ()
+      -> ConduitT seq o m ()
 dropE =
     loop
   where
@@ -592,7 +587,7 @@ dropE =
 -- Since 1.0.0
 dropWhile :: Monad m
           => (a -> Bool)
-          -> Consumer a m ()
+          -> ConduitT a o m ()
 dropWhile f =
     loop
   where
@@ -605,7 +600,7 @@ dropWhile f =
 -- Since 1.0.0
 dropWhileE :: (Monad m, Seq.IsSequence seq)
            => (Element seq -> Bool)
-           -> Consumer seq m ()
+           -> ConduitT seq o m ()
 dropWhileE f =
     loop
   where
@@ -623,7 +618,7 @@ dropWhileE f =
 --
 -- Since 1.0.0
 fold :: (Monad m, Monoid a)
-     => Consumer a m a
+     => ConduitT a o m a
 INLINE_RULE0(fold, CL.foldMap id)
 
 -- | Monoidally combine all elements in the chunked stream.
@@ -632,7 +627,7 @@ INLINE_RULE0(fold, CL.foldMap id)
 --
 -- Since 1.0.0
 foldE :: (Monad m, MonoFoldable mono, Monoid (Element mono))
-      => Consumer mono m (Element mono)
+      => ConduitT mono o m (Element mono)
 INLINE_RULE0(foldE, CL.fold (\accum mono -> accum `mappend` ofoldMap id mono) mempty)
 
 -- | A strict left fold.
@@ -640,7 +635,7 @@ INLINE_RULE0(foldE, CL.fold (\accum mono -> accum `mappend` ofoldMap id mono) me
 -- Subject to fusion
 --
 -- Since 1.0.0
-foldl :: Monad m => (a -> b -> a) -> a -> Consumer b m a
+foldl :: Monad m => (a -> b -> a) -> a -> ConduitT b o m a
 INLINE_RULE(foldl, f x, CL.fold f x)
 
 -- | A strict left fold on a chunked stream.
@@ -651,7 +646,7 @@ INLINE_RULE(foldl, f x, CL.fold f x)
 foldlE :: (Monad m, MonoFoldable mono)
        => (a -> Element mono -> a)
        -> a
-       -> Consumer mono m a
+       -> ConduitT mono o m a
 INLINE_RULE(foldlE, f x, CL.fold (ofoldlPrime f) x)
 
 -- Work around CPP not supporting identifiers with primes...
@@ -665,7 +660,7 @@ ofoldlPrime = ofoldl'
 -- Since 1.0.0
 foldMap :: (Monad m, Monoid b)
         => (a -> b)
-        -> Consumer a m b
+        -> ConduitT a o m b
 INLINE_RULE(foldMap, f, CL.foldMap f)
 
 -- | Apply the provided mapping function and monoidal combine all elements of the chunked stream.
@@ -675,14 +670,14 @@ INLINE_RULE(foldMap, f, CL.foldMap f)
 -- Since 1.0.0
 foldMapE :: (Monad m, MonoFoldable mono, Monoid w)
          => (Element mono -> w)
-         -> Consumer mono m w
+         -> ConduitT mono o m w
 INLINE_RULE(foldMapE, f, CL.foldMap (ofoldMap f))
 
 -- | A strict left fold with no starting value.  Returns 'Nothing'
 -- when the stream is empty.
 --
 -- Subject to fusion
-foldl1, foldl1C :: Monad m => (a -> a -> a) -> Consumer a m (Maybe a)
+foldl1, foldl1C :: Monad m => (a -> a -> a) -> ConduitT a o m (Maybe a)
 foldl1C f =
     await >>= maybe (return Nothing) loop
   where
@@ -697,7 +692,7 @@ STREAMING(foldl1, foldl1C, foldl1S, f)
 -- Since 1.0.0
 foldl1E :: (Monad m, MonoFoldable mono, a ~ Element mono)
         => (a -> a -> a)
-        -> Consumer mono m (Maybe a)
+        -> ConduitT mono o m (Maybe a)
 INLINE_RULE(foldl1E, f, foldl (foldMaybeNull f) Nothing)
 
 -- Helper for foldl1E
@@ -723,7 +718,7 @@ foldMaybeNull f macc mono =
 -- Since 1.0.0
 all, allC :: Monad m
           => (a -> Bool)
-          -> Consumer a m Bool
+          -> ConduitT a o m Bool
 allC f = fmap isNothing $ find (Prelude.not . f)
 {-# INLINE allC #-}
 STREAMING(all, allC, allS, f)
@@ -738,7 +733,7 @@ STREAMING(all, allC, allS, f)
 -- Since 1.0.0
 allE :: (Monad m, MonoFoldable mono)
      => (Element mono -> Bool)
-     -> Consumer mono m Bool
+     -> ConduitT mono o m Bool
 INLINE_RULE(allE, f, all (oall f))
 
 -- | Check that at least one value in the stream returns True.
@@ -751,7 +746,7 @@ INLINE_RULE(allE, f, all (oall f))
 -- Since 1.0.0
 any, anyC :: Monad m
           => (a -> Bool)
-          -> Consumer a m Bool
+          -> ConduitT a o m Bool
 anyC = fmap isJust . find
 {-# INLINE anyC #-}
 STREAMING(any, anyC, anyS, f)
@@ -766,7 +761,7 @@ STREAMING(any, anyC, anyS, f)
 -- Since 1.0.0
 anyE :: (Monad m, MonoFoldable mono)
      => (Element mono -> Bool)
-     -> Consumer mono m Bool
+     -> ConduitT mono o m Bool
 INLINE_RULE(anyE, f, any (oany f))
 
 -- | Are all values in the stream True?
@@ -776,7 +771,7 @@ INLINE_RULE(anyE, f, any (oany f))
 -- Subject to fusion
 --
 -- Since 1.0.0
-and :: Monad m => Consumer Bool m Bool
+and :: Monad m => ConduitT Bool o m Bool
 INLINE_RULE0(and, all id)
 
 -- | Are all elements in the chunked stream True?
@@ -787,13 +782,8 @@ INLINE_RULE0(and, all id)
 --
 -- Since 1.0.0
 andE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
-     => Consumer mono m Bool
-#if __GLASGOW_HASKELL__ >= 706
+     => ConduitT mono o m Bool
 INLINE_RULE0(andE, allE id)
-#else
-andE = allE id
-{-# INLINE andE #-}
-#endif
 
 -- | Are any values in the stream True?
 --
@@ -802,7 +792,7 @@ andE = allE id
 -- Subject to fusion
 --
 -- Since 1.0.0
-or :: Monad m => Consumer Bool m Bool
+or :: Monad m => ConduitT Bool o m Bool
 INLINE_RULE0(or, any id)
 
 -- | Are any elements in the chunked stream True?
@@ -813,19 +803,14 @@ INLINE_RULE0(or, any id)
 --
 -- Since 1.0.0
 orE :: (Monad m, MonoFoldable mono, Element mono ~ Bool)
-    => Consumer mono m Bool
-#if __GLASGOW_HASKELL__ >= 706
+    => ConduitT mono o m Bool
 INLINE_RULE0(orE, anyE id)
-#else
-orE = anyE id
-{-# INLINE orE #-}
-#endif
 
 -- | 'Alternative'ly combine all values in the stream.
 --
 -- Since 1.1.1
 asum :: (Monad m, Alternative f)
-     => Consumer (f a) m (f a)
+     => ConduitT (f a) o m (f a)
 INLINE_RULE0(asum, foldl (<|>) empty)
 
 -- | Are any values in the stream equal to the given value?
@@ -835,7 +820,7 @@ INLINE_RULE0(asum, foldl (<|>) empty)
 -- Subject to fusion
 --
 -- Since 1.0.0
-elem :: (Monad m, Eq a) => a -> Consumer a m Bool
+elem :: (Monad m, Eq a) => a -> ConduitT a o m Bool
 INLINE_RULE(elem, x, any (== x))
 
 -- | Are any elements in the chunked stream equal to the given element?
@@ -845,18 +830,10 @@ INLINE_RULE(elem, x, any (== x))
 -- Subject to fusion
 --
 -- Since 1.0.0
-#if MIN_VERSION_mono_traversable(1,0,0)
 elemE :: (Monad m, Seq.IsSequence seq, Eq (Element seq))
-#else
-elemE :: (Monad m, Seq.EqSequence seq)
-#endif
       => Element seq
-      -> Consumer seq m Bool
-#if MIN_VERSION_mono_traversable(0,8,0)
+      -> ConduitT seq o m Bool
 INLINE_RULE(elemE, f, any (oelem f))
-#else
-INLINE_RULE(elemE, f, any (Seq.elem f))
-#endif
 
 -- | Are no values in the stream equal to the given value?
 --
@@ -865,7 +842,7 @@ INLINE_RULE(elemE, f, any (Seq.elem f))
 -- Subject to fusion
 --
 -- Since 1.0.0
-notElem :: (Monad m, Eq a) => a -> Consumer a m Bool
+notElem :: (Monad m, Eq a) => a -> ConduitT a o m Bool
 INLINE_RULE(notElem, x, all (/= x))
 
 -- | Are no elements in the chunked stream equal to the given element?
@@ -875,18 +852,10 @@ INLINE_RULE(notElem, x, all (/= x))
 -- Subject to fusion
 --
 -- Since 1.0.0
-#if MIN_VERSION_mono_traversable(1,0,0)
 notElemE :: (Monad m, Seq.IsSequence seq, Eq (Element seq))
-#else
-notElemE :: (Monad m, Seq.EqSequence seq)
-#endif
          => Element seq
-         -> Consumer seq m Bool
-#if MIN_VERSION_mono_traversable(0,8,0)
+         -> ConduitT seq o m Bool
 INLINE_RULE(notElemE, x, all (onotElem x))
-#else
-INLINE_RULE(notElemE, x, all (Seq.notElem x))
-#endif
 
 -- | Consume all incoming strict chunks into a lazy sequence.
 -- Note that the entirety of the sequence will be resident at memory.
@@ -898,7 +867,7 @@ INLINE_RULE(notElemE, x, all (Seq.notElem x))
 --
 -- Since 1.0.0
 sinkLazy, sinkLazyC :: (Monad m, LazySequence lazy strict)
-                    => Consumer strict m lazy
+                    => ConduitT strict o m lazy
 sinkLazyC = (fromChunks . ($ [])) <$> CL.fold (\front next -> front . (next:)) id
 {-# INLINE sinkLazyC #-}
 STREAMING0(sinkLazy, sinkLazyC, sinkLazyS)
@@ -909,7 +878,7 @@ STREAMING0(sinkLazy, sinkLazyC, sinkLazyS)
 -- Subject to fusion
 --
 -- Since 1.0.0
-sinkList :: Monad m => Consumer a m [a]
+sinkList :: Monad m => ConduitT a o m [a]
 INLINE_RULE0(sinkList, CL.consume)
 
 -- | Sink incoming values into a vector, growing the vector as necessary to fit
@@ -922,7 +891,7 @@ INLINE_RULE0(sinkList, CL.consume)
 --
 -- Since 1.0.0
 sinkVector, sinkVectorC :: (V.Vector v a, PrimMonad m)
-                        => Consumer a m (v a)
+                        => ConduitT a o m (v a)
 sinkVectorC = do
     let initSize = 10
     mv0 <- VM.new initSize
@@ -953,7 +922,7 @@ STREAMING0(sinkVector, sinkVectorC, sinkVectorS)
 -- Since 1.0.0
 sinkVectorN, sinkVectorNC :: (V.Vector v a, PrimMonad m)
                           => Int -- ^ maximum allowed size
-                          -> Consumer a m (v a)
+                          -> ConduitT a o m (v a)
 sinkVectorNC maxSize = do
     mv <- VM.new maxSize
     let go i | i >= maxSize = V.unsafeFreeze mv
@@ -976,7 +945,7 @@ STREAMING(sinkVectorN, sinkVectorNC, sinkVectorNS, maxSize)
 --
 -- Since 1.0.0
 sinkBuilder :: (Monad m, Monoid builder, ToBuilder a builder)
-            => Consumer a m builder
+            => ConduitT a o m builder
 INLINE_RULE0(sinkBuilder, foldMap toBuilder)
 
 -- | Same as @sinkBuilder@, but afterwards convert the builder to its lazy
@@ -994,7 +963,7 @@ INLINE_RULE0(sinkBuilder, foldMap toBuilder)
 --
 -- Since 1.0.0
 sinkLazyBuilder, sinkLazyBuilderC :: (Monad m, Monoid builder, ToBuilder a builder, Builder builder lazy)
-                                  => Consumer a m lazy
+                                  => ConduitT a o m lazy
 sinkLazyBuilderC = fmap builderToLazy sinkBuilder
 {-# INLINE sinkLazyBuilderC #-}
 STREAMING0(sinkLazyBuilder, sinkLazyBuilderC, sinkLazyBuilderS)
@@ -1004,13 +973,13 @@ STREAMING0(sinkLazyBuilder, sinkLazyBuilderC, sinkLazyBuilderS)
 -- Subject to fusion
 --
 -- Since 1.0.0
-sinkNull :: Monad m => Consumer a m ()
+sinkNull :: Monad m => ConduitT a o m ()
 INLINE_RULE0(sinkNull, CL.sinkNull)
 
 -- | Same as @await@, but discards any leading 'onull' values.
 --
 -- Since 1.0.0
-awaitNonNull :: (Monad m, MonoFoldable a) => Consumer a m (Maybe (NonNull.NonNull a))
+awaitNonNull :: (Monad m, MonoFoldable a) => ConduitT a o m (Maybe (NonNull.NonNull a))
 awaitNonNull =
     go
   where
@@ -1022,19 +991,19 @@ awaitNonNull =
 -- | Take a single value from the stream, if available.
 --
 -- Since 1.0.5
-head :: Monad m => Consumer a m (Maybe a)
+head :: Monad m => ConduitT a o m (Maybe a)
 head = CL.head
 
 -- | Same as 'head', but returns a default value if none are available from the stream.
 --
 -- Since 1.0.5
-headDef :: Monad m => a -> Consumer a m a
+headDef :: Monad m => a -> ConduitT a o m a
 headDef a = fromMaybe a <$> head
 
 -- | Get the next element in the chunked stream.
 --
 -- Since 1.0.0
-headE :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
+headE :: (Monad m, Seq.IsSequence seq) => ConduitT seq o m (Maybe (Element seq))
 headE =
     loop
   where
@@ -1050,14 +1019,14 @@ headE =
 -- | View the next value in the stream without consuming it.
 --
 -- Since 1.0.0
-peek :: Monad m => Consumer a m (Maybe a)
+peek :: Monad m => ConduitT a o m (Maybe a)
 peek = CL.peek
 {-# INLINE peek #-}
 
 -- | View the next element in the chunked stream without consuming it.
 --
 -- Since 1.0.0
-peekE :: (Monad m, MonoFoldable mono) => Consumer mono m (Maybe (Element mono))
+peekE :: (Monad m, MonoFoldable mono) => ConduitT mono o m (Maybe (Element mono))
 peekE =
     loop
   where
@@ -1075,7 +1044,7 @@ peekE =
 -- Subject to fusion
 --
 -- Since 1.0.0
-last, lastC :: Monad m => Consumer a m (Maybe a)
+last, lastC :: Monad m => ConduitT a o m (Maybe a)
 lastC =
     await >>= maybe (return Nothing) loop
   where
@@ -1085,7 +1054,7 @@ STREAMING0(last, lastC, lastS)
 -- | Same as 'last', but returns a default value if none are available from the stream.
 --
 -- Since 1.0.5
-lastDef :: Monad m => a -> Consumer a m a
+lastDef :: Monad m => a -> ConduitT a o m a
 lastDef a = fromMaybe a <$> last
 
 -- | Retrieve the last element in the chunked stream, if present.
@@ -1093,7 +1062,7 @@ lastDef a = fromMaybe a <$> last
 -- Subject to fusion
 --
 -- Since 1.0.0
-lastE, lastEC :: (Monad m, Seq.IsSequence seq) => Consumer seq m (Maybe (Element seq))
+lastE, lastEC :: (Monad m, Seq.IsSequence seq) => ConduitT seq o m (Maybe (Element seq))
 lastEC =
     awaitNonNull >>= maybe (return Nothing) (loop . NonNull.last)
   where
@@ -1105,7 +1074,7 @@ STREAMING0(lastE, lastEC, lastES)
 -- Subject to fusion
 --
 -- Since 1.0.0
-length :: (Monad m, Num len) => Consumer a m len
+length :: (Monad m, Num len) => ConduitT a o m len
 INLINE_RULE0(length, foldl (\x _ -> x + 1) 0)
 
 -- | Count how many elements are in the chunked stream.
@@ -1113,7 +1082,7 @@ INLINE_RULE0(length, foldl (\x _ -> x + 1) 0)
 -- Subject to fusion
 --
 -- Since 1.0.0
-lengthE :: (Monad m, Num len, MonoFoldable mono) => Consumer mono m len
+lengthE :: (Monad m, Num len, MonoFoldable mono) => ConduitT mono o m len
 INLINE_RULE0(lengthE, foldl (\x y -> x + fromIntegral (olength y)) 0)
 
 -- | Count how many values in the stream pass the given predicate.
@@ -1121,7 +1090,7 @@ INLINE_RULE0(lengthE, foldl (\x y -> x + fromIntegral (olength y)) 0)
 -- Subject to fusion
 --
 -- Since 1.0.0
-lengthIf :: (Monad m, Num len) => (a -> Bool) -> Consumer a m len
+lengthIf :: (Monad m, Num len) => (a -> Bool) -> ConduitT a o m len
 INLINE_RULE(lengthIf, f, foldl (\cnt a -> if f a then (cnt + 1) else cnt) 0)
 
 -- | Count how many elements in the chunked stream pass the given predicate.
@@ -1130,7 +1099,7 @@ INLINE_RULE(lengthIf, f, foldl (\cnt a -> if f a then (cnt + 1) else cnt) 0)
 --
 -- Since 1.0.0
 lengthIfE :: (Monad m, Num len, MonoFoldable mono)
-          => (Element mono -> Bool) -> Consumer mono m len
+          => (Element mono -> Bool) -> ConduitT mono o m len
 INLINE_RULE(lengthIfE, f, foldlE (\cnt a -> if f a then (cnt + 1) else cnt) 0)
 
 -- | Get the largest value in the stream, if present.
@@ -1138,7 +1107,7 @@ INLINE_RULE(lengthIfE, f, foldlE (\cnt a -> if f a then (cnt + 1) else cnt) 0)
 -- Subject to fusion
 --
 -- Since 1.0.0
-maximum :: (Monad m, Ord a) => Consumer a m (Maybe a)
+maximum :: (Monad m, Ord a) => ConduitT a o m (Maybe a)
 INLINE_RULE0(maximum, foldl1 max)
 
 -- | Get the largest element in the chunked stream, if present.
@@ -1146,11 +1115,7 @@ INLINE_RULE0(maximum, foldl1 max)
 -- Subject to fusion
 --
 -- Since 1.0.0
-#if MIN_VERSION_mono_traversable(1,0,0)
-maximumE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => Consumer seq m (Maybe (Element seq))
-#else
-maximumE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
-#endif
+maximumE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => ConduitT seq o m (Maybe (Element seq))
 INLINE_RULE0(maximumE, foldl1E max)
 
 -- | Get the smallest value in the stream, if present.
@@ -1158,7 +1123,7 @@ INLINE_RULE0(maximumE, foldl1E max)
 -- Subject to fusion
 --
 -- Since 1.0.0
-minimum :: (Monad m, Ord a) => Consumer a m (Maybe a)
+minimum :: (Monad m, Ord a) => ConduitT a o m (Maybe a)
 INLINE_RULE0(minimum, foldl1 min)
 
 -- | Get the smallest element in the chunked stream, if present.
@@ -1166,11 +1131,7 @@ INLINE_RULE0(minimum, foldl1 min)
 -- Subject to fusion
 --
 -- Since 1.0.0
-#if MIN_VERSION_mono_traversable(1,0,0)
-minimumE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => Consumer seq m (Maybe (Element seq))
-#else
-minimumE :: (Monad m, Seq.OrdSequence seq) => Consumer seq m (Maybe (Element seq))
-#endif
+minimumE :: (Monad m, Seq.IsSequence seq, Ord (Element seq)) => ConduitT seq o m (Maybe (Element seq))
 INLINE_RULE0(minimumE, foldl1E min)
 
 -- | True if there are no values in the stream.
@@ -1178,7 +1139,7 @@ INLINE_RULE0(minimumE, foldl1E min)
 -- This function does not modify the stream.
 --
 -- Since 1.0.0
-null :: Monad m => Consumer a m Bool
+null :: Monad m => ConduitT a o m Bool
 null = (maybe True (\_ -> False)) `fmap` peek
 {-# INLINE null #-}
 
@@ -1189,7 +1150,7 @@ null = (maybe True (\_ -> False)) `fmap` peek
 --
 -- Since 1.0.0
 nullE :: (Monad m, MonoFoldable mono)
-      => Consumer mono m Bool
+      => ConduitT mono o m Bool
 nullE =
     go
   where
@@ -1202,7 +1163,7 @@ nullE =
 -- Subject to fusion
 --
 -- Since 1.0.0
-sum :: (Monad m, Num a) => Consumer a m a
+sum :: (Monad m, Num a) => ConduitT a o m a
 INLINE_RULE0(sum, foldl (+) 0)
 
 -- | Get the sum of all elements in the chunked stream.
@@ -1210,7 +1171,7 @@ INLINE_RULE0(sum, foldl (+) 0)
 -- Subject to fusion
 --
 -- Since 1.0.0
-sumE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m (Element mono)
+sumE :: (Monad m, MonoFoldable mono, Num (Element mono)) => ConduitT mono o m (Element mono)
 INLINE_RULE0(sumE, foldlE (+) 0)
 
 -- | Get the product of all values in the stream.
@@ -1218,7 +1179,7 @@ INLINE_RULE0(sumE, foldlE (+) 0)
 -- Subject to fusion
 --
 -- Since 1.0.0
-product :: (Monad m, Num a) => Consumer a m a
+product :: (Monad m, Num a) => ConduitT a o m a
 INLINE_RULE0(product, foldl (*) 1)
 
 -- | Get the product of all elements in the chunked stream.
@@ -1226,7 +1187,7 @@ INLINE_RULE0(product, foldl (*) 1)
 -- Subject to fusion
 --
 -- Since 1.0.0
-productE :: (Monad m, MonoFoldable mono, Num (Element mono)) => Consumer mono m (Element mono)
+productE :: (Monad m, MonoFoldable mono, Num (Element mono)) => ConduitT mono o m (Element mono)
 INLINE_RULE0(productE, foldlE (*) 1)
 
 -- | Find the first matching value.
@@ -1234,7 +1195,7 @@ INLINE_RULE0(productE, foldlE (*) 1)
 -- Subject to fusion
 --
 -- Since 1.0.0
-find, findC :: Monad m => (a -> Bool) -> Consumer a m (Maybe a)
+find, findC :: Monad m => (a -> Bool) -> ConduitT a o m (Maybe a)
 findC f =
     loop
   where
@@ -1248,7 +1209,7 @@ STREAMING(find, findC, findS, f)
 -- Subject to fusion
 --
 -- Since 1.0.0
-mapM_ :: Monad m => (a -> m ()) -> Consumer a m ()
+mapM_ :: Monad m => (a -> m ()) -> ConduitT a o m ()
 INLINE_RULE(mapM_, f, CL.mapM_ f)
 
 -- | Apply the action to all elements in the chunked stream.
@@ -1256,7 +1217,7 @@ INLINE_RULE(mapM_, f, CL.mapM_ f)
 -- Subject to fusion
 --
 -- Since 1.0.0
-mapM_E :: (Monad m, MonoFoldable mono) => (Element mono -> m ()) -> Consumer mono m ()
+mapM_E :: (Monad m, MonoFoldable mono) => (Element mono -> m ()) -> ConduitT mono o m ()
 INLINE_RULE(mapM_E, f, CL.mapM_ (omapM_ f))
 
 -- | A monadic strict left fold.
@@ -1264,7 +1225,7 @@ INLINE_RULE(mapM_E, f, CL.mapM_ (omapM_ f))
 -- Subject to fusion
 --
 -- Since 1.0.0
-foldM :: Monad m => (a -> b -> m a) -> a -> Consumer b m a
+foldM :: Monad m => (a -> b -> m a) -> a -> ConduitT b o m a
 INLINE_RULE(foldM, f x, CL.foldM f x)
 
 -- | A monadic strict left fold on a chunked stream.
@@ -1275,7 +1236,7 @@ INLINE_RULE(foldM, f x, CL.foldM f x)
 foldME :: (Monad m, MonoFoldable mono)
        => (a -> Element mono -> m a)
        -> a
-       -> Consumer mono m a
+       -> ConduitT mono o m a
 INLINE_RULE(foldME, f x, foldM (ofoldlM f) x)
 
 -- | Apply the provided monadic mapping function and monoidal combine all values.
@@ -1283,7 +1244,7 @@ INLINE_RULE(foldME, f x, foldM (ofoldlM f) x)
 -- Subject to fusion
 --
 -- Since 1.0.0
-foldMapM :: (Monad m, Monoid w) => (a -> m w) -> Consumer a m w
+foldMapM :: (Monad m, Monoid w) => (a -> m w) -> ConduitT a o m w
 INLINE_RULE(foldMapM, f, CL.foldMapM f)
 
 -- | Apply the provided monadic mapping function and monoidal combine all
@@ -1294,14 +1255,14 @@ INLINE_RULE(foldMapM, f, CL.foldMapM f)
 -- Since 1.0.0
 foldMapME :: (Monad m, MonoFoldable mono, Monoid w)
           => (Element mono -> m w)
-          -> Consumer mono m w
+          -> ConduitT mono o m w
 INLINE_RULE(foldMapME, f, CL.foldM (ofoldlM (\accum e -> mappend accum `liftM` f e)) mempty)
 
 -- | 'sinkFile' specialized to 'ByteString' to help with type
 -- inference.
 --
 -- @since 1.0.7
-sinkFileBS :: MonadResource m => FilePath -> Consumer ByteString m ()
+sinkFileBS :: MonadResource m => FilePath -> ConduitT ByteString o m ()
 sinkFileBS = sinkFile
 {-# INLINE sinkFileBS #-}
 
@@ -1310,7 +1271,7 @@ sinkFileBS = sinkFile
 -- Subject to fusion
 --
 -- Since 1.0.0
-print :: (Show a, MonadIO m) => Consumer a m ()
+print :: (Show a, MonadIO m) => ConduitT a o m ()
 INLINE_RULE0(print, mapM_ (liftIO . Prelude.print))
 
 -- | @sinkHandle@ applied to @stdout@.
@@ -1318,7 +1279,7 @@ INLINE_RULE0(print, mapM_ (liftIO . Prelude.print))
 -- Subject to fusion
 --
 -- Since 1.0.0
-stdout :: MonadIO m => Consumer ByteString m ()
+stdout :: MonadIO m => ConduitT ByteString o m ()
 INLINE_RULE0(stdout, sinkHandle SIO.stdout)
 
 -- | @sinkHandle@ applied to @stderr@.
@@ -1326,7 +1287,7 @@ INLINE_RULE0(stdout, sinkHandle SIO.stdout)
 -- Subject to fusion
 --
 -- Since 1.0.0
-stderr :: MonadIO m => Consumer ByteString m ()
+stderr :: MonadIO m => ConduitT ByteString o m ()
 INLINE_RULE0(stderr, sinkHandle SIO.stderr)
 
 -- | Apply a transformation to all values in a stream.
@@ -1334,7 +1295,7 @@ INLINE_RULE0(stderr, sinkHandle SIO.stderr)
 -- Subject to fusion
 --
 -- Since 1.0.0
-map :: Monad m => (a -> b) -> Conduit a m b
+map :: Monad m => (a -> b) -> ConduitT a b m ()
 INLINE_RULE(map, f, CL.map f)
 
 -- | Apply a transformation to all elements in a chunked stream.
@@ -1342,7 +1303,7 @@ INLINE_RULE(map, f, CL.map f)
 -- Subject to fusion
 --
 -- Since 1.0.0
-mapE :: (Monad m, Functor f) => (a -> b) -> Conduit (f a) m (f b)
+mapE :: (Monad m, Functor f) => (a -> b) -> ConduitT (f a) (f b) m ()
 INLINE_RULE(mapE, f, CL.map (fmap f))
 
 -- | Apply a monomorphic transformation to all elements in a chunked stream.
@@ -1353,7 +1314,7 @@ INLINE_RULE(mapE, f, CL.map (fmap f))
 -- Subject to fusion
 --
 -- Since 1.0.0
-omapE :: (Monad m, MonoFunctor mono) => (Element mono -> Element mono) -> Conduit mono m mono
+omapE :: (Monad m, MonoFunctor mono) => (Element mono -> Element mono) -> ConduitT mono mono m ()
 INLINE_RULE(omapE, f, CL.map (omap f))
 
 -- | Apply the function to each value in the stream, resulting in a foldable
@@ -1367,7 +1328,7 @@ INLINE_RULE(omapE, f, CL.map (omap f))
 -- Since 1.0.0
 concatMap, concatMapC :: (Monad m, MonoFoldable mono)
                       => (a -> mono)
-                      -> Conduit a m (Element mono)
+                      -> ConduitT a (Element mono) m ()
 concatMapC f = awaitForever (yieldMany . f)
 {-# INLINE concatMapC #-}
 STREAMING(concatMap, concatMapC, concatMapS, f)
@@ -1383,7 +1344,7 @@ STREAMING(concatMap, concatMapC, concatMapS, f)
 -- Since 1.0.0
 concatMapE :: (Monad m, MonoFoldable mono, Monoid w)
            => (Element mono -> w)
-           -> Conduit mono m w
+           -> ConduitT mono w m ()
 INLINE_RULE(concatMapE, f, CL.map (ofoldMap f))
 
 -- | Stream up to n number of values downstream.
@@ -1395,7 +1356,7 @@ INLINE_RULE(concatMapE, f, CL.map (ofoldMap f))
 -- Subject to fusion
 --
 -- Since 1.0.0
-take :: Monad m => Int -> Conduit a m a
+take :: Monad m => Int -> ConduitT a a m ()
 INLINE_RULE(take, n, CL.isolate n)
 
 -- | Stream up to n number of elements downstream in a chunked stream.
@@ -1407,7 +1368,7 @@ INLINE_RULE(take, n, CL.isolate n)
 -- Since 1.0.0
 takeE :: (Monad m, Seq.IsSequence seq)
       => Seq.Index seq
-      -> Conduit seq m seq
+      -> ConduitT seq seq m ()
 takeE =
     loop
   where
@@ -1431,7 +1392,7 @@ takeE =
 -- Since 1.0.0
 takeWhile :: Monad m
           => (a -> Bool)
-          -> Conduit a m a
+          -> ConduitT a a m ()
 takeWhile f =
     loop
   where
@@ -1448,7 +1409,7 @@ takeWhile f =
 -- Since 1.0.0
 takeWhileE :: (Monad m, Seq.IsSequence seq)
            => (Element seq -> Bool)
-           -> Conduit seq m seq
+           -> ConduitT seq seq m ()
 takeWhileE f =
     loop
   where
@@ -1470,7 +1431,7 @@ takeWhileE f =
 -- early. This function will discard any additional values in the stream if
 -- they are unconsumed.
 --
--- Note that this function takes a downstream @ConduitM@ as a parameter, as
+-- Note that this function takes a downstream @ConduitT@ as a parameter, as
 -- opposed to working with normal fusion. For more information, see
 -- <http://www.yesodweb.com/blog/2013/10/core-flaw-pipes-conduit>, the section
 -- titled \"pipes and conduit: isolate\".
@@ -1478,9 +1439,9 @@ takeWhileE f =
 -- Since 1.0.0
 takeExactly :: Monad m
             => Int
-            -> ConduitM a b m r
-            -> ConduitM a b m r
-takeExactly count inner = take count =$= do
+            -> ConduitT a b m r
+            -> ConduitT a b m r
+takeExactly count inner = take count .| do
     r <- inner
     CL.sinkNull
     return r
@@ -1490,9 +1451,9 @@ takeExactly count inner = take count =$= do
 -- Since 1.0.0
 takeExactlyE :: (Monad m, Seq.IsSequence a)
              => Seq.Index a
-             -> ConduitM a b m r
-             -> ConduitM a b m r
-takeExactlyE count inner = takeE count =$= do
+             -> ConduitT a b m r
+             -> ConduitT a b m r
+takeExactlyE count inner = takeE count .| do
     r <- inner
     CL.sinkNull
     return r
@@ -1505,7 +1466,7 @@ takeExactlyE count inner = takeE count =$= do
 --
 -- Since 1.0.0
 concat, concatC :: (Monad m, MonoFoldable mono)
-                => Conduit mono m (Element mono)
+                => ConduitT mono (Element mono) m ()
 concatC = awaitForever yieldMany
 STREAMING0(concat, concatC, concatS)
 
@@ -1514,7 +1475,7 @@ STREAMING0(concat, concatC, concatS)
 -- Subject to fusion
 --
 -- Since 1.0.0
-filter :: Monad m => (a -> Bool) -> Conduit a m a
+filter :: Monad m => (a -> Bool) -> ConduitT a a m ()
 INLINE_RULE(filter, f, CL.filter f)
 
 -- | Keep only elements in the chunked stream passing a given predicate.
@@ -1522,13 +1483,13 @@ INLINE_RULE(filter, f, CL.filter f)
 -- Subject to fusion
 --
 -- Since 1.0.0
-filterE :: (Seq.IsSequence seq, Monad m) => (Element seq -> Bool) -> Conduit seq m seq
+filterE :: (Seq.IsSequence seq, Monad m) => (Element seq -> Bool) -> ConduitT seq seq m ()
 INLINE_RULE(filterE, f, CL.map (Seq.filter f))
 
 -- | Map values as long as the result is @Just@.
 --
 -- Since 1.0.0
-mapWhile :: Monad m => (a -> Maybe b) -> Conduit a m b
+mapWhile :: Monad m => (a -> Maybe b) -> ConduitT a b m ()
 mapWhile f =
     loop
   where
@@ -1546,7 +1507,7 @@ mapWhile f =
 -- Since 1.0.0
 conduitVector :: (V.Vector v a, PrimMonad m)
               => Int -- ^ maximum allowed size
-              -> Conduit a m (v a)
+              -> ConduitT a (v a) m ()
 conduitVector size =
     loop
   where
@@ -1562,7 +1523,7 @@ conduitVector size =
 -- Subject to fusion
 --
 -- Since 1.0.6
-scanl, scanlC :: Monad m => (a -> b -> a) -> a -> Conduit b m a
+scanl, scanlC :: Monad m => (a -> b -> a) -> a -> ConduitT b a m ()
 scanlC f =
     loop
   where
@@ -1581,8 +1542,7 @@ STREAMING(scanl, scanlC, scanlS, f x)
 -- accumulator via @Left@.
 --
 -- Subject to fusion
-mapAccumWhile, mapAccumWhileC :: Monad m =>
-    (a -> s -> Either s (s, b)) -> s -> ConduitM a b m s
+mapAccumWhile, mapAccumWhileC :: Monad m => (a -> s -> Either s (s, b)) -> s -> ConduitT a b m s
 mapAccumWhileC f =
     loop
   where
@@ -1597,7 +1557,7 @@ STREAMING(mapAccumWhile, mapAccumWhileC, mapAccumWhileS, f s)
 -- Subject to fusion
 --
 -- Since 1.0.0
-concatMapAccum :: Monad m => (a -> accum -> (accum, [b])) -> accum -> Conduit a m b
+concatMapAccum :: Monad m => (a -> accum -> (accum, [b])) -> accum -> ConduitT a b m ()
 INLINE_RULE0(concatMapAccum, CL.concatMapAccum)
 
 -- | Insert the given value between each two values in the stream.
@@ -1605,7 +1565,7 @@ INLINE_RULE0(concatMapAccum, CL.concatMapAccum)
 -- Subject to fusion
 --
 -- Since 1.0.0
-intersperse, intersperseC :: Monad m => a -> Conduit a m a
+intersperse, intersperseC :: Monad m => a -> ConduitT a a m ()
 intersperseC x =
     await >>= omapM_ go
   where
@@ -1621,7 +1581,7 @@ STREAMING(intersperse, intersperseC, intersperseS, x)
 -- Subject to fusion
 --
 -- Since 1.0.0
-slidingWindow, slidingWindowC :: (Monad m, Seq.IsSequence seq, Element seq ~ a) => Int -> Conduit a m seq
+slidingWindow, slidingWindowC :: (Monad m, Seq.IsSequence seq, Element seq ~ a) => Int -> ConduitT a seq m ()
 slidingWindowC sz = go (max 1 sz) mempty
     where goContinue st = await >>=
                           maybe (return ())
@@ -1643,7 +1603,7 @@ STREAMING(slidingWindow, slidingWindowC, slidingWindowS, sz)
 -- 'chunksOfExactlyE' which will not yield this last element)
 --
 -- @since 1.1.2
-chunksOfE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> Conduit seq m seq
+chunksOfE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> ConduitT seq seq m ()
 chunksOfE chunkSize = chunksOfExactlyE chunkSize >> (await >>= maybe (return ()) yield)
 
 -- | Split input into chunk of size 'chunkSize'
@@ -1652,7 +1612,7 @@ chunksOfE chunkSize = chunksOfExactlyE chunkSize >> (await >>= maybe (return ())
 -- leftover (see also 'chunksOfE')
 --
 -- @since 1.1.2
-chunksOfExactlyE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> Conduit seq m seq
+chunksOfExactlyE :: (Monad m, Seq.IsSequence seq) => Seq.Index seq -> ConduitT seq seq m ()
 chunksOfExactlyE chunkSize = await >>= maybe (return ()) start
     where
         start b
@@ -1675,7 +1635,7 @@ chunksOfExactlyE chunkSize = await >>= maybe (return ()) start
 codeWith :: Monad m
          => Int
          -> (ByteString -> Either e ByteString)
-         -> Conduit ByteString m ByteString
+         -> ConduitT ByteString ByteString m ()
 codeWith size f =
     loop
   where
@@ -1718,7 +1678,7 @@ codeWith size f =
 -- | Apply base64-encoding to the stream.
 --
 -- Since 1.0.0
-encodeBase64 :: Monad m => Conduit ByteString m ByteString
+encodeBase64 :: Monad m => ConduitT ByteString ByteString m ()
 encodeBase64 = codeWith 3 (Right . B64.encode)
 {-# INLINE encodeBase64 #-}
 
@@ -1726,14 +1686,14 @@ encodeBase64 = codeWith 3 (Right . B64.encode)
 -- invalid chunk.
 --
 -- Since 1.0.0
-decodeBase64 :: Monad m => Conduit ByteString m ByteString
+decodeBase64 :: Monad m => ConduitT ByteString ByteString m ()
 decodeBase64 = codeWith 4 B64.decode
 {-# INLINE decodeBase64 #-}
 
 -- | Apply URL-encoding to the stream.
 --
 -- Since 1.0.0
-encodeBase64URL :: Monad m => Conduit ByteString m ByteString
+encodeBase64URL :: Monad m => ConduitT ByteString ByteString m ()
 encodeBase64URL = codeWith 3 (Right . B64U.encode)
 {-# INLINE encodeBase64URL #-}
 
@@ -1741,7 +1701,7 @@ encodeBase64URL = codeWith 3 (Right . B64U.encode)
 -- first invalid chunk.
 --
 -- Since 1.0.0
-decodeBase64URL :: Monad m => Conduit ByteString m ByteString
+decodeBase64URL :: Monad m => ConduitT ByteString ByteString m ()
 decodeBase64URL = codeWith 4 B64U.decode
 {-# INLINE decodeBase64URL #-}
 
@@ -1750,14 +1710,14 @@ decodeBase64URL = codeWith 4 B64U.decode
 -- Subject to fusion
 --
 -- Since 1.0.0
-encodeBase16 :: Monad m => Conduit ByteString m ByteString
+encodeBase16 :: Monad m => ConduitT ByteString ByteString m ()
 INLINE_RULE0(encodeBase16, map B16.encode)
 
 -- | Apply base16-decoding to the stream. Will stop decoding on the first
 -- invalid chunk.
 --
 -- Since 1.0.0
-decodeBase16 :: Monad m => Conduit ByteString m ByteString
+decodeBase16 :: Monad m => ConduitT ByteString ByteString m ()
 decodeBase16 =
     codeWith 2 decode'
   where
@@ -1776,7 +1736,7 @@ decodeBase16 =
 -- Subject to fusion
 --
 -- Since 1.0.0
-mapM :: Monad m => (a -> m b) -> Conduit a m b
+mapM :: Monad m => (a -> m b) -> ConduitT a b m ()
 INLINE_RULE(mapM, f, CL.mapM f)
 
 -- | Apply a monadic transformation to all elements in a chunked stream.
@@ -1784,7 +1744,7 @@ INLINE_RULE(mapM, f, CL.mapM f)
 -- Subject to fusion
 --
 -- Since 1.0.0
-mapME :: (Monad m, Data.Traversable.Traversable f) => (a -> m b) -> Conduit (f a) m (f b)
+mapME :: (Monad m, Data.Traversable.Traversable f) => (a -> m b) -> ConduitT (f a) (f b) m ()
 INLINE_RULE(mapME, f, CL.mapM (Data.Traversable.mapM f))
 
 -- | Apply a monadic monomorphic transformation to all elements in a chunked stream.
@@ -1797,7 +1757,7 @@ INLINE_RULE(mapME, f, CL.mapM (Data.Traversable.mapM f))
 -- Since 1.0.0
 omapME :: (Monad m, MonoTraversable mono)
        => (Element mono -> m (Element mono))
-       -> Conduit mono m mono
+       -> ConduitT mono mono m ()
 INLINE_RULE(omapME, f, CL.mapM (omapM f))
 
 -- | Apply the monadic function to each value in the stream, resulting in a
@@ -1811,7 +1771,7 @@ INLINE_RULE(omapME, f, CL.mapM (omapM f))
 -- Since 1.0.0
 concatMapM, concatMapMC :: (Monad m, MonoFoldable mono)
                         => (a -> m mono)
-                        -> Conduit a m (Element mono)
+                        -> ConduitT a (Element mono) m ()
 concatMapMC f = awaitForever (lift . f >=> yieldMany)
 STREAMING(concatMapM, concatMapMC, concatMapMS, f)
 
@@ -1822,7 +1782,7 @@ STREAMING(concatMapM, concatMapMC, concatMapMS, f)
 -- Since 1.0.0
 filterM, filterMC :: Monad m
                   => (a -> m Bool)
-                  -> Conduit a m a
+                  -> ConduitT a a m ()
 filterMC f =
     awaitForever go
   where
@@ -1836,7 +1796,7 @@ STREAMING(filterM, filterMC, filterMS, f)
 -- Subject to fusion
 --
 -- Since 1.0.0
-filterME :: (Monad m, Seq.IsSequence seq) => (Element seq -> m Bool) -> Conduit seq m seq
+filterME :: (Monad m, Seq.IsSequence seq) => (Element seq -> m Bool) -> ConduitT seq seq m ()
 INLINE_RULE(filterME, f, CL.mapM (Seq.filterM f))
 
 -- | Apply a monadic action on all values in a stream.
@@ -1849,7 +1809,7 @@ INLINE_RULE(filterME, f, CL.mapM (Seq.filterM f))
 -- Subject to fusion
 --
 -- Since 1.0.0
-iterM :: Monad m => (a -> m ()) -> Conduit a m a
+iterM :: Monad m => (a -> m ()) -> ConduitT a a m ()
 INLINE_RULE(iterM, f, CL.iterM f)
 
 -- | Analog of 'Prelude.scanl' for lists, monadic.
@@ -1857,7 +1817,7 @@ INLINE_RULE(iterM, f, CL.iterM f)
 -- Subject to fusion
 --
 -- Since 1.0.6
-scanlM, scanlMC :: Monad m => (a -> b -> m a) -> a -> Conduit b m a
+scanlM, scanlMC :: Monad m => (a -> b -> m a) -> a -> ConduitT b a m ()
 scanlMC f =
     loop
   where
@@ -1873,8 +1833,7 @@ STREAMING(scanlM, scanlMC, scanlMS, f x)
 -- | Monadic `mapAccumWhile`.
 --
 -- Subject to fusion
-mapAccumWhileM, mapAccumWhileMC :: Monad m =>
-    (a -> s -> m (Either s (s, b))) -> s -> ConduitM a b m s
+mapAccumWhileM, mapAccumWhileMC :: Monad m => (a -> s -> m (Either s (s, b))) -> s -> ConduitT a b m s
 mapAccumWhileMC f =
     loop
   where
@@ -1889,7 +1848,7 @@ STREAMING(mapAccumWhileM, mapAccumWhileMC, mapAccumWhileMS, f s)
 -- Subject to fusion
 --
 -- Since 1.0.0
-concatMapAccumM :: Monad m => (a -> accum -> m (accum, [b])) -> accum -> Conduit a m b
+concatMapAccumM :: Monad m => (a -> accum -> m (accum, [b])) -> accum -> ConduitT a b m ()
 INLINE_RULE(concatMapAccumM, f x, CL.concatMapAccumM f x)
 
 -- | Encode a stream of text as UTF8.
@@ -1897,20 +1856,20 @@ INLINE_RULE(concatMapAccumM, f x, CL.concatMapAccumM f x)
 -- Subject to fusion
 --
 -- Since 1.0.0
-encodeUtf8 :: (Monad m, DTE.Utf8 text binary) => Conduit text m binary
+encodeUtf8 :: (Monad m, DTE.Utf8 text binary) => ConduitT text binary m ()
 INLINE_RULE0(encodeUtf8, map DTE.encodeUtf8)
 
 -- | Decode a stream of binary data as UTF8.
 --
 -- Since 1.0.0
-decodeUtf8 :: MonadThrow m => Conduit ByteString m Text
+decodeUtf8 :: MonadThrow m => ConduitT ByteString Text m ()
 decodeUtf8 = CT.decode CT.utf8
 
 -- | Decode a stream of binary data as UTF8, replacing any invalid bytes with
 -- the Unicode replacement character.
 --
 -- Since 1.0.0
-decodeUtf8Lenient :: MonadThrow m => Conduit ByteString m Text
+decodeUtf8Lenient :: MonadThrow m => ConduitT ByteString Text m ()
 decodeUtf8Lenient = CT.decodeUtf8Lenient
 
 -- | Stream in the entirety of a single line.
@@ -1920,8 +1879,8 @@ decodeUtf8Lenient = CT.decodeUtf8Lenient
 --
 -- Since 1.0.0
 line :: (Monad m, Seq.IsSequence seq, Element seq ~ Char)
-     => ConduitM seq o m r
-     -> ConduitM seq o m r
+     => ConduitT seq o m r
+     -> ConduitT seq o m r
 line = takeExactlyUntilE (== '\n')
 {-# INLINE line #-}
 
@@ -1929,8 +1888,8 @@ line = takeExactlyUntilE (== '\n')
 --
 -- Since 1.0.0
 lineAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
-          => ConduitM seq o m r
-          -> ConduitM seq o m r
+          => ConduitT seq o m r
+          -> ConduitT seq o m r
 lineAscii = takeExactlyUntilE (== 10)
 {-# INLINE lineAscii #-}
 
@@ -1940,10 +1899,10 @@ lineAscii = takeExactlyUntilE (== 10)
 -- regardless of the behavior of the inner Conduit.
 takeExactlyUntilE :: (Monad m, Seq.IsSequence seq)
                   => (Element seq -> Bool)
-                  -> ConduitM seq o m r
-                  -> ConduitM seq o m r
+                  -> ConduitT seq o m r
+                  -> ConduitT seq o m r
 takeExactlyUntilE f inner =
-    loop =$= do
+    loop .| do
         x <- inner
         sinkNull
         return x
@@ -1965,25 +1924,16 @@ takeExactlyUntilE f inner =
 -- Subject to fusion
 --
 -- Since 1.0.0
-unlines :: (Monad m, Seq.IsSequence seq, Element seq ~ Char) => Conduit seq m seq
-#if __GLASGOW_HASKELL__ >= 706
+unlines :: (Monad m, Seq.IsSequence seq, Element seq ~ Char) => ConduitT seq seq m ()
 INLINE_RULE0(unlines, concatMap (:[Seq.singleton '\n']))
-#else
-unlines = concatMap (:[Seq.singleton '\n'])
-{-# INLINE unlines #-}
-#endif
 
 -- | Same as 'unlines', but operates on ASCII/binary data.
 --
 -- Subject to fusion
 --
 -- Since 1.0.0
-unlinesAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8) => Conduit seq m seq
-#if __GLASGOW_HASKELL__ >= 706
+unlinesAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8) => ConduitT seq seq m ()
 INLINE_RULE0(unlinesAscii, concatMap (:[Seq.singleton 10]))
-#else
-unlinesAscii = concatMap (:[Seq.singleton 10])
-#endif
 
 -- | Split a stream of arbitrarily-chunked data, based on a predicate
 -- on elements.  Elements that satisfy the predicate will cause chunks
@@ -1991,9 +1941,7 @@ unlinesAscii = concatMap (:[Seq.singleton 10])
 -- that, if you have unknown or untrusted input, this function is
 -- /unsafe/, since it would allow an attacker to form chunks of
 -- massive length and exhaust memory.
-splitOnUnboundedE, splitOnUnboundedEC
-    :: (Monad m, Seq.IsSequence seq)
-    => (Element seq -> Bool) -> Conduit seq m seq
+splitOnUnboundedE, splitOnUnboundedEC :: (Monad m, Seq.IsSequence seq) => (Element seq -> Bool) -> ConduitT seq seq m ()
 splitOnUnboundedEC f =
     start
   where
@@ -2021,12 +1969,8 @@ STREAMING(splitOnUnboundedE, splitOnUnboundedEC, splitOnUnboundedES, f)
 --
 -- Since 1.0.0
 linesUnbounded :: (Monad m, Seq.IsSequence seq, Element seq ~ Char)
-               => Conduit seq m seq
-#if __GLASGOW_HASKELL__ >= 706
+               => ConduitT seq seq m ()
 INLINE_RULE0(linesUnbounded, splitOnUnboundedE (== '\n'))
-#else
-linesUnbounded = splitOnUnboundedE (== '\n')
-#endif
 
 -- | Same as 'linesUnbounded', but for ASCII/binary data.
 --
@@ -2034,12 +1978,8 @@ linesUnbounded = splitOnUnboundedE (== '\n')
 --
 -- Since 1.0.0
 linesUnboundedAscii :: (Monad m, Seq.IsSequence seq, Element seq ~ Word8)
-                    => Conduit seq m seq
-#if __GLASGOW_HASKELL__ >= 706
+                    => ConduitT seq seq m ()
 INLINE_RULE0(linesUnboundedAscii, splitOnUnboundedE (== 10))
-#else
-linesUnboundedAscii = splitOnUnboundedE (== 10)
-#endif
 
 -- | Generally speaking, yielding values from inside a Conduit requires
 -- some allocation for constructors. This can introduce an overhead,
@@ -2061,8 +2001,8 @@ linesUnboundedAscii = splitOnUnboundedE (== 10)
 -- Since 1.0.0
 vectorBuilder :: (PrimMonad m, PrimMonad n, V.Vector v e, PrimState m ~ PrimState n)
               => Int -- ^ size
-              -> ((e -> n ()) -> Sink i m r)
-              -> ConduitM i (v e) m r
+              -> ((e -> n ()) -> ConduitT i Void m r)
+              -> ConduitT i (v e) m r
 vectorBuilder size inner = do
     ref <- do
         mv <- VM.new size
@@ -2087,10 +2027,10 @@ data S s v e = S
     ([v e] -> [v e])
 
 onAwait :: Monad m
-        => ConduitM i o m ()
-        -> Sink i m r
-        -> ConduitM i o m r
-onAwait (ConduitM callback) (ConduitM sink0) = ConduitM $ \rest -> let
+        => ConduitT i o m ()
+        -> ConduitT i Void m r
+        -> ConduitT i o m r
+onAwait (ConduitT callback) (ConduitT sink0) = ConduitT $ \rest -> let
     go (Done r) = rest r
     go (HaveOutput _ _ o) = absurd o
     go (NeedInput f g) = callback $ \() -> NeedInput (go . f) (go . g)
@@ -2101,7 +2041,7 @@ onAwait (ConduitM callback) (ConduitM sink0) = ConduitM $ \rest -> let
 
 yieldS :: PrimMonad m
        => MutVar (PrimState m) (S (PrimState m) v e)
-       -> Producer m (v e)
+       -> ConduitT i (v e) m ()
 yieldS ref = do
     S idx mv front <- readMutVar ref
     Prelude.mapM_ yield (front [])
@@ -2132,7 +2072,12 @@ addE ref e = do
 -- >>> let f a s = liftM (:s) $ mapC (*a) =$ CL.take a
 -- >>> reverse $ runIdentity $ yieldMany [0..3] $$ mapAccumS f [] (yieldMany [1..])
 -- [[],[1],[4,6],[12,15,18]] :: [[Int]]
-mapAccumS :: Monad m => (a -> s -> Sink b m s) -> s -> Source m b -> Sink a m s
+mapAccumS
+  :: Monad m
+  => (a -> s -> ConduitT b Void m s)
+  -> s
+  -> ConduitT () b m ()
+  -> ConduitT a Void m s
 mapAccumS f s xs = do
     (zs, u) <- loop (newResumableSource xs, s)
     lift (closeResumableSource zs) >> return u
@@ -2144,7 +2089,7 @@ mapAccumS f s xs = do
 -- data available from upstream.
 --
 -- Since 1.0.0
-peekForever :: Monad m => ConduitM i o m () -> ConduitM i o m ()
+peekForever :: Monad m => ConduitT i o m () -> ConduitT i o m ()
 peekForever inner =
     loop
   where
@@ -2164,8 +2109,8 @@ peekForever inner =
 --
 -- @since 1.0.6
 peekForeverE :: (Monad m, MonoFoldable i)
-             => ConduitM i o m ()
-             -> ConduitM i o m ()
+             => ConduitT i o m ()
+             -> ConduitT i o m ()
 peekForeverE inner =
     loop
   where

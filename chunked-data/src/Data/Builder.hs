@@ -9,6 +9,7 @@
 module Data.Builder
     ( TextBuilder
     , BlazeBuilder
+    , ByteStringBuilder
     , Builder (..)
     , ToBuilder (..)
     , textToBuilder
