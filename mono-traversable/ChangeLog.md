@@ -1,6 +1,7 @@
 ## 1.0.7.0
 
 * Add `dropPrefix` and `dropSuffix` to `Data.Sequences` [#139](https://github.com/snoyberg/mono-traversable/issues/139)
+* Change `sort` implementation [#153](https://github.com/snoyberg/mono-traversable/issues/153)
 
 ## 1.0.6.0
 
