@@ -20,20 +20,17 @@ module ClassyPrelude
     , (<||>)
       -- ** Monad
     , module Control.Monad
-    , module Control.Monad.Trans.Unlift
     , whenM
     , unlessM
+      -- ** UnliftIO reexports
+    , module UnliftIO
       -- ** Mutable references
-    , module Control.Concurrent.MVar.Lifted
-    , module Control.Concurrent.Chan.Lifted
-    , module Control.Concurrent.STM
     , atomically
     , alwaysSTM
     , alwaysSucceedsSTM
     , retrySTM
     , orElseSTM
     , checkSTM
-    , module Data.IORef.Lifted
     , module Data.Mutable
       -- ** STM Channels
     , module Control.Concurrent.STM.TBChan
@@ -87,10 +84,7 @@ module ClassyPrelude
     , stderr
     , module Say
       -- * Concurrency
-    , module Control.Concurrent.Lifted
     , yieldThread
-    , module Control.Concurrent.Async
-    , module Control.Concurrent.Async.Lifted.Safe
     , waitAsync
     , pollAsync
     , waitCatchAsync
@@ -147,7 +141,6 @@ module ClassyPrelude
     , asDList
     , applyDList
       -- ** Exceptions
-    , module Control.Exception.Safe
     , module Control.DeepSeq
       -- ** Force types
       -- | Helper functions for situations where type inferer gets confused.
@@ -173,16 +166,9 @@ import qualified Prelude
 import Control.Applicative ((<**>),liftA,liftA2,liftA3,Alternative (..), optional)
 import Data.Functor
 import Control.Exception (assert)
-import Control.Exception.Safe
 import Control.DeepSeq (deepseq, ($!!), force, NFData (..))
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
-import Control.Concurrent.Lifted hiding (yield, throwTo)
-import qualified Control.Concurrent.Lifted as Conc (yield)
-import Control.Concurrent.MVar.Lifted
-import Control.Concurrent.Chan.Lifted
-import Control.Concurrent.STM hiding (atomically, always, alwaysSucceeds, retry, orElse, check)
 import qualified Control.Concurrent.STM as STM
-import Data.IORef.Lifted
 import Data.Mutable
 import Data.Traversable (Traversable (..), for, forM)
 import Data.Foldable (Foldable)
@@ -212,8 +198,6 @@ import qualified Data.Text.Lazy.IO as LTextIO
 import Data.ByteString.Internal (ByteString (PS))
 import Data.ByteString.Lazy.Internal (defaultChunkSize)
 import Data.Vector.Storable (unsafeToForeignPtr, unsafeFromForeignPtr)
-
-import System.IO (Handle, stdin, stdout, stderr, hClose)
 
 import qualified Debug.Trace as Trace
 import Data.Semigroup (Semigroup (..), WrappedMonoid (..))
@@ -250,6 +234,7 @@ import Control.Concurrent.STM.TBMChan
 import Control.Concurrent.STM.TBMQueue
 import Control.Concurrent.STM.TMChan
 import Control.Concurrent.STM.TMQueue
+import qualified Control.Concurrent
 
 #if MIN_VERSION_base(4,9,0)
 import GHC.Stack (HasCallStack)
@@ -415,8 +400,8 @@ traceShowM :: (Show a, Monad m) => a -> m ()
 traceShowM = traceM . show
 
 -- | Originally 'Conc.yield'.
-yieldThread :: MonadBase IO m => m ()
-yieldThread = Conc.yield
+yieldThread :: MonadIO m => m ()
+yieldThread = liftIO Control.Concurrent.yield
 {-# INLINE yieldThread #-}
 
 -- Below is a lot of coding for classy-prelude!
@@ -464,15 +449,6 @@ ordNubBy p f = go Map.empty
     elem_by _  _ []     = False
     elem_by eq y (x:xs) = y `eq` x || elem_by eq y xs
 
--- | Generalized version of 'STM.atomically'.
-atomically :: MonadIO m => STM a -> m a
-atomically = liftIO . STM.atomically
-
--- | Synonym for 'STM.retry'.
-retrySTM :: STM a
-retrySTM = STM.retry
-{-# INLINE retrySTM #-}
-
 -- | Synonym for 'STM.always'.
 alwaysSTM :: STM Bool -> STM ()
 alwaysSTM = STM.always
@@ -487,11 +463,6 @@ alwaysSucceedsSTM = STM.alwaysSucceeds
 orElseSTM :: STM a -> STM a -> STM a
 orElseSTM = STM.orElse
 {-# INLINE orElseSTM #-}
-
--- | Synonym for 'STM.check'.
-checkSTM :: Bool -> STM ()
-checkSTM = STM.check
-{-# INLINE checkSTM #-}
 
 -- | Only perform the action if the predicate returns 'True'.
 --
@@ -564,32 +535,19 @@ pollAsync = atomically . pollSTM
 --
 -- @since 1.0.0
 waitCatchAsync :: MonadIO m => Async a -> m (Either SomeException a)
-waitCatchAsync = atomically . waitCatchSTM
-
--- | 'Async.cancel' generalized to any 'MonadIO'
---
--- @since 1.0.0
-cancel :: MonadIO m => Async a -> m ()
-cancel = liftIO . Async.cancel
-
--- | 'cancel' an 'Async' with the given exception. It is converted to
--- an async exception via 'toAsyncException' first.
---
--- @since 1.0.0
-cancelWith :: (MonadIO m, Exception e) => Async a -> e -> m ()
-cancelWith a e = liftIO (Async.cancelWith a (toAsyncException e))
+waitCatchAsync = waitCatch
 
 -- | 'Async.link' generalized to any 'MonadIO'
 --
 -- @since 1.0.0
 linkAsync :: MonadIO m => Async a -> m ()
-linkAsync = liftIO . Async.link
+linkAsync = UnliftIO.link
 
 -- | 'Async.link2' generalized to any 'MonadIO'
 --
 -- @since 1.0.0
 link2Async :: MonadIO m => Async a -> Async b -> m ()
-link2Async a = liftIO . Async.link2 a
+link2Async a = UnliftIO.link2 a
 
 -- | Strictly read a file into a 'ByteString'.
 --
