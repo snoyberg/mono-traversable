@@ -187,19 +187,25 @@ chunkProps dummy = do
     prop "fromChunks . return . concat . toChunks == id" $ \a ->
         fromChunks [concat $ toChunks (a `asTypeOf` dummy)] == a
 
-stripSuffixProps :: ( Eq c
-                    , Show c
-                    , Arbitrary c
-                    , IsSequence c
-                    , Eq (Element c)
-                    )
-                 => c
-                 -> Spec
-stripSuffixProps dummy = do
+suffixProps :: ( Eq c
+               , Show c
+               , Arbitrary c
+               , IsSequence c
+               , Eq (Element c)
+               )
+            => c
+            -> Spec
+suffixProps dummy = do
+    prop "y `isSuffixOf` (x ++ y)" $ \x y ->
+        (y `asTypeOf` dummy) `isSuffixOf` (x ++ y)
     prop "stripSuffix y (x ++ y) == Just x" $ \x y ->
         stripSuffix y (x ++ y) == Just (x `asTypeOf` dummy)
     prop "isJust (stripSuffix x y) == isSuffixOf x y" $ \x y ->
         isJust (stripSuffix x y) == isSuffixOf x (y `asTypeOf` dummy)
+    prop "dropSuffix y (x ++ y) == x" $ \x y ->
+        dropSuffix y (x ++ y) == (x `asTypeOf` dummy)
+    prop "dropSuffix x y == y || x `isSuffixOf` y" $ \x y ->
+        dropSuffix x y == y || x `isSuffixOf` (y `asTypeOf` dummy)
 
 replicateMProps :: ( Eq a
                    , Show (Index a)
@@ -252,6 +258,10 @@ prefixProps dummy = do
         stripPrefix x (x ++ y) == Just (y `asTypeOf` dummy)
     prop "stripPrefix x y == Nothing || x `isPrefixOf` y" $ \x y ->
         stripPrefix x y == Nothing || x `isPrefixOf` (y `asTypeOf` dummy)
+    prop "dropPrefix x (x ++ y) == y" $ \x y ->
+        dropPrefix x (x ++ y) == (y `asTypeOf` dummy)
+    prop "dropPrefix x y == y || x `isPrefixOf` y" $ \x y ->
+        dropPrefix x y == y || x `isPrefixOf` (y `asTypeOf` dummy)
 
 main :: IO ()
 main = hspec $ do
@@ -347,12 +357,15 @@ main = hspec $ do
     describe "chunks" $ do
         describe "ByteString" $ chunkProps (asLByteString undefined)
         describe "Text" $ chunkProps (asLText undefined)
-    describe "stripSuffix" $ do
-        describe "Text" $ stripSuffixProps (undefined :: Text)
-        describe "LText" $ stripSuffixProps (undefined :: LText)
-        describe "ByteString" $ stripSuffixProps (undefined :: ByteString)
-        describe "LByteString" $ stripSuffixProps (undefined :: LByteString)
-        describe "Seq" $ stripSuffixProps (undefined :: Seq Int)
+    describe "Suffix" $ do
+        describe "list" $ suffixProps (undefined :: [Int])
+        describe "Text" $ suffixProps (undefined :: Text)
+        describe "LText" $ suffixProps (undefined :: LText)
+        describe "ByteString" $ suffixProps (undefined :: ByteString)
+        describe "LByteString" $ suffixProps (undefined :: LByteString)
+        describe "Vector" $ suffixProps (undefined :: Vector Int)
+        describe "UVector" $ suffixProps (undefined :: UVector Int)
+        describe "Seq" $ suffixProps (undefined :: Seq Int)
     describe "replicateM" $ do
         describe "list" $ replicateMProps (undefined :: [Int])
         describe "Vector" $ replicateMProps (undefined :: Vector Int)
