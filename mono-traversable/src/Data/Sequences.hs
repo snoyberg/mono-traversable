@@ -8,7 +8,7 @@
 -- | Abstractions over sequential data structures, like lists and vectors.
 module Data.Sequences where
 
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (fromJust, fromMaybe, isJust)
 import Data.Monoid (Monoid, mconcat, mempty, (<>))
 import Data.MonoTraversable
 import Data.Int (Int64, Int)
@@ -1260,6 +1260,34 @@ stripSuffix x y =
     stripSuffixList :: Eq a => [a] -> [a] -> Maybe [a]
     stripSuffixList x' y' = fmap reverse (stripPrefix (reverse x') (reverse y'))
 
+-- | 'dropPrefix' drops the given prefix from a sequence.  It returns the
+-- original sequence if the sequence doesn't start with the given prefix.
+--
+-- @
+-- > 'dropPrefix' \"foo\" \"foobar\"
+-- \"bar\"
+-- > 'dropPrefix' \"abc\" \"foobar\"
+-- \"foobar\"
+-- @
+--
+-- @since 1.0.7.0
+dropPrefix :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> seq
+dropPrefix x y = fromMaybe y (stripPrefix x y)
+
+-- | 'dropSuffix' drops the given suffix from a sequence.  It returns the
+-- original sequence if the sequence doesn't end with the given suffix.
+--
+-- @
+-- > 'dropSuffix' \"bar\" \"foobar\"
+-- \"foo\"
+-- > 'dropSuffix' \"abc\" \"foobar\"
+-- \"foobar\"
+-- @
+--
+-- @since 1.0.7.0
+dropSuffix :: (IsSequence seq, Eq (Element seq)) => seq -> seq -> seq
+dropSuffix x y = fromMaybe y (stripSuffix x y)
+
 -- | 'ensurePrefix' will add a prefix to a sequence if it doesn't
 -- exist, and otherwise have no effect.
 --
@@ -1435,8 +1463,8 @@ replaceSeqLazyText old new
 -- > 'sort' [4,3,1,2]
 -- [1,2,3,4]
 -- @
-sort :: (IsSequence seq, Ord (Element seq)) => seq -> seq
-sort = fromList . V.toList . vectorSort . V.fromList . otoList
+sort :: (SemiSequence seq, Ord (Element seq)) => seq -> seq
+sort = sortBy compare
 {-# INLINE [0] sort #-}
 
 {-# RULES "strict ByteString sort" sort = S.sort #-}

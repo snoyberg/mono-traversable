@@ -36,6 +36,7 @@ module Data.NonNull (
   , minimumBy
   , (<|)
   , toMinList
+  , mapNonNull
   , GrowingAppend
 ) where
 
@@ -348,3 +349,20 @@ minimumBy :: MonoFoldable mono
           -> Element mono
 minimumBy cmp = minimumByEx cmp . toNullable
 {-# INLINE minimumBy #-}
+
+-- | 'fmap' over the underlying container in a 'NonNull'.
+--
+-- @since 1.0.6.0
+
+-- ==== __Examples__
+--
+-- @
+-- > let xs = 'ncons' 1 [2, 3 :: Int]
+-- > 'mapNonNull' 'show' xs
+-- 'NonNull' {toNullable = [\"1\",\"2\",\"3\"]}
+-- @
+mapNonNull :: (Functor f, MonoFoldable (f b))
+           => (a -> b)
+           -> NonNull (f a)
+           -> NonNull (f b)
+mapNonNull f = impureNonNull . fmap f . toNullable
