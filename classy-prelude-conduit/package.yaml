@@ -28,7 +28,6 @@ library:
   - monad-control
   - resourcet
   - void
-  - conduit-combinators >=0.2.8
 
 tests:
   spec:

@@ -1,6 +1,6 @@
 name:        conduit-combinators
 version:     1.3.0
-synopsis:    Commonly used conduit functions, for both chunked and unchunked data
+synopsis:    DEPRECATED Functionality merged into the conduit package itself
 description: See docs and README at <http://www.stackage.org/package/conduit-combinators>
 category:    Data, Conduit
 author:      Michael Snoyman
@@ -9,62 +9,10 @@ license:     MIT
 github:      snoyberg/mono-traversable
 
 extra-source-files:
-- test/subdir/dummyfile.txt
-- fusion-macros.h
 - ChangeLog.md
 - README.md
 
 dependencies:
 - base >=4.9 && <5
-- transformers
-- vector
-- text
-- bytestring
-- mwc-random
-- base16-bytestring
-- filepath
-- unliftio-core
-- chunked-data >=0.3 # FIXME needed?
-- conduit >=1.3
-- conduit-extra >=1.3
-- mono-traversable >=1.0
-- primitive
-- unix-compat
-- base64-bytestring >=0.1.1.1
-- resourcet
-library:
-  ghc-options:
-  - -Wall
-  - -O2
-  source-dirs: src
-  other-modules:
-  - Data.Conduit.Combinators.Unqualified
-  include-dirs: .
-  when:
-  - condition: os(windows)
-    then:
-      cpp-options: -DWINDOWS
-    else:
-      dependencies:
-      - unix
-  - condition: "!impl(ghc>=7.9)"
-    dependencies:
-    - void
-tests:
-  test:
-    main: Spec.hs
-    source-dirs: test
-    ghc-options: -Wall
-    cpp-options: -DTEST
-    dependencies:
-    - conduit-combinators
-    - hspec >=1.3
-    - silently
-    - mtl
-    - containers
-    - safe
-    - QuickCheck >=2.5
-    - directory
-    when:
-    - condition: os(windows)
-      cpp-options: -DWINDOWS
+
+library: {}

@@ -1,3 +1,7 @@
+# 1.3.0
+
+* Deprecated; functionality moved into conduit package itself
+
 # 1.2.0
 
 * Switch over to `MonadUnliftIO`
