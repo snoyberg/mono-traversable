@@ -122,7 +122,7 @@ class (Integral (Index seq), GrowingAppend seq) => SemiSequence seq where
 -- > 'singleton' 'a' :: 'Vector' 'Char'
 -- 'Data.Vector.fromList' "a"
 -- @
-singleton :: IsSequence seq => Element seq -> seq
+singleton :: MonoPointed seq => Element seq -> seq
 singleton = opoint
 {-# INLINE singleton #-}
 
