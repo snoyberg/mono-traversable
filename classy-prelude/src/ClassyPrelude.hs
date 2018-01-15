@@ -25,12 +25,9 @@ module ClassyPrelude
       -- ** UnliftIO reexports
     , module UnliftIO
       -- ** Mutable references
-    , atomically
     , alwaysSTM
     , alwaysSucceedsSTM
-    , retrySTM
     , orElseSTM
-    , checkSTM
     , module Data.Mutable
       -- ** STM Channels
     , module Control.Concurrent.STM.TBChan
@@ -50,10 +47,8 @@ module ClassyPrelude
     , traceM
     , traceShowId
     , traceShowM
-    , assert
       -- ** Time (since 0.6.1)
     , module Data.Time
-    , defaultTimeLocale
       -- ** Generics (since 0.8.1)
     , Generic
       -- ** Transformers (since 0.9.4)
@@ -78,18 +73,12 @@ module ClassyPrelude
     , toByteVector
     , fromByteVector
       -- * I\/O
-    , Handle
-    , stdin
-    , stdout
-    , stderr
     , module Say
       -- * Concurrency
     , yieldThread
     , waitAsync
     , pollAsync
     , waitCatchAsync
-    , cancel
-    , cancelWith
     , linkAsync
     , link2Async
       -- * Non-standard
@@ -127,7 +116,6 @@ module ClassyPrelude
     , hPut
     , hGetChunk
     , print
-    , hClose
     -- Prelude IO operations
     , putChar
     , putStr
@@ -177,11 +165,7 @@ import UnliftIO
 import Data.Vector.Instances ()
 import CorePrelude hiding
     ( putStr, putStrLn, print, undefined, (<>), catMaybes, first, second
-    , try, throwIO, onException, mask, mask_
-    , handle, finally, catch, bracket, bracket_, bracketOnError
     , catchIOError
-    , uninterruptibleMask, uninterruptibleMask_
-    , catchJust, handleJust, tryJust
     )
 import Data.ChunkedZip
 import qualified Data.Char as Char

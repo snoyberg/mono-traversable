@@ -16,13 +16,11 @@ module Data.Mutable.PRef
     , MutableRef (..)
     ) where
 
-import Control.Monad            (liftM)
 import Data.Mutable.Class
 import Data.Primitive           (sizeOf)
 import Data.Primitive.ByteArray (MutableByteArray, newByteArray, readByteArray,
                                  writeByteArray)
 import Data.Primitive.Types     (Prim)
-import GHC.Types                (Int (..))
 
 -- | A primitive ByteArray reference, supporting any monad.
 --

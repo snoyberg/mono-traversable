@@ -13,8 +13,6 @@ import ClassyPrelude hiding (undefined)
 import Test.QuickCheck.Arbitrary
 import Prelude (undefined)
 import Control.Monad.Trans.Writer (tell, Writer, runWriter)
-import Control.Concurrent (forkIO)
-import Control.Exception (throw)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 
