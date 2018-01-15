@@ -1,4 +1,4 @@
-import Criterion.Main
+import Gauge.Main
 import Data.Sequences
 import Data.MonoTraversable
 import qualified Data.List

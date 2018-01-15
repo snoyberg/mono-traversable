@@ -58,7 +58,7 @@ benchmarks:
     - -O2
     dependencies:
     - base
-    - criterion
+    - gauge
     - mono-traversable
     - vector
     - mwc-random

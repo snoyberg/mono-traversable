@@ -1,7 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeFamilies    #-}
 import Control.Monad
-import Criterion.Main
+import Gauge.Main
 import Data.Mutable
 import Data.Sequence      (Seq)
 

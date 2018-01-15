@@ -45,7 +45,7 @@ benchmarks:
     - -rtsopts
     dependencies:
     - mutable-containers
-    - criterion
+    - gauge
   ref:
     main: ref.hs
     source-dirs: bench
@@ -55,4 +55,4 @@ benchmarks:
     - -rtsopts
     dependencies:
     - mutable-containers
-    - criterion
+    - gauge
