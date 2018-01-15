@@ -1,3 +1,7 @@
+## 1.0.8.0
+
+* Switch to gauge
+
 ## 1.0.7.0
 
 * Add `dropPrefix` and `dropSuffix` to `Data.Sequences` [#139](https://github.com/snoyberg/mono-traversable/issues/139)
