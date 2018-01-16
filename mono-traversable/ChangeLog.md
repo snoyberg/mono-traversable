@@ -1,3 +1,7 @@
+## 1.0.8.1
+
+* Compat with gauge 0.1 and 0.2
+
 ## 1.0.8.0
 
 * Switch to gauge
