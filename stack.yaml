@@ -10,9 +10,10 @@ packages:
 - conduit-combinators
 - mutable-containers
 extra-deps:
-#- conduit-extra-1.2.2
-- typed-process-0.2.0.0
-- unliftio-0.2.1.0
-- ../conduit/resourcet
-- ../conduit/conduit
-- ../conduit/conduit-extra
+- resourcet-1.2.0
+- conduit-1.3.0
+- conduit-extra-1.3.0
+- typed-process-0.2.1.0
+- unliftio-0.2.4.0
+- unliftio-core-0.1.1.0
+- http-conduit-2.3.0
