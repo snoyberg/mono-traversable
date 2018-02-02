@@ -17,3 +17,6 @@ extra-deps:
 - unliftio-0.2.4.0
 - unliftio-core-0.1.1.0
 - http-conduit-2.3.0
+- basic-prelude-0.7.0
+- gauge-0.2.1
+- basement-0.0.6
