@@ -1,3 +1,7 @@
+## 1.4.0
+
+* Switch to `MonadUnliftIO`
+
 ## 1.3.1
 
 * Add terminal IO functions

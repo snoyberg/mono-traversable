@@ -398,7 +398,7 @@ main = hspec $ do
                     -- replace random element or any random value with random new value
                     \x list new -> forAll (elements (x:list)) $ \old ->
                     let seq' = fromListAs list dummy
-                    in replaceElem old new seq' @?= omap (\x -> if x == old then new else x) seq'
+                    in replaceElem old new seq' @?= omap (\x' -> if x' == old then new else x') seq'
 #if MIN_VERSION_QuickCheck(2,8,0)
                 prop "replaceSeq old new === ointercalate new . splitSeq old" $
                     -- replace random subsequence with random new sequence

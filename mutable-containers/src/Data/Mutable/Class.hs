@@ -189,7 +189,7 @@ class MutableContainer c => MutableCollection c where
     -- Since 0.2.0
     newColl :: (PrimMonad m, PrimState m ~ MCState c)
             => m c
-instance Monoid w => MutableCollection (IORef w) where
+instance Data.Monoid.Monoid w => MutableCollection (IORef w) where
     type CollElement (IORef w) = Element w
     newColl = newRef mempty
     {-# INLINE newColl #-}

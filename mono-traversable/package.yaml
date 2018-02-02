@@ -1,5 +1,5 @@
 name:        mono-traversable
-version:     1.0.7.0
+version:     1.0.8.1
 synopsis:    Type classes for mapping, folding, and traversing monomorphic containers
 description: Please see the README at <https://www.stackage.org/package/mono-traversable>
 category:    Data
@@ -16,7 +16,7 @@ library:
   source-dirs: src
   ghc-options: -Wall
   dependencies:
-  - base >=4.7 && <5
+  - base >= 4.9 && <5
   - containers >=0.4
   - unordered-containers >=0.2
   - hashable
@@ -58,7 +58,7 @@ benchmarks:
     - -O2
     dependencies:
     - base
-    - criterion
+    - gauge
     - mono-traversable
     - vector
     - mwc-random

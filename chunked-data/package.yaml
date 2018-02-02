@@ -1,5 +1,5 @@
 name:        chunked-data
-version:     0.3.0
+version:     0.3.1
 synopsis:    Typeclasses for dealing with various chunked data representations
 description: See docs and README at <http://www.stackage.org/package/chunked-data>
 category:    Data
@@ -13,7 +13,7 @@ extra-source-files:
 - ChangeLog.md
 
 dependencies:
-- base >=4 && <5
+- base >= 4.9 && <5
 - transformers
 - bytestring >=0.10.2
 - text >=1.2

@@ -1,3 +1,7 @@
+## 0.3.4
+
+* Switch to gauge
+
 ## 0.3.3
 
 * Move into mono-traversable repo

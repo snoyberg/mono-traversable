@@ -1,5 +1,5 @@
 name:        mutable-containers
-version:     0.3.3
+version:     0.3.4
 synopsis:    Abstactions and concrete implementations of mutable containers
 description: See docs and README at <http://www.stackage.org/package/mutable-containers>
 category:    Data
@@ -13,7 +13,7 @@ extra-source-files:
 - ChangeLog.md
 
 dependencies:
-- base >=4.7 && <5
+- base >= 4.9 && <5
 - containers
 - vector
 
@@ -45,7 +45,7 @@ benchmarks:
     - -rtsopts
     dependencies:
     - mutable-containers
-    - criterion
+    - gauge
   ref:
     main: ref.hs
     source-dirs: bench
@@ -55,4 +55,4 @@ benchmarks:
     - -rtsopts
     dependencies:
     - mutable-containers
-    - criterion
+    - gauge

@@ -1,4 +1,11 @@
-import Criterion.Main
+{-# LANGUAGE CPP #-}
+
+#if MIN_VERSION_gauge(0,2,0)
+import Gauge
+#else
+import Gauge.Main
+#endif
+
 import Data.Sequences
 import Data.MonoTraversable
 import qualified Data.List

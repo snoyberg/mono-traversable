@@ -7,7 +7,6 @@ module ClassyPrelude.Yesod
 
 import ClassyPrelude.Conduit as X hiding (delete, deleteBy, Handler (..))
 import Yesod as X hiding (Header, parseTime)
-import qualified Yesod
 import Yesod.Static as X
 import Yesod.Feed as X
 import Network.HTTP.Client.Conduit as X

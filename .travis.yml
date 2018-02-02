@@ -47,12 +47,12 @@ matrix:
   #- env: BUILD=cabal GHCVER=7.6.3 CABALVER=1.16 HAPPYVER=1.19.5 ALEXVER=3.1.7
   #  compiler: ": #GHC 7.6.3"
   #  addons: {apt: {packages: [cabal-install-1.16,ghc-7.6.3,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
-  - env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18 HAPPYVER=1.19.5 ALEXVER=3.1.7
-    compiler: ": #GHC 7.8.4"
-    addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
-  - env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22 HAPPYVER=1.19.5 ALEXVER=3.1.7
-    compiler: ": #GHC 7.10.3"
-    addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
+  #- env: BUILD=cabal GHCVER=7.8.4 CABALVER=1.18 HAPPYVER=1.19.5 ALEXVER=3.1.7
+  #  compiler: ": #GHC 7.8.4"
+  #  addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
+  #- env: BUILD=cabal GHCVER=7.10.3 CABALVER=1.22 HAPPYVER=1.19.5 ALEXVER=3.1.7
+  #  compiler: ": #GHC 7.10.3"
+  #  addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
   - env: BUILD=cabal GHCVER=8.0.2 CABALVER=1.24 HAPPYVER=1.19.5 ALEXVER=3.1.7
     compiler: ": #GHC 8.0.2"
     addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2,happy-1.19.5,alex-3.1.7], sources: [hvr-ghc]}}
@@ -72,17 +72,17 @@ matrix:
     compiler: ": #stack default"
     addons: {apt: {packages: [libgmp-dev]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-2"
-    compiler: ": #stack 7.8.4"
-    addons: {apt: {packages: [libgmp-dev]}}
+  #- env: BUILD=stack ARGS="--resolver lts-2"
+  #  compiler: ": #stack 7.8.4"
+  #  addons: {apt: {packages: [libgmp-dev]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-3"
-    compiler: ": #stack 7.10.2"
-    addons: {apt: {packages: [libgmp-dev]}}
+  #- env: BUILD=stack ARGS="--resolver lts-3"
+  #  compiler: ": #stack 7.10.2"
+  #  addons: {apt: {packages: [libgmp-dev]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-6"
-    compiler: ": #stack 7.10.3"
-    addons: {apt: {packages: [libgmp-dev]}}
+  #- env: BUILD=stack ARGS="--resolver lts-6"
+  #  compiler: ": #stack 7.10.3"
+  #  addons: {apt: {packages: [libgmp-dev]}}
 
   - env: BUILD=stack ARGS="--resolver lts-7"
     compiler: ": #stack 8.0.1"
@@ -90,6 +90,10 @@ matrix:
 
   - env: BUILD=stack ARGS="--resolver lts-9"
     compiler: ": #stack 8.0.2"
+    addons: {apt: {packages: [libgmp-dev]}}
+
+  - env: BUILD=stack ARGS="--resolver lts-10"
+    compiler: ": #stack 8.2.2"
     addons: {apt: {packages: [libgmp-dev]}}
 
   # Nightly builds are allowed to fail
@@ -107,13 +111,13 @@ matrix:
   #  compiler: ": #stack 7.8.4 osx"
   #  os: osx
 
-  - env: BUILD=stack ARGS="--resolver lts-3"
-    compiler: ": #stack 7.10.2 osx"
-    os: osx
+  #- env: BUILD=stack ARGS="--resolver lts-3"
+  #  compiler: ": #stack 7.10.2 osx"
+  #  os: osx
 
-  - env: BUILD=stack ARGS="--resolver lts-6"
-    compiler: ": #stack 7.10.3 osx"
-    os: osx
+  #- env: BUILD=stack ARGS="--resolver lts-6"
+  #  compiler: ": #stack 7.10.3 osx"
+  #  os: osx
 
   - env: BUILD=stack ARGS="--resolver lts-7"
     compiler: ": #stack 8.0.1 osx"
@@ -121,6 +125,10 @@ matrix:
 
   - env: BUILD=stack ARGS="--resolver lts-9"
     compiler: ": #stack 8.0.2 osx"
+    os: osx
+
+  - env: BUILD=stack ARGS="--resolver lts-10"
+    compiler: ": #stack 8.2.2 osx"
     os: osx
 
   - env: BUILD=stack ARGS="--resolver nightly"
@@ -165,6 +173,12 @@ install:
 - if [ -f configure.ac ]; then autoreconf -i; fi
 - |
   set -ex
+
+  # Get the list of packages from the stack.yaml file. Note that
+  # this will also implicitly run hpack as necessary to generate
+  # the .cabal files needed by cabal-install.
+  PACKAGES=$(stack --install-ghc query locals | grep '^ *path' | sed 's@^ *path:@@' | grep -v yesod | grep -v classy-prelude-conduit)
+
   case "$BUILD" in
     stack)
       if [ `uname` = "Darwin" ]
@@ -174,27 +188,22 @@ install:
       fi
 
       # Add in extra-deps for older snapshots, as necessary
-      stack --no-terminal --install-ghc $ARGS test --bench --dry-run || ( \
-        stack --no-terminal $ARGS build cabal-install && \
-        cp stack.yaml tmp && grep -v yesod tmp > stack.yaml && rm tmp &&
-        stack --no-terminal $ARGS solver --update-config)
+      #stack --no-terminal --install-ghc $ARGS test --bench --dry-run || ( \
+      #  stack --no-terminal $ARGS build cabal-install && \
+      #  cp stack.yaml tmp && grep -v yesod tmp > stack.yaml && rm tmp &&
+      #  stack --no-terminal $ARGS solver --update-config)
 
       # Build the dependencies
       if [ `uname` = "Darwin" ]
       then
-        stack --no-terminal --install-ghc $ARGS test --only-dependencies --fast
+        stack --no-terminal --install-ghc $ARGS test --only-dependencies --fast $PACKAGES
       else
-        stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
+        stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies $PACKAGES
       fi
       ;;
     cabal)
       cabal --version
       travis_retry cabal update
-
-      # Get the list of packages from the stack.yaml file. Note that
-      # this will also implicitly run hpack as necessary to generate
-      # the .cabal files needed by cabal-install.
-      PACKAGES=$(stack --install-ghc query locals | grep '^ *path' | sed 's@^ *path:@@' | grep -v yesod)
 
       cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
       ;;
@@ -208,31 +217,32 @@ script:
     stack)
       if [ `uname` = "Darwin" ]
       then
-        stack --no-terminal $ARGS test --fast
+        stack --no-terminal $ARGS test --fast $PACKAGES
       else
-        stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps
+        stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps $PACKAGES
       fi
       ;;
     cabal)
       cabal install --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
-      ORIGDIR=$(pwd)
-      for dir in $PACKAGES
-      do
-        cd $dir
+      # Taking too long
+      #ORIGDIR=$(pwd)
+      #for dir in $PACKAGES
+      #do
+      #  cd $dir
         # We have a valid -O2 in a .cabal file, so don't call this
         # cabal check || [ "$CABALVER" == "1.16" ]
-        cabal sdist
-        PKGVER=$(cabal info . | awk '{print $2;exit}')
-        SRC_TGZ=$PKGVER.tar.gz
-        cd dist
-        tar zxfv "$SRC_TGZ"
-        cd "$PKGVER"
-        cabal configure --enable-tests
-        cabal build
-        cabal test
-        cd $ORIGDIR
-      done
+      #  cabal sdist
+      #  PKGVER=$(cabal info . | awk '{print $2;exit}')
+      #  SRC_TGZ=$PKGVER.tar.gz
+      #  cd dist
+      #  tar zxfv "$SRC_TGZ"
+      #  cd "$PKGVER"
+      #  cabal configure --enable-tests
+      #  cabal build
+      #  cabal test
+      #  cd $ORIGDIR
+      #done
       ;;
   esac
   set +ex

@@ -1,3 +1,13 @@
+## 1.0.8.1
+
+* Compat with gauge 0.1 and 0.2
+
+## 1.0.8.0
+
+* Switch to gauge
+* Relax constraint on `singleton` to `MonoPointed`
+  [#156](https://github.com/snoyberg/mono-traversable/issues/156)
+
 ## 1.0.7.0
 
 * Add `dropPrefix` and `dropSuffix` to `Data.Sequences` [#139](https://github.com/snoyberg/mono-traversable/issues/139)

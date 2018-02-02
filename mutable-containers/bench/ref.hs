@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 import Control.Monad
-import Criterion.Main
+import Gauge.Main
 import Data.Mutable
 
 test :: (MCState c ~ PrimState IO, RefElement c ~ Int, MutableRef c)
