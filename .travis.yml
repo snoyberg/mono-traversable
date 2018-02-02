@@ -165,6 +165,12 @@ install:
 - if [ -f configure.ac ]; then autoreconf -i; fi
 - |
   set -ex
+
+  # Get the list of packages from the stack.yaml file. Note that
+  # this will also implicitly run hpack as necessary to generate
+  # the .cabal files needed by cabal-install.
+  PACKAGES=$(stack --install-ghc query locals | grep '^ *path' | sed 's@^ *path:@@' | grep -v yesod)
+
   case "$BUILD" in
     stack)
       if [ `uname` = "Darwin" ]
@@ -182,19 +188,14 @@ install:
       # Build the dependencies
       if [ `uname` = "Darwin" ]
       then
-        stack --no-terminal --install-ghc $ARGS test --only-dependencies --fast
+        stack --no-terminal --install-ghc $ARGS test --only-dependencies --fast $PACKAGES
       else
-        stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
+        stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies $PACKAGES
       fi
       ;;
     cabal)
       cabal --version
       travis_retry cabal update
-
-      # Get the list of packages from the stack.yaml file. Note that
-      # this will also implicitly run hpack as necessary to generate
-      # the .cabal files needed by cabal-install.
-      PACKAGES=$(stack --install-ghc query locals | grep '^ *path' | sed 's@^ *path:@@' | grep -v yesod)
 
       cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
       ;;
@@ -208,9 +209,9 @@ script:
     stack)
       if [ `uname` = "Darwin" ]
       then
-        stack --no-terminal $ARGS test --fast
+        stack --no-terminal $ARGS test --fast $PACKAGES
       else
-        stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps
+        stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps $PACKAGES
       fi
       ;;
     cabal)
