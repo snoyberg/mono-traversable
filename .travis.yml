@@ -217,23 +217,24 @@ script:
     cabal)
       cabal install --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
-      ORIGDIR=$(pwd)
-      for dir in $PACKAGES
-      do
-        cd $dir
+      # Taking too long
+      #ORIGDIR=$(pwd)
+      #for dir in $PACKAGES
+      #do
+      #  cd $dir
         # We have a valid -O2 in a .cabal file, so don't call this
         # cabal check || [ "$CABALVER" == "1.16" ]
-        cabal sdist
-        PKGVER=$(cabal info . | awk '{print $2;exit}')
-        SRC_TGZ=$PKGVER.tar.gz
-        cd dist
-        tar zxfv "$SRC_TGZ"
-        cd "$PKGVER"
-        cabal configure --enable-tests
-        cabal build
-        cabal test
-        cd $ORIGDIR
-      done
+      #  cabal sdist
+      #  PKGVER=$(cabal info . | awk '{print $2;exit}')
+      #  SRC_TGZ=$PKGVER.tar.gz
+      #  cd dist
+      #  tar zxfv "$SRC_TGZ"
+      #  cd "$PKGVER"
+      #  cabal configure --enable-tests
+      #  cabal build
+      #  cabal test
+      #  cd $ORIGDIR
+      #done
       ;;
   esac
   set +ex
