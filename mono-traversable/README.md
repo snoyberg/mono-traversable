@@ -13,7 +13,7 @@ mono-traversable also adds
 
 In addition to this package, the
 [mono-traversable-instances](https://www.stackage.org/package/mono-traversable-instances)
-pacakge provides a number of orphan instances.
+package provides a number of orphan instances.
 
 
 Using Typeclasses
