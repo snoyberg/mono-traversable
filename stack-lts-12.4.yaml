@@ -1,0 +1,10 @@
+resolver: lts-12.4
+packages:
+- minlen
+- mono-traversable
+- mono-traversable-instances
+- chunked-data
+- classy-prelude
+- classy-prelude-conduit
+- classy-prelude-yesod
+- mutable-containers
