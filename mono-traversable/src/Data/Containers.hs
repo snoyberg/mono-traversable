@@ -563,6 +563,8 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
         go (k, v) = [(f k, v)]
 
     -- | Filter values in a map.
+    --
+    -- @since 1.0.9.0
     filterMap :: IsMap map => (MapValue map -> Bool) -> map -> map
     filterMap p = mapFromList . filter (p . snd) . mapToList
 
