@@ -562,6 +562,10 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
       where
         go (k, v) = [(f k, v)]
 
+    -- | Filter values in a map.
+    filterMap :: IsMap map => (MapValue map -> Bool) -> map -> map
+    filterMap p = mapFromList . filter (p . snd) . mapToList
+
 #if MIN_VERSION_containers(0, 5, 0)
 -- | This instance uses the functions from "Data.Map.Strict".
 #endif
