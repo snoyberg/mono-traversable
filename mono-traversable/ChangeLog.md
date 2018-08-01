@@ -1,3 +1,8 @@
+## 1.0.9.0
+
+* Added `filterMap` to `Data.Containers`
+  [#167](https://github.com/snoyberg/mono-traversable/pull/167)
+
 ## 1.0.8.1
 
 * Compat with gauge 0.1 and 0.2
