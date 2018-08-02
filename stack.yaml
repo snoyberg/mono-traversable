@@ -6,7 +6,7 @@ packages:
 - chunked-data
 - classy-prelude
 - classy-prelude-conduit
-- classy-prelude-yesod
+#- classy-prelude-yesod
 - mutable-containers
 extra-deps:
 - resourcet-1.2.0@rev:0
