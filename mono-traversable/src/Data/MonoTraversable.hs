@@ -942,6 +942,9 @@ minimumByMay f mono
 {-# INLINE minimumByMay #-}
 
 -- | Monomorphic containers that can be traversed from left to right.
+--
+-- NOTE: Due to limitations with the role system, GHC is yet unable to provide newtype-derivation of
+-- 'MonoTraversable'. See <https://stackoverflow.com/questions/49776924/newtype-deriving-issequence>.
 class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
     -- | Map each element of a monomorphic container to an action,
     -- evaluate these actions from left to right, and
