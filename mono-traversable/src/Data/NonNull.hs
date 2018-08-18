@@ -162,17 +162,17 @@ splitFirst xs =
   fromMaybe (error "Data.NonNull.splitFirst: data structure is null, it should be non-null")
           $ uncons (toNullable xs)
 
--- | Equivalent to @"Data.Sequence".'Data.Sequence.filter'@,
+-- | Equivalent to @"Data.Sequences".'Data.Sequences.filter'@,
 -- but works on non-nullable sequences.
 nfilter :: IsSequence seq => (Element seq -> Bool) -> NonNull seq -> seq
 nfilter f = filter f . toNullable
 
--- | Equivalent to @"Data.Sequence".'Data.Sequence.filterM'@,
+-- | Equivalent to @"Data.Sequences".'Data.Sequences.filterM'@,
 -- but works on non-nullable sequences.
 nfilterM :: (Monad m, IsSequence seq) => (Element seq -> m Bool) -> NonNull seq -> m seq
 nfilterM f = filterM f . toNullable
 
--- | Equivalent to @"Data.Sequence".'Data.Sequence.replicate'@
+-- | Equivalent to @"Data.Sequences".'Data.Sequences.replicate'@
 --
 -- @i@ must be @> 0@
 --
