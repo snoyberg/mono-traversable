@@ -331,7 +331,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See 'Data.NonNull.ofoldr1Ex' from "Data.NonNull" for a total version of this function./
+    -- /See 'Data.NonNull.ofoldr1' from "Data.NonNull" for a total version of this function./
     ofoldr1Ex :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldr1Ex :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                       => (Element mono -> Element mono -> Element mono) -> mono -> Element mono
@@ -344,7 +344,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See 'Data.NonNull.ofoldl1Ex'' from "Data.NonNull" for a total version of this function./
+    -- /See 'Data.NonNull.ofoldl1'' from "Data.NonNull" for a total version of this function./
     ofoldl1Ex' :: (Element mono -> Element mono -> Element mono) -> mono -> Element mono
     default ofoldl1Ex' :: (t a ~ mono, a ~ Element (t a), F.Foldable t)
                        => (Element mono -> Element mono -> Element mono) -> mono -> Element mono
