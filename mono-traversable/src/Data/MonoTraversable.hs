@@ -366,7 +366,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See 'Data.NonNull.last from "Data.NonNull" for a total version of this function./
+    -- /See 'Data.NonNull.last' from "Data.NonNull" for a total version of this function./
     lastEx :: mono -> Element mono
     lastEx = ofoldl1Ex' (flip const)
     {-# INLINE lastEx #-}
