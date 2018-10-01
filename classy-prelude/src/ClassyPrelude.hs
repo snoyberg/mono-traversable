@@ -25,8 +25,6 @@ module ClassyPrelude
       -- ** UnliftIO reexports
     , module UnliftIO
       -- ** Mutable references
-    , alwaysSTM
-    , alwaysSucceedsSTM
     , orElseSTM
     , module Data.Mutable
       -- ** STM Channels
@@ -432,16 +430,6 @@ ordNubBy p f = go Map.empty
     elem_by :: (a -> a -> Bool) -> a -> [a] -> Bool
     elem_by _  _ []     = False
     elem_by eq y (x:xs) = y `eq` x || elem_by eq y xs
-
--- | Synonym for 'STM.always'.
-alwaysSTM :: STM Bool -> STM ()
-alwaysSTM = STM.always
-{-# INLINE alwaysSTM #-}
-
--- | Synonym for 'STM.alwaysSucceeds'.
-alwaysSucceedsSTM :: STM a -> STM ()
-alwaysSucceedsSTM = STM.alwaysSucceeds
-{-# INLINE alwaysSucceedsSTM #-}
 
 -- | Synonym for 'STM.orElse'.
 orElseSTM :: STM a -> STM a -> STM a

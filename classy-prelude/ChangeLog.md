@@ -1,3 +1,8 @@
+## 1.5.0
+
+* Removed `alwaysSTM` and `alwaysSucceedsSTM`. See
+  <https://github.com/ghc-proposals/ghc-proposals/pull/77>
+
 ## 1.4.0
 
 * Switch to `MonadUnliftIO`
