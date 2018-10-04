@@ -1,5 +1,5 @@
 name:          classy-prelude
-version:       1.4.0
+version:       1.5.0
 synopsis:      A typeclass-based Prelude.
 description:   See docs and README at <http://www.stackage.org/package/classy-prelude>
 category:      Control, Prelude
