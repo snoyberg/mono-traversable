@@ -705,7 +705,7 @@ instance IsSequence S.ByteString where
 
     index bs i
         | i < 0 || i >= S.length bs = Nothing
-        | otherwise = Just (S.index bs i)
+        | otherwise = Just (SU.unsafeIndex bs i)
     indexEx = S.index
     unsafeIndex = SU.unsafeIndex
     {-# INLINE index #-}
