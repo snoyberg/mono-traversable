@@ -15,7 +15,7 @@ import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Data.List.Split as List
 import qualified Control.Monad (filterM, replicateM)
-import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), fst, snd, Integral, ($), flip, maybe, error)
+import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), fst, snd, Integral, ($), flip, maybe, error, (||))
 import Data.Char (Char, isSpace)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
@@ -447,7 +447,9 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- 'Nothing'
     -- @
     index :: seq -> Index seq -> Maybe (Element seq)
-    index seq' idx = headMay (drop idx seq')
+    index seq' idx
+        | idx < 0 = Nothing
+        | otherwise = headMay (drop idx seq')
 
     -- | __Unsafe__
     --
@@ -702,7 +704,7 @@ instance IsSequence S.ByteString where
     {-# INLINE splitWhen #-}
 
     index bs i
-        | i >= S.length bs = Nothing
+        | i < 0 || i >= S.length bs = Nothing
         | otherwise = Just (S.index bs i)
     indexEx = S.index
     unsafeIndex = SU.unsafeIndex
@@ -766,7 +768,7 @@ instance IsSequence T.Text where
     {-# INLINE splitWhen #-}
 
     index t i
-        | i >= T.length t = Nothing
+        | i < 0 || i >= T.length t = Nothing
         | otherwise = Just (T.index t i)
     indexEx = T.index
     unsafeIndex = T.index
@@ -952,9 +954,7 @@ instance IsSequence (Seq.Seq a) where
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
 
-    index seq' i
-        | i >= Seq.length seq' = Nothing
-        | otherwise = Just (Seq.index seq' i)
+    index = (Seq.!?)
     indexEx = Seq.index
     unsafeIndex = Seq.index
     {-# INLINE index #-}
@@ -1027,9 +1027,7 @@ instance IsSequence (V.Vector a) where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
 
-    index v i
-        | i >= V.length v = Nothing
-        | otherwise = Just (v V.! i)
+    index = (V.!?)
     indexEx = (V.!)
     unsafeIndex = V.unsafeIndex
     {-# INLINE index #-}
@@ -1102,9 +1100,7 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
 
-    index v i
-        | i >= U.length v = Nothing
-        | otherwise = Just (v U.! i)
+    index = (U.!?)
     indexEx = (U.!)
     unsafeIndex = U.unsafeIndex
     {-# INLINE index #-}
@@ -1177,9 +1173,7 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE unsafeTail #-}
     {-# INLINE unsafeInit #-}
 
-    index v i
-        | i >= VS.length v = Nothing
-        | otherwise = Just (v VS.! i)
+    index = (VS.!?)
     indexEx = (VS.!)
     unsafeIndex = VS.unsafeIndex
     {-# INLINE index #-}
