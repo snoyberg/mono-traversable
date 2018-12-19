@@ -1,3 +1,9 @@
+## 1.0.10.0
+
+* Make index work on negative indices
+  [#172](https://github.com/snoyberg/mono-traversable/issues/172)
+  [#114](https://github.com/snoyberg/mono-traversable/issues/114)
+
 ## 1.0.9.0
 
 * Added `filterMap` to `Data.Containers`
