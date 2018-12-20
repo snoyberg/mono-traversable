@@ -17,7 +17,7 @@ library:
   ghc-options: -Wall
   dependencies:
   - base >= 4.9 && <5
-  - containers >=0.4
+  - containers >=0.5.8
   - unordered-containers >=0.2
   - hashable
   - bytestring >=0.9
