@@ -154,7 +154,7 @@ main = hspec $ do
 
     describe "index" $ do
         let test name dummy = prop name $
-              \(NonNegative i') (QCM.NonEmpty xs) ->
+              \i' (QCM.NonEmpty xs) ->
                 let seq' = fromListAs xs dummy
                     mx   = index xs (fromIntegral i)
                     i    = fromIntegral (i' :: Int)
