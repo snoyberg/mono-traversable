@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts        #-}
 {-# LANGUAGE FlexibleInstances       #-}
 {-# LANGUAGE TypeFamilies            #-}
+{-# LANGUAGE TypeOperators           #-}
 {-# LANGUAGE UndecidableInstances    #-}
 -- | Type classes mirroring standard typeclasses, but working with monomorphic containers.
 --
@@ -37,12 +38,14 @@ import qualified Data.Foldable        as F
 import           Data.Functor
 import           Data.Maybe           (fromMaybe)
 import           Data.Monoid (Monoid (..), Any (..), All (..))
+import           Data.Proxy
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
 import           Data.Traversable
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
+import           GHC.Generics         ((:.:), (:*:), (:+:)(..), K1(..), M1(..), Par1(..), Rec1(..), U1(..), V1(..))
 import           Prelude              (Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
                                        (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
                                        (==), seq, otherwise, Eq, Ord, (-), (*))
@@ -137,6 +140,16 @@ type instance Element (Product f g a) = a
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
 type instance Element (Arg a b) = b
+type instance Element ((f :.: g) a) = a
+type instance Element ((f :*: g) a) = a
+type instance Element ((f :+: g) a) = a
+type instance Element (K1 i c a)    = a
+type instance Element (M1 i c f a)  = a
+type instance Element (Rec1 f a)    = a
+type instance Element (Par1 a)      = a
+type instance Element (U1 a)        = a
+type instance Element (V1 a)        = a
+type instance Element (Proxy a)     = a
 
 -- | Monomorphic containers that can be mapped over.
 class MonoFunctor mono where
@@ -194,6 +207,26 @@ instance Functor m => MonoFunctor (ReaderT r m a)
 instance Functor m => MonoFunctor (ContT r m a)
 instance (Functor f, Functor g) => MonoFunctor (Compose f g a)
 instance (Functor f, Functor g) => MonoFunctor (Product f g a)
+-- | @since 1.0.11.0
+instance (Functor f, Functor g) => MonoFunctor ((f :.: g) a)
+-- | @since 1.0.11.0
+instance (Functor f, Functor g) => MonoFunctor ((f :*: g) a)
+-- | @since 1.0.11.0
+instance (Functor f, Functor g) => MonoFunctor ((f :+: g) a)
+-- | @since 1.0.11.0
+instance MonoFunctor (K1 i c a)
+-- | @since 1.0.11.0
+instance Functor f => MonoFunctor (M1 i c f a)
+-- | @since 1.0.11.0
+instance Functor f => MonoFunctor (Rec1 f a)
+-- | @since 1.0.11.0
+instance MonoFunctor (Par1 a)
+-- | @since 1.0.11.0
+instance MonoFunctor (U1 a)
+-- | @since 1.0.11.0
+instance MonoFunctor (V1 a)
+-- | @since 1.0.11.0
+instance MonoFunctor (Proxy a)
 instance U.Unbox a => MonoFunctor (U.Vector a) where
     omap = U.map
     {-# INLINE omap #-}
@@ -771,6 +804,26 @@ instance F.Foldable f => MonoFoldable (WriterT w f a)
 instance F.Foldable f => MonoFoldable (Strict.WriterT w f a)
 instance (F.Foldable f, F.Foldable g) => MonoFoldable (Compose f g a)
 instance (F.Foldable f, F.Foldable g) => MonoFoldable (Product f g a)
+-- | @since 1.0.11.0
+instance (F.Foldable f, F.Foldable g) => MonoFoldable ((f :.: g) a)
+-- | @since 1.0.11.0
+instance (F.Foldable f, F.Foldable g) => MonoFoldable ((f :*: g) a)
+-- | @since 1.0.11.0
+instance (F.Foldable f, F.Foldable g) => MonoFoldable ((f :+: g) a)
+-- | @since 1.0.11.0
+instance MonoFoldable (K1 i c a)
+-- | @since 1.0.11.0
+instance F.Foldable f => MonoFoldable (M1 i c f a)
+-- | @since 1.0.11.0
+instance F.Foldable f => MonoFoldable (Rec1 f a)
+-- | @since 1.0.11.0
+instance MonoFoldable (Par1 a)
+-- | @since 1.0.11.0
+instance MonoFoldable (U1 a)
+-- | @since 1.0.11.0
+instance MonoFoldable (V1 a)
+-- | @since 1.0.11.0
+instance MonoFoldable (Proxy a)
 
 -- | Safe version of 'headEx'.
 --
@@ -804,14 +857,14 @@ oproduct = ofoldl' (*) 1
 
 -- | Are __all__ of the elements 'True'?
 --
--- Since 0.6.0
+-- @since 0.6.0
 oand :: (Element mono ~ Bool, MonoFoldable mono) => mono -> Bool
 oand = oall id
 {-# INLINE oand #-}
 
 -- | Are __any__ of the elements 'True'?
 --
--- Since 0.6.0
+-- @since 0.6.0
 oor :: (Element mono ~ Bool, MonoFoldable mono) => mono -> Bool
 oor = oany id
 {-# INLINE oor #-}
@@ -1049,6 +1102,26 @@ instance Traversable f => MonoTraversable (WriterT w f a)
 instance Traversable f => MonoTraversable (Strict.WriterT w f a)
 instance (Traversable f, Traversable g) => MonoTraversable (Compose f g a)
 instance (Traversable f, Traversable g) => MonoTraversable (Product f g a)
+-- | @since 1.0.11.0
+instance (Traversable f, Traversable g) => MonoTraversable ((f :.: g) a)
+-- | @since 1.0.11.0
+instance (Traversable f, Traversable g) => MonoTraversable ((f :*: g) a)
+-- | @since 1.0.11.0
+instance (Traversable f, Traversable g) => MonoTraversable ((f :+: g) a)
+-- | @since 1.0.11.0
+instance MonoTraversable (K1 i c a)
+-- | @since 1.0.11.0
+instance Traversable f => MonoTraversable (M1 i c f a)
+-- | @since 1.0.11.0
+instance Traversable f => MonoTraversable (Rec1 f a)
+-- | @since 1.0.11.0
+instance MonoTraversable (Par1 a)
+-- | @since 1.0.11.0
+instance MonoTraversable (U1 a)
+-- | @since 1.0.11.0
+instance MonoTraversable (V1 a)
+-- | @since 1.0.11.0
+instance MonoTraversable (Proxy a)
 
 -- | 'ofor' is 'otraverse' with its arguments flipped.
 ofor :: (MonoTraversable mono, Applicative f) => mono -> (Element mono -> f (Element mono)) -> f mono
@@ -1070,7 +1143,7 @@ oforM = flip omapM
 -- expected type. It is provided mainly for integration with the @foldl@
 -- package, to be used in conjunction with @purely@.
 --
--- Since 0.3.1
+-- @since 0.3.1
 ofoldlUnwrap :: MonoFoldable mono
              => (x -> Element mono -> x) -> x -> (x -> b) -> mono -> b
 ofoldlUnwrap f x unwrap mono = unwrap (ofoldl' f x mono)
@@ -1080,7 +1153,7 @@ ofoldlUnwrap f x unwrap mono = unwrap (ofoldl' f x mono)
 -- Similar to 'foldlUnwrap', but allows monadic actions. To be used with
 -- @impurely@ from @foldl@.
 --
--- Since 0.3.1
+-- @since 0.3.1
 ofoldMUnwrap :: (Monad m, MonoFoldable mono)
              => (x -> Element mono -> m x) -> m x -> (x -> m b) -> mono -> m b
 ofoldMUnwrap f mx unwrap mono = do
@@ -1142,6 +1215,20 @@ instance Applicative m => MonoPointed (ReaderT r m a)
 instance MonoPointed (ContT r m a)
 instance (Applicative f, Applicative g) => MonoPointed (Compose f g a)
 instance (Applicative f, Applicative g) => MonoPointed (Product f g a)
+-- | @since 1.0.11.0
+instance (Applicative f, Applicative g) => MonoPointed ((f :.: g) a)
+-- | @since 1.0.11.0
+instance (Applicative f, Applicative g) => MonoPointed ((f :*: g) a)
+-- | @since 1.0.11.0
+instance Applicative f => MonoPointed (M1 i c f a)
+-- | @since 1.0.11.0
+instance Applicative f => MonoPointed (Rec1 f a)
+-- | @since 1.0.11.0
+instance MonoPointed (Par1 a)
+-- | @since 1.0.11.0
+instance MonoPointed (U1 a)
+-- | @since 1.0.11.0
+instance MonoPointed (Proxy a)
 
 -- Not Applicative
 instance MonoPointed (Seq a) where
@@ -1188,6 +1275,10 @@ instance MonoPointed (ViewR a) where
     {-# INLINE opoint #-}
 instance MonoPointed (Tree a) where
     opoint a = Node a []
+    {-# INLINE opoint #-}
+-- | @since 1.0.11.0
+instance (Applicative f, Applicative g) => MonoPointed ((f :+: g) a) where
+    opoint = R1 . pure
     {-# INLINE opoint #-}
 
 

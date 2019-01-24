@@ -1,3 +1,8 @@
+## 1.0.11.0
+
+* Adding monomorphic instances for GHC.Generics and Data.Proxy types
+  [#175](https://github.com/snoyberg/mono-traversable/issues/175)
+
 ## 1.0.10.0
 
 * Make index work on negative indices
