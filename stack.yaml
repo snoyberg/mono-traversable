@@ -1,4 +1,4 @@
-resolver: lts-12.4
+resolver: lts-13.4
 packages:
 - minlen
 - mono-traversable
