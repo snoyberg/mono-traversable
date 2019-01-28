@@ -12,6 +12,7 @@ extra-deps:
 - resourcet-1.2.0@rev:0
 - conduit-1.3.0@rev:0
 - conduit-extra-1.3.0@rev:0
+- containers-0.5.11.0@sha256:28ad7337057442f75bc689315ab4ec7bdf5e6b2c39668f306672cecd82c02798,16685
 - typed-process-0.2.1.0@rev:0
 - unliftio-0.2.4.0@rev:0
 - unliftio-core-0.1.1.0@rev:0
