@@ -1,3 +1,6 @@
+## 1.0.12.0
+* Added `filterSet` to `Data.Containers`
+
 ## 1.0.11.0
 
 * Adding monomorphic instances for GHC.Generics and Data.Proxy types

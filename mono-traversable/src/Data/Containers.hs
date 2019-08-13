@@ -736,6 +736,12 @@ class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
     -- | Convert a set to a list.
     setToList :: set -> [Element set]
 
+    -- | Filter values in a set.
+    --
+    -- @since 1.0.12.0
+    filterSet :: (Element set -> Bool) -> set -> set
+    filterSet p = setFromList . filter p . setToList
+
 instance Ord element => IsSet (Set.Set element) where
     insertSet = Set.insert
     {-# INLINE insertSet #-}
@@ -747,6 +753,8 @@ instance Ord element => IsSet (Set.Set element) where
     {-# INLINE setFromList #-}
     setToList = Set.toList
     {-# INLINE setToList #-}
+    filterSet = Set.filter
+    {-# INLINE filterSet #-}
 
 instance (Eq element, Hashable element) => IsSet (HashSet.HashSet element) where
     insertSet = HashSet.insert
@@ -759,6 +767,8 @@ instance (Eq element, Hashable element) => IsSet (HashSet.HashSet element) where
     {-# INLINE setFromList #-}
     setToList = HashSet.toList
     {-# INLINE setToList #-}
+    filterSet = HashSet.filter
+    {-# INLINE filterSet #-}
 
 instance IsSet IntSet.IntSet where
     insertSet = IntSet.insert
@@ -771,6 +781,8 @@ instance IsSet IntSet.IntSet where
     {-# INLINE setFromList #-}
     setToList = IntSet.toList
     {-# INLINE setToList #-}
+    filterSet = IntSet.filter
+    {-# INLINE filterSet #-}
 
 
 -- | Zip operations on 'MonoFunctor's.
