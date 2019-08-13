@@ -1,5 +1,6 @@
 ## 1.0.12.0
 * Added `filterSet` to `Data.Containers`
+* Use container specific implementations for `filterSet` and `filterMap`
 
 ## 1.0.11.0
 

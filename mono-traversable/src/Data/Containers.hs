@@ -616,6 +616,8 @@ instance Ord key => IsMap (Map.Map key value) where
     {-# INLINE mapWithKey #-}
     omapKeysWith = Map.mapKeysWith
     {-# INLINE omapKeysWith #-}
+    filterMap = Map.filter
+    {-# INLINE filterMap #-}
 
 #if MIN_VERSION_containers(0, 5, 0)
 -- | This instance uses the functions from "Data.HashMap.Strict".
@@ -653,6 +655,8 @@ instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
     --unionsWith = HashMap.unionsWith
     --mapWithKey = HashMap.mapWithKey
     --mapKeysWith = HashMap.mapKeysWith
+    filterMap = HashMap.filter
+    {-# INLINE filterMap #-}
 
 #if MIN_VERSION_containers(0, 5, 0)
 -- | This instance uses the functions from "Data.IntMap.Strict".
@@ -703,6 +707,8 @@ instance IsMap (IntMap.IntMap value) where
     omapKeysWith = IntMap.mapKeysWith
     {-# INLINE omapKeysWith #-}
 #endif
+    filterMap = IntMap.filter
+    {-# INLINE filterMap #-}
 
 instance Eq key => IsMap [(key, value)] where
     type MapValue [(key, value)] = value
