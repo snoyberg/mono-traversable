@@ -1,6 +1,7 @@
 ## 1.0.12.0
 * Added `filterSet` to `Data.Containers`
 * Use container specific implementations for `filterSet` and `filterMap`
+  [#178](https://github.com/snoyberg/mono-traversable/pull/178)
 
 ## 1.0.11.0
 
