@@ -1,3 +1,7 @@
+## 1.0.13.0
+* Added `WrappedPoly` to `Data.MonoTraversable`
+  [#180](https://github.com/snoyberg/mono-traversable/pull/180)
+
 ## 1.0.12.0
 * Added `filterSet` to `Data.Containers`
 * Use container specific implementations for `filterSet` and `filterMap`

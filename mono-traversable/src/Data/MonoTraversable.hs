@@ -1,11 +1,13 @@
 {-# LANGUAGE ConstrainedClassMethods #-}
 {-# LANGUAGE CPP                     #-}
 {-# LANGUAGE DefaultSignatures       #-}
+{-# LANGUAGE DerivingStrategies      #-}
 {-# LANGUAGE FlexibleContexts        #-}
 {-# LANGUAGE FlexibleInstances       #-}
 {-# LANGUAGE TypeFamilies            #-}
 {-# LANGUAGE TypeOperators           #-}
 {-# LANGUAGE UndecidableInstances    #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- | Type classes mirroring standard typeclasses, but working with monomorphic containers.
 --
 -- The motivation is that some commonly used data types (i.e., 'ByteString' and
@@ -1382,3 +1384,27 @@ ointercalate x = mconcat . List.intersperse x . otoList
         ointercalate x = T.intercalate x . otoList #-}
 {-# RULES "intercalate LText" forall x.
         ointercalate x = TL.intercalate x . otoList #-}
+
+-- | Provides a `MonoFoldable`, `MonoFunctor` or `MonoPointed` for an arbitrary
+-- `F.Foldable`, `Functor` or `Applicative`.
+--
+-- Useful for, e.g., passing a `F.Foldable` type you don't own into a
+-- function that expects a `MonoFoldable`.
+--
+-- > // package A
+-- > data MyList a = MyList [a] deriving Foldable
+-- >
+-- > // package B
+-- > process :: MonoFoldable mono => mono -> IO ()
+-- >
+-- > // package C
+-- > process (WrappedPoly (MyList []))
+--
+-- @since 1.0.13.0
+newtype WrappedPoly f a = WrappedPoly { unwrapPoly :: f a }
+    deriving newtype (F.Foldable, Functor, Applicative, Monad)
+
+type instance Element (WrappedPoly f a) = a
+instance F.Foldable f  => MonoFoldable (WrappedPoly f a)
+instance Functor f     => MonoFunctor (WrappedPoly f a)
+instance Applicative f => MonoPointed (WrappedPoly f a)
