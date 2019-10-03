@@ -1,4 +1,4 @@
-resolver: lts-14.7
+resolver: nightly-2019-10-02
 packages:
 - minlen
 - mono-traversable
@@ -6,5 +6,4 @@ packages:
 - chunked-data
 - classy-prelude
 - classy-prelude-conduit
-- classy-prelude-yesod
 - mutable-containers
