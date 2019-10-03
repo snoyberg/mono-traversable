@@ -20,3 +20,4 @@ extra-deps:
 - basic-prelude-0.7.0@rev:0
 - gauge-0.2.1@rev:0
 - basement-0.0.6@rev:0
+- binary-0.8.7.0@sha256:ae3e6cca723ac55c54bbb3fa771bcf18142bc727afd57818e66d6ee6c8044f12,7705
