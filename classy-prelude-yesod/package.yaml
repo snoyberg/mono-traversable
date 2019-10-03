@@ -13,7 +13,7 @@ extra-source-files:
 - ChangeLog.md
 
 dependencies:
-- base >= 4.9 && <5
+- base >= 4.10 && <5
 - classy-prelude >=1.5.0 && <1.5.1
 - classy-prelude-conduit >=1.5.0 && <1.5.1
 - yesod >=1.2
