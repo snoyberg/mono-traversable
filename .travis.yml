@@ -98,9 +98,9 @@ matrix:
   #  compiler: ": #stack 8.0.1"
   #  addons: {apt: {packages: [libgmp-dev]}}
 
-  - env: BUILD=stack ARGS="--stack-yaml stack-lts-9.yaml"
-    compiler: ": #stack 8.0.2"
-    addons: {apt: {packages: [libgmp-dev]}}
+  #- env: BUILD=stack ARGS="--stack-yaml stack-lts-9.yaml"
+  #  compiler: ": #stack 8.0.2"
+  #  addons: {apt: {packages: [libgmp-dev]}}
 
   - env: BUILD=stack ARGS="--resolver lts-11"
     compiler: ": #stack 8.2.2"
@@ -145,9 +145,9 @@ matrix:
   #  compiler: ": #stack 8.0.1 osx"
   #  os: osx
 
-  - env: BUILD=stack ARGS="--stack-yaml stack-lts-9.yaml"
-    compiler: ": #stack 8.0.2 osx"
-    os: osx
+  #- env: BUILD=stack ARGS="--stack-yaml stack-lts-9.yaml"
+  #  compiler: ": #stack 8.0.2 osx"
+  #  os: osx
 
   - env: BUILD=stack ARGS="--resolver lts-11"
     compiler: ": #stack 8.2.2 osx"
