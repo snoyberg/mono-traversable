@@ -1,3 +1,7 @@
+## 1.0.14.0
+* Added `WrappedMono` to `Data.MonoTraversable`
+  [#182](https://github.com/snoyberg/mono-traversable/pull/182)
+
 ## 1.0.13.0
 * Added `WrappedPoly` to `Data.MonoTraversable`
   [#180](https://github.com/snoyberg/mono-traversable/pull/180)
