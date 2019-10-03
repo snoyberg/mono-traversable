@@ -4,6 +4,7 @@
 {-# LANGUAGE DerivingStrategies      #-}
 {-# LANGUAGE FlexibleContexts        #-}
 {-# LANGUAGE FlexibleInstances       #-}
+{-# LANGUAGE GADTs                   #-}
 {-# LANGUAGE TypeFamilies            #-}
 {-# LANGUAGE TypeOperators           #-}
 {-# LANGUAGE UndecidableInstances    #-}
@@ -1408,3 +1409,103 @@ type instance Element (WrappedPoly f a) = a
 instance F.Foldable f  => MonoFoldable (WrappedPoly f a)
 instance Functor f     => MonoFunctor (WrappedPoly f a)
 instance Applicative f => MonoPointed (WrappedPoly f a)
+
+
+-- | Provides a `F.Foldable` for an arbitrary `MonoFoldable`.
+--
+-- @since 1.0.14.0
+data WrappedMono mono a where
+    WrappedMono :: Element mono ~ a => mono -> WrappedMono mono a
+
+-- | Unwraps a `WrappedMono`.
+--
+-- @since 1.0.14.0
+unwrapMono :: WrappedMono mono a -> mono
+unwrapMono (WrappedMono mono) = mono
+{-# INLINE unwrapMono #-}
+
+type instance Element (WrappedMono mono a) = Element mono
+
+instance MonoFoldable mono => MonoFoldable (WrappedMono mono a) where
+    ofoldMap f = ofoldMap f . unwrapMono
+    {-# INLINE ofoldMap #-}
+    ofoldr f z = ofoldr f z . unwrapMono
+    {-# INLINE ofoldr #-}
+    ofoldl' f z = ofoldl' f z . unwrapMono
+    {-# INLINE ofoldl' #-}
+    otoList = otoList . unwrapMono
+    {-# INLINE otoList #-}
+    oall f = oall f . unwrapMono
+    {-# INLINE oall #-}
+    oany f = oany f . unwrapMono
+    {-# INLINE oany #-}
+    onull = onull . unwrapMono
+    {-# INLINE onull #-}
+    olength = olength . unwrapMono
+    {-# INLINE olength #-}
+    olength64 = olength64 . unwrapMono
+    {-# INLINE olength64 #-}
+    ocompareLength mono i = ocompareLength (unwrapMono mono) i
+    {-# INLINE ocompareLength #-}
+    otraverse_ f = otraverse_ f . unwrapMono
+    {-# INLINE otraverse_ #-}
+    ofor_ mono f = ofor_ (unwrapMono mono) f
+    {-# INLINE ofor_ #-}
+    omapM_ f = omapM_ f . unwrapMono
+    {-# INLINE omapM_ #-}
+    oforM_ mono f = oforM_ (unwrapMono mono) f
+    {-# INLINE oforM_ #-}
+    ofoldlM f z = ofoldlM f z . unwrapMono
+    {-# INLINE ofoldlM #-}
+    ofoldMap1Ex f = ofoldMap1Ex f . unwrapMono
+    {-# INLINE ofoldMap1Ex #-}
+    ofoldr1Ex f = ofoldr1Ex f . unwrapMono
+    {-# INLINE ofoldr1Ex #-}
+    ofoldl1Ex' f = ofoldl1Ex' f . unwrapMono
+    {-# INLINE ofoldl1Ex' #-}
+    headEx = headEx . unwrapMono
+    {-# INLINE headEx #-}
+    lastEx = lastEx . unwrapMono
+    {-# INLINE lastEx #-}
+    unsafeHead = unsafeHead . unwrapMono
+    {-# INLINE unsafeHead #-}
+    unsafeLast = unsafeLast . unwrapMono
+    {-# INLINE unsafeLast #-}
+    maximumByEx f = maximumByEx f . unwrapMono
+    {-# INLINE maximumByEx #-}
+    minimumByEx f = minimumByEx f . unwrapMono
+    {-# INLINE minimumByEx #-}
+    oelem a = oelem a . unwrapMono
+    {-# INLINE oelem #-}
+    onotElem a = onotElem a . unwrapMono
+    {-# INLINE onotElem #-}
+
+instance MonoFunctor mono => MonoFunctor (WrappedMono mono a) where
+    omap f (WrappedMono mono) = WrappedMono (omap f mono)
+    {-# INLINE omap #-}
+
+instance (MonoPointed mono, Element mono ~ a) => MonoPointed (WrappedMono mono a) where
+    opoint a = WrappedMono (opoint a)
+    {-# INLINE opoint #-}
+
+instance MonoFoldable mono => F.Foldable (WrappedMono mono) where
+    foldr f zero (WrappedMono mono) = ofoldr f zero mono
+    {-# INLINE foldr #-}
+    foldMap f (WrappedMono mono) = ofoldMap f mono
+    {-# INLINE foldMap #-}
+    foldl' f z (WrappedMono mono) = ofoldl' f z mono
+    {-# INLINE foldl' #-}
+    foldl1 f (WrappedMono mono) = ofoldl1Ex' f mono
+    {-# INLINE foldl1 #-}
+    toList (WrappedMono mono) = otoList mono
+    {-# INLINE toList #-}
+    null (WrappedMono mono) = onull mono
+    {-# INLINE null #-}
+    length (WrappedMono mono) = olength mono
+    {-# INLINE length #-}
+    elem a (WrappedMono mono) = oelem a mono
+    {-# INLINE elem #-}
+    maximum (WrappedMono mono) = maximumEx mono
+    {-# INLINE maximum #-}
+    minimum (WrappedMono mono) = minimumEx mono
+    {-# INLINE minimum #-}
