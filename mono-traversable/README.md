@@ -155,7 +155,7 @@ class (MonoFunctor mono, MonoFoldable mono) => MonoTraversable mono where
 * IsMap: unifies operations across different `Map`s
 * MonoZip: zip operations on MonoFunctors.
 
-Note that because `Set` and `Map` are not a Functor (and therefore not MonoFoldable), one must use `mapFromList`, `mapToList`, `setFromList`, and `setToList`.
+Note that because `Set` is not a Functor (and therefore neither a MonoFunctor nor MonoTraversable), one must use `setFromList` and `setToList` to `omap` or `otraverse` over the elements of a `Set`.
 
 
 ### Sequences
