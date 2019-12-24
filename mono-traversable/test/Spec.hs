@@ -209,6 +209,9 @@ main = hspec $ do
         describe "fromNonEmpty" $ do
             prop "toMinList" $ \(NonEmpty' ne) ->
                 (NE.toList ne :: [Int]) @?= NN.toNullable (NN.toMinList ne)
+        describe "toNonEmpty" $ do
+            it "converts nonnull to nonempty" $ do
+                NN.toNonEmpty (NN.impureNonNull [1,2,3]) @?= NE.fromList [1,2,3]
 
         describe "mapNonNull" $ do
             prop "mapNonNull id == id" $ \x xs ->

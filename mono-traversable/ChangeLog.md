@@ -1,3 +1,7 @@
+## 1.0.15.0
+* Added `toNonEmpty` to `Data.NonNull`
+  [#](https://github.com/snoyberg/mono-traversable/pull/)
+
 ## 1.0.14.0
 * Added `WrappedMono` to `Data.MonoTraversable`
   [#182](https://github.com/snoyberg/mono-traversable/pull/182)

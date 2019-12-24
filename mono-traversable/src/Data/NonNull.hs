@@ -16,6 +16,7 @@ module Data.NonNull (
   , nonNull
   , toNullable
   , fromNonEmpty
+  , toNonEmpty
   , ncons
   , nuncons
   , splitFirst
@@ -131,6 +132,12 @@ nonNull = impureNonNull
 fromNonEmpty :: IsSequence seq => NE.NonEmpty (Element seq) -> NonNull seq
 fromNonEmpty = impureNonNull . fromList . NE.toList
 {-# INLINE fromNonEmpty #-}
+
+-- | __Safely__ convert from a 'NonNull' container to a 'NonEmpty' list.
+--
+-- @since x.y.z
+toNonEmpty :: MonoFoldable mono => NonNull mono -> NE.NonEmpty (Element mono)
+toNonEmpty = NE.fromList . otoList
 
 -- | Specializes 'fromNonEmpty' to lists only.
 toMinList :: NE.NonEmpty a -> NonNull [a]
