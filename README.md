@@ -1,6 +1,6 @@
 ## mono-traversable mega-repo
 
-[![Build Status](https://travis-ci.org/snoyberg/mono-traversable.svg?branch=master)](https://travis-ci.org/snoyberg/mono-traversable)
+[![Build Status](https://dev.azure.com/snoyberg/mono-traversable/_apis/build/status/snoyberg.mono-traversable?branchName=master)](https://dev.azure.com/snoyberg/mono-traversable/_build/latest?definitionId=9&branchName=master)
 
 This repository contains packages in the mono-traversable and classy-prelude
 families. Please see the individual READMEs for more details:
