@@ -135,7 +135,7 @@ fromNonEmpty = impureNonNull . fromList . NE.toList
 
 -- | __Safely__ convert from a 'NonNull' container to a 'NonEmpty' list.
 --
--- @since x.y.z
+-- @since 1.0.15.0
 toNonEmpty :: MonoFoldable mono => NonNull mono -> NE.NonEmpty (Element mono)
 toNonEmpty = NE.fromList . otoList
 
