@@ -1314,7 +1314,7 @@ class MonoFunctor mono => MonoComonad mono where
 instance MonoComonad (ViewL a) where
     oextract ~(x :< _) = x
     {-# INLINE oextract #-}
-    oextend f w@ ~(_ :< xxs) =
+    oextend f w@(~(_ :< xxs)) =
         f w :< case Seq.viewl xxs of
                  EmptyL -> Seq.empty
                  xs     -> case oextend f xs of
@@ -1324,7 +1324,7 @@ instance MonoComonad (ViewL a) where
 instance MonoComonad (ViewR a) where
     oextract ~(_ :> x) = x
     {-# INLINE oextract #-}
-    oextend f w@ ~(xxs :> _) =
+    oextend f w@(~(xxs :> _)) =
         (case Seq.viewr xxs of
            EmptyR -> Seq.empty
            xs     -> case oextend f xs of
