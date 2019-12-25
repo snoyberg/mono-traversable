@@ -1,4 +1,11 @@
+# ChangeLog for mono-traversable
+
+## 1.0.15.1
+
+* Remove whitespace after `@` in as-patterns for GHC HEAD [#186](https://github.com/snoyberg/mono-traversable/pull/186)
+
 ## 1.0.15.0
+
 * Added `toNonEmpty` to `Data.NonNull`
   [#185](https://github.com/snoyberg/mono-traversable/pull/185)
 
