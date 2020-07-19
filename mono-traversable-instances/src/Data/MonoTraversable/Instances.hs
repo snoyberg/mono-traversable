@@ -66,7 +66,11 @@ instance SemiSequence (DList a) where
 instance IsSequence (DList a) where
     fromList = DL.fromList
     replicate = DL.replicate
+#if MIN_VERSION_dlist(1,0,0)
+    tailEx = DL.fromList . DL.tail
+#else
     tailEx = DL.tail
+#endif
     {-# INLINE fromList #-}
     {-# INLINE replicate #-}
     {-# INLINE tailEx #-}

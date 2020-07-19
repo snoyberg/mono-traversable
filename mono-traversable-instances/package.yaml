@@ -1,5 +1,5 @@
 name:        mono-traversable-instances
-version:     0.1.0.0
+version:     0.1.1.0
 synopsis:    Extra typeclass instances for mono-traversable
 description: See docs and README at <http://www.stackage.org/package/mono-traversable-instance>
 category:    Data
@@ -18,7 +18,7 @@ dependencies:
 - semigroupoids >=3.0
 - comonad >=3.0.3
 - vector-instances
-- dlist >=0.6 && <1.0
+- dlist >=0.6 && <1.1
 - dlist-instances ==0.1.*
 - transformers
 - semigroups
