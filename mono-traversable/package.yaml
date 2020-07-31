@@ -26,10 +26,6 @@ library:
   - vector >=0.10
   - vector-algorithms >=0.6
   - split >=0.2
-  when:
-  - condition: impl(ghc <8.0)
-    dependencies:
-    - semigroups >=0.10
 tests:
   test:
     main: main.hs
@@ -45,7 +41,6 @@ tests:
     - transformers
     - vector
     - QuickCheck
-    - semigroups
     - containers
     - unordered-containers
     - foldl

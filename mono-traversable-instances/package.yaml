@@ -21,7 +21,6 @@ dependencies:
 - dlist >=0.6 && <1.1
 - dlist-instances ==0.1.*
 - transformers
-- semigroups
 - containers
 library:
   source-dirs: src
