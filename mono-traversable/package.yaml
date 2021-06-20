@@ -32,7 +32,7 @@ library:
     - semigroups >=0.10
 tests:
   test:
-    main: main.hs
+    main: Main.hs
     source-dirs: test
     ghc-options: -O0
     dependencies:
