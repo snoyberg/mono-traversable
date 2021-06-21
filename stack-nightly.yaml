@@ -1,9 +1,0 @@
-resolver: nightly-2019-10-02
-packages:
-- minlen
-- mono-traversable
-- mono-traversable-instances
-- chunked-data
-- classy-prelude
-- classy-prelude-conduit
-- mutable-containers

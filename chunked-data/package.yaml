@@ -13,13 +13,12 @@ extra-source-files:
 - ChangeLog.md
 
 dependencies:
-- base >= 4.10 && <5
+- base >= 4.13 && <5
 - transformers
 - bytestring >=0.10.2
 - text >=1.2
 - containers
 - vector
-- semigroups
 
 library:
   source-dirs: src
