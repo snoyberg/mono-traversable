@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PatternSynonyms #-}
 
-module Spec where
+module Main where
 
 import Data.MonoTraversable
 import Data.Containers
