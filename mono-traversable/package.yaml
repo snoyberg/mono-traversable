@@ -16,7 +16,7 @@ library:
   source-dirs: src
   ghc-options: -Wall
   dependencies:
-  - base >= 4.10 && <5
+  - base >= 4.13 && <5
   - containers >=0.5.8
   - unordered-containers >=0.2
   - hashable
