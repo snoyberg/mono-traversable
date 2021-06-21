@@ -35,7 +35,6 @@ library:
   - mono-traversable >=1.0
   - mono-traversable-instances
   #- exceptions >=0.5
-  - semigroups
   - vector-instances
   - time >= 1.5
   #- time-locale-compat

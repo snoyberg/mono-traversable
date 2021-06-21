@@ -15,7 +15,6 @@ extra-source-files:
 dependencies:
 - base >= 4.13 && <5
 - mono-traversable
-- semigroups
 - transformers
 library:
   source-dirs: src
