@@ -1,5 +1,5 @@
 name:        mono-traversable
-version:     1.0.15.1
+version:     1.0.15.2
 synopsis:    Type classes for mapping, folding, and traversing monomorphic containers
 description: Please see the README at <https://www.stackage.org/package/mono-traversable>
 category:    Data

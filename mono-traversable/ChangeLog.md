@@ -1,5 +1,9 @@
 # ChangeLog for mono-traversable
 
+## 1.0.15.2
+
+* Support transformers 0.6.0.0 [#196](https://github.com/snoyberg/mono-traversable/issues/196)
+
 ## 1.0.15.1
 
 * Remove whitespace after `@` in as-patterns for GHC HEAD [#186](https://github.com/snoyberg/mono-traversable/pull/186)

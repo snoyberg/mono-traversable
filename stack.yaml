@@ -1,4 +1,4 @@
-resolver: lts-18.0
+resolver: lts-18.5
 packages:
 - minlen
 - mono-traversable

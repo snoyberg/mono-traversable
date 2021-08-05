@@ -72,7 +72,9 @@ import qualified Data.Map.Strict as Map
 import Data.HashMap.Strict (HashMap)
 import Data.Vector (Vector)
 import Control.Monad.Trans.Maybe (MaybeT (..))
+#if !MIN_VERSION_transformers(0,6,0)
 import Control.Monad.Trans.List (ListT)
+#endif
 import Control.Monad.Trans.Writer (WriterT)
 import qualified Control.Monad.Trans.Writer.Strict as Strict (WriterT)
 import Control.Monad.Trans.State (StateT(..))
@@ -128,7 +130,9 @@ type instance Element (HashSet e) = e
 type instance Element (Vector a) = a
 type instance Element (WrappedArrow a b c) = c
 type instance Element (MaybeT m a) = a
+#if !MIN_VERSION_transformers(0,6,0)
 type instance Element (ListT m a) = a
+#endif
 type instance Element (IdentityT m a) = a
 type instance Element (WriterT w m a) = a
 type instance Element (Strict.WriterT w m a) = a
@@ -198,7 +202,9 @@ instance MonoFunctor (Vector a)
 instance MonoFunctor (Arg a b)
 instance Arrow a => MonoFunctor (WrappedArrow a b c)
 instance Functor m => MonoFunctor (MaybeT m a)
+#if !MIN_VERSION_transformers(0,6,0)
 instance Functor m => MonoFunctor (ListT m a)
+#endif
 instance Functor m => MonoFunctor (IdentityT m a)
 instance Functor m => MonoFunctor (WriterT w m a)
 instance Functor m => MonoFunctor (Strict.WriterT w m a)
@@ -801,7 +807,9 @@ instance MonoFoldable (Either a b) where
 instance MonoFoldable (a, b)
 instance MonoFoldable (Const m a)
 instance F.Foldable f => MonoFoldable (MaybeT f a)
+#if !MIN_VERSION_transformers(0,6,0)
 instance F.Foldable f => MonoFoldable (ListT f a)
+#endif
 instance F.Foldable f => MonoFoldable (IdentityT f a)
 instance F.Foldable f => MonoFoldable (WriterT w f a)
 instance F.Foldable f => MonoFoldable (Strict.WriterT w f a)
@@ -1099,7 +1107,9 @@ instance MonoTraversable (Either a b) where
 instance MonoTraversable (a, b)
 instance MonoTraversable (Const m a)
 instance Traversable f => MonoTraversable (MaybeT f a)
+#if !MIN_VERSION_transformers(0,6,0)
 instance Traversable f => MonoTraversable (ListT f a)
+#endif
 instance Traversable f => MonoTraversable (IdentityT f a)
 instance Traversable f => MonoTraversable (WriterT w f a)
 instance Traversable f => MonoTraversable (Strict.WriterT w f a)
@@ -1209,7 +1219,9 @@ instance MonoPointed (r -> a)
 instance Monoid a => MonoPointed (a, b)
 instance Monoid m => MonoPointed (Const m a)
 instance Monad m => MonoPointed (WrappedMonad m a)
+#if !MIN_VERSION_transformers(0,6,0)
 instance Applicative m => MonoPointed (ListT m a)
+#endif
 instance Applicative m => MonoPointed (IdentityT m a)
 instance Arrow a => MonoPointed (WrappedArrow a b c)
 instance (Monoid w, Applicative m) => MonoPointed (WriterT w m a)
