@@ -19,7 +19,6 @@ jobs:
         #- "--resolver nightly"
         - lts-18
         - lts-16
-            args: "--resolver lts-16"
 
     steps:
       - name: Clone project
