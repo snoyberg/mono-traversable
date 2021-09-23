@@ -16,9 +16,6 @@ import qualified Data.DList as DL
 import Data.Vector.Instances ()
 import Data.MonoTraversable
 import Data.Sequences
-#if !MIN_VERSION_base(4,8,0)
-import Control.Monad (liftM)
-#endif
 import Control.Monad.Trans.Identity (IdentityT)
 import Data.Semigroup (Arg)
 import Data.List.NonEmpty (NonEmpty)
@@ -40,9 +37,6 @@ instance MonoFoldable (DList a) where
     {-# INLINE headEx #-}
 instance MonoTraversable (DList a) where
      otraverse f = fmap DL.fromList . Data.Traversable.traverse f . DL.toList
-#if !MIN_VERSION_base(4,8,0)
-     omapM f = liftM DL.fromList . mapM f . DL.toList
-#endif
 instance MonoFunctor (DList a)
 instance MonoPointed (DList a)
 instance GrowingAppend (DList a)

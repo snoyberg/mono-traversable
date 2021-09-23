@@ -93,25 +93,15 @@ for_ = ofor_
 -- | Synonym for 'omapM_'
 --
 -- @since 1.0.0
-#if MIN_VERSION_base(4,8,0)
 mapM_ :: (MonoFoldable mono, Applicative m)
       => (Element mono -> m ()) -> mono -> m ()
-#else
-mapM_ :: (MonoFoldable mono, Monad m)
-      => (Element mono -> m ()) -> mono -> m ()
-#endif
 mapM_ = omapM_
 
 -- | Synonym for 'oforM_'
 --
 -- @since 1.0.0
-#if MIN_VERSION_base(4,8,0)
 forM_ :: (MonoFoldable mono, Applicative m)
       => mono -> (Element mono -> m ()) -> m ()
-#else
-forM_ :: (MonoFoldable mono, Monad m)
-      => mono -> (Element mono -> m ()) -> m ()
-#endif
 forM_ = oforM_
 
 -- | Synonym for 'ofoldlM'
@@ -227,9 +217,5 @@ foldM = ofoldM
 -- | Synonym for 'osequence_'
 --
 -- @since 1.0.0
-#if MIN_VERSION_base(4,8,0)
 sequence_ :: (Applicative m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m ()
-#else
-sequence_ :: (Monad m, MonoFoldable mono, Element mono ~ (m ())) => mono -> m ()
-#endif
 sequence_ = osequence_
