@@ -14,7 +14,6 @@ module Data.MonoTraversable.Unprefixed where
 
 import Data.Int (Int64)
 import Data.MonoTraversable
-import Data.Semigroup (Semigroup)
 import Data.Monoid (Monoid)
 import Control.Applicative (Applicative)
 

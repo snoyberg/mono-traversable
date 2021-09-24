@@ -1,5 +1,10 @@
 # ChangeLog for mono-traversable
 
+## 1.0.15.3
+
+* Compile with GHC 9.2 (`Option` removed from `base-4.16`)
+  [#199](https://github.com/snoyberg/mono-traversable/issues/199)
+
 ## 1.0.15.2
 
 * Support transformers 0.6.0.0 [#196](https://github.com/snoyberg/mono-traversable/issues/196)

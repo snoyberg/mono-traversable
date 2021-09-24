@@ -49,7 +49,6 @@ import qualified Data.List.NonEmpty as NE
 import Data.Maybe (fromMaybe)
 import Data.MonoTraversable
 import Data.Sequences
-import Data.Semigroup (Semigroup (..))
 import Control.Monad.Trans.State.Strict (evalState, state)
 
 data NullError = NullError String deriving (Show, Typeable)

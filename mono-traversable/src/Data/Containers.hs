@@ -16,7 +16,6 @@ import Data.Hashable (Hashable)
 import qualified Data.Set as Set
 import qualified Data.HashSet as HashSet
 import Data.Monoid (Monoid (..))
-import Data.Semigroup (Semigroup)
 import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element, GrowingAppend, ofoldl', otoList)
 import Data.Function (on)
 import qualified Data.List as List
