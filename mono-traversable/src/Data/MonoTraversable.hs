@@ -44,7 +44,7 @@ import           Data.Traversable
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
-import           GHC.Generics         ((:.:), (:*:), (:+:)(..), K1(..), M1(..), Par1(..), Rec1(..), U1(..), V1(..))
+import           GHC.Generics         ((:.:), (:*:), (:+:)(..), K1(..), M1(..), Par1(..), Rec1(..), U1(..), V1)
 import           Prelude              (Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
                                        (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
                                        (==), seq, otherwise, Eq, Ord, (-), (*))
