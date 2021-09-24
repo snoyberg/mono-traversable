@@ -90,7 +90,14 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
-import Data.Semigroup (Semigroup, Option (..), Arg)
+import Data.Semigroup
+  ( Semigroup
+-- Option has been removed in base-4.16 (GHC 9.2)
+#if !MIN_VERSION_base(4,16,0)
+  , Option (..)
+#endif
+  , Arg
+  )
 import qualified Data.ByteString.Unsafe as SU
 import Control.Monad.Trans.Identity (IdentityT)
 
@@ -111,7 +118,9 @@ type instance Element (ViewL a) = a
 type instance Element (ViewR a) = a
 type instance Element (IntMap a) = a
 type instance Element IntSet = Int
+#if !MIN_VERSION_base(4,16,0)
 type instance Element (Option a) = a
+#endif
 type instance Element (NonEmpty a) = a
 type instance Element (Identity a) = a
 type instance Element (r -> a) = a
@@ -184,7 +193,9 @@ instance MonoFunctor (Seq a)
 instance MonoFunctor (ViewL a)
 instance MonoFunctor (ViewR a)
 instance MonoFunctor (IntMap a)
+#if !MIN_VERSION_base(4,16,0)
 instance MonoFunctor (Option a)
+#endif
 instance MonoFunctor (NonEmpty a)
 instance MonoFunctor (Identity a)
 instance MonoFunctor (r -> a)
@@ -352,7 +363,7 @@ class MonoFoldable mono where
     -- /See 'Data.NonNull.ofoldMap1' from "Data.NonNull" for a total version of this function./
     ofoldMap1Ex :: Semigroup m => (Element mono -> m) -> mono -> m
     ofoldMap1Ex f = fromMaybe (Prelude.error "Data.MonoTraversable.ofoldMap1Ex")
-                       . getOption . ofoldMap (Option . Just . f)
+                       . ofoldMap (Just . f)
 
     -- | Right-associative fold of a monomorphic container with no base element.
     --
@@ -630,7 +641,9 @@ instance MonoFoldable (Seq a) where
 instance MonoFoldable (ViewL a)
 instance MonoFoldable (ViewR a)
 instance MonoFoldable (IntMap a)
+#if !MIN_VERSION_base(4,16,0)
 instance MonoFoldable (Option a)
+#endif
 instance MonoFoldable (NonEmpty a)
 instance MonoFoldable (Identity a)
 instance MonoFoldable (Map k v) where
@@ -1009,7 +1022,9 @@ instance MonoTraversable (Seq a)
 instance MonoTraversable (ViewL a)
 instance MonoTraversable (ViewR a)
 instance MonoTraversable (IntMap a)
+#if !MIN_VERSION_base(4,16,0)
 instance MonoTraversable (Option a)
+#endif
 instance MonoTraversable (NonEmpty a)
 instance MonoTraversable (Identity a)
 instance MonoTraversable (Map k v)
@@ -1135,7 +1150,9 @@ instance MonoPointed TL.Text where
 -- Applicative
 instance MonoPointed [a]
 instance MonoPointed (Maybe a)
+#if !MIN_VERSION_base(4,16,0)
 instance MonoPointed (Option a)
+#endif
 instance MonoPointed (NonEmpty a)
 instance MonoPointed (Identity a)
 instance MonoPointed (Vector a)
