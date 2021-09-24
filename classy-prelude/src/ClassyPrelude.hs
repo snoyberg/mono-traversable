@@ -201,6 +201,7 @@ import qualified Data.Map as Map
 import qualified Data.HashSet as HashSet
 
 import GHC.Generics (Generic)
+import GHC.Stack (HasCallStack)
 
 import Control.Monad.Primitive (primToPrim, primToIO, primToST)
 import Data.Primitive.MutVar
@@ -217,10 +218,6 @@ import Control.Concurrent.STM.TBMQueue
 import Control.Concurrent.STM.TMChan
 import Control.Concurrent.STM.TMQueue
 import qualified Control.Concurrent
-
-#if MIN_VERSION_base(4,9,0)
-import GHC.Stack (HasCallStack)
-#endif
 
 tshow :: Show a => a -> Text
 tshow = fromList . Prelude.show
@@ -334,11 +331,7 @@ sortWith f = sortBy $ comparing f
 -- @"Prelude".'Prelude.undefined'@.
 --
 -- Since 0.5.5
-#if MIN_VERSION_base(4,9,0)
 undefined :: HasCallStack => a
-#else
-undefined :: a
-#endif
 undefined = error "ClassyPrelude.undefined"
 {-# DEPRECATED undefined "It is highly recommended that you either avoid partial functions or provide meaningful error messages" #-}
 

@@ -50,9 +50,6 @@ import Data.MonoTraversable
 import Data.Sequences
 import Data.Monoid (Monoid (..))
 import Data.Semigroup (Semigroup (..))
-#if !MIN_VERSION_base(4,8,0)
-import Control.Monad (liftM)
-#endif
 import Control.Monad.Trans.State.Strict (evalState, state)
 
 -- $peanoNumbers
@@ -172,10 +169,6 @@ deriving instance MonoFoldable mono => MonoFoldable (MinLen nat mono)
 instance MonoTraversable mono => MonoTraversable (MinLen nat mono) where
     otraverse f (MinLen x) = fmap MinLen (otraverse f x)
     {-# INLINE otraverse #-}
-#if !MIN_VERSION_base(4,8,0)
-    omapM f (MinLen x) = liftM MinLen (omapM f x)
-    {-# INLINE omapM #-}
-#endif
 deriving instance GrowingAppend mono => GrowingAppend (MinLen nat mono)
 
 -- | This function is unsafe, and must not be exposed from this module.
