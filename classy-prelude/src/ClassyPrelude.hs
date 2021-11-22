@@ -47,6 +47,9 @@ module ClassyPrelude
     , traceShowM
       -- ** Time (since 0.6.1)
     , module Data.Time
+#if MIN_VERSION_time(1,10,0)
+    , parseTime
+#endif
       -- ** Generics (since 0.8.1)
     , Generic
       -- ** Transformers (since 0.9.4)
@@ -190,7 +193,9 @@ import Data.Time
     , toGregorian
     , fromGregorian
     , formatTime
+#if !MIN_VERSION_time(1,10,0)
     , parseTime
+#endif
     , parseTimeM
     , getCurrentTime
     , defaultTimeLocale
@@ -620,3 +625,16 @@ getContents = liftIO LTextIO.getContents
 -- @since 1.3.1
 interact :: MonadIO m => (LText -> LText) -> m ()
 interact = liftIO . LTextIO.interact
+
+
+#if MIN_VERSION_time(1,10,0)
+parseTime 
+  :: ParseTime t
+  => TimeLocale -- ^ Time locale.
+  -> String -- ^ Format string.
+  -> String -- ^ Input string.
+  -> Maybe t -- ^ The time value, or 'Nothing' if the input could not be parsed using the given format.
+parseTime = parseTimeM True
+#endif
+
+
