@@ -1,5 +1,5 @@
 name:        classy-prelude-yesod
-version:     1.5.1
+version:     1.5.0
 synopsis:    Provide a classy prelude including common Yesod functionality.
 description: See docs and README at <http://www.stackage.org/package/classy-prelude-yesod>
 category:    Control, Yesod
@@ -14,8 +14,8 @@ extra-source-files:
 
 dependencies:
 - base >= 4.13 && <5
-- classy-prelude >=1.5.0 && <1.5.2
-- classy-prelude-conduit >=1.5.0 && <1.5.2
+- classy-prelude >=1.5.0 && <1.5.1
+- classy-prelude-conduit >=1.5.0 && <1.5.1
 - yesod >=1.2
 - yesod-newsfeed
 - yesod-static

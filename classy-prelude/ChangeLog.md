@@ -1,4 +1,6 @@
-## 1.5.1
+# ChangeLog for classy-prelude
+
+## 1.5.0.1
 
 * Export a compatiblity shim for `parseTime` as it has been removed in `time-1.10`.
   See <https://hackage.haskell.org/package/time-1.12/changelog>
