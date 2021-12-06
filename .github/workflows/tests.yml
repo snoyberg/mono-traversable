@@ -22,6 +22,9 @@ jobs:
         stack-yaml:
         - stack.yaml
         - stack-new-time.yaml
+        exclude:
+        - resolver: lts-16
+          stack-yaml: stack-new-time.yaml
 
     steps:
       - name: Clone project
