@@ -1,5 +1,8 @@
 # ChangeLog for classy-prelude
 
+## 1.5.0.2
+* Fix building with time >= 1.10 [#207](https://github.com/snoyberg/mono-traversable/pull/207).
+
 ## 1.5.0.1
 
 * Export a compatiblity shim for `parseTime` as it has been removed in `time-1.10`.

@@ -200,6 +200,7 @@ import Data.Time
     , getCurrentTime
     , defaultTimeLocale
     )
+import qualified Data.Time as Time
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map
@@ -629,8 +630,8 @@ interact = liftIO . LTextIO.interact
 
 #if MIN_VERSION_time(1,10,0)
 parseTime 
-  :: ParseTime t
-  => TimeLocale -- ^ Time locale.
+  :: Time.ParseTime t
+  => Time.TimeLocale -- ^ Time locale.
   -> String -- ^ Format string.
   -> String -- ^ Input string.
   -> Maybe t -- ^ The time value, or 'Nothing' if the input could not be parsed using the given format.
