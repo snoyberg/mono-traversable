@@ -17,7 +17,7 @@ jobs:
         resolver:
         # Missing some packages now
         #- "--resolver nightly"
-        - lts-18
+        - lts-18.16 # Win32 issue
         - lts-16
 
     steps:
