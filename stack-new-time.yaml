@@ -1,0 +1,18 @@
+resolver: lts-18.5
+skip-ghc-check: true
+packages:
+- minlen
+- mono-traversable
+- mono-traversable-instances
+- chunked-data
+- classy-prelude
+- classy-prelude-conduit
+- classy-prelude-yesod
+- mutable-containers
+
+extra-deps:
+  - time-1.10@sha256:536801b30aa2ce66da07cb19847827662650907efb2af4c8bef0a6276445075f,5738
+  - Cabal-3.4.1.0@sha256:664179b2b713dd0436d870640eb342c7758726b23bd6d85d2a6c573452d75e77,30533
+  - directory-1.3.7.0@sha256:4d59f9714700e69d139084b47204fc91f13f31546aac39d666279996192b0d11,2940
+  - process-1.6.13.2@sha256:a6530a5698796e29d85817f74ca3ae20d2172fb9fa52b492c2e6816e1306bfe8,2963
+  - unix-2.7.2.2@sha256:15f5365c5995634e45de1772b9504761504a310184e676bc2ef60a14536dbef9,3496

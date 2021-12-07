@@ -19,6 +19,14 @@ jobs:
         #- "--resolver nightly"
         - lts-18.16 # Win32 issue
         - lts-16
+        stack-yaml:
+        - stack.yaml
+        - stack-new-time.yaml
+        exclude:
+        - resolver: lts-16
+          stack-yaml: stack-new-time.yaml
+        - os: windows-latest
+          stack-yaml: stack-new-time.yaml
 
     steps:
       - name: Clone project
@@ -31,4 +39,4 @@ jobs:
             mkdir -p ../_newstack
             stack upgrade --force-download --local-bin-path ../_newstack
             ../_newstack/stack --version
-            ../_newstack/stack test --fast --no-terminal --resolver=${{ matrix.resolver }}
+            ../_newstack/stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
