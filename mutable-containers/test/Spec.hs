@@ -1,4 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 import Control.Monad             (forM_)
 import Data.Mutable
 import Data.Sequence             (Seq)
