@@ -1,3 +1,9 @@
+# ChangeLog for mutable-containers
+
+## 0.3.4.1
+
+* Fix test suite compilation [#208](https://github.com/snoyberg/mono-traversable/pull/208)
+
 ## 0.3.4
 
 * Switch to gauge
