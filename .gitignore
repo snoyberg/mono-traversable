@@ -4,5 +4,4 @@
 cabal.sandbox.config
 .stack-work/
 tarballs/
-*.cabal
 *~
