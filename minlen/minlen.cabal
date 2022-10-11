@@ -1,0 +1,38 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           minlen
+version:        0.1.0.0
+synopsis:       Express the minimum length of a container in its type
+description:    See docs and README at <http://www.stackage.org/package/minlen>
+category:       Data
+homepage:       https://github.com/snoyberg/mono-traversable#readme
+bug-reports:    https://github.com/snoyberg/mono-traversable/issues
+author:         Michael Snoyman
+maintainer:     michael@snoyman.com
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/snoyberg/mono-traversable
+
+library
+  exposed-modules:
+      Data.MinLen
+  other-modules:
+      Paths_minlen
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.13 && <5
+    , mono-traversable
+    , transformers
+  default-language: Haskell2010

@@ -1,0 +1,46 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           classy-prelude-yesod
+version:        1.5.0
+synopsis:       Provide a classy prelude including common Yesod functionality.
+description:    See docs and README at <http://www.stackage.org/package/classy-prelude-yesod>
+category:       Control, Yesod
+homepage:       https://github.com/snoyberg/mono-traversable#readme
+bug-reports:    https://github.com/snoyberg/mono-traversable/issues
+author:         Michael Snoyman
+maintainer:     michael@snoyman.com
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/snoyberg/mono-traversable
+
+library
+  exposed-modules:
+      ClassyPrelude.Yesod
+  other-modules:
+      Paths_classy_prelude_yesod
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , base >=4.13 && <5
+    , classy-prelude ==1.5.0.*
+    , classy-prelude-conduit ==1.5.0.*
+    , data-default
+    , http-conduit
+    , http-types
+    , persistent >=1.1
+    , yesod >=1.2
+    , yesod-newsfeed
+    , yesod-static
+  default-language: Haskell2010

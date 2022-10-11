@@ -1,0 +1,43 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           chunked-data
+version:        0.3.1
+synopsis:       Typeclasses for dealing with various chunked data representations
+description:    See docs and README at <http://www.stackage.org/package/chunked-data>
+category:       Data
+homepage:       https://github.com/snoyberg/mono-traversable#readme
+bug-reports:    https://github.com/snoyberg/mono-traversable/issues
+author:         Michael Snoyman
+maintainer:     michael@snoyman.com
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/snoyberg/mono-traversable
+
+library
+  exposed-modules:
+      Data.Builder
+      Data.ChunkedZip
+      Data.IOData
+  other-modules:
+      Paths_chunked_data
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.13 && <5
+    , bytestring >=0.10.2
+    , containers
+    , text >=1.2
+    , transformers
+    , vector
+  default-language: Haskell2010
