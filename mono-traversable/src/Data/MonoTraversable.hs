@@ -426,7 +426,7 @@ class MonoFoldable mono where
     -- Note: this is a partial function. On an empty 'MonoFoldable', it will
     -- throw an exception.
     --
-    -- /See 'Data.NonNull.maximiumBy' from "Data.NonNull" for a total version of this function./
+    -- /See 'Data.NonNull.maximumBy' from "Data.NonNull" for a total version of this function./
     maximumByEx :: (Element mono -> Element mono -> Ordering) -> mono -> Element mono
     maximumByEx f =
         ofoldl1Ex' go

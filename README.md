@@ -18,7 +18,7 @@ Additional packages in this repository:
 * [chunked-data](https://github.com/snoyberg/mono-traversable/tree/master/chunked-data#readme),
   providing typeclasses for dealing with various chunked data representations
 * [mutable-containers](https://github.com/snoyberg/mono-traversable/tree/master/mutable-containers#readme),
-  abstactions and concrete implementations of mutable containers
+  abstractions and concrete implementations of mutable containers
 * [conduit-combinators](https://github.com/snoyberg/mono-traversable/tree/master/conduit-combinators#readme),
   commonly used conduit functions, for both chunked and unchunked data
 * [classy-prelude](https://github.com/snoyberg/mono-traversable/tree/master/classy-prelude#readme),
