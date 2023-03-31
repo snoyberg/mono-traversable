@@ -6,7 +6,7 @@ cabal-version: 1.12
 
 name:           mutable-containers
 version:        0.3.4.1
-synopsis:       Abstactions and concrete implementations of mutable containers
+synopsis:       Abstractions and concrete implementations of mutable containers
 description:    See docs and README at <http://www.stackage.org/package/mutable-containers>
 category:       Data
 homepage:       https://github.com/snoyberg/mono-traversable#readme

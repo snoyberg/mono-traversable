@@ -42,7 +42,7 @@ import Data.Word (Word8)
 -- | 'SemiSequence' was created to share code between 'IsSequence' and 'NonNull'.
 --
 -- @Semi@ means 'SemiGroup'
--- A 'SemiSequence' can accomodate a 'SemiGroup' such as 'NonEmpty' or 'NonNull'
+-- A 'SemiSequence' can accommodate a 'SemiGroup' such as 'NonEmpty' or 'NonNull'
 -- A Monoid should be able to fill out 'IsSequence'.
 --
 -- 'SemiSequence' operations maintain the same type because they all maintain the same number of elements or increase them.
@@ -151,7 +151,7 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     lengthIndex :: seq -> Index seq;
     lengthIndex = fromIntegral . olength64;
 
-    -- below functions change type fron the perspective of NonEmpty
+    -- below functions change type from the perspective of NonEmpty
 
     -- | 'break' applies a predicate to a sequence, and returns a tuple where
     -- the first element is the longest prefix (possibly empty) of elements that
@@ -1477,7 +1477,7 @@ class (IsSequence t, IsString t, Element t ~ Char) => Textual t where
     -- @
     words :: t -> [t]
 
-    -- | Join a list of textual sequences using seperating spaces.
+    -- | Join a list of textual sequences using separating spaces.
     --
     -- @
     -- > 'unwords' ["abc","def","ghi"]

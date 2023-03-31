@@ -173,7 +173,7 @@ A new MonoFoldableEq class that takes `elem` and `notElem` from `EqSequence`.
 `EqSequence` now inherits from `MonoFoldableEq`.
 
 For most users that do not define instances this should not be a breaking change.
-However, any instance of `EqSequence` now needs to definie `MonoFoldableEq`.
+However, any instance of `EqSequence` now needs to define `MonoFoldableEq`.
 
 
 ## 0.7.0

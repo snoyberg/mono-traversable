@@ -145,11 +145,11 @@ toMinList = fromNonEmpty
 --
 -- * if you don't need to cons, use 'fromNullable' or 'nonNull' if you can create your structure in one go.
 -- * if you need to cons, you might be able to start off with an efficient data structure such as a 'NonEmpty' List.
---     'fronNonEmpty' will convert that to your data structure using the structure's fromList function.
+--     'fromNonEmpty' will convert that to your data structure using the structure's fromList function.
 ncons :: SemiSequence seq => Element seq -> seq -> NonNull seq
 ncons x xs = nonNull $ cons x xs
 
--- | Extract the first element of a sequnce and the rest of the non-null sequence if it exists.
+-- | Extract the first element of a sequence and the rest of the non-null sequence if it exists.
 nuncons :: IsSequence seq => NonNull seq -> (Element seq, Maybe (NonNull seq))
 nuncons xs =
   second fromNullable
