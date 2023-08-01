@@ -153,7 +153,7 @@ module ClassyPrelude
 
 import qualified Prelude
 import Control.Applicative ((<**>),liftA,liftA2,liftA3,Alternative (..), optional)
-import Data.Functor
+import Data.Functor hiding (unzip)
 import Control.Exception (assert)
 import Control.DeepSeq (deepseq, ($!!), force, NFData (..))
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
