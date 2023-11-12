@@ -695,6 +695,9 @@ instance SemiSequence S.ByteString where
     {-# INLINE cons #-}
     {-# INLINE snoc #-}
 
+initTailsViaSplitAt :: IsSequence seq => seq -> [(seq, seq)]
+initTailsViaSplitAt x = fmap (`splitAt` x) [0 .. lengthIndex x]
+
 instance IsSequence S.ByteString where
     fromList = S.pack
     lengthIndex = S.length
@@ -749,6 +752,9 @@ instance IsSequence S.ByteString where
     {-# INLINE index #-}
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
+
+    initTails = initTailsViaSplitAt
+    {-# INLINE initTails #-}
 
 instance SemiSequence T.Text where
     type Index T.Text = Int
@@ -813,6 +819,9 @@ instance IsSequence T.Text where
     {-# INLINE index #-}
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
+
+    initTails = initTailsViaSplitAt
+    {-# INLINE initTails #-}
 
 instance SemiSequence L.ByteString where
     type Index L.ByteString = Int64
@@ -1072,6 +1081,9 @@ instance IsSequence (V.Vector a) where
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
+    initTails = initTailsViaSplitAt
+    {-# INLINE initTails #-}
+
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
 
@@ -1145,6 +1157,9 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
+    initTails = initTailsViaSplitAt
+    {-# INLINE initTails #-}
+
 instance VS.Storable a => SemiSequence (VS.Vector a) where
     type Index (VS.Vector a) = Int
     reverse = VS.reverse
@@ -1217,6 +1232,9 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     {-# INLINE index #-}
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
+
+    initTails = initTailsViaSplitAt
+    {-# INLINE initTails #-}
 
 -- | @'splitElem'@ splits a sequence into components delimited by separator
 -- element. It's equivalent to 'splitWhen' with equality predicate:
