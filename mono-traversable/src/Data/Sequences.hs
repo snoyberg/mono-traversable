@@ -1008,6 +1008,11 @@ instance IsSequence (Seq.Seq a) where
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
 
+    initTails = its . (,) mempty
+      where
+      its x@(is, y Seq.:<| ts) = x : its (is Seq.:|> y, ts)
+      its (_, Seq.Empty) = mempty
+
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int
     reverse = V.reverse
