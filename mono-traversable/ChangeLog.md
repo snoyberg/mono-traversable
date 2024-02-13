@@ -1,5 +1,10 @@
 # ChangeLog for mono-traversable
 
+## 1.0.16.0
+
+* Added MonoPointed instance for bytestring Builder
+  [#219](https://github.com/snoyberg/mono-traversable/pull/219#pullrequestreview-1879553961)
+
 ## 1.0.15.3
 
 * Compile with GHC 9.2 (`Option` removed from `base-4.16`)

@@ -33,6 +33,7 @@ import           Control.Category
 import           Control.Monad        (Monad (..))
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
+import qualified Data.ByteString.Builder as B
 import qualified Data.Foldable        as F
 import           Data.Functor
 import           Data.Maybe           (fromMaybe)
@@ -106,6 +107,8 @@ import Control.Monad.Trans.Identity (IdentityT)
 type family Element mono
 type instance Element S.ByteString = Word8
 type instance Element L.ByteString = Word8
+-- | @since 1.0.16.0
+type instance Element B.Builder = Word8
 type instance Element T.Text = Char
 type instance Element TL.Text = Char
 type instance Element [a] = a
@@ -1139,6 +1142,10 @@ instance MonoPointed S.ByteString where
     {-# INLINE opoint #-}
 instance MonoPointed L.ByteString where
     opoint = L.singleton
+    {-# INLINE opoint #-}
+-- | @since 1.0.16.0
+instance MonoPointed B.Builder where
+    opoint = B.word8
     {-# INLINE opoint #-}
 instance MonoPointed T.Text where
     opoint = T.singleton
