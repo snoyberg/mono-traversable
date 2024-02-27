@@ -474,13 +474,27 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
 
     -- | Returns all the final segments of 'seq' with the longest first.
     --
-    -- @since ????
+    -- @
+    -- > tails [1,2]
+    -- [[1,2],[2],[]]
+    -- > tails []
+    -- [[]]
+    -- @
+    --
+    -- @since 1.0.17.0
     tails :: seq -> [seq]
     tails x = x : maybe mempty tails (tailMay x)
 
     -- | Return all the initial segments of 'seq' with the shortest first.
     --
-    -- @since ????
+    -- @
+    -- > inits [1,2]
+    -- [[],[1],[1,2]]
+    -- > inits []
+    -- [[]]
+    -- @
+    --
+    -- @since 1.0.17.0
     inits :: seq -> [seq]
     inits seq = is seq [seq]
       where
@@ -489,11 +503,13 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- | Return all the pairs of inital and final segments of 'seq'.
     --
     -- @
-    -- > 'initTails' [1,2]
-    -- [([],[1,2]), ([1],[2]), ([1,2],[])]
+    -- > initTails [1,2]
+    -- [([],[1,2]),([1],[2]),([1,2],[])]
+    -- > initTails []
+    -- [([],[])]
     -- @
     --
-    -- @since ????
+    -- @since 1.0.17.0
     initTails :: seq -> [(seq,seq)]
     initTails seq = List.zip (inits seq) (tails seq)
 
