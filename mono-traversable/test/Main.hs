@@ -216,22 +216,30 @@ main = hspec $ do
               it "empty" $ inits emptyTyp @?= [""]
               it "one element" $ inits ("a" <> emptyTyp) @?= ["", "a"]
               it "two elements" $ inits ("ab" <> emptyTyp) @?= ["", "a", "ab"]
+        test "String" (mempty :: String)
         test "StrictBytestring" S.empty
         test "LazyBytestring" L.empty
         test "StrictText" T.empty
         test "LazyText" TL.empty
-        test "String" (mempty :: String)
+        test "Seq" Seq.empty
+        test "Vector" (mempty :: V.Vector Char)
+        test "Unboxed Vector" (mempty :: U.Vector Char)
+        test "Storable Vector" (mempty :: VS.Vector Char)
 
     describe "tails" $ do
         let test typ emptyTyp = describe typ $ do
               it "empty" $ tails emptyTyp @?= [""]
               it "one element" $ tails ("a" <> emptyTyp) @?= ["a", ""]
               it "two elements" $ tails ("ab" <> emptyTyp) @?= ["ab", "b", ""]
+        test "String" (mempty :: String)
         test "StrictBytestring" S.empty
         test "LazyBytestring" L.empty
         test "StrictText" T.empty
         test "LazyText" TL.empty
-        test "String" (mempty :: String)
+        test "Seq" Seq.empty
+        test "Vector" (mempty :: V.Vector Char)
+        test "Unboxed Vector" (mempty :: U.Vector Char)
+        test "Storable Vector" (mempty :: VS.Vector Char)
 
     describe "initTails" $ do
         let test typ emptyTyp = describe typ $ do

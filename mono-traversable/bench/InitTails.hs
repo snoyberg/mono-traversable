@@ -64,7 +64,6 @@ bmg = bgroup (testLabel @seq) $ bm <$> labelledLengths
     , ("small",   [100,150,200,300])
     , ("medium",  [1000,1500,2000,2500])
     , ("large",   [10000,20000,50000])
-    , ("extream", [1000000])
     ]
 
 class Typeable a => TestLabel a where
