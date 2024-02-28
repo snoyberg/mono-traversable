@@ -423,7 +423,7 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- an empty monomorphic container.
     --
     -- @since 1.0.0
-    initMay :: IsSequence seq => seq -> Maybe seq
+    initMay :: seq -> Maybe seq
     initMay seq
         | onull seq = Nothing
         | otherwise = Just (initEx seq)
@@ -472,6 +472,47 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     splitWhen :: (Element seq -> Bool) -> seq -> [seq]
     splitWhen = defaultSplitWhen
 
+    -- | Returns all the final segments of 'seq' with the longest first.
+    --
+    -- @
+    -- > tails [1,2]
+    -- [[1,2],[2],[]]
+    -- > tails []
+    -- [[]]
+    -- @
+    --
+    -- @since 1.0.17.0
+    tails :: seq -> [seq]
+    tails x = x : maybe mempty tails (tailMay x)
+
+    -- | Return all the initial segments of 'seq' with the shortest first.
+    --
+    -- @
+    -- > inits [1,2]
+    -- [[],[1],[1,2]]
+    -- > inits []
+    -- [[]]
+    -- @
+    --
+    -- @since 1.0.17.0
+    inits :: seq -> [seq]
+    inits seq = is seq [seq]
+      where
+      is = maybe id (\x -> is x . (x :)) . initMay
+
+    -- | Return all the pairs of inital and final segments of 'seq'.
+    --
+    -- @
+    -- > initTails [1,2]
+    -- [([],[1,2]),([1],[2]),([1,2],[])]
+    -- > initTails []
+    -- [([],[])]
+    -- @
+    --
+    -- @since 1.0.17.0
+    initTails :: seq -> [(seq,seq)]
+    initTails seq = List.zip (inits seq) (tails seq)
+
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -502,6 +543,9 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
     {-# INLINE splitWhen #-}
+    {-# INLINE tails #-}
+    {-# INLINE inits #-}
+    {-# INLINE initTails #-}
 
 -- | Use "Data.List"'s implementation of 'Data.List.find'.
 defaultFind :: MonoFoldable seq => (Element seq -> Bool) -> seq -> Maybe (Element seq)
@@ -607,6 +651,13 @@ instance IsSequence [a] where
         (matches, nonMatches) = partition ((== f head) . f) tail
     groupAllOn _ [] = []
     splitWhen = List.splitWhen
+    tails = List.tails
+    inits = List.inits
+    initTails = its id
+      where
+        its :: ([a] -> [a]) -> [a] -> [([a],[a])]
+        its f xs@(y:ys) = (f [], xs) : its (f . (y:)) ys
+        its f [] = [(f [], [])]
     {-# INLINE fromList #-}
     {-# INLINE break #-}
     {-# INLINE span #-}
@@ -625,6 +676,9 @@ instance IsSequence [a] where
     {-# INLINE groupBy #-}
     {-# INLINE groupAllOn #-}
     {-# INLINE splitWhen #-}
+    {-# INLINE tails #-}
+    {-# INLINE inits #-}
+    {-# INLINE initTails #-}
 
 instance SemiSequence (NE.NonEmpty a) where
     type Index (NE.NonEmpty a) = Int
@@ -960,6 +1014,12 @@ instance IsSequence (Seq.Seq a) where
     {-# INLINE index #-}
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
+
+    initTails = its . (,) mempty
+      where
+      its x@(is, y Seq.:<| ts) = x : its (is Seq.:|> y, ts)
+      its x@(_, Seq.Empty) = [x]
+    {-# INLINE initTails #-}
 
 instance SemiSequence (V.Vector a) where
     type Index (V.Vector a) = Int

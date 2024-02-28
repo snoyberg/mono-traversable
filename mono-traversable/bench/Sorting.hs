@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+module Sorting (sortingBenchmarks) where
 
 #if MIN_VERSION_gauge(0,2,0)
 import Gauge
@@ -12,16 +13,19 @@ import qualified Data.List
 import qualified System.Random.MWC as MWC
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
+import System.IO.Unsafe (unsafePerformIO)
+
+sortingBenchmarks :: Benchmark
+sortingBenchmarks
+  = bgroup "Sorting"
+  $ unsafePerformIO
+  $ mapM mkGroup [10, 100, 1000, 10000]
 
 asVector :: V.Vector a -> V.Vector a
 asVector = id
 
 asUVector :: U.Vector a -> U.Vector a
 asUVector = id
-
-main :: IO ()
-main = do
-    mapM mkGroup [10, 100, 1000, 10000] >>= defaultMain
 
 mkGroup :: Int -> IO Benchmark
 mkGroup size = do

@@ -1,5 +1,5 @@
 name:        mono-traversable
-version:     1.0.16.0
+version:     1.0.17.0
 synopsis:    Type classes for mapping, folding, and traversing monomorphic containers
 description: Please see the README at <https://www.stackage.org/package/mono-traversable>
 category:    Data
@@ -45,15 +45,23 @@ tests:
     - unordered-containers
     - foldl
 benchmarks:
-  sorting:
-    main: sorting.hs
+  all:
+    main: main.hs
     source-dirs: bench
     ghc-options:
     - -Wall
     - -O2
+    - -with-rtsopts=-A32m
+    when:
+      - condition: impl(ghc >= 8.6)
+        ghc-options: -fproc-alignment=64
     dependencies:
     - base
     - gauge
     - mono-traversable
+    - text
+    - containers
+    - bytestring
     - vector
     - mwc-random
+    - deepseq
