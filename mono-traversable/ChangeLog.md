@@ -1,5 +1,11 @@
 # ChangeLog for mono-traversable
 
+## 1.0.17.0
+
+* Added `inits`, `tails`, `initTails` to class `IsSequence` with tests and benchmarks for `initTails`.
+* Improved ghc benchmark flags.
+* Removed extraneous constraint `IsSequence` from `initMay`.
+
 ## 1.0.16.0
 
 * Added MonoPointed instance for bytestring Builder

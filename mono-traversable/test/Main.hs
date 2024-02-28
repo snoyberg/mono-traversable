@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE CPP #-}
@@ -39,13 +40,14 @@ import qualified Data.IntMap as IntMap
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Set as Set
 import qualified Control.Foldl as Foldl
+import Data.String (IsString, fromString)
 
 import Control.Arrow (second)
 import Control.Applicative
 import Control.Monad.Trans.Writer
 
 import Prelude (Bool (..), ($), IO, Eq (..), fromIntegral, Ord (..), String, mod, Int, Integer, show,
-                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe)
+                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe, Char)
 import qualified Prelude
 
 newtype NonEmpty' a = NonEmpty' (NE.NonEmpty a)
@@ -92,6 +94,10 @@ fromListAs xs _ = fromList xs
 -- | Type restricted 'mapFromListAs'
 mapFromListAs :: IsMap a => [(ContainerKey a, MapValue a)] -> a -> a
 mapFromListAs xs _ = mapFromList xs
+
+instance IsString (V.Vector Char) where fromString = V.fromList
+instance IsString (U.Vector Char) where fromString = U.fromList
+instance IsString (VS.Vector Char) where fromString = VS.fromList
 
 main :: IO ()
 main = hspec $ do
@@ -232,11 +238,15 @@ main = hspec $ do
               it "empty" $ initTails emptyTyp @?= [("","")]
               it "one element" $ initTails ("a" <> emptyTyp) @?= [("","a"), ("a","")]
               it "two elements" $ initTails ("ab" <> emptyTyp) @?= [("","ab"), ("a","b"), ("ab","")]
+        test "String" (mempty :: String)
         test "StrictBytestring" S.empty
         test "LazyBytestring" L.empty
         test "StrictText" T.empty
         test "LazyText" TL.empty
-        test "String" (mempty :: String)
+        test "Seq" Seq.empty
+        test "Vector" (mempty :: V.Vector Char)
+        test "Unboxed Vector" (mempty :: U.Vector Char)
+        test "Storable Vector" (mempty :: VS.Vector Char)
 
     describe "NonNull" $ do
         describe "fromNonEmpty" $ do
