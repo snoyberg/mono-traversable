@@ -39,6 +39,8 @@ module Data.Mutable
     , MutableRef (..)
     , MutableAtomicRef (..)
     , MutableCollection (..)
+    , MutableInitialSizedCollection (..)
+    , MutableIndexing (..)
     , MutablePushFront (..)
     , MutablePushBack (..)
     , MutablePopFront (..)

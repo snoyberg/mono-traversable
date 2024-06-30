@@ -21,6 +21,8 @@ module Data.Mutable.Class
     , MutableRef (..)
     , MutableAtomicRef (..)
     , MutableCollection (..)
+    , MutableInitialSizedCollection (..)
+    , MutableIndexing (..)
     , MutablePushFront (..)
     , MutablePushBack (..)
     , MutablePopFront (..)
@@ -38,6 +40,10 @@ import           Data.MonoTraversable    (Element)
 import           Data.Primitive.MutVar
 import qualified Data.Sequences          as Seqs
 import           Data.STRef
+import qualified Data.Vector.Mutable               as MV
+import qualified Data.Vector.Primitive.Mutable     as MPV
+import qualified Data.Vector.Storable.Mutable      as MSV
+import qualified Data.Vector.Unboxed.Mutable       as MUV
 
 -- | The parent typeclass for all mutable containers.
 --
@@ -55,6 +61,14 @@ instance MutableContainer (STRef s a) where
     type MCState (STRef s a) = s
 instance MutableContainer (MutVar s a) where
     type MCState (MutVar s a) = s
+instance MutableContainer (MV.MVector s a) where
+    type MCState (MV.MVector s a) = s
+instance MutableContainer (MPV.MVector s a) where
+    type MCState (MPV.MVector s a) = s
+instance MutableContainer (MSV.MVector s a) where
+    type MCState (MSV.MVector s a) = s
+instance MutableContainer (MUV.MVector s a) where
+    type MCState (MUV.MVector s a) = s
 
 -- | Typeclass for single-cell mutable references.
 --
@@ -202,6 +216,69 @@ instance Monoid w => MutableCollection (MutVar s w) where
     type CollElement (MutVar s w) = Element w
     newColl = newRef mempty
     {-# INLINE newColl #-}
+instance MutableCollection (MV.MVector s a) where
+    type CollElement (MV.MVector s a) = a
+    newColl = MV.new 0
+    {-# INLINE newColl #-}
+instance MPV.Prim a => MutableCollection (MPV.MVector s a) where
+    type CollElement (MPV.MVector s a) = a
+    newColl = MPV.new 0
+    {-# INLINE newColl #-}
+instance MSV.Storable a => MutableCollection (MSV.MVector s a) where
+    type CollElement (MSV.MVector s a) = a
+    newColl = MSV.new 0
+    {-# INLINE newColl #-}
+instance MUV.Unbox a => MutableCollection (MUV.MVector s a) where
+    type CollElement (MUV.MVector s a) = a
+    newColl = MUV.new 0
+    {-# INLINE newColl #-}
+
+-- | Containers that can be initialized with n elements.
+class MutableCollection c => MutableInitialSizedCollection c where
+    type CollIndex c
+    newCollOfSize :: (PrimMonad m, PrimState m ~ MCState c)
+            => CollIndex c
+            -> m c
+instance MutableInitialSizedCollection (MV.MVector s a) where
+    type CollIndex (MV.MVector s a) = Int
+    newCollOfSize = MV.new
+    {-# INLINE newCollOfSize #-}
+instance MPV.Prim a => MutableInitialSizedCollection (MPV.MVector s a) where
+    type CollIndex (MPV.MVector s a) = Int
+    newCollOfSize = MPV.new
+    {-# INLINE newCollOfSize #-}
+instance MSV.Storable a => MutableInitialSizedCollection (MSV.MVector s a) where
+    type CollIndex (MSV.MVector s a) = Int
+    newCollOfSize = MSV.new
+    {-# INLINE newCollOfSize #-}
+instance MUV.Unbox a => MutableInitialSizedCollection (MUV.MVector s a) where
+    type CollIndex (MUV.MVector s a) = Int
+    newCollOfSize = MUV.new
+    {-# INLINE newCollOfSize #-}
+
+class MutableInitialSizedCollection c => MutableIndexing c where
+    readIndex :: (PrimMonad m, PrimState m ~ MCState c) => c -> CollIndex c -> m (CollElement c)
+    writeIndex :: (PrimMonad m, PrimState m ~ MCState c) => c -> CollIndex c -> CollElement c -> m ()
+instance MutableIndexing (MV.MVector s a) where
+    readIndex = MV.read
+    {-# INLINE readIndex #-}
+    writeIndex = MV.write
+    {-# INLINE writeIndex #-}
+instance MPV.Prim a => MutableIndexing (MPV.MVector s a) where
+    readIndex = MPV.read
+    {-# INLINE readIndex #-}
+    writeIndex = MPV.write
+    {-# INLINE writeIndex #-}
+instance MSV.Storable a => MutableIndexing (MSV.MVector s a) where
+    readIndex = MSV.read
+    {-# INLINE readIndex #-}
+    writeIndex = MSV.write
+    {-# INLINE writeIndex #-}
+instance MUV.Unbox a => MutableIndexing (MUV.MVector s a) where
+    readIndex = MUV.read
+    {-# INLINE readIndex #-}
+    writeIndex = MUV.write
+    {-# INLINE writeIndex #-}
 
 -- | Take a value from the front of the collection, if available.
 --
