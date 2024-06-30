@@ -46,6 +46,10 @@ import qualified Data.Vector.Primitive.Mutable     as MPV
 import qualified Data.Vector.Storable.Mutable      as MSV
 import qualified Data.Vector.Unboxed.Mutable       as MUV
 import qualified GHC.Arr
+import qualified Foreign.Marshal.Array             as Foreign
+import           Foreign.Ptr                       (Ptr)
+import           Foreign.Storable                  (Storable)
+import qualified Foreign.Storable                  as Foreign
 
 -- | The parent typeclass for all mutable containers.
 --
@@ -73,6 +77,8 @@ instance MutableContainer (MUV.MVector s a) where
     type MCState (MUV.MVector s a) = s
 instance MutableContainer (GHC.Arr.STArray s i e) where
     type MCState (GHC.Arr.STArray s i e) = s
+instance MutableContainer (Ptr a) where
+    type MCState (Ptr a) = PrimState IO
 
 -- | Typeclass for single-cell mutable references.
 --
@@ -228,7 +234,7 @@ instance MPV.Prim a => MutableCollection (MPV.MVector s a) where
     type CollElement (MPV.MVector s a) = a
     newColl = MPV.new 0
     {-# INLINE newColl #-}
-instance MSV.Storable a => MutableCollection (MSV.MVector s a) where
+instance Storable a => MutableCollection (MSV.MVector s a) where
     type CollElement (MSV.MVector s a) = a
     newColl = MSV.new 0
     {-# INLINE newColl #-}
@@ -239,6 +245,10 @@ instance MUV.Unbox a => MutableCollection (MUV.MVector s a) where
 instance (GHC.Arr.Ix i, Num i) => MutableCollection (GHC.Arr.STArray s i e) where
     type CollElement (GHC.Arr.STArray s i e) = e
     newColl = primToPrim $ GHC.Arr.newSTArray (0,0) undefined
+    {-# INLINE newColl #-}
+instance Storable a => MutableCollection (Ptr a) where
+    type CollElement (Ptr a) = a
+    newColl = primToPrim $ Foreign.mallocArray 0
     {-# INLINE newColl #-}
 
 -- | Containers that can be initialized with n elements.
@@ -255,7 +265,7 @@ instance MPV.Prim a => MutableInitialSizedCollection (MPV.MVector s a) where
     type CollIndex (MPV.MVector s a) = Int
     newCollOfSize = MPV.new
     {-# INLINE newCollOfSize #-}
-instance MSV.Storable a => MutableInitialSizedCollection (MSV.MVector s a) where
+instance Storable a => MutableInitialSizedCollection (MSV.MVector s a) where
     type CollIndex (MSV.MVector s a) = Int
     newCollOfSize = MSV.new
     {-# INLINE newCollOfSize #-}
@@ -266,6 +276,10 @@ instance MUV.Unbox a => MutableInitialSizedCollection (MUV.MVector s a) where
 instance (GHC.Arr.Ix i, Num i) => MutableInitialSizedCollection (GHC.Arr.STArray s i e) where
     type CollIndex (GHC.Arr.STArray s i e) = i
     newCollOfSize x = primToPrim $ GHC.Arr.newSTArray (0,x) undefined
+    {-# INLINE newCollOfSize #-}
+instance Storable a => MutableInitialSizedCollection (Ptr a) where
+    type CollIndex (Ptr a) = Int
+    newCollOfSize = primToPrim . Foreign.mallocArray 
     {-# INLINE newCollOfSize #-}
 
 class MutableInitialSizedCollection c => MutableIndexing c where
@@ -281,7 +295,7 @@ instance MPV.Prim a => MutableIndexing (MPV.MVector s a) where
     {-# INLINE readIndex #-}
     writeIndex = MPV.write
     {-# INLINE writeIndex #-}
-instance MSV.Storable a => MutableIndexing (MSV.MVector s a) where
+instance Storable a => MutableIndexing (MSV.MVector s a) where
     readIndex = MSV.read
     {-# INLINE readIndex #-}
     writeIndex = MSV.write
@@ -295,6 +309,11 @@ instance (GHC.Arr.Ix i, Num i) => MutableIndexing (GHC.Arr.STArray s i e) where
     readIndex c i = primToPrim $ GHC.Arr.readSTArray c i
     {-# INLINE readIndex #-}
     writeIndex c i e = primToPrim $ GHC.Arr.writeSTArray c i e
+    {-# INLINE writeIndex #-}
+instance Storable a => MutableIndexing (Ptr a) where
+    readIndex p i = primToPrim $ Foreign.peekElemOff p i
+    {-# INLINE readIndex #-}
+    writeIndex p i e = primToPrim $ Foreign.pokeElemOff p i e
     {-# INLINE writeIndex #-}
 
 -- | Take a value from the front of the collection, if available.
