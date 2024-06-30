@@ -40,10 +40,12 @@ import           Data.MonoTraversable    (Element)
 import           Data.Primitive.MutVar
 import qualified Data.Sequences          as Seqs
 import           Data.STRef
+import           Control.Monad.ST                  (ST)
 import qualified Data.Vector.Mutable               as MV
 import qualified Data.Vector.Primitive.Mutable     as MPV
 import qualified Data.Vector.Storable.Mutable      as MSV
 import qualified Data.Vector.Unboxed.Mutable       as MUV
+import qualified GHC.Arr
 
 -- | The parent typeclass for all mutable containers.
 --
@@ -69,6 +71,8 @@ instance MutableContainer (MSV.MVector s a) where
     type MCState (MSV.MVector s a) = s
 instance MutableContainer (MUV.MVector s a) where
     type MCState (MUV.MVector s a) = s
+instance MutableContainer (GHC.Arr.STArray s i e) where
+    type MCState (GHC.Arr.STArray s i e) = s
 
 -- | Typeclass for single-cell mutable references.
 --
@@ -232,6 +236,10 @@ instance MUV.Unbox a => MutableCollection (MUV.MVector s a) where
     type CollElement (MUV.MVector s a) = a
     newColl = MUV.new 0
     {-# INLINE newColl #-}
+instance (GHC.Arr.Ix i, Num i) => MutableCollection (GHC.Arr.STArray s i e) where
+    type CollElement (GHC.Arr.STArray s i e) = e
+    newColl = primToPrim $ GHC.Arr.newSTArray (0,0) undefined
+    {-# INLINE newColl #-}
 
 -- | Containers that can be initialized with n elements.
 class MutableCollection c => MutableInitialSizedCollection c where
@@ -254,6 +262,10 @@ instance MSV.Storable a => MutableInitialSizedCollection (MSV.MVector s a) where
 instance MUV.Unbox a => MutableInitialSizedCollection (MUV.MVector s a) where
     type CollIndex (MUV.MVector s a) = Int
     newCollOfSize = MUV.new
+    {-# INLINE newCollOfSize #-}
+instance (GHC.Arr.Ix i, Num i) => MutableInitialSizedCollection (GHC.Arr.STArray s i e) where
+    type CollIndex (GHC.Arr.STArray s i e) = i
+    newCollOfSize x = primToPrim $ GHC.Arr.newSTArray (0,x) undefined
     {-# INLINE newCollOfSize #-}
 
 class MutableInitialSizedCollection c => MutableIndexing c where
@@ -278,6 +290,11 @@ instance MUV.Unbox a => MutableIndexing (MUV.MVector s a) where
     readIndex = MUV.read
     {-# INLINE readIndex #-}
     writeIndex = MUV.write
+    {-# INLINE writeIndex #-}
+instance (GHC.Arr.Ix i, Num i) => MutableIndexing (GHC.Arr.STArray s i e) where
+    readIndex c i = primToPrim $ GHC.Arr.readSTArray c i
+    {-# INLINE readIndex #-}
+    writeIndex c i e = primToPrim $ GHC.Arr.writeSTArray c i e
     {-# INLINE writeIndex #-}
 
 -- | Take a value from the front of the collection, if available.
