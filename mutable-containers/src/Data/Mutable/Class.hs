@@ -21,8 +21,9 @@ module Data.Mutable.Class
     , MutableRef (..)
     , MutableAtomicRef (..)
     , MutableCollection (..)
-    , MutableInitialSizedCollection (..)
-    , MutableIndexing (..)
+    , MutableAllocatedCollection (..)
+    , CollIndex
+    , MutableIndexingWrite (..)
     , MutablePushFront (..)
     , MutablePushBack (..)
     , MutablePopFront (..)
@@ -229,90 +230,85 @@ instance Monoid w => MutableCollection (MutVar s w) where
 instance MutableCollection (MV.MVector s a) where
     type CollElement (MV.MVector s a) = a
     newColl = MV.new 0
-    {-# INLINE newColl #-}
 instance MPV.Prim a => MutableCollection (MPV.MVector s a) where
     type CollElement (MPV.MVector s a) = a
     newColl = MPV.new 0
-    {-# INLINE newColl #-}
 instance Storable a => MutableCollection (MSV.MVector s a) where
     type CollElement (MSV.MVector s a) = a
     newColl = MSV.new 0
-    {-# INLINE newColl #-}
 instance MUV.Unbox a => MutableCollection (MUV.MVector s a) where
     type CollElement (MUV.MVector s a) = a
     newColl = MUV.new 0
-    {-# INLINE newColl #-}
 instance (GHC.Arr.Ix i, Num i) => MutableCollection (GHC.Arr.STArray s i e) where
     type CollElement (GHC.Arr.STArray s i e) = e
     newColl = primToPrim $ GHC.Arr.newSTArray (0,0) undefined
-    {-# INLINE newColl #-}
 instance Storable a => MutableCollection (Ptr a) where
     type CollElement (Ptr a) = a
     newColl = primToPrim $ Foreign.mallocArray 0
-    {-# INLINE newColl #-}
 
 -- | Containers that can be initialized with n elements.
-class MutableCollection c => MutableInitialSizedCollection c where
-    type CollIndex c
+type family CollIndex c
+
+class MutableCollection c => MutableAllocatedCollection c where
     newCollOfSize :: (PrimMonad m, PrimState m ~ MCState c)
             => CollIndex c
             -> m c
-instance MutableInitialSizedCollection (MV.MVector s a) where
-    type CollIndex (MV.MVector s a) = Int
+type instance CollIndex (MV.MVector s a) = Int
+instance MutableAllocatedCollection (MV.MVector s a) where
     newCollOfSize = MV.new
     {-# INLINE newCollOfSize #-}
-instance MPV.Prim a => MutableInitialSizedCollection (MPV.MVector s a) where
-    type CollIndex (MPV.MVector s a) = Int
+type instance CollIndex (MPV.MVector s a) = Int
+instance MPV.Prim a => MutableAllocatedCollection (MPV.MVector s a) where
     newCollOfSize = MPV.new
     {-# INLINE newCollOfSize #-}
-instance Storable a => MutableInitialSizedCollection (MSV.MVector s a) where
-    type CollIndex (MSV.MVector s a) = Int
+type instance CollIndex (MSV.MVector s a) = Int
+instance Storable a => MutableAllocatedCollection (MSV.MVector s a) where
     newCollOfSize = MSV.new
     {-# INLINE newCollOfSize #-}
-instance MUV.Unbox a => MutableInitialSizedCollection (MUV.MVector s a) where
-    type CollIndex (MUV.MVector s a) = Int
+type instance CollIndex (MUV.MVector s a) = Int
+instance MUV.Unbox a => MutableAllocatedCollection (MUV.MVector s a) where
     newCollOfSize = MUV.new
     {-# INLINE newCollOfSize #-}
-instance (GHC.Arr.Ix i, Num i) => MutableInitialSizedCollection (GHC.Arr.STArray s i e) where
-    type CollIndex (GHC.Arr.STArray s i e) = i
+type instance CollIndex (GHC.Arr.STArray s i e) = i
+instance (GHC.Arr.Ix i, Num i) => MutableAllocatedCollection (GHC.Arr.STArray s i e) where
     newCollOfSize x = primToPrim $ GHC.Arr.newSTArray (0,x) undefined
     {-# INLINE newCollOfSize #-}
-instance Storable a => MutableInitialSizedCollection (Ptr a) where
-    type CollIndex (Ptr a) = Int
+type instance CollIndex (Ptr a) = Int
+instance Storable a => MutableAllocatedCollection (Ptr a) where
     newCollOfSize = primToPrim . Foreign.mallocArray 
     {-# INLINE newCollOfSize #-}
 
-class MutableInitialSizedCollection c => MutableIndexing c where
-    readIndex :: (PrimMonad m, PrimState m ~ MCState c) => c -> CollIndex c -> m (CollElement c)
+class MutableAllocatedCollection c => MutableIndexingWrite c where
+--    readIndex :: (PrimMonad m, PrimState m ~ MCState c) => c -> CollIndex c -> m (CollElement c)
     writeIndex :: (PrimMonad m, PrimState m ~ MCState c) => c -> CollIndex c -> CollElement c -> m ()
-instance MutableIndexing (MV.MVector s a) where
-    readIndex = MV.read
-    {-# INLINE readIndex #-}
+instance MutableIndexingWrite (MV.MVector s a) where
+--    readIndex = MV.read
+--    {-# INLINE readIndex #-}
     writeIndex = MV.write
     {-# INLINE writeIndex #-}
-instance MPV.Prim a => MutableIndexing (MPV.MVector s a) where
-    readIndex = MPV.read
-    {-# INLINE readIndex #-}
+instance MPV.Prim a => MutableIndexingWrite (MPV.MVector s a) where
+--    readIndex = MPV.read
+--    {-# INLINE readIndex #-}
     writeIndex = MPV.write
     {-# INLINE writeIndex #-}
-instance Storable a => MutableIndexing (MSV.MVector s a) where
-    readIndex = MSV.read
-    {-# INLINE readIndex #-}
+instance Storable a => MutableIndexingWrite (MSV.MVector s a) where
+--    readIndex = MSV.read
+--    {-# INLINE readIndex #-}
     writeIndex = MSV.write
     {-# INLINE writeIndex #-}
-instance MUV.Unbox a => MutableIndexing (MUV.MVector s a) where
-    readIndex = MUV.read
-    {-# INLINE readIndex #-}
+instance MUV.Unbox a => MutableIndexingWrite (MUV.MVector s a) where
+--    readIndex = MUV.read
+--    {-# INLINE readIndex #-}
     writeIndex = MUV.write
     {-# INLINE writeIndex #-}
-instance (GHC.Arr.Ix i, Num i) => MutableIndexing (GHC.Arr.STArray s i e) where
-    readIndex c i = primToPrim $ GHC.Arr.readSTArray c i
-    {-# INLINE readIndex #-}
+instance (GHC.Arr.Ix i, Num i) => MutableIndexingWrite (GHC.Arr.STArray s i e) where
+--    readIndex c i = primToPrim $ GHC.Arr.readSTArray c i
+--    {-# INLINE readIndex #-}
     writeIndex c i e = primToPrim $ GHC.Arr.writeSTArray c i e
     {-# INLINE writeIndex #-}
-instance Storable a => MutableIndexing (Ptr a) where
-    readIndex p i = primToPrim $ Foreign.peekElemOff p i
-    {-# INLINE readIndex #-}
+instance Storable a => MutableIndexingWrite (Ptr a) where
+--    readIndex p i = primToPrim $ Foreign.peekElemOff p i
+--    {-# INLINE readIndex #-}
     writeIndex p i e = primToPrim $ Foreign.pokeElemOff p i e
     {-# INLINE writeIndex #-}
 
