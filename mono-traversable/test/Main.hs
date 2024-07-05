@@ -47,8 +47,12 @@ import Control.Applicative
 import Control.Monad.Trans.Writer
 
 import Prelude (Bool (..), ($), IO, Eq (..), fromIntegral, Ord (..), String, mod, Int, Integer, show,
-                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe, Char)
+                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe, Char,
+                fmap, id
+                )
 import qualified Prelude
+import Data.Tuple (swap)
+import Data.Bool (bool)
 
 newtype NonEmpty' a = NonEmpty' (NE.NonEmpty a)
     deriving (Show, Eq)
@@ -551,3 +555,53 @@ main = hspec $ do
         it "#83 head on Seq works correctly" $ do
             headEx (Seq.fromList [1 :: Int,2,3]) @?= (1 :: Int)
             headMay (Seq.fromList [] :: Seq.Seq Int) @?= Nothing
+
+    describe "MonoUnfold" $ do
+        let test typ dummy = describe typ $ do
+                let fromList' = (`fromListAs` dummy)
+                let headTailMay xs = case xs of
+                        x:xs -> Just (x,xs)
+                        [] -> Nothing
+                let headTailMaySwap = fmap swap . headTailMay
+                let headTail (x:xs) = (x,xs)
+                let headTailSwap = swap . headTail
+                prop "unfoldr" $ \xs -> unfoldr headTailMay xs @?= fromList' xs
+                prop "unfoldrN" $ \(n,xs) -> unfoldrN n headTailMay xs @?= fromList' (take n xs)
+                prop "unfoldrN'" $ \(n, InfiniteList xs _) -> unfoldrN' n headTail xs @?= fromList' (take n xs)
+                prop "unfoldl" $ \xs -> unfoldl headTailMaySwap xs @?= fromList' (reverse xs)
+                prop "unfoldlN" $ \(n,xs) -> unfoldlN n headTailMaySwap xs @?= fromList' (reverse (take n xs))
+                prop "unfoldlN'" $ \(n,InfiniteList xs _) -> unfoldlN' n headTailSwap xs @?= fromList' (reverse (take n xs))
+        test "List" ([] :: [Int])
+        --test "Vector" (V.empty :: V.Vector Int)
+        --test "Storable Vector" (VS.empty :: VS.Vector Int)
+        --test "Unboxed Vector" (U.empty :: U.Vector Int)
+        --test "Strict ByteString" S.empty
+        --test "Lazy ByteString" L.empty
+        --test "Strict Text" T.empty
+
+    describe "MonoUnfold1" $ do
+        let test :: (Arbitrary (Element mono), MonoUnfold1 mono, Eq mono, Show mono, Show (Element mono)) => String -> ([Element mono] -> mono) -> Spec
+            test typ fromList' = describe typ $ do
+                let headTailMay xs = case xs of
+                        x:[] -> (x, Nothing)
+                        x:xs -> (x, Just xs)
+                let headTailMaySwap = swap . headTailMay
+                let headTail (x:xs) = (x,xs)
+                let headTailSwap = swap . headTail
+                let take1 n = take (bool 1 n (n >= 1))
+                prop "unfoldr1" $ \(QCM.NonEmpty xs) -> unfoldr1 headTailMay xs @?= fromList' xs
+                prop "unfoldr1N" $ \(n, QCM.NonEmpty xs) -> unfoldr1N n headTailMay xs @?= fromList' (take1 n xs)
+                prop "unfoldr1N'" $ \(n, InfiniteList xs _) -> unfoldr1N' n headTail xs @?= fromList' (take1 n xs)
+                prop "unfoldl1" $ \(QCM.NonEmpty xs) -> unfoldl1 headTailMaySwap xs @?= fromList' (reverse xs)
+                prop "unfoldl1N" $ \(n, QCM.NonEmpty xs) -> unfoldl1N n headTailMaySwap xs @?= fromList' (reverse (take1 n xs))
+                prop "unfoldl1N'" $ \(n,InfiniteList xs _) -> unfoldl1N' n headTailSwap xs @?= fromList' (reverse (take1 n xs))
+        test "List" (id :: [Int] -> [Int])
+        test "NonEmpty" (NE.fromList :: [Int] -> NE.NonEmpty Int)
+        --test "Vector" (V.empty :: V.Vector Int)
+        --test "Storable Vector" (VS.empty :: VS.Vector Int)
+        --test "Unboxed Vector" (U.empty :: U.Vector Int)
+        --test "Strict ByteString" S.empty
+        --test "Lazy ByteString" L.empty
+        --test "Strict Text" T.empty
+        --test "Lazy Text" TL.empty-test "Lazy Text" TL.empty
+        --
