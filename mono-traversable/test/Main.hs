@@ -14,7 +14,7 @@ import Data.Containers
 import Data.Sequences
 import qualified Data.Sequence as Seq
 import qualified Data.NonNull as NN
-import Data.Monoid (mempty, mconcat, (<>))
+import Data.Monoid (mempty, mconcat, (<>), Endo(Endo))
 import Data.Maybe (fromMaybe)
 import qualified Data.List as List
 
@@ -557,8 +557,8 @@ main = hspec $ do
             headMay (Seq.fromList [] :: Seq.Seq Int) @?= Nothing
 
     describe "MonoUnfold" $ do
-        let test typ dummy = describe typ $ do
-                let fromList' = (`fromListAs` dummy)
+        let test :: (Arbitrary (Element mono), MonoUnfold mono, Eq mono, Show mono, Show (Element mono)) => String -> ([Element mono] -> mono) -> Spec
+            test typ fromList' = describe typ $ do
                 let headTailMay xs = case xs of
                         x:xs -> Just (x,xs)
                         [] -> Nothing
@@ -567,17 +567,18 @@ main = hspec $ do
                 let headTailSwap = swap . headTail
                 prop "unfoldr" $ \xs -> unfoldr headTailMay xs @?= fromList' xs
                 prop "unfoldrN" $ \(n,xs) -> unfoldrN n headTailMay xs @?= fromList' (take n xs)
-                prop "unfoldrN'" $ \(n, InfiniteList xs _) -> unfoldrN' n headTail xs @?= fromList' (take n xs)
+                prop "unfoldrExactN" $ \(n, InfiniteList xs _) -> unfoldrExactN n headTail xs @?= fromList' (take n xs)
                 prop "unfoldl" $ \xs -> unfoldl headTailMaySwap xs @?= fromList' (reverse xs)
                 prop "unfoldlN" $ \(n,xs) -> unfoldlN n headTailMaySwap xs @?= fromList' (reverse (take n xs))
-                prop "unfoldlN'" $ \(n,InfiniteList xs _) -> unfoldlN' n headTailSwap xs @?= fromList' (reverse (take n xs))
-        test "List" ([] :: [Int])
-        --test "Vector" (V.empty :: V.Vector Int)
-        --test "Storable Vector" (VS.empty :: VS.Vector Int)
-        --test "Unboxed Vector" (U.empty :: U.Vector Int)
-        --test "Strict ByteString" S.empty
-        --test "Lazy ByteString" L.empty
-        --test "Strict Text" T.empty
+                prop "unfoldlExactN" $ \(n,InfiniteList xs _) -> unfoldlExactN n headTailSwap xs @?= fromList' (reverse (take n xs))
+        test "Endo" (Prelude.foldr (\x f -> Endo (x :) <> f) mempty :: [Int] -> Endo [Int])
+        test "List" (id :: [Int] -> [Int])
+        test "Vector" (V.fromList :: [Int] -> V.Vector Int)
+        test "Storable Vector" (VS.fromList :: [Int] -> VS.Vector Int)
+        test "Unboxed Vector" (U.fromList :: [Int] -> U.Vector Int)
+        test "Strict ByteString" S.pack
+        test "Lazy ByteString" L.pack
+        test "Strict Text" T.pack
 
     describe "MonoUnfold1" $ do
         let test :: (Arbitrary (Element mono), MonoUnfold1 mono, Eq mono, Show mono, Show (Element mono)) => String -> ([Element mono] -> mono) -> Spec
@@ -591,17 +592,19 @@ main = hspec $ do
                 let take1 n = take (bool 1 n (n >= 1))
                 prop "unfoldr1" $ \(QCM.NonEmpty xs) -> unfoldr1 headTailMay xs @?= fromList' xs
                 prop "unfoldr1N" $ \(n, QCM.NonEmpty xs) -> unfoldr1N n headTailMay xs @?= fromList' (take1 n xs)
-                prop "unfoldr1N'" $ \(n, InfiniteList xs _) -> unfoldr1N' n headTail xs @?= fromList' (take1 n xs)
+                prop "unfoldr1ExactN" $ \(n, InfiniteList xs _) -> unfoldr1ExactN n headTail xs @?= fromList' (take1 n xs)
                 prop "unfoldl1" $ \(QCM.NonEmpty xs) -> unfoldl1 headTailMaySwap xs @?= fromList' (reverse xs)
                 prop "unfoldl1N" $ \(n, QCM.NonEmpty xs) -> unfoldl1N n headTailMaySwap xs @?= fromList' (reverse (take1 n xs))
-                prop "unfoldl1N'" $ \(n,InfiniteList xs _) -> unfoldl1N' n headTailSwap xs @?= fromList' (reverse (take1 n xs))
+                prop "unfoldl1ExactN" $ \(n,InfiniteList xs _) -> unfoldl1ExactN n headTailSwap xs @?= fromList' (reverse (take1 n xs))
         test "List" (id :: [Int] -> [Int])
         test "NonEmpty" (NE.fromList :: [Int] -> NE.NonEmpty Int)
-        --test "Vector" (V.empty :: V.Vector Int)
-        --test "Storable Vector" (VS.empty :: VS.Vector Int)
-        --test "Unboxed Vector" (U.empty :: U.Vector Int)
-        --test "Strict ByteString" S.empty
-        --test "Lazy ByteString" L.empty
-        --test "Strict Text" T.empty
-        --test "Lazy Text" TL.empty-test "Lazy Text" TL.empty
-        --
+        test "Vector" (V.fromList :: [Int] -> V.Vector Int)
+        test "Storable Vector" (VS.fromList :: [Int] -> VS.Vector Int)
+        test "Unboxed Vector" (U.fromList :: [Int] -> U.Vector Int)
+        test "Strict ByteString" S.pack
+        test "Lazy ByteString" L.pack
+        test "Strict Text" T.pack
+        test "Lazy Text" TL.pack
+
+instance Eq (Endo [Int]) where Endo f == Endo g = f mempty == g mempty
+instance Show (Endo [Int]) where show (Endo f) = "Endo " <> show (f mempty)
