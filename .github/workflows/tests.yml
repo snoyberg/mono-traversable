@@ -39,11 +39,11 @@ jobs:
       #    stack --version
       #    stack install stack-all
       #    stack-all --version
-      #- name: Build and run tests
-      #  shell: bash
-      #  run: |
-      #    set -ex
-      #    stack-all --oldest lts-18 --newest lts-19
+      - name: Build and run tests
+        shell: bash
+        run: |
+          set -ex
+          stack-all --oldest lts-18 --newest lts-19
 
 #  macos-13:
 #    name: macos-13
