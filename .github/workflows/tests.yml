@@ -9,7 +9,7 @@ on:
 jobs:
   macos-latest:
     name: macos-latest-llvm@12
-    runs-on: moacos-latest
+    runs-on: macos-latest
       #strategy:
       #  newest: lts-19
       #  oldest: lts-18
@@ -17,7 +17,7 @@ jobs:
       - name: Clone project
         uses: actions/checkout@v4
       - name: Install LLVM 12
-        #if: job.name == macos-latest-llvm@12
+        if: job.name == macos-latest-llvm@12
         shell: bash
         run: |
           set -ex
