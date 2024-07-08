@@ -10,9 +10,6 @@ jobs:
   macos-latest:
     name: macos-latest
     runs-on: macos-latest
-      #strategy:
-      #  newest: lts-19
-      #  oldest: lts-18
     steps:
       - name: Install LLVM 12
         if: ${{ job.name == macos-latest-llvm@12 }}
@@ -37,7 +34,9 @@ jobs:
         run: |
             set -ex
             stack --version
-            stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
+            for resolver in 18.28 19.33
+            do stack test --fast --no-terminal --resolver=lts-$resolver
+            done
 
 #  macos-13:
 #    name: macos-13
