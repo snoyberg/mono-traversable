@@ -31,8 +31,13 @@ jobs:
     steps:
       - name: Clone project
         uses: actions/checkout@v2
-      - name: Install Stack
-        run: stack --version || curl -sSL https://get.haskellstack.org/ | sh
+      - name: Setup Haskell
+        uses: haskell-actions/setup@v2.7.5
+        with:
+          enable-stack: true
+          stack-version: 'latest'
+          stack-no-global: true
+          cabal-update: false
       - name: Build and run tests
         shell: bash
         run: |
