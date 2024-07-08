@@ -37,9 +37,9 @@ jobs:
       - name: Install LLVM 12
         run: |
           brew install llvm@12
-          echo "$(brew --prefix)/opt/homebrew/Cellar/llvm@12/*/bin"                >> "${GITHUB_PATH}"
-          echo LDFLAGS="-L$(brew --prefix)/opt/homebrew/Cellar/llvm@12/*/lib"      >> "${GITHUB_ENV}"
-          echo CPPFLAGS="-I$(brew --prefix)/opt/homebrew/Cellar/llvm@12/*/include" >> "${GITHUB_ENV}"
+          echo "/opt/homebrew/opt/llvm@12/bin:$PATH" >> "${GITHUB_PATH}"
+          echo LDFLAGS="-L/opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
+          echo CPPFLAGS="-I/opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
       - name: Setup Haskell
         uses: haskell-actions/setup@v2.7.5
         with:
@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
             echo $PATH
-            ls "$(brew --prefix)/opt/homebrew/Cellar/llvm@12/*/bin"
+            ls "/opt/homebrew/Cellar/llvm@12/*"
             set -ex
             stack --version
             stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
