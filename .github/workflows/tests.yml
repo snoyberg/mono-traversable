@@ -20,7 +20,7 @@ jobs:
           - 18.28
     steps:
       - name: Install LLVM 12
-        if: ${{ matrix.os == macos-latest && matrix.resolver < 20 }}
+        if: ${{ matrix.os == 'macos-latest' && matrix.resolver < 20 }}
         run: |
           brew install llvm@12
           echo "/opt/homebrew/opt/llvm@12/bin" >> "${GITHUB_PATH}"
