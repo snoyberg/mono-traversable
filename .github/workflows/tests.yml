@@ -35,9 +35,13 @@ jobs:
       - name: Clone project
         uses: actions/checkout@v2
       - name: Install LLVM 12
+        shell: bash
         run: |
+          set -ex
           echo "$(brew --prefix)"
           brew install llvm@12
+          ls -F "$(brew --prefix)"
+          ls -F "$(brew --prefix)/*"
           ls -F "$(brew --prefix)/opt/llvm@12"
           ls -F "$(brew --prefix)/opt/llvm@12/*"
           echo "/opt/homebrew/opt/llvm@12/bin:$PATH" >> "${GITHUB_PATH}"
@@ -53,8 +57,8 @@ jobs:
       - name: Build and run tests
         shell: bash
         run: |
+            set -ex
             echo $PATH
             ls "/opt/homebrew/opt/llvm@12/*"
-            set -ex
             stack --version
             stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
