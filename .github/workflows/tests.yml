@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
             echo $PATH
-            ls "/opt/homebrew/llvm@12/*"
+            ls "/opt/homebrew/opt/llvm@12/*"
             set -ex
             stack --version
             stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
