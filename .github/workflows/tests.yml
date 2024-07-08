@@ -50,6 +50,8 @@ jobs:
       - name: Build and run tests
         shell: bash
         run: |
+            echo $PATH
+            ls "$(brew --prefix)/opt/homebrew/Cellar/llvm@12/*/bin"
             set -ex
             stack --version
             stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
