@@ -7,17 +7,17 @@ on:
         - master
 
 jobs:
-  macos-latest:
-    name: macos-latest
-    runs-on: macos-latest
+  tests:
+    name: tests
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - macos-latest
         resolver:
-          20.26
-          19.33
-          18.28
+          - 20.26
+          - 19.33
+          - 18.28
     steps:
       - name: Install LLVM 12
         if: ${{ matrix.os == macos-latest && matrix.resolver < 20 }}
@@ -38,9 +38,9 @@ jobs:
       - name: Build and run tests
         shell: bash
         run: |
-            set -ex
-            stack --version
-            stack test --fast --no-terminal --resolver=${{ matrix.resolver }}
+          set -ex
+          stack --version
+          stack test --fast --no-terminal --resolver=${{ matrix.resolver }}
 
 #  macos-13:
 #    name: macos-13
