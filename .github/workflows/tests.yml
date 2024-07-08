@@ -14,48 +14,14 @@ jobs:
       #  newest: lts-19
       #  oldest: lts-18
     steps:
-#      - name: Clone project
-#        uses: actions/checkout@v4
-#      - name: Install LLVM 12
-#        if: job.name == macos-latest-llvm@12
-#        shell: bash
-#        run: |
-#          set -ex
-#          brew install llvm@12
-#          echo "/opt/homebrew/opt/llvm@12/bin" >> "${GITHUB_PATH}"
-#          echo LDFLAGS="-L/opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
-#          echo CPPFLAGS="-I/opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
-#      - name: Setup Haskell
-#        uses: haskell-actions/setup@v2.7.5
-#        with:
-#          enable-stack: true
-#          stack-version: 'latest'
-#          stack-no-global: true
-#          cabal-update: false
-#      - name: Install stack-all
-#        shell: bash
-#        run: |
-#          set -ex
-#          stack --version
-#          stack install stack-all
-#          stack-all --version
-#      - name: Build and run tests
-#        shell: bash
-#        run: |
-#          set -ex
-#          stack-all --oldest lts-18 --newest lts-19
-
       - name: Clone project
         uses: actions/checkout@v2
       - name: Install LLVM 12
+        if: job.name == macos-latest-llvm@12
         shell: bash
         run: |
           set -ex
-          echo "$(brew --prefix)"
           brew install llvm@12
-          ls -F "$(brew --prefix)"
-          ls -F "$(brew --prefix)/opt"
-          ls -F "$(brew --prefix)/opt/llvm@12"
           echo "/opt/homebrew/opt/llvm@12/bin" >> "${GITHUB_PATH}"
           echo LDFLAGS="-L/opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
           echo CPPFLAGS="-I/opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
@@ -66,13 +32,18 @@ jobs:
           stack-version: 'latest'
           stack-no-global: true
           cabal-update: false
+      - name: Install stack-all
+        shell: bash
+        run: |
+          set -ex
+          stack --version
+          stack install stack-all
+          stack-all --version
       - name: Build and run tests
         shell: bash
         run: |
-            set -ex
-            echo $PATH
-            stack --version
-            stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
+          set -ex
+          stack-all --oldest lts-18 --newest lts-19
 
 #  macos-13:
 #    name: macos-13
