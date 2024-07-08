@@ -14,7 +14,12 @@ jobs:
       matrix:
         os:
           - macos-latest
+          - macos-13
+          - ubuntu-latest
+          - windows-latest
         resolver:
+          - 22.28
+          - 21.25
           - 20.26
           - 19.33
           - 18.28
@@ -27,6 +32,7 @@ jobs:
           echo LDFLAGS="-L/opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
           echo CPPFLAGS="-I/opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
       - name: Setup Haskell
+        if: ${{ contains( matrix.os , 'macos' ) }}
         uses: haskell-actions/setup@v2.7
         with:
           enable-stack: true
