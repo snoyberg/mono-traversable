@@ -32,13 +32,13 @@ jobs:
           stack-version: 'latest'
           stack-no-global: true
           cabal-update: false
-      - name: Install stack-all
-        shell: bash
-        run: |
-          set -ex
-          stack --version
-          stack install stack-all
-          stack-all --version
+      #- name: Install stack-all
+      #  shell: bash
+      #  run: |
+      #    set -ex
+      #    stack --version
+      #    stack install stack-all
+      #    stack-all --version
       - name: Build and run tests
         shell: bash
         run: |
