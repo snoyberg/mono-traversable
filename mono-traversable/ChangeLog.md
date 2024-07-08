@@ -1,5 +1,10 @@
 # ChangeLog for mono-traversable
 
+## 1.0.18.0
+
+* Added MonoPointed instance for text Builder
+  [#225](https://github.com/snoyberg/mono-traversable/pull/225)
+
 ## 1.0.17.0
 
 * Added `inits`, `tails`, `initTails` to class `IsSequence` with tests and benchmarks for `initTails`.
