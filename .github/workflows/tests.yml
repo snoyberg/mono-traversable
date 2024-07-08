@@ -10,15 +10,14 @@ jobs:
   macos-latest:
     name: macos-latest-llvm@12
     runs-on: moacos-latest
-    concurrency: strategy
-    strategy:
-      newest: lts-19
-      oldest: lts-18
+      #strategy:
+      #  newest: lts-19
+      #  oldest: lts-18
     steps: &steps
       - name: Clone project
         uses: actions/checkout@v4
       - name: Install LLVM 12
-        if: job.name == macos-latest-llvm@12
+        #if: job.name == macos-latest-llvm@12
         shell: bash
         run: |
           set -ex
@@ -44,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -ex
-          stack-all --oldest ${{ strategy.oldest }} --newest ${{ strategy.newest }}
+          stack-all --oldest lts-18 --newest lts-19
 
 #  macos-13:
 #    name: macos-13
