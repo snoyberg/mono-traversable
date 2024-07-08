@@ -8,7 +8,7 @@ on:
 
 jobs:
   macos-latest:
-    name: macos-latest-llvm@12
+    name: macos-latest-llvmV12
     runs-on: macos-latest
       #strategy:
       #  newest: lts-19
