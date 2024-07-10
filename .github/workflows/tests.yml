@@ -18,11 +18,11 @@ jobs:
           #- ubuntu-latest
           #- windows-latest
         resolver:
-          #- 22.28
-          #- 21.25
-          #- 20.26
+          - 22.28
+          - 21.25
+          - 20.26
           - 19.33
-          #- 18.28
+          - 18.28
     steps:
       - name: Install LLVM 13
         if: ${{ matrix.os == 'macos-latest' && matrix.resolver < 20 }}
