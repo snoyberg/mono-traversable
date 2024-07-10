@@ -24,13 +24,13 @@ jobs:
           - 19.33
           #- 18.28
     steps:
-      - name: Install LLVM 12
+      - name: Install LLVM 13
         if: ${{ matrix.os == 'macos-latest' && matrix.resolver < 20 }}
         run: |
-          brew install llvm@12
-          echo "/opt/homebrew/opt/llvm@12/bin" >> "${GITHUB_PATH}"
-          echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
-          echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
+          brew install llvm@13
+          echo "/opt/homebrew/opt/llvm@13/bin" >> "${GITHUB_PATH}"
+          echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@13/lib" >> "${GITHUB_ENV}"
+          echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@13/include" >> "${GITHUB_ENV}"
           echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> ${GITHUB_ENV}
       - name: Setup Haskell
         if: ${{ contains( matrix.os , 'macos' ) }}
