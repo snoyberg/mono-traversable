@@ -30,8 +30,8 @@ jobs:
           brew install llvm@12
           echo "/opt/homebrew/opt/llvm@12/bin" >> "${GITHUB_PATH}"
           echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
-          echo extraIncludeDirs="--extra-include-dirs /opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
-          echo ghcOptions="--ghc-options $(pkg-config --cflags libffi)" >> ${GITHUB_ENV}
+          echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
+          echo extraIncludeDirsFFI="--extra-include-dirs $(pkg-config --cflags libffi)" >> ${GITHUB_ENV}
       - name: Setup Haskell
         if: ${{ contains( matrix.os , 'macos' ) }}
         uses: haskell-actions/setup@v2.7
