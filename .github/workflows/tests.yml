@@ -42,6 +42,14 @@ jobs:
           cabal-update: false
       - name: Clone project
         uses: actions/checkout@v4
+      - name: Use Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ matrix.os }}_${{ matrix.resolver }}
+          path: |
+            ~/.stack
+            ./.stack-work
+            ./*/.stack-work
       - name: Build and run tests
         shell: bash
         run: |
