@@ -20,7 +20,7 @@ jobs:
         resolver:
           #- 22.28
           #- 21.25
-          - 20.26
+          #- 20.26
           - 19.33
           #- 18.28
     steps:
@@ -31,7 +31,7 @@ jobs:
           echo "/opt/homebrew/opt/llvm@12/bin" >> "${GITHUB_PATH}"
           echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
           echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
-          echo extraIncludeDirsFFI="--extra-include-dirs $(pkg-config --cflags libffi)" >> ${GITHUB_ENV}
+          echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> ${GITHUB_ENV}
       - name: Setup Haskell
         if: ${{ contains( matrix.os , 'macos' ) }}
         uses: haskell-actions/setup@v2.7
@@ -47,7 +47,7 @@ jobs:
         run: |
           set -ex
           stack --version
-          stack test $extraLibDirs $extraIncludeDirs $ghcOptions --fast --no-terminal --resolver=lts-${{ matrix.resolver }}
+          stack test $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --resolver=lts-${{ matrix.resolver }}
 
 #  macos-13:
 #    name: macos-13
