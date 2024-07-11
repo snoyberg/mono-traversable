@@ -93,6 +93,8 @@ jobs:
         if: ${{ contains( matrix.os , 'macos' ) }}
         id: setup-haskell-cabal-macos
         uses: haskell-actions/setup@v2.7
+        with:
+          ghc-version: 9.8.2
       - name: Setup Haskell not macos
         if: ${{ ! contains( matrix.os , 'macos' ) }}
         id: setup-haskell-cabal-not-macos
