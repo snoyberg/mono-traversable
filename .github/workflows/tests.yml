@@ -107,4 +107,4 @@ jobs:
         run: |
           ghc --version
           cabal --version
-          cabal test -O0 all
+          cabal test --minimize-conflict-set -O0 all
