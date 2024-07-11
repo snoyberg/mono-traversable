@@ -39,20 +39,12 @@ jobs:
           echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@13/include" >> $GITHUB_ENV
           echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> $GITHUB_ENV
       - name: Setup Haskell macos
-        if: ${{ contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-stack-macos
+        id: setup-haskell-stack
         uses: haskell-actions/setup@v2.7
         with:
           ghc-version: ${{ env.ghcVersion }}
           enable-stack: true
           stack-version: 'latest'
-          cabal-update: false
-      - name: Setup Haskell not macos
-        if: ${{ ! contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-stack-not-macos
-        uses: haskell-actions/setup@v2.7
-        with:
-          ghc-version: ${{ env.ghcVersion }}
           cabal-update: false
       - name: Clone project
         uses: actions/checkout@v4
@@ -66,8 +58,7 @@ jobs:
             ${{ matrix.os }}_${{ env.snapshot }}_
             ${{ matrix.os }}_${{ env.snapshot }}
           path: |
-            ${{ steps.setup-haskell-stack-macos.outputs.stack-root }}
-            ${{ steps.setup-haskell-stack-not-macos.outputs.stack-root }}
+            ${{ steps.setup-haskell-stack.outputs.stack-root }}
             .stack-work
             */.stack-work
       - name: Build and run tests
@@ -90,17 +81,10 @@ jobs:
           - windows-latest
     steps:
       - name: Setup Haskell macos
-        if: ${{ contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-cabal-macos
+        id: setup-haskell-cabal
         uses: haskell-actions/setup@v2.7
         with:
-          ghc-version: 9.8.2
-      - name: Setup Haskell not macos
-        if: ${{ ! contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-cabal-not-macos
-        uses: haskell-actions/setup@v2.7
-        with:
-          ghc-version: 9.8.2
+          ghc-version: 9.6.6
       - name: Clone project
         uses: actions/checkout@v4
       - name: Use Cache
@@ -113,8 +97,7 @@ jobs:
             ${{ matrix.os }}_cabal_
             ${{ matrix.os }}_cabal
           path: |
-            ${{ steps.setup-haskell-cabal-macos.outputs.cabal-store }}
-            ${{ steps.setup-haskell-cabal-not-macos.outputs.cabal-store }}
+            ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
             dist-newstyle
       - name: Build and run tests
         shell: bash
