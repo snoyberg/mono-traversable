@@ -56,7 +56,7 @@ jobs:
           set -ex
           stack --version
           stack test $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --resolver=lts-${{ matrix.resolver }}
-          stack path
+          find ~/.stack .stack-work/ -type f | xargs -n 100 du | sort -nr | head -100
 
 #  macos-13:
 #    name: macos-13
