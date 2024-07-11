@@ -44,6 +44,7 @@ tests:
     - containers
     - unordered-containers
     - foldl
+    build-tools: hspec-discover
 benchmarks:
   all:
     main: main.hs

@@ -38,7 +38,7 @@ jobs:
           echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@13/lib" >> $GITHUB_ENV
           echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@13/include" >> $GITHUB_ENV
           echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> $GITHUB_ENV
-      - name: Setup Haskell macos
+      - name: Setup Haskell
         id: setup-haskell-stack
         uses: haskell-actions/setup@v2.7
         with:
@@ -80,7 +80,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
     steps:
-      - name: Setup Haskell macos
+      - name: Setup Haskell
         id: setup-haskell-cabal
         uses: haskell-actions/setup@v2.7
         with:

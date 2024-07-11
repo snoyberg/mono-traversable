@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -50,6 +50,8 @@ test-suite spec
       Paths_classy_prelude_conduit
   hs-source-dirs:
       test
+  build-tool-depends:
+      hspec-discover:hspec-discover
   build-depends:
       QuickCheck
     , base >=4.13 && <5

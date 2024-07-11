@@ -64,3 +64,4 @@ tests:
     - hspec >=1.3
     - QuickCheck
     - containers
+    build-tools: hspec-discover
