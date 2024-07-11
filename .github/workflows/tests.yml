@@ -17,38 +17,43 @@ jobs:
           #- macos-13
           #- ubuntu-latest
           #- windows-latest
-        resolver:
-          #- 22.28
-          #- 21.25
-          #- 20.26
-          #- 19.33
-          - 18.28
+
+        versions:
+          #- <lts version> <ghc version>
+          #- 22.28 9.6.6
+          #- 21.25 9.4.8
+          #- 20.26 9.2.8
+          #- 19.33 9.0.2
+          - 18.28 8.10.7
     steps:
+      - name: Parse lts and ghc versions
+        run: |
+          echo snapshot=$(echo ${{ matrix.versions }} | cut -d ' ' -f 1) >> $GITHUB_ENV
+          echo ghcVersion=$(echo ${{ matrix.versions }} | cut -d ' ' -f 2) >> $GITHUB_ENV
       - name: Install LLVM 13
-        if: ${{ matrix.os == 'macos-latest' && matrix.resolver < 20 }}
+        if: ${{ matrix.os == 'macos-latest' && env.snapshot < 20 }}
         run: |
           brew install llvm@13
-          echo "/opt/homebrew/opt/llvm@13/bin" >> "${GITHUB_PATH}"
-          echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@13/lib" >> "${GITHUB_ENV}"
-          echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@13/include" >> "${GITHUB_ENV}"
-          echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> ${GITHUB_ENV}
+          echo "/opt/homebrew/opt/llvm@13/bin" >> $GITHUB_PATH
+          echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@13/lib" >> $GITHUB_ENV
+          echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@13/include" >> $GITHUB_ENV
+          echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> $GITHUB_ENV
       - name: Setup Haskell
         if: ${{ contains( matrix.os , 'macos' ) }}
         uses: haskell-actions/setup@v2.7
         with:
+          ghc-version: ${{ env.ghcVersion }}
           enable-stack: true
           stack-version: 'latest'
-          stack-no-global: true
           cabal-update: false
       - name: Clone project
         uses: actions/checkout@v4
       - name: Use Cache
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}_${{ matrix.resolver }}
+          key: ${{ matrix.os }}_${{ env.snapshot }}
           path: |
-            ~/.stack/*
-            !~/.stack/programs
+            ~/.stack
             ./.stack-work
             ./*/.stack-work
       - name: Build and run tests
@@ -56,8 +61,7 @@ jobs:
         run: |
           set -ex
           stack --version
-          stack test $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --resolver=lts-${{ matrix.resolver }}
-          find ~/.stack .stack-work/ -type f | xargs -n 100 du | sort -nr | head -100
+          stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
 
 #  macos-13:
 #    name: macos-13
