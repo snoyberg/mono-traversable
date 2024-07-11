@@ -59,8 +59,9 @@ jobs:
       - name: Use Cache
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}_${{ env.snapshot }}_${{ github.base_ref }}
+          key: ${{ matrix.os }}_${{ env.snapshot }}_${{ github.head_ref }}
           restore-keys: |
+            ${{ matrix.os }}_${{ env.snapshot }}_${{ github.head_ref }}
             ${{ matrix.os }}_${{ env.snapshot }}_${{ github.base_ref }}
             ${{ matrix.os }}_${{ env.snapshot }}_
             ${{ matrix.os }}_${{ env.snapshot }}
@@ -96,13 +97,16 @@ jobs:
         if: ${{ ! contains( matrix.os , 'macos' ) }}
         id: setup-haskell-cabal-not-macos
         uses: haskell-actions/setup@v2.7
+        with:
+          ghc-version: 9.8.2
       - name: Clone project
         uses: actions/checkout@v4
       - name: Use Cache
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}_cabal_${{ github.base_ref }}
+          key: ${{ matrix.os }}_cabal_${{ github.head_ref }}
           restore-keys: |
+            ${{ matrix.os }}_cabal_${{ github.head_ref }}
             ${{ matrix.os }}_cabal_${{ github.base_ref }}
             ${{ matrix.os }}_cabal_
             ${{ matrix.os }}_cabal
