@@ -59,10 +59,14 @@ jobs:
       - name: Use Cache
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}_${{ env.snapshot }}
+          key: ${{ matrix.os }}_${{ env.snapshot }}_${{ GITHUB_HEAD_REF }}
+          restore-keys: |
+            ${{ matrix.os }}_${{ env.snapshot }}_${{ GITHUB_HEAD_REF }}
+            ${{ matrix.os }}_${{ env.snapshot }}_
+            ${{ matrix.os }}_${{ env.snapshot }}
           path: |
-            ${{ steps.setup-haskell-stack-macos.outputs.cabal-store }}
-            ${{ steps.setup-haskell-stack-not-macos.outputs.cabal-store }}
+            ${{ steps.setup-haskell-stack-macos.outputs.stack-root }}
+            ${{ steps.setup-haskell-stack-not-macos.outputs.stack-root }}
             .stack-work
             */.stack-work
       - name: Build and run tests
@@ -97,7 +101,11 @@ jobs:
       - name: Use Cache
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}_cabal
+          key: ${{ matrix.os }}_cabal_${{ GITHUB_HEAD_REF }}
+          restore-keys: |
+            ${{ matrix.os }}_cabal_${{ GITHUB_HEAD_REF }}
+            ${{ matrix.os }}_cabal_
+            ${{ matrix.os }}_cabal
           path: |
             ${{ steps.setup-haskell-cabal-macos.outputs.cabal-store }}
             ${{ steps.setup-haskell-cabal-not-macos.outputs.cabal-store }}
