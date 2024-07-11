@@ -59,9 +59,9 @@ jobs:
       - name: Use Cache
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}_${{ env.snapshot }}_${{ GITHUB_HEAD_REF }}
+          key: ${{ matrix.os }}_${{ env.snapshot }}_${{ github.base_ref }}
           restore-keys: |
-            ${{ matrix.os }}_${{ env.snapshot }}_${{ GITHUB_HEAD_REF }}
+            ${{ matrix.os }}_${{ env.snapshot }}_${{ github.base_ref }}
             ${{ matrix.os }}_${{ env.snapshot }}_
             ${{ matrix.os }}_${{ env.snapshot }}
           path: |
@@ -101,9 +101,9 @@ jobs:
       - name: Use Cache
         uses: actions/cache@v4
         with:
-          key: ${{ matrix.os }}_cabal_${{ GITHUB_HEAD_REF }}
+          key: ${{ matrix.os }}_cabal_${{ github.base_ref }}
           restore-keys: |
-            ${{ matrix.os }}_cabal_${{ GITHUB_HEAD_REF }}
+            ${{ matrix.os }}_cabal_${{ github.base_ref }}
             ${{ matrix.os }}_cabal_
             ${{ matrix.os }}_cabal
           path: |
