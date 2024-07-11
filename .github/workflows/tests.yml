@@ -47,7 +47,8 @@ jobs:
         with:
           key: ${{ matrix.os }}_${{ matrix.resolver }}
           path: |
-            ~/.stack
+            ~/.stack/*
+            !~/.stack/programs
             ./.stack-work
             ./*/.stack-work
       - name: Build and run tests
