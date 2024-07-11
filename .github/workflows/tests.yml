@@ -20,6 +20,7 @@ jobs:
 
         versions:
           #- <lts version> <ghc version>
+          #- latest latest
           #- 22.28 9.6.6
           #- 21.25 9.4.8
           #- 20.26 9.2.8
@@ -57,71 +58,5 @@ jobs:
             ./.stack-work
             ./*/.stack-work
       - name: Build and run tests
-        shell: bash
-        run: |
-          set -ex
-          stack --version
-          stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
+        run: stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
 
-#  macos-13:
-#    name: macos-13
-#    runs-on: macos-13
-#    concurrency: strategy
-#    strategy:
-#      fail-fast: true
-#        oldest: lts-16
-#
-#  stack:
-#    name: Stack
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        os:
-#          #- ubuntu-latest
-#          - macos-13
-#          - macos-latest
-#          #- windows-latest
-#        resolver:
-#        - lts-18.16 # Win32 issue
-#        - lts-16
-#        stack-yaml:
-#        - stack.yaml
-#        - stack-new-time.yaml
-#        exclude:
-#        - resolver: lts-16
-#          stack-yaml: stack-new-time.yaml
-#        - os: windows-latest
-#          stack-yaml: stack-new-time.yaml
-#        - os: macos-latest
-#          resolver: lts-16
-#
-#    steps:
-#      - name: Clone project
-#        uses: actions/checkout@v2
-#      - name: Install LLVM 12
-#        shell: bash
-#        run: |
-#          set -ex
-#          echo "$(brew --prefix)"
-#          brew install llvm@12
-#          ls -F "$(brew --prefix)"
-#          ls -F "$(brew --prefix)/opt"
-#          ls -F "$(brew --prefix)/opt/llvm@12"
-#          echo "/opt/homebrew/opt/llvm@12/bin" >> "${GITHUB_PATH}"
-#          echo LDFLAGS="-L/opt/homebrew/opt/llvm@12/lib" >> "${GITHUB_ENV}"
-#          echo CPPFLAGS="-I/opt/homebrew/opt/llvm@12/include" >> "${GITHUB_ENV}"
-#      - name: Setup Haskell
-#        uses: haskell-actions/setup@v2.7.5
-#        with:
-#          enable-stack: true
-#          stack-version: 'latest'
-#          stack-no-global: true
-#          cabal-update: false
-#      - name: Build and run tests
-#        shell: bash
-#        run: |
-#            set -ex
-#            echo $PATH
-#            stack --version
-#            stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
