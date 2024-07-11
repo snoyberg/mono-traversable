@@ -7,24 +7,21 @@ on:
         - master
 
 jobs:
-  tests:
-    name: tests
+  stack:
+    name: tests with stack
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - macos-latest
-          #- macos-13
-          #- ubuntu-latest
-          #- windows-latest
-
+          - ubuntu-latest
+          - windows-latest
         versions:
           #- <lts version> <ghc version>
-          #- latest latest
-          #- 22.28 9.6.6
-          #- 21.25 9.4.8
-          #- 20.26 9.2.8
-          #- 19.33 9.0.2
+          - 22.28 9.6.6
+          - 21.25 9.4.8
+          - 20.26 9.2.8
+          - 19.33 9.0.2
           - 18.28 8.10.7
     steps:
       - name: Parse lts and ghc versions
@@ -60,3 +57,28 @@ jobs:
       - name: Build and run tests
         run: stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
 
+  cabal:
+    name: tests with cabal
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - macos-13
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: Setup Haskell
+        if: ${{ contains( matrix.os , 'macos' ) }}
+        uses: haskell-actions/setup@v2.7
+      - name: Clone project
+        uses: actions/checkout@v4
+      - name: Use Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ matrix.os }}_cabal
+          path: |
+            ~/.cabal
+            ./dist-newstyle
+      - name: Build and run tests
+        run: stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
