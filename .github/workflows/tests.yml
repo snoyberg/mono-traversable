@@ -40,6 +40,7 @@ jobs:
           echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> $GITHUB_ENV
       - name: Setup Haskell macos
         if: ${{ contains( matrix.os , 'macos' ) }}
+        id: setup-haskell-cabal
         uses: haskell-actions/setup@v2.7
         with:
           ghc-version: ${{ env.ghcVersion }}
@@ -48,6 +49,7 @@ jobs:
           cabal-update: false
       - name: Setup Haskell not macos
         if: ${{ ! contains( matrix.os , 'macos' ) }}
+        id: setup-haskell-cabal
         uses: haskell-actions/setup@v2.7
         with:
           ghc-version: ${{ env.ghcVersion }}
@@ -59,9 +61,9 @@ jobs:
         with:
           key: ${{ matrix.os }}_${{ env.snapshot }}
           path: |
-            ~/.stack
-            ./.stack-work
-            ./*/.stack-work
+            ${{ steps.setup-haskell-cabal.outputs.stack-root }}
+            .stack-work
+            */.stack-work
       - name: Build and run tests
         shell: bash
         run: |
@@ -81,8 +83,13 @@ jobs:
           - ubuntu-latest
           - windows-latest
     steps:
-      - name: Setup Haskell
+      - name: Setup Haskell macos
         if: ${{ contains( matrix.os , 'macos' ) }}
+        id: setup-haskell-cabal
+        uses: haskell-actions/setup@v2.7
+      - name: Setup Haskell not macos
+        if: ${{ ! contains( matrix.os , 'macos' ) }}
+        id: setup-haskell-cabal
         uses: haskell-actions/setup@v2.7
       - name: Clone project
         uses: actions/checkout@v4
@@ -91,8 +98,8 @@ jobs:
         with:
           key: ${{ matrix.os }}_cabal
           path: |
-            ~/.cabal
-            ./dist-newstyle
+            ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+            dist-newstyle
       - name: Build and run tests
         shell: bash
         run: |
