@@ -25,11 +25,13 @@ jobs:
           - 18.28 8.10.7
     steps:
       - name: Parse lts and ghc versions
+        shell: sh
         run: |
           echo snapshot=$(echo ${{ matrix.versions }} | cut -d ' ' -f 1) >> $GITHUB_ENV
           echo ghcVersion=$(echo ${{ matrix.versions }} | cut -d ' ' -f 2) >> $GITHUB_ENV
       - name: Install LLVM 13
         if: ${{ matrix.os == 'macos-latest' && env.snapshot < 20 }}
+        shell: sh
         run: |
           brew install llvm@13
           echo "/opt/homebrew/opt/llvm@13/bin" >> $GITHUB_PATH
@@ -55,6 +57,7 @@ jobs:
             ./.stack-work
             ./*/.stack-work
       - name: Build and run tests
+        shell: sh
         run: stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
 
   cabal:
@@ -81,4 +84,5 @@ jobs:
             ~/.cabal
             ./dist-newstyle
       - name: Build and run tests
-        run: stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
+        shell: sh
+        run: cabal test -O0 all
