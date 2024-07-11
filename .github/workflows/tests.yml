@@ -40,7 +40,7 @@ jobs:
           echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> $GITHUB_ENV
       - name: Setup Haskell macos
         if: ${{ contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-cabal
+        id: setup-haskell-stack-macos
         uses: haskell-actions/setup@v2.7
         with:
           ghc-version: ${{ env.ghcVersion }}
@@ -49,7 +49,7 @@ jobs:
           cabal-update: false
       - name: Setup Haskell not macos
         if: ${{ ! contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-cabal
+        id: setup-haskell-stack-not-macos
         uses: haskell-actions/setup@v2.7
         with:
           ghc-version: ${{ env.ghcVersion }}
@@ -61,7 +61,8 @@ jobs:
         with:
           key: ${{ matrix.os }}_${{ env.snapshot }}
           path: |
-            ${{ steps.setup-haskell-cabal.outputs.stack-root }}
+            ${{ steps.setup-haskell-stack-macos.outputs.cabal-store }}
+            ${{ steps.setup-haskell-stack-not-macos.outputs.cabal-store }}
             .stack-work
             */.stack-work
       - name: Build and run tests
@@ -85,11 +86,11 @@ jobs:
     steps:
       - name: Setup Haskell macos
         if: ${{ contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-cabal
+        id: setup-haskell-cabal-macos
         uses: haskell-actions/setup@v2.7
       - name: Setup Haskell not macos
         if: ${{ ! contains( matrix.os , 'macos' ) }}
-        id: setup-haskell-cabal
+        id: setup-haskell-cabal-not-macos
         uses: haskell-actions/setup@v2.7
       - name: Clone project
         uses: actions/checkout@v4
@@ -98,7 +99,8 @@ jobs:
         with:
           key: ${{ matrix.os }}_cabal
           path: |
-            ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+            ${{ steps.setup-haskell-cabal-macos.outputs.cabal-store }}
+            ${{ steps.setup-haskell-cabal-not-macos.outputs.cabal-store }}
             dist-newstyle
       - name: Build and run tests
         shell: bash
