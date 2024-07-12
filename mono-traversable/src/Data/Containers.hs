@@ -548,8 +548,15 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
     -- | Filter values in a map.
     --
     -- @since 1.0.9.0
-    filterMap :: IsMap map => (MapValue map -> Bool) -> map -> map
-    filterMap p = mapFromList . filter (p . snd) . mapToList
+    filterMap :: (MapValue map -> Bool) -> map -> map
+    filterMap = filterWithKey . const
+
+    -- | Equivalent to 'filterMap', but the function accepts the key,
+    -- as well as the value.
+    --
+    -- @since 1.0.??
+    filterWithKey :: (ContainerKey map -> MapValue map -> Bool) -> map -> map
+    filterWithKey p = mapFromList . filter (uncurry p) . mapToList
 
 -- | This instance uses the functions from "Data.Map.Strict".
 instance Ord key => IsMap (Map.Map key value) where
@@ -599,6 +606,8 @@ instance Ord key => IsMap (Map.Map key value) where
     {-# INLINE omapKeysWith #-}
     filterMap = Map.filter
     {-# INLINE filterMap #-}
+    filterWithKey = Map.filterWithKey
+    {-# INLINE filterWithKey #-}
 
 -- | This instance uses the functions from "Data.HashMap.Strict".
 instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
@@ -636,6 +645,8 @@ instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
     --mapKeysWith = HashMap.mapKeysWith
     filterMap = HashMap.filter
     {-# INLINE filterMap #-}
+    filterWithKey = HashMap.filterWithKey
+    {-# INLINE filterWithKey #-}
 
 -- | This instance uses the functions from "Data.IntMap.Strict".
 instance IsMap (IntMap.IntMap value) where
@@ -684,6 +695,8 @@ instance IsMap (IntMap.IntMap value) where
     {-# INLINE omapKeysWith #-}
     filterMap = IntMap.filter
     {-# INLINE filterMap #-}
+    filterWithKey = IntMap.filterWithKey
+    {-# INLINE filterWithKey #-}
 
 instance Eq key => IsMap [(key, value)] where
     type MapValue [(key, value)] = value
