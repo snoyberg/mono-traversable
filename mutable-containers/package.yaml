@@ -35,6 +35,7 @@ tests:
     - hspec
     - QuickCheck
     - primitive
+    build-tools: hspec-discover
 benchmarks:
   deque:
     main: deque.hs

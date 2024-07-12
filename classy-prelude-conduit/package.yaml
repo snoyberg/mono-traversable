@@ -38,3 +38,4 @@ tests:
     - classy-prelude-conduit
     - QuickCheck
     - conduit
+    build-tools: hspec-discover

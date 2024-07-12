@@ -11,30 +11,97 @@ jobs:
     name: Stack
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        resolver:
-        # Missing some packages now
-        #- "--resolver nightly"
-        - lts-18.16 # Win32 issue
-        - lts-16
-        stack-yaml:
-        - stack.yaml
-        - stack-new-time.yaml
-        exclude:
-        - resolver: lts-16
-          stack-yaml: stack-new-time.yaml
-        - os: windows-latest
-          stack-yaml: stack-new-time.yaml
-
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        versions:
+          #- <lts version> <ghc version>
+          - 22.28 9.6.6
+          - 21.25 9.4.8
+          - 20.26 9.2.8
+          - 19.33 9.0.2
+          - 18.28 8.10.7
     steps:
+      - name: Parse lts and ghc versions
+        shell: sh
+        run: |
+          echo snapshot=$(echo ${{ matrix.versions }} | cut -d ' ' -f 1) >> $GITHUB_ENV
+          echo ghcVersion=$(echo ${{ matrix.versions }} | cut -d ' ' -f 2) >> $GITHUB_ENV
+      - name: Install LLVM 13
+        if: ${{ matrix.os == 'macos-latest' && env.snapshot < 20 }}
+        shell: sh
+        run: |
+          brew install llvm@13
+          echo "/opt/homebrew/opt/llvm@13/bin" >> $GITHUB_PATH
+          echo extraLibDirs="--extra-lib-dirs /opt/homebrew/opt/llvm@13/lib" >> $GITHUB_ENV
+          echo extraIncludeDirsLLVM="--extra-include-dirs /opt/homebrew/opt/llvm@13/include" >> $GITHUB_ENV
+          echo extraIncludeDirsFFI="--extra-include-dirs /Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/ffi" >> $GITHUB_ENV
+      - name: Setup Haskell
+        id: setup-haskell-stack
+        uses: haskell-actions/setup@v2.7
+        with:
+          ghc-version: ${{ env.ghcVersion }}
+          enable-stack: true
+          stack-version: 'latest'
+          cabal-update: false
       - name: Clone project
-        uses: actions/checkout@v2
-
+        uses: actions/checkout@v4
+      - name: Use Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ matrix.os }}_${{ env.snapshot }}_${{ github.head_ref }}
+          restore-keys: |
+            ${{ matrix.os }}_${{ env.snapshot }}_${{ github.head_ref }}
+            ${{ matrix.os }}_${{ env.snapshot }}_${{ github.base_ref }}
+            ${{ matrix.os }}_${{ env.snapshot }}_
+            ${{ matrix.os }}_${{ env.snapshot }}
+          path: |
+            ${{ steps.setup-haskell-stack.outputs.stack-root }}
+            .stack-work
+            */.stack-work
       - name: Build and run tests
         shell: bash
         run: |
-            set -ex
-            stack --version
-            stack test --fast --no-terminal --stack-yaml=${{ matrix.stack-yaml }} --resolver=${{ matrix.resolver }}
+          set -ex
+          ghc --version
+          stack --version
+          stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
+
+  Cabal:
+    name: Cabal
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - macos-13
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: Setup Haskell
+        id: setup-haskell-cabal
+        uses: haskell-actions/setup@v2.7
+        with:
+          ghc-version: 9.6.6
+      - name: Clone project
+        uses: actions/checkout@v4
+      - name: Use Cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ matrix.os }}_cabal_${{ github.head_ref }}
+          restore-keys: |
+            ${{ matrix.os }}_cabal_${{ github.head_ref }}
+            ${{ matrix.os }}_cabal_${{ github.base_ref }}
+            ${{ matrix.os }}_cabal_
+            ${{ matrix.os }}_cabal
+          path: |
+            ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+            dist-newstyle
+      - name: Build and run tests
+        shell: bash
+        run: |
+          ghc --version
+          cabal --version
+          cabal test --minimize-conflict-set -O0 all

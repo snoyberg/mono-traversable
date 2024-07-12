@@ -57,6 +57,8 @@ test-suite test
   hs-source-dirs:
       test
   ghc-options: -O0
+  build-tool-depends:
+      hspec-discover:hspec-discover
   build-depends:
       HUnit
     , QuickCheck
