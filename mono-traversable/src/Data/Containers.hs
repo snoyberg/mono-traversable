@@ -4,6 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeOperators #-}
 -- | Warning: This module should be considered highly experimental.
 module Data.Containers where
 

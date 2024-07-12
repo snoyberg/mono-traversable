@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 -- | The functions in "Data.MonoTraversable" are all prefixed with the letter
 -- @o@ to avoid conflicts with their polymorphic counterparts. This module
 -- exports the same identifiers without the prefix, for all cases where the
