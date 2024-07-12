@@ -41,6 +41,7 @@ import           Data.Monoid (Monoid (..), Any (..), All (..))
 import           Data.Proxy
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
+import qualified Data.Text.Lazy.Builder as TB
 import           Data.Traversable
 import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
@@ -111,6 +112,8 @@ type instance Element L.ByteString = Word8
 type instance Element B.Builder = Word8
 type instance Element T.Text = Char
 type instance Element TL.Text = Char
+-- | @since 1.0.18.0
+type instance Element TB.Builder = Char
 type instance Element [a] = a
 type instance Element (IO a) = a
 type instance Element (ZipList a) = a
@@ -1152,6 +1155,10 @@ instance MonoPointed T.Text where
     {-# INLINE opoint #-}
 instance MonoPointed TL.Text where
     opoint = TL.singleton
+    {-# INLINE opoint #-}
+-- | @since 1.0.18.0
+instance MonoPointed TB.Builder where
+    opoint = TB.singleton
     {-# INLINE opoint #-}
 
 -- Applicative
