@@ -1,5 +1,9 @@
 # ChangeLog for mono-traversable
 
+## 1.0.19.1
+
+* Removed 'highly experimental' warning haddock comment from Data.Containers.
+
 ## 1.0.19.0
 
 * Added `filterWithKey` to `IsMap`.
