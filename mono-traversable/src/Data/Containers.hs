@@ -554,7 +554,7 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
     -- | Equivalent to 'filterMap', but the function accepts the key,
     -- as well as the value.
     --
-    -- @since 1.0.??
+    -- @since 1.0.19.0
     filterWithKey :: (ContainerKey map -> MapValue map -> Bool) -> map -> map
     filterWithKey p = mapFromList . filter (uncurry p) . mapToList
 
