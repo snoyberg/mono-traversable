@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           mutable-containers
-version:        0.3.4.1
+version:        0.3.4.2
 synopsis:       Abstractions and concrete implementations of mutable containers
 description:    See docs and README at <http://www.stackage.org/package/mutable-containers>
 category:       Data
