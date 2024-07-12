@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE TypeOperators #-}
 -- | Various typeclasses for mutable containers.
 module Data.Mutable.Class
     ( PrimMonad

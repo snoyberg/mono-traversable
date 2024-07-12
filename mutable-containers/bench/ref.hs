@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 import Control.Monad
 import Gauge.Main
 import Data.Mutable

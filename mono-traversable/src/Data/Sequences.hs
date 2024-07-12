@@ -5,6 +5,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE TypeOperators #-}
 -- | Abstractions over sequential data structures, like lists and vectors.
 module Data.Sequences where
 

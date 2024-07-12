@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           mono-traversable
-version:        1.0.17.0
+version:        1.0.17.1
 synopsis:       Type classes for mapping, folding, and traversing monomorphic containers
 description:    Please see the README at <https://www.stackage.org/package/mono-traversable>
 category:       Data
