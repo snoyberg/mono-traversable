@@ -1,5 +1,10 @@
 # ChangeLog for mono-traversable
 
+## 1.0.19.0
+
+* Added `filterWithKey` to `IsMap`.
+  [#232](https://github.com/snoyberg/mono-traversable/pull/232)
+
 ## 1.0.18.0
 
 * Added MonoPointed instance for text Builder
