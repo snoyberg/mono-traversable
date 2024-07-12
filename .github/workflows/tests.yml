@@ -8,7 +8,7 @@ on:
 
 jobs:
   stack:
-    name: tests with stack
+    name: Stack
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -69,8 +69,8 @@ jobs:
           stack --version
           stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
 
-  cabal:
-    name: tests with cabal
+  Cabal:
+    name: Cabal
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
