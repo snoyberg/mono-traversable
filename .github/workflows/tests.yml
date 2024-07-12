@@ -68,6 +68,17 @@ jobs:
           ghc --version
           stack --version
           stack test --system-ghc $extraLibDirs $extraIncludeDirsLLVM $extraIncludeDirsFFI --fast --no-terminal --snapshot=lts-$snapshot
+      - name: Check for Source Changes
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain)" ]
+          then
+            >&2 echo 'ERROR: Source Changed After Build'
+            >&2 git diff
+            >&2 git status
+            >&2 echo 'ERROR: Source Changed After Build'
+            exit 1
+          fi
 
   Cabal:
     name: Cabal
