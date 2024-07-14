@@ -9,6 +9,7 @@
 {-# LANGUAGE TypeOperators           #-}
 {-# LANGUAGE UndecidableInstances    #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 -- | Type classes mirroring standard typeclasses, but working with monomorphic containers.
 --
 -- The motivation is that some commonly used data types (i.e., 'ByteString' and
@@ -36,7 +37,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Builder as B
 import qualified Data.Foldable        as F
 import           Data.Functor
-import           Data.Maybe           (fromMaybe)
+import           Data.Maybe           (fromMaybe, maybe)
 import           Data.Monoid (Monoid (..), Any (..), All (..))
 import           Data.Proxy
 import qualified Data.Text            as T
@@ -48,7 +49,7 @@ import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           GHC.Generics         ((:.:), (:*:), (:+:)(..), K1(..), M1(..), Par1(..), Rec1(..), U1(..), V1)
 import           Prelude              (Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
-                                       (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
+                                       (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=), (>),
                                        (==), seq, otherwise, Eq, Ord, (-), (*))
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
@@ -64,7 +65,8 @@ import Data.IntMap (IntMap)
 import Data.IntSet (IntSet)
 import qualified Data.List as List
 import Data.List.NonEmpty (NonEmpty)
-import Data.Functor.Identity (Identity)
+import qualified Data.List.NonEmpty as NE
+import Data.Functor.Identity (Identity(Identity,runIdentity))
 import Data.Map (Map)
 import qualified Data.Map.Strict as Map
 import Data.HashMap.Strict (HashMap)
@@ -93,7 +95,8 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 import qualified Data.IntSet as IntSet
 import Data.Semigroup
-  ( Semigroup
+  ( Semigroup ((<>))
+  , Endo (Endo)
 -- Option has been removed in base-4.16 (GHC 9.2)
 #if !MIN_VERSION_base(4,16,0)
   , Option (..)
@@ -102,6 +105,8 @@ import Data.Semigroup
   )
 import qualified Data.ByteString.Unsafe as SU
 import Control.Monad.Trans.Identity (IdentityT)
+import Data.Function (($))
+import Data.Bool (bool)
 
 -- | Type family for getting the type of the elements
 -- of a monomorphic container.
@@ -168,6 +173,7 @@ type instance Element (Par1 a)      = a
 type instance Element (U1 a)        = a
 type instance Element (V1 a)        = a
 type instance Element (Proxy a)     = a
+type instance Element (Endo mono)   = Element mono
 
 -- | Monomorphic containers that can be mapped over.
 class MonoFunctor mono where
@@ -989,6 +995,133 @@ minimumByMay f mono
     | otherwise = Just (minimumByEx f mono)
 {-# INLINE minimumByMay #-}
 
+class MonoUnfold mono where
+    unfoldrM   :: Monad m =>        (a -> m (Maybe (Element mono, a))) -> a -> m mono
+    unfoldrNM  :: Monad m => Int -> (a -> m (Maybe (Element mono, a))) -> a -> m mono
+    unfoldrExactNM :: Monad m => Int -> (a -> m (      (Element mono, a))) -> a -> m mono
+    unfoldlM   :: Monad m =>        (a -> m (Maybe (a, Element mono))) -> a -> m mono
+    unfoldlNM  :: Monad m => Int -> (a -> m (Maybe (a, Element mono))) -> a -> m mono
+    unfoldlExactNM :: Monad m => Int -> (a -> m (      (a, Element mono))) -> a -> m mono
+
+unfoldr   :: MonoUnfold mono =>        (a -> Maybe (Element mono, a)) -> a -> mono
+unfoldr   = wrapIdentity unfoldrM
+unfoldrN  :: MonoUnfold mono => Int -> (a -> Maybe (Element mono, a)) -> a -> mono
+unfoldrN  = wrapIdentity . unfoldrNM
+unfoldrExactN :: MonoUnfold mono => Int -> (a ->       (Element mono, a)) -> a -> mono
+unfoldrExactN = wrapIdentity . unfoldrExactNM
+unfoldl   :: MonoUnfold mono =>        (a -> Maybe (a, Element mono)) -> a -> mono
+unfoldl   = wrapIdentity unfoldlM
+unfoldlN  :: MonoUnfold mono => Int -> (a -> Maybe (a, Element mono)) -> a -> mono
+unfoldlN  = wrapIdentity . unfoldlNM
+unfoldlExactN :: MonoUnfold mono => Int -> (a ->       (a, Element mono)) -> a -> mono
+unfoldlExactN = wrapIdentity . unfoldlExactNM
+
+wrapIdentity :: ((a -> Identity b) -> c -> Identity d) -> (a -> b) -> c -> d
+wrapIdentity f g = runIdentity . f (Identity . g)
+
+instance {-# OVERLAPPABLE #-} (Monoid a, MonoPointed a) => MonoUnfold a where
+    unfoldrM f x = f x >>= maybe (pure mempty) (\(y,x) -> (opoint y <>) <$> unfoldrM f x)
+    unfoldrNM n f x | n > 0 = f x >>= maybe (pure mempty) (\(y,x) -> (opoint y <>) <$> unfoldrNM (n - 1) f x)
+                    | otherwise = pure mempty
+    unfoldrExactNM n f x | n > 0 = f x >>= \(y,x) -> (opoint y <>) <$> unfoldrExactNM (n - 1) f x
+                    | otherwise = pure mempty
+    unfoldlM f = fmap ($ mempty) . g
+        where g x = f x >>= maybe (pure id) (\(y,z) -> g y <&> (. (opoint z <>)))
+    unfoldlNM n f = fmap ($ mempty) . g n
+        where g n x | n > 0 = f x >>= maybe (pure id) (\(y,z) -> g (n - 1) y <&> (. (opoint z <>)))
+                    | otherwise = pure id
+    unfoldlExactNM n f = fmap ($ mempty) . g n
+        where g n x | n > 0 = f x >>= \(x,y) -> g (n - 1) x <&> (. (opoint y <>))
+                    | otherwise = pure id
+--instance {-# OVERLAPPING #-} MonoUnfold (V.Vector a) where
+--    unfoldrM = V.unfoldrM
+--    unfoldrNM = V.unfoldrNM
+--    unfoldrExactNM = V.unfoldrExactNM
+
+--instance MonoUnfold (Endo [a]) where
+--    unfoldrM f x = f x >>= maybe (pure mempty) (\(y,x) -> (Endo (y :) <>) <$> unfoldrM f x)
+--    unfoldrNM n f x | n > 0 = f x >>= maybe (pure mempty) (\(y,x) -> (Endo (y :) <>) <$> unfoldrNM (n - 1) f x)
+--                    | otherwise = pure mempty
+--    unfoldrExactNM n f x | n > 0 = f x >>= \(y,x) -> (Endo (y :) <>) <$> unfoldrExactNM (n - 1) f x
+--                    | otherwise = pure mempty
+--    unfoldlM f = fmap ($ mempty) . g
+--        where g x = f x >>= maybe (pure id) (\(y,z) -> g y <&> (. (Endo (z :) <>)))
+--    unfoldlNM n f = fmap ($ mempty) . g n
+--        where g n x | n > 0 = f x >>= maybe (pure id) (\(y,z) -> g (n - 1) y <&> (. (Endo (z :) <>)))
+--                    | otherwise = pure id
+--    unfoldlExactNM n f = fmap ($ mempty) . g n
+--        where g n x | n > 0 = f x >>= \(x,y) -> g (n - 1) x <&> (. (Endo (y :) <>))
+--                    | otherwise = pure id
+--instance MonoUnfold [a] where
+--    unfoldrM f x = f x >>= maybe (pure []) (\(y,x) -> (y :) <$> unfoldrM f x)
+--    unfoldrNM n f x | n > 0 = f x >>= maybe (pure []) (\(y,x) -> (y :) <$> unfoldrNM (n - 1) f x)
+--                    | otherwise = pure []
+--    unfoldrExactNM n f x | n > 0 = f x >>= \(y,x) -> (y :) <$> unfoldrExactNM (n - 1) f x
+--                    | otherwise = pure []
+--    unfoldlM f = fmap ($ []) . g
+--        where g x = f x >>= maybe (pure id) (\(y,z) -> g y <&> (. (z :)))
+--    unfoldlNM n f = fmap ($ []) . g n
+--        where g n x | n > 0 = f x >>= maybe (pure id) (\(y,z) -> g (n - 1) y <&> (. (z :)))
+--                    | otherwise = pure id
+--    unfoldlExactNM n f = fmap ($ []) . g n
+--        where g n x | n > 0 = f x >>= \(x,y) -> g (n - 1) x <&> (. (y :))
+--                    | otherwise = pure id
+
+class MonoUnfold1 mono where
+    unfoldr1M   :: Monad m =>        (a -> m (Element mono, Maybe a)) -> a -> m mono
+    unfoldr1NM  :: Monad m => Int -> (a -> m (Element mono, Maybe a)) -> a -> m mono
+    unfoldr1ExactNM :: Monad m => Int -> (a -> m (Element mono,       a)) -> a -> m mono
+    unfoldl1M   :: Monad m =>        (a -> m (Maybe a, Element mono)) -> a -> m mono
+    unfoldl1NM  :: Monad m => Int -> (a -> m (Maybe a, Element mono)) -> a -> m mono
+    unfoldl1ExactNM :: Monad m => Int -> (a -> m (      a, Element mono)) -> a -> m mono
+
+unfoldr1   :: MonoUnfold1 mono =>        (a -> (Element mono, Maybe a)) -> a -> mono
+unfoldr1   = wrapIdentity unfoldr1M
+unfoldr1N  :: MonoUnfold1 mono => Int -> (a -> (Element mono, Maybe a)) -> a -> mono
+unfoldr1N  = wrapIdentity . unfoldr1NM
+unfoldr1ExactN :: MonoUnfold1 mono => Int -> (a -> (Element mono,       a)) -> a -> mono
+unfoldr1ExactN = wrapIdentity . unfoldr1ExactNM
+unfoldl1   :: MonoUnfold1 mono =>        (a -> (Maybe a, Element mono)) -> a -> mono
+unfoldl1   = wrapIdentity unfoldl1M
+unfoldl1N  :: MonoUnfold1 mono => Int -> (a -> (Maybe a, Element mono)) -> a -> mono
+unfoldl1N  = wrapIdentity . unfoldl1NM
+unfoldl1ExactN :: MonoUnfold1 mono => Int -> (a -> (      a, Element mono)) -> a -> mono
+unfoldl1ExactN = wrapIdentity . unfoldl1ExactNM
+
+instance {-# OVERLAPPABLE #-} (MonoPointed a, Semigroup a) => MonoUnfold1 a where
+    unfoldr1M f x = f x >>= \(y,mx) -> maybe (pure $ opoint y) (fmap (opoint y <>) . unfoldr1M f) mx
+    unfoldr1NM n f x = f x >>= \(y,mx) -> maybe (pure $ opoint y) (fmap (opoint y <>) . unfoldr1NM (n - 1) f) (bool Nothing mx (n > 1))
+    unfoldr1ExactNM n f x = f x >>= \(y,x) -> bool (pure $ opoint y) ((opoint y <>) <$> unfoldr1ExactNM (n - 1) f x) (n > 1)
+    unfoldl1M f x = f x >>= \(mx,y) -> maybe (pure $ opoint y) (fmap (<> opoint y) . unfoldl1M f) mx
+    unfoldl1NM n f x = f x >>= \(mx,y) -> maybe (pure $ opoint y) (fmap (<> opoint y) . unfoldl1NM (n - 1) f) $ bool Nothing mx (n > 1)
+    unfoldl1ExactNM n f x = f x >>= \(x,y) -> bool (pure $ opoint y) (fmap (<> opoint y) $ unfoldl1ExactNM (n - 1) f x) (n > 1)
+--instance MonoUnfold1 (NonEmpty a) where
+--    unfoldr1M f x = g f (NE.:|) (:) x
+--        where
+--        g :: Monad m => (b -> m (a, Maybe b)) -> (a -> [a] -> f a) -> (a -> [a] -> [a]) -> b -> m (f a)
+--        g f cons cons' x = f x >>= \(y,mx) -> cons y <$> maybe (pure []) (g f cons' cons') mx
+--    unfoldr1NM n f x = g f (NE.:|) (:) n x
+--        where
+--        g :: Monad m => (b -> m (a, Maybe b)) -> (a -> [a] -> f a) -> (a -> [a] -> [a]) -> Int -> b -> m (f a)
+--        g f cons cons' n x = f x >>= \(y,mx) -> cons y <$> maybe (pure []) (g f cons' cons' (n - 1)) (bool Nothing mx (n > 1))
+--    unfoldr1ExactNM n f x = g f (NE.:|) (:) n x
+--        where
+--        g :: Monad m => (b -> m (a, b)) -> (a -> [a] -> f a) -> (a -> [a] -> [a]) -> Int -> b -> m (f a)
+--        g f cons cons' n x = f x >>= \(y,x) -> cons y <$> bool (pure []) (g f cons' cons' (n - 1) x) (n > 1)
+--    unfoldl1M f x = g x <&> \(y,h) -> y NE.:| h []
+--        where g x = f x >>= \(mx,y) -> maybe (pure (y,id)) (\x -> g x <&> fmap (. (y :))) mx
+--    unfoldl1NM n f x = g n x <&> \(y,h) -> y NE.:| h []
+--        where g n x = f x >>= \(mx,y) -> maybe (pure (y,id)) (\x -> g (n - 1) x <&> fmap (. (y :))) (bool Nothing mx (n > 1))
+--    unfoldl1ExactNM n f x = g n x <&> \(y,h) -> y NE.:| h []
+--        where g n x = f x >>= \(x,y) -> bool (pure (y,id)) (g (n - 1) x <&> fmap (. (y :))) (n > 1)
+--instance MonoUnfold1 [a] where
+--    unfoldr1M f = fmap NE.toList . unfoldr1M f
+--    unfoldr1NM n f = fmap NE.toList . unfoldr1NM n f
+--    unfoldr1ExactNM n f = fmap NE.toList . unfoldr1ExactNM n f
+--    unfoldl1M f = fmap NE.toList . unfoldl1M f
+--    unfoldl1NM n f = fmap NE.toList . unfoldl1NM n f
+--    unfoldl1ExactNM n f = fmap NE.toList . unfoldl1ExactNM n f
+
 -- | Monomorphic containers that can be traversed from left to right.
 --
 -- NOTE: Due to limitations with the role system, GHC is yet unable to provide newtype-derivation of
@@ -1251,6 +1384,10 @@ instance MonoPointed (Tree a) where
 -- | @since 1.0.11.0
 instance (Applicative f, Applicative g) => MonoPointed ((f :+: g) a) where
     opoint = R1 . pure
+    {-# INLINE opoint #-}
+-- | @since ????????????
+instance (MonoPointed mono, Semigroup mono) => MonoPointed (Endo mono) where
+    opoint = Endo . (<>) . opoint
     {-# INLINE opoint #-}
 
 
