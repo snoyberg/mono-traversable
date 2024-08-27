@@ -238,6 +238,9 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     unsafeSplitAt :: Index seq -> seq -> (seq, seq)
     unsafeSplitAt i seq = (unsafeTake i seq, unsafeDrop i seq)
 
+    splitAtExactMay :: Index seq -> seq -> Maybe (seq, seq)
+    splitAtExactMay i seq = let x = splitAt i seq in if lengthIndex (fst x) == i then Just x else Nothing
+
     -- | @'take' n@ returns the prefix of a sequence of length @n@, or the
     -- sequence itself if @n > 'olength' seq@.
     --
@@ -254,6 +257,9 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     unsafeTake :: Index seq -> seq -> seq
     unsafeTake = take
 
+    takeExactMay :: Index seq -> seq -> Maybe seq
+    takeExactMay i = fmap fst . splitAtExactMay i
+
     -- | @'drop' n@ returns the suffix of a sequence after the first @n@
     -- elements, or an empty sequence if @n > 'olength' seq@.
     --
@@ -269,6 +275,9 @@ class (Monoid seq, MonoTraversable seq, SemiSequence seq, MonoPointed seq) => Is
     -- | Equivalent to 'drop'
     unsafeDrop :: Index seq -> seq -> seq
     unsafeDrop = drop
+
+    dropExactMay :: Index seq -> seq -> Maybe seq
+    dropExactMay i = fmap snd . splitAtExactMay i
 
     -- | Same as 'drop' but drops from the end of the sequence instead.
     --
