@@ -258,6 +258,7 @@ instance U.Unbox a => MonoFunctor (U.Vector a) where
 instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
     {-# INLINE omap #-}
+-- | @since 1.0.20.0
 instance MonoFunctor (f a) => MonoFunctor (Reverse f a) where
     omap f (Reverse t) = Reverse (omap f t)
 
@@ -828,6 +829,7 @@ instance MonoFoldable (U1 a)
 instance MonoFoldable (V1 a)
 -- | @since 1.0.11.0
 instance MonoFoldable (Proxy a)
+-- | @since 1.0.20.0
 instance MonoFoldable (f a) => MonoFoldable (Reverse f a) where
     ofoldMap f (Reverse t) = getDual (ofoldMap (Dual . f) t)
     ofoldr f z (Reverse t) = ofoldl' (flip f) z t
@@ -1097,6 +1099,7 @@ instance MonoTraversable (U1 a)
 instance MonoTraversable (V1 a)
 -- | @since 1.0.11.0
 instance MonoTraversable (Proxy a)
+-- | @since 1.0.20.0
 instance (MonoTraversable (f a)) => MonoTraversable (Reverse f a) where
     otraverse f (Reverse t) = (fmap Reverse . forwards) (otraverse (Backwards . f) t)
 

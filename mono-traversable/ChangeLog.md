@@ -1,5 +1,9 @@
 # ChangeLog for mono-traversable
 
+## 1.0.20.0
+
+* Added instances for [`Reverse`](https://hackage.haskell.org/package/transformers-0.6.1.1/docs/Data-Functor-Reverse.html#t:Reverse) data structure.
+
 ## 1.0.19.1
 
 * Removed 'highly experimental' warning haddock comment from Data.Containers.
