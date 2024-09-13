@@ -37,7 +37,7 @@ import qualified Data.ByteString.Builder as B
 import qualified Data.Foldable        as F
 import           Data.Functor
 import           Data.Maybe           (fromMaybe)
-import           Data.Monoid (Monoid (..), Any (..), All (..))
+import           Data.Monoid (Dual(..), Monoid (..), Any (..), All (..))
 import           Data.Proxy
 import qualified Data.Text            as T
 import qualified Data.Text.Lazy       as TL
@@ -56,6 +56,7 @@ import qualified Foreign.ForeignPtr.Unsafe as Unsafe
 import Foreign.Ptr (plusPtr)
 import Foreign.ForeignPtr (touchForeignPtr)
 import Foreign.Storable (peek)
+import Control.Applicative.Backwards (Backwards (..))
 import Control.Arrow (Arrow)
 import Data.Tree (Tree (..))
 import Data.Sequence (Seq, ViewL (..), ViewR (..))
@@ -65,6 +66,7 @@ import Data.IntSet (IntSet)
 import qualified Data.List as List
 import Data.List.NonEmpty (NonEmpty)
 import Data.Functor.Identity (Identity)
+import Data.Functor.Reverse (Reverse (..))
 import Data.Map (Map)
 import qualified Data.Map.Strict as Map
 import Data.HashMap.Strict (HashMap)
@@ -168,6 +170,7 @@ type instance Element (Par1 a)      = a
 type instance Element (U1 a)        = a
 type instance Element (V1 a)        = a
 type instance Element (Proxy a)     = a
+type instance Element (Reverse f a) = Element (f a)
 
 -- | Monomorphic containers that can be mapped over.
 class MonoFunctor mono where
@@ -255,6 +258,9 @@ instance U.Unbox a => MonoFunctor (U.Vector a) where
 instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
     {-# INLINE omap #-}
+-- | @since 1.0.20.0
+instance MonoFunctor (f a) => MonoFunctor (Reverse f a) where
+    omap f (Reverse t) = Reverse (omap f t)
 
 -- | @'replaceElem' old new@ replaces all @old@ elements with @new@.
 --
@@ -823,6 +829,13 @@ instance MonoFoldable (U1 a)
 instance MonoFoldable (V1 a)
 -- | @since 1.0.11.0
 instance MonoFoldable (Proxy a)
+-- | @since 1.0.20.0
+instance MonoFoldable (f a) => MonoFoldable (Reverse f a) where
+    ofoldMap f (Reverse t) = getDual (ofoldMap (Dual . f) t)
+    ofoldr f z (Reverse t) = ofoldl' (flip f) z t
+    ofoldl' f z (Reverse t) = ofoldr (flip f) z t
+    ofoldr1Ex f (Reverse t) = ofoldl1Ex' (flip f) t
+    ofoldl1Ex' f (Reverse t) = ofoldr1Ex (flip f) t
 
 -- | Safe version of 'headEx'.
 --
@@ -1086,6 +1099,9 @@ instance MonoTraversable (U1 a)
 instance MonoTraversable (V1 a)
 -- | @since 1.0.11.0
 instance MonoTraversable (Proxy a)
+-- | @since 1.0.20.0
+instance (MonoTraversable (f a)) => MonoTraversable (Reverse f a) where
+    otraverse f (Reverse t) = (fmap Reverse . forwards) (otraverse (Backwards . f) t)
 
 -- | 'ofor' is 'otraverse' with its arguments flipped.
 ofor :: (MonoTraversable mono, Applicative f) => mono -> (Element mono -> f (Element mono)) -> f mono
