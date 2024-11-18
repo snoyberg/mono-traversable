@@ -33,6 +33,9 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
+#if MIN_VERSION_vector(0,13,2)
+import qualified Data.Vector.Strict as VSC
+#endif
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Semigroup as SG
 import qualified Data.Map as Map
@@ -98,6 +101,9 @@ mapFromListAs xs _ = mapFromList xs
 instance IsString (V.Vector Char) where fromString = V.fromList
 instance IsString (U.Vector Char) where fromString = U.fromList
 instance IsString (VS.Vector Char) where fromString = VS.fromList
+#if MIN_VERSION_vector(0,13,2)
+instance IsString (VSC.Vector Char) where fromString = VSC.fromList
+#endif
 
 main :: IO ()
 main = hspec $ do
@@ -176,6 +182,9 @@ main = hspec $ do
         test "works on lazy bytestrings" L.empty
         test "works on Vector" (V.singleton (1 :: Int))
         test "works on SVector" (VS.singleton (1 :: Int))
+#if MIN_VERSION_vector(0,13,2)
+        test "works on StrictVector" (VSC.singleton (1 :: Int))
+#endif
         test "works on UVector" (U.singleton (1 :: Int))
         test "works on Seq" (Seq.fromList [1 :: Int])
 
@@ -225,6 +234,9 @@ main = hspec $ do
         test "Vector" (mempty :: V.Vector Char)
         test "Unboxed Vector" (mempty :: U.Vector Char)
         test "Storable Vector" (mempty :: VS.Vector Char)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (mempty :: VSC.Vector Char)
+#endif
 
     describe "tails" $ do
         let test typ emptyTyp = describe typ $ do
@@ -240,6 +252,9 @@ main = hspec $ do
         test "Vector" (mempty :: V.Vector Char)
         test "Unboxed Vector" (mempty :: U.Vector Char)
         test "Storable Vector" (mempty :: VS.Vector Char)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (mempty :: VSC.Vector Char)
+#endif
 
     describe "initTails" $ do
         let test typ emptyTyp = describe typ $ do
@@ -255,6 +270,9 @@ main = hspec $ do
         test "Vector" (mempty :: V.Vector Char)
         test "Unboxed Vector" (mempty :: U.Vector Char)
         test "Storable Vector" (mempty :: VS.Vector Char)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (mempty :: VSC.Vector Char)
+#endif
 
     describe "NonNull" $ do
         describe "fromNonEmpty" $ do
@@ -310,6 +328,9 @@ main = hspec $ do
         test "Vector" (V.empty :: V.Vector Int)
         test "Unboxed Vector" (U.empty :: U.Vector Int)
         test "Storable Vector" (VS.empty :: VS.Vector Int)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+#endif
         test "List" ([5 :: Int])
 
     describe "Containers" $ do
@@ -467,6 +488,9 @@ main = hspec $ do
         test "Vector" (V.empty :: V.Vector Int)
         test "Storable Vector" (VS.empty :: VS.Vector Int)
         test "Unboxed Vector" (U.empty :: U.Vector Int)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+#endif
         test "Strict ByteString" S.empty
         test "Lazy ByteString" L.empty
         test "Strict Text" T.empty
@@ -483,6 +507,9 @@ main = hspec $ do
         test "Vector" (V.empty :: V.Vector Int)
         test "Storable Vector" (VS.empty :: VS.Vector Int)
         test "Unboxed Vector" (U.empty :: U.Vector Int)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+#endif
         test "Strict ByteString" S.empty
         test "Lazy ByteString" L.empty
         test "Strict Text" T.empty
@@ -498,6 +525,9 @@ main = hspec $ do
         test "Vector" (V.empty :: V.Vector Int)
         test "Storable Vector" (VS.empty :: VS.Vector Int)
         test "Unboxed Vector" (U.empty :: U.Vector Int)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+#endif
         test "Strict ByteString" S.empty
         test "Lazy ByteString" L.empty
         test "Strict Text" T.empty
@@ -536,6 +566,9 @@ main = hspec $ do
         test "Vector" (V.empty :: V.Vector Int)
         test "Storable Vector" (VS.empty :: VS.Vector Int)
         test "Unboxed Vector" (U.empty :: U.Vector Int)
+#if MIN_VERSION_vector(0,13,2)
+        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+#endif
         test "Strict ByteString" S.empty
         test "Lazy ByteString" L.empty
         test "Strict Text" T.empty

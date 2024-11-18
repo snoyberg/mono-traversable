@@ -93,6 +93,9 @@ import Data.Hashable (Hashable)
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
+#if MIN_VERSION_vector(0,13,2)
+import qualified Data.Vector.Strict as VSC
+#endif
 import qualified Data.IntSet as IntSet
 import Data.Semigroup
   ( Semigroup
@@ -159,6 +162,9 @@ type instance Element (Compose f g a) = a
 type instance Element (Product f g a) = a
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
+#if MIN_VERSION_vector(0,13,2)
+type instance Element (VSC.Vector a) = a
+#endif
 type instance Element (Arg a b) = b
 type instance Element ((f :.: g) a) = a
 type instance Element ((f :*: g) a) = a
@@ -258,6 +264,9 @@ instance U.Unbox a => MonoFunctor (U.Vector a) where
 instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
     {-# INLINE omap #-}
+#if MIN_VERSION_vector(0,13,2)
+instance MonoFunctor (VSC.Vector a)
+#endif
 -- | @since 1.0.20.0
 instance MonoFunctor (f a) => MonoFunctor (Reverse f a) where
     omap f (Reverse t) = Reverse (omap f t)
@@ -765,6 +774,38 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     {-# INLINE unsafeHead #-}
     {-# INLINE maximumByEx #-}
     {-# INLINE minimumByEx #-}
+#if MIN_VERSION_vector(0,13,2)
+instance MonoFoldable (VSC.Vector a) where
+    ofoldr = VSC.foldr
+    ofoldl' = VSC.foldl'
+    otoList = VSC.toList
+    oall = VSC.all
+    oany = VSC.any
+    onull = VSC.null
+    olength = VSC.length
+    ofoldr1Ex = VSC.foldr1
+    ofoldl1Ex' = VSC.foldl1'
+    headEx = VSC.head
+    lastEx = VSC.last
+    unsafeHead = VSC.unsafeHead
+    unsafeLast = VSC.unsafeLast
+    maximumByEx = VSC.maximumBy
+    minimumByEx = VSC.minimumBy
+    {-# INLINE ofoldr #-}
+    {-# INLINE ofoldl' #-}
+    {-# INLINE otoList #-}
+    {-# INLINE oall #-}
+    {-# INLINE oany #-}
+    {-# INLINE onull #-}
+    {-# INLINE olength #-}
+    {-# INLINE ofoldr1Ex #-}
+    {-# INLINE ofoldl1Ex' #-}
+    {-# INLINE headEx #-}
+    {-# INLINE lastEx #-}
+    {-# INLINE unsafeHead #-}
+    {-# INLINE maximumByEx #-}
+    {-# INLINE minimumByEx #-}
+#endif
 instance MonoFoldable (Either a b) where
     ofoldMap f = ofoldr (mappend . f) mempty
     ofoldr f b (Right a) = f a b
@@ -1061,6 +1102,9 @@ instance VS.Storable a => MonoTraversable (VS.Vector a) where
     omapM = otraverse
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
+#if MIN_VERSION_vector(0,13,2)
+instance MonoTraversable (VSC.Vector a)
+#endif
 instance MonoTraversable (Either a b) where
     otraverse _ (Left a) = pure (Left a)
     otraverse f (Right b) = fmap Right (f b)
@@ -1228,6 +1272,9 @@ instance U.Unbox a => MonoPointed (U.Vector a) where
 instance VS.Storable a => MonoPointed (VS.Vector a) where
     opoint = VS.singleton
     {-# INLINE opoint #-}
+#if MIN_VERSION_vector(0,13,2)
+instance MonoPointed (VSC.Vector a)
+#endif
 instance MonoPointed (Either a b) where
     opoint = Right
     {-# INLINE opoint #-}
@@ -1338,6 +1385,9 @@ instance GrowingAppend [a]
 instance GrowingAppend (V.Vector a)
 instance U.Unbox a => GrowingAppend (U.Vector a)
 instance VS.Storable a => GrowingAppend (VS.Vector a)
+#if MIN_VERSION_vector(0,13,2)
+instance GrowingAppend (VSC.Vector a)
+#endif
 instance GrowingAppend S.ByteString
 instance GrowingAppend L.ByteString
 instance GrowingAppend T.Text

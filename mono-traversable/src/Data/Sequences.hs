@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -29,6 +30,9 @@ import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
+#if MIN_VERSION_vector(0,13,2)
+import qualified Data.Vector.Strict as VSC
+#endif
 import Data.String (IsString)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.ByteString.Unsafe as SU
@@ -1094,6 +1098,81 @@ instance IsSequence (V.Vector a) where
     {-# INLINE index #-}
     {-# INLINE indexEx #-}
     {-# INLINE unsafeIndex #-}
+
+#if MIN_VERSION_vector(0,13,2)
+instance SemiSequence (VSC.Vector a) where
+    type Index (VSC.Vector a) = Int
+    reverse = VSC.reverse
+    find = VSC.find
+    cons = VSC.cons
+    snoc = VSC.snoc
+
+    sortBy = vectorSortBy
+    intersperse = defaultIntersperse
+    {-# INLINE intersperse #-}
+    {-# INLINE reverse #-}
+    {-# INLINE find #-}
+    {-# INLINE sortBy #-}
+    {-# INLINE cons #-}
+    {-# INLINE snoc #-}
+
+instance IsSequence (VSC.Vector a) where
+    fromList = VSC.fromList
+    lengthIndex = VSC.length
+    replicate = VSC.replicate
+    replicateM = VSC.replicateM
+    filter = VSC.filter
+    filterM = VSC.filterM
+    break = VSC.break
+    span = VSC.span
+    dropWhile = VSC.dropWhile
+    takeWhile = VSC.takeWhile
+    splitAt = VSC.splitAt
+    take = VSC.take
+    drop = VSC.drop
+    unsafeTake = VSC.unsafeTake
+    unsafeDrop = VSC.unsafeDrop
+    partition = VSC.partition
+    uncons v
+        | VSC.null v = Nothing
+        | otherwise = Just (VSC.head v, VSC.tail v)
+    unsnoc v
+        | VSC.null v = Nothing
+        | otherwise = Just (VSC.init v, VSC.last v)
+    --groupBy = VSC.groupBy
+    tailEx = VSC.tail
+    initEx = VSC.init
+    unsafeTail = VSC.unsafeTail
+    unsafeInit = VSC.unsafeInit
+    {-# INLINE fromList #-}
+    {-# INLINE break #-}
+    {-# INLINE span #-}
+    {-# INLINE dropWhile #-}
+    {-# INLINE takeWhile #-}
+    {-# INLINE splitAt #-}
+    {-# INLINE take #-}
+    {-# INLINE unsafeTake #-}
+    {-# INLINE drop #-}
+    {-# INLINE unsafeDrop #-}
+    {-# INLINE partition #-}
+    {-# INLINE uncons #-}
+    {-# INLINE unsnoc #-}
+    {-# INLINE filter #-}
+    {-# INLINE filterM #-}
+    {-# INLINE replicate #-}
+    {-# INLINE replicateM #-}
+    {-# INLINE tailEx #-}
+    {-# INLINE initEx #-}
+    {-# INLINE unsafeTail #-}
+    {-# INLINE unsafeInit #-}
+
+    index = (VSC.!?)
+    indexEx = (VSC.!)
+    unsafeIndex = VSC.unsafeIndex
+    {-# INLINE index #-}
+    {-# INLINE indexEx #-}
+    {-# INLINE unsafeIndex #-}
+#endif
 
 instance U.Unbox a => SemiSequence (U.Vector a) where
     type Index (U.Vector a) = Int
