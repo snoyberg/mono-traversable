@@ -1,5 +1,10 @@
 # ChangeLog for mono-traversable
 
+## 1.0.21.0
+
+* Support for vector 0.13.2.0, adding instances for [`Data.Vector.Strict`](https://hackage.haskell.org/package/vector-0.13.2.0/docs/Data-Vector-Strict.html) data structure.
+  [#244](https://github.com/snoyberg/mono-traversable/issues/244)
+
 ## 1.0.20.0
 
 * Added instances for [`Reverse`](https://hackage.haskell.org/package/transformers-0.6.1.1/docs/Data-Functor-Reverse.html#t:Reverse) data structure.
