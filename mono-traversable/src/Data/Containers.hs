@@ -29,7 +29,9 @@ import Control.Arrow ((***))
 import GHC.Exts (Constraint)
 
 -- | A container whose values are stored in Key-Value pairs.
-class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), GrowingAppend set) => SetContainer set where
+--
+-- Generally, `<>` is `union`, but that is not required.
+class (GrowingAppend set, MonoFoldable set, Eq (ContainerKey set)) => SemiSetContainer set where
     -- | The type of the key
     type ContainerKey set
 
@@ -44,6 +46,11 @@ class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey
     -- | Get the union of two containers.
     union :: set -> set -> set
 
+    -- | Get a list of all of the keys in the container.
+    keys :: set -> [ContainerKey set]
+
+-- | A container whose values are stored in Key-Value pairs.
+class (Data.Monoid.Monoid set, SemiSetContainer set) => SetContainer set where
     -- | Combine a collection of @SetContainer@s, with left-most values overriding
     -- when there are matching keys.
     --
@@ -58,11 +65,8 @@ class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey
     -- | Get the intersection of two containers.
     intersection :: set -> set -> set
 
-    -- | Get a list of all of the keys in the container.
-    keys :: set -> [ContainerKey set]
-
 -- | This instance uses the functions from "Data.Map.Strict".
-instance Ord k => SetContainer (Map.Map k v) where
+instance Ord k => SemiSetContainer (Map.Map k v) where
     type ContainerKey (Map.Map k v) = k
     member = Map.member
     {-# INLINE member #-}
@@ -70,17 +74,18 @@ instance Ord k => SetContainer (Map.Map k v) where
     {-# INLINE notMember #-}
     union = Map.union
     {-# INLINE union #-}
+    keys = Map.keys
+    {-# INLINE keys #-}
+instance Ord k => SetContainer (Map.Map k v) where
     unions = Map.unions . otoList
     {-# INLINE unions #-}
     difference = Map.difference
     {-# INLINE difference #-}
     intersection = Map.intersection
     {-# INLINE intersection #-}
-    keys = Map.keys
-    {-# INLINE keys #-}
 
 -- | This instance uses the functions from "Data.HashMap.Strict".
-instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) where
+instance (Hashable key) => SemiSetContainer (HashMap.HashMap key value) where
     type ContainerKey (HashMap.HashMap key value) = key
     member = HashMap.member
     {-# INLINE member #-}
@@ -88,17 +93,18 @@ instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) wher
     {-# INLINE notMember #-}
     union = HashMap.union
     {-# INLINE union #-}
+    keys = HashMap.keys
+    {-# INLINE keys #-}
+instance (Hashable key) => SetContainer (HashMap.HashMap key value) where
     unions = HashMap.unions . otoList
     {-# INLINE unions #-}
     difference = HashMap.difference
     {-# INLINE difference #-}
     intersection = HashMap.intersection
     {-# INLINE intersection #-}
-    keys = HashMap.keys
-    {-# INLINE keys #-}
 
 -- | This instance uses the functions from "Data.IntMap.Strict".
-instance SetContainer (IntMap.IntMap value) where
+instance SemiSetContainer (IntMap.IntMap value) where
     type ContainerKey (IntMap.IntMap value) = Int
     member = IntMap.member
     {-# INLINE member #-}
@@ -106,16 +112,17 @@ instance SetContainer (IntMap.IntMap value) where
     {-# INLINE notMember #-}
     union = IntMap.union
     {-# INLINE union #-}
+    keys = IntMap.keys
+    {-# INLINE keys #-}
+instance SetContainer (IntMap.IntMap value) where
     unions = IntMap.unions . otoList
     {-# INLINE unions #-}
     difference = IntMap.difference
     {-# INLINE difference #-}
     intersection = IntMap.intersection
     {-# INLINE intersection #-}
-    keys = IntMap.keys
-    {-# INLINE keys #-}
 
-instance Ord element => SetContainer (Set.Set element) where
+instance Ord element => SemiSetContainer (Set.Set element) where
     type ContainerKey (Set.Set element) = element
     member = Set.member
     {-# INLINE member #-}
@@ -123,16 +130,17 @@ instance Ord element => SetContainer (Set.Set element) where
     {-# INLINE notMember #-}
     union = Set.union
     {-# INLINE union #-}
+    keys = Set.toList
+    {-# INLINE keys #-}
+instance Ord element => SetContainer (Set.Set element) where
     unions = Set.unions . otoList
     {-# INLINE unions #-}
     difference = Set.difference
     {-# INLINE difference #-}
     intersection = Set.intersection
     {-# INLINE intersection #-}
-    keys = Set.toList
-    {-# INLINE keys #-}
 
-instance (Eq element, Hashable element) => SetContainer (HashSet.HashSet element) where
+instance (Hashable element) => SemiSetContainer (HashSet.HashSet element) where
     type ContainerKey (HashSet.HashSet element) = element
     member = HashSet.member
     {-# INLINE member #-}
@@ -140,14 +148,15 @@ instance (Eq element, Hashable element) => SetContainer (HashSet.HashSet element
     {-# INLINE notMember #-}
     union = HashSet.union
     {-# INLINE union #-}
+    keys = HashSet.toList
+    {-# INLINE keys #-}
+instance (Hashable element) => SetContainer (HashSet.HashSet element) where
     difference = HashSet.difference
     {-# INLINE difference #-}
     intersection = HashSet.intersection
     {-# INLINE intersection #-}
-    keys = HashSet.toList
-    {-# INLINE keys #-}
 
-instance SetContainer IntSet.IntSet where
+instance SemiSetContainer IntSet.IntSet where
     type ContainerKey IntSet.IntSet = Int
     member = IntSet.member
     {-# INLINE member #-}
@@ -155,14 +164,15 @@ instance SetContainer IntSet.IntSet where
     {-# INLINE notMember #-}
     union = IntSet.union
     {-# INLINE union #-}
+    keys = IntSet.toList
+    {-# INLINE keys #-}
+instance SetContainer IntSet.IntSet where
     difference = IntSet.difference
     {-# INLINE difference #-}
     intersection = IntSet.intersection
     {-# INLINE intersection #-}
-    keys = IntSet.toList
-    {-# INLINE keys #-}
 
-instance Eq key => SetContainer [(key, value)] where
+instance (Eq key) => SemiSetContainer [(key, value)] where
     type ContainerKey [(key, value)] = key
     member k = List.any ((== k) . fst)
     {-# INLINE member #-}
@@ -170,6 +180,9 @@ instance Eq key => SetContainer [(key, value)] where
     {-# INLINE notMember #-}
     union = List.unionBy ((==) `on` fst)
     {-# INLINE union #-}
+    keys = map fst
+    {-# INLINE keys #-}
+instance (Eq key) => SetContainer [(key, value)] where
     x `difference` y =
         loop x
       where
@@ -180,8 +193,6 @@ instance Eq key => SetContainer [(key, value)] where
                 Just _ -> loop rest
     intersection = List.intersectBy ((==) `on` fst)
     {-# INLINE intersection #-}
-    keys = map fst
-    {-# INLINE keys #-}
 
 -- | A guaranteed-polymorphic @Map@, which allows for more polymorphic versions
 -- of functions.
