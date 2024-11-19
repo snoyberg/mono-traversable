@@ -274,6 +274,7 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
 
     -- | Insert a key-value pair into a map.
     insertMap    :: ContainerKey map -> MapValue map -> map -> map
+    insertMap = insertWith const
 
     -- | Create a map from a single key-value pair.
     singletonMap :: ContainerKey map -> MapValue map -> map
@@ -299,13 +300,7 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
                -> MapValue map     -- ^ new value to insert
                -> map              -- ^ input map
                -> map              -- ^ resulting map
-    insertWith f k v m =
-        v' `seq` insertMap k v' m
-      where
-        v' =
-            case lookup k m of
-                Nothing -> v
-                Just vold -> f v vold
+    insertWith = insertWithKey . const
 
     -- | Insert a key-value pair into a map.
     --
@@ -321,13 +316,7 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
         -> MapValue map     -- ^ new value to insert
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    insertWithKey f k v m =
-        v' `seq` insertMap k v' m
-      where
-        v' =
-            case lookup k m of
-                Nothing -> v
-                Just vold -> f k v vold
+    insertWithKey f k v = snd . insertLookupWithKey f k v
 
     -- | Insert a key-value pair into a map, return the previous key's value
     -- if it existed.
@@ -361,12 +350,7 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
         -> ContainerKey map -- ^ key
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    adjustMap f k m =
-        case lookup k m of
-            Nothing -> m
-            Just v ->
-                let v' = f v
-                 in v' `seq` insertMap k v' m
+    adjustMap = adjustWithKey . const
 
     -- | Equivalent to 'adjustMap', but the function accepts the key,
     -- as well as the previous value.
@@ -396,15 +380,7 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
         -> map -- ^ first map
         -> map -- ^ second map
         -> map -- ^ resulting map
-    default unionWith :: IsMap map => (MapValue map -> MapValue map -> MapValue map) -> map -> map -> map
-    unionWith f x y =
-        mapFromList $ loop $ mapToList x ++ mapToList y
-      where
-        loop [] = []
-        loop ((k, v):rest) =
-            case List.lookup k rest of
-                Nothing -> (k, v) : loop rest
-                Just v' -> (k, f v v') : loop (deleteMap k rest)
+    unionWith = unionWithKey . const
 
     -- Equivalent to 'unionWith', but the function accepts the key,
     -- as well as both of the map's values.
@@ -415,15 +391,7 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
         -> map -- ^ first map
         -> map -- ^ second map
         -> map -- ^ resulting map
-    default unionWithKey :: IsMap map => (ContainerKey map -> MapValue map -> MapValue map -> MapValue map) -> map -> map -> map
-    unionWithKey f x y =
-        mapFromList $ loop $ mapToList x ++ mapToList y
-      where
-        loop [] = []
-        loop ((k, v):rest) =
-            case List.lookup k rest of
-                Nothing -> (k, v) : loop rest
-                Just v' -> (k, f k v v') : loop (deleteMap k rest)
+    unionWithKey f x y = ofoldl' (flip (uncurry (insertWithKey f))) x (mapToList y)
 
     -- | Apply a function over every key-value pair of a map.
     mapWithKey
@@ -432,11 +400,7 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
            -- and returns the new value
         -> map -- ^ input map
         -> map -- ^ resulting map
-    default mapWithKey :: IsMap map => (ContainerKey map -> MapValue map -> MapValue map) -> map -> map
-    mapWithKey f =
-        mapFromList . map go . mapToList
-      where
-        go (k, v) = (k, f k v)
+    mapWithKey f x = ofoldl' (\x' (k, v) -> insertMap k (f k v) x') x (mapToList x)
 
     -- | Apply a function over every key of a pair and run
     -- 'unionsWith' over the results.
