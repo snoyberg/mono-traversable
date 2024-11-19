@@ -20,6 +20,7 @@ import Data.Monoid (Monoid (..))
 import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element, GrowingAppend, ofoldl', otoList)
 import Data.Function (on)
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NE
 import qualified Data.IntSet as IntSet
 
 import qualified Data.Text.Lazy as LText
@@ -413,11 +414,9 @@ class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
            -- returns the new key
         -> map -- ^ input map
         -> map -- ^ resulting map
-    default omapKeysWith :: IsMap map => (MapValue map -> MapValue map -> MapValue map) -> (ContainerKey map -> ContainerKey map) -> map -> map
-    omapKeysWith g f =
-        mapFromList . unionsWith g . map go . mapToList
-      where
-        go (k, v) = [(f k, v)]
+    omapKeysWith g f x = case NE.nonEmpty (mapToList x) of
+        Nothing -> x -- empty map, we don't have to change anything
+        Just ((key1, val1) NE.:| rest) -> ofoldl' (\x' (key, val) -> insertWith g (f key) val x') (singletonMap (f key1) val1) rest
 
 -- | Polymorphic typeclass for interacting with different map types
 class (SetContainer map, SemiIsMap map) => IsMap map where
