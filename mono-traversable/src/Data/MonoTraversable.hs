@@ -1331,7 +1331,7 @@ instance MonoComonad (ViewR a) where
 -- This should have a @Semigroup@ superclass constraint, however, due to
 -- @Semigroup@ only recently moving to base, some packages do not provide
 -- instances.
-class MonoFoldable mono => GrowingAppend mono
+class (Semigroup mono, MonoFoldable mono) => GrowingAppend mono
 
 instance GrowingAppend (Seq.Seq a)
 instance GrowingAppend [a]
