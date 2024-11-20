@@ -72,16 +72,23 @@ instance GrowingAppend mono => GrowingAppend (NonNull mono)
 
 instance (Semigroup mono, GrowingAppend mono) => Semigroup (NonNull mono) where
     (<>) = unsafeMap2 (<>)
+    {-# INLINE (<>) #-}
 
 instance SemiSequence seq => SemiSequence (NonNull seq) where
     type Index (NonNull seq) = Index seq
 
     intersperse e = unsafeMap $ intersperse e
+    {-# INLINE intersperse #-}
     reverse       = unsafeMap reverse
+    {-# INLINE reverse #-}
     find f        = find f . toNullable
+    {-# INLINE find #-}
     cons x        = unsafeMap $ cons x
+    {-# INLINE cons #-}
     snoc xs x     = unsafeMap (flip snoc x) xs
+    {-# INLINE snoc #-}
     sortBy f      = unsafeMap $ sortBy f
+    {-# INLINE sortBy #-}
 
 instance SemiSetContainer set => SemiSetContainer (NonNull set) where
     type ContainerKey (NonNull set) = ContainerKey set
