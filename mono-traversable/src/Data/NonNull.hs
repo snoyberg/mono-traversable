@@ -50,6 +50,7 @@ import Data.Maybe (fromMaybe)
 import Data.MonoTraversable
 import Data.Sequences
 import Control.Monad.Trans.State.Strict (evalState, state)
+import Data.Containers
 
 data NullError = NullError String deriving (Show, Typeable)
 instance Exception NullError
@@ -70,7 +71,7 @@ instance MonoTraversable mono => MonoTraversable (NonNull mono) where
 instance GrowingAppend mono => GrowingAppend (NonNull mono)
 
 instance (Semigroup mono, GrowingAppend mono) => Semigroup (NonNull mono) where
-    NonNull x <> NonNull y = NonNull (x <> y)
+    (<>) = unsafeMap2 (<>)
 
 instance SemiSequence seq => SemiSequence (NonNull seq) where
     type Index (NonNull seq) = Index seq
@@ -82,9 +83,53 @@ instance SemiSequence seq => SemiSequence (NonNull seq) where
     snoc xs x     = unsafeMap (flip snoc x) xs
     sortBy f      = unsafeMap $ sortBy f
 
+instance SemiSetContainer set => SemiSetContainer (NonNull set) where
+    type ContainerKey (NonNull set) = ContainerKey set
+
+    member k = member k . toNullable
+    notMember k = notMember k . toNullable
+    union = unsafeMap2 union
+    keys = keys . toNullable
+
+instance SemiIsMap map => SemiIsMap (NonNull map) where
+    type MapValue (NonNull map) = MapValue map
+
+    lookup k = Data.Containers.lookup k . toNullable
+    insertMap k v = unsafeMap $ insertMap k v
+    singletonMap k v = NonNull $ singletonMap k v
+    mapToList = mapToList . toNullable
+    findWithDefault def k = findWithDefault def k . toNullable
+
+    insertWith f k v = unsafeMap $ insertWith f k v
+    insertWithKey f k v = unsafeMap $ insertWithKey f k v
+    insertLookupWithKey f k v (NonNull mp) = NonNull <$> insertLookupWithKey f k v mp
+
+    adjustMap f k = unsafeMap $ adjustMap f k
+    adjustWithKey f k = unsafeMap $ adjustWithKey f k
+
+    unionWith f = unsafeMap2 (unionWith f)
+    unionWithKey f = unsafeMap2 (unionWithKey f)
+
+    mapWithKey f = unsafeMap (mapWithKey f)
+    omapKeysWith g f = unsafeMap (omapKeysWith g f)
+
+instance SemiIsSet set => SemiIsSet (NonNull set) where
+    insertSet e = unsafeMap (insertSet e)
+    singletonSet = NonNull . singletonSet
+    setToList = setToList . toNullable
+
+instance HasKeysSet set => HasKeysSet (NonNull set) where
+    type KeySet (NonNull set) = NonNull (KeySet set)
+
+    keysSet = NonNull . keysSet . toNullable
+
 -- | This function is unsafe, and must not be exposed from this module.
 unsafeMap :: (mono -> mono) -> NonNull mono -> NonNull mono
 unsafeMap f (NonNull x) = NonNull (f x)
+
+-- | This function is unsafe, and must not be exposed from this module.
+unsafeMap2 :: (mono -> mono -> mono) -> NonNull mono -> NonNull mono -> NonNull mono
+unsafeMap2 f (NonNull x) (NonNull y) = NonNull $ f x y
 
 instance MonoPointed mono => MonoPointed (NonNull mono) where
     opoint = NonNull . opoint
