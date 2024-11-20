@@ -50,6 +50,7 @@ import Data.Maybe (fromMaybe)
 import Data.MonoTraversable
 import Data.Sequences
 import Control.Monad.Trans.State.Strict (evalState, state)
+import Data.Containers
 
 data NullError = NullError String deriving (Show, Typeable)
 instance Exception NullError
@@ -70,21 +71,94 @@ instance MonoTraversable mono => MonoTraversable (NonNull mono) where
 instance GrowingAppend mono => GrowingAppend (NonNull mono)
 
 instance (Semigroup mono, GrowingAppend mono) => Semigroup (NonNull mono) where
-    NonNull x <> NonNull y = NonNull (x <> y)
+    (<>) = unsafeMap2 (<>)
+    {-# INLINE (<>) #-}
 
 instance SemiSequence seq => SemiSequence (NonNull seq) where
     type Index (NonNull seq) = Index seq
 
     intersperse e = unsafeMap $ intersperse e
+    {-# INLINE intersperse #-}
     reverse       = unsafeMap reverse
+    {-# INLINE reverse #-}
     find f        = find f . toNullable
+    {-# INLINE find #-}
     cons x        = unsafeMap $ cons x
+    {-# INLINE cons #-}
     snoc xs x     = unsafeMap (flip snoc x) xs
+    {-# INLINE snoc #-}
     sortBy f      = unsafeMap $ sortBy f
+    {-# INLINE sortBy #-}
+
+instance SemiSetContainer set => SemiSetContainer (NonNull set) where
+    type ContainerKey (NonNull set) = ContainerKey set
+
+    member k = member k . toNullable
+    {-# INLINE member #-}
+    notMember k = notMember k . toNullable
+    {-# INLINE notMember #-}
+    union = unsafeMap2 union
+    {-# INLINE union #-}
+    keys = keys . toNullable
+    {-# INLINE keys #-}
+
+instance SemiIsMap map => SemiIsMap (NonNull map) where
+    type MapValue (NonNull map) = MapValue map
+
+    lookup k = Data.Containers.lookup k . toNullable
+    {-# INLINE lookup #-}
+    insertMap k v = unsafeMap $ insertMap k v
+    {-# INLINE insertMap #-}
+    singletonMap k v = NonNull $ singletonMap k v
+    {-# INLINE singletonMap #-}
+    mapToList = mapToList . toNullable
+    {-# INLINE mapToList #-}
+    findWithDefault def k = findWithDefault def k . toNullable
+    {-# INLINE findWithDefault #-}
+
+    insertWith f k v = unsafeMap $ insertWith f k v
+    {-# INLINE insertWith #-}
+    insertWithKey f k v = unsafeMap $ insertWithKey f k v
+    {-# INLINE insertWithKey #-}
+    insertLookupWithKey f k v (NonNull mp) = NonNull <$> insertLookupWithKey f k v mp
+    {-# INLINE insertLookupWithKey #-}
+
+    adjustMap f k = unsafeMap $ adjustMap f k
+    {-# INLINE adjustMap #-}
+    adjustWithKey f k = unsafeMap $ adjustWithKey f k
+    {-# INLINE adjustWithKey #-}
+
+    unionWith f = unsafeMap2 (unionWith f)
+    {-# INLINE unionWith #-}
+    unionWithKey f = unsafeMap2 (unionWithKey f)
+    {-# INLINE unionWithKey #-}
+
+    mapWithKey f = unsafeMap (mapWithKey f)
+    {-# INLINE mapWithKey #-}
+    omapKeysWith g f = unsafeMap (omapKeysWith g f)
+    {-# INLINE omapKeysWith #-}
+
+instance SemiIsSet set => SemiIsSet (NonNull set) where
+    insertSet e = unsafeMap (insertSet e)
+    {-# INLINE insertSet #-}
+    singletonSet = NonNull . singletonSet
+    {-# INLINE singletonSet #-}
+    setToList = setToList . toNullable
+    {-# INLINE setToList #-}
+
+instance HasKeysSet set => HasKeysSet (NonNull set) where
+    type KeySet (NonNull set) = NonNull (KeySet set)
+
+    keysSet = NonNull . keysSet . toNullable
+    {-# INLINE keysSet #-}
 
 -- | This function is unsafe, and must not be exposed from this module.
 unsafeMap :: (mono -> mono) -> NonNull mono -> NonNull mono
 unsafeMap f (NonNull x) = NonNull (f x)
+
+-- | This function is unsafe, and must not be exposed from this module.
+unsafeMap2 :: (mono -> mono -> mono) -> NonNull mono -> NonNull mono -> NonNull mono
+unsafeMap2 f (NonNull x) (NonNull y) = NonNull $ f x y
 
 instance MonoPointed mono => MonoPointed (NonNull mono) where
     opoint = NonNull . opoint

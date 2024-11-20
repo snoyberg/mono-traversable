@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DefaultSignatures #-}
 module Data.Containers where
 
 import Prelude hiding (lookup)
@@ -19,6 +20,7 @@ import Data.Monoid (Monoid (..))
 import Data.MonoTraversable (MonoFunctor(..), MonoFoldable, MonoTraversable, Element, GrowingAppend, ofoldl', otoList)
 import Data.Function (on)
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NE
 import qualified Data.IntSet as IntSet
 
 import qualified Data.Text.Lazy as LText
@@ -29,7 +31,9 @@ import Control.Arrow ((***))
 import GHC.Exts (Constraint)
 
 -- | A container whose values are stored in Key-Value pairs.
-class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey set), GrowingAppend set) => SetContainer set where
+--
+-- Generally, `<>` is `union`, but that is not required.
+class (GrowingAppend set, MonoFoldable set, Eq (ContainerKey set)) => SemiSetContainer set where
     -- | The type of the key
     type ContainerKey set
 
@@ -44,6 +48,11 @@ class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey
     -- | Get the union of two containers.
     union :: set -> set -> set
 
+    -- | Get a list of all of the keys in the container.
+    keys :: set -> [ContainerKey set]
+
+-- | A container whose values are stored in Key-Value pairs.
+class (Data.Monoid.Monoid set, SemiSetContainer set) => SetContainer set where
     -- | Combine a collection of @SetContainer@s, with left-most values overriding
     -- when there are matching keys.
     --
@@ -58,11 +67,8 @@ class (Data.Monoid.Monoid set, Semigroup set, MonoFoldable set, Eq (ContainerKey
     -- | Get the intersection of two containers.
     intersection :: set -> set -> set
 
-    -- | Get a list of all of the keys in the container.
-    keys :: set -> [ContainerKey set]
-
 -- | This instance uses the functions from "Data.Map.Strict".
-instance Ord k => SetContainer (Map.Map k v) where
+instance Ord k => SemiSetContainer (Map.Map k v) where
     type ContainerKey (Map.Map k v) = k
     member = Map.member
     {-# INLINE member #-}
@@ -70,17 +76,18 @@ instance Ord k => SetContainer (Map.Map k v) where
     {-# INLINE notMember #-}
     union = Map.union
     {-# INLINE union #-}
+    keys = Map.keys
+    {-# INLINE keys #-}
+instance Ord k => SetContainer (Map.Map k v) where
     unions = Map.unions . otoList
     {-# INLINE unions #-}
     difference = Map.difference
     {-# INLINE difference #-}
     intersection = Map.intersection
     {-# INLINE intersection #-}
-    keys = Map.keys
-    {-# INLINE keys #-}
 
 -- | This instance uses the functions from "Data.HashMap.Strict".
-instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) where
+instance (Hashable key) => SemiSetContainer (HashMap.HashMap key value) where
     type ContainerKey (HashMap.HashMap key value) = key
     member = HashMap.member
     {-# INLINE member #-}
@@ -88,17 +95,18 @@ instance (Eq key, Hashable key) => SetContainer (HashMap.HashMap key value) wher
     {-# INLINE notMember #-}
     union = HashMap.union
     {-# INLINE union #-}
+    keys = HashMap.keys
+    {-# INLINE keys #-}
+instance (Hashable key) => SetContainer (HashMap.HashMap key value) where
     unions = HashMap.unions . otoList
     {-# INLINE unions #-}
     difference = HashMap.difference
     {-# INLINE difference #-}
     intersection = HashMap.intersection
     {-# INLINE intersection #-}
-    keys = HashMap.keys
-    {-# INLINE keys #-}
 
 -- | This instance uses the functions from "Data.IntMap.Strict".
-instance SetContainer (IntMap.IntMap value) where
+instance SemiSetContainer (IntMap.IntMap value) where
     type ContainerKey (IntMap.IntMap value) = Int
     member = IntMap.member
     {-# INLINE member #-}
@@ -106,16 +114,17 @@ instance SetContainer (IntMap.IntMap value) where
     {-# INLINE notMember #-}
     union = IntMap.union
     {-# INLINE union #-}
+    keys = IntMap.keys
+    {-# INLINE keys #-}
+instance SetContainer (IntMap.IntMap value) where
     unions = IntMap.unions . otoList
     {-# INLINE unions #-}
     difference = IntMap.difference
     {-# INLINE difference #-}
     intersection = IntMap.intersection
     {-# INLINE intersection #-}
-    keys = IntMap.keys
-    {-# INLINE keys #-}
 
-instance Ord element => SetContainer (Set.Set element) where
+instance Ord element => SemiSetContainer (Set.Set element) where
     type ContainerKey (Set.Set element) = element
     member = Set.member
     {-# INLINE member #-}
@@ -123,16 +132,17 @@ instance Ord element => SetContainer (Set.Set element) where
     {-# INLINE notMember #-}
     union = Set.union
     {-# INLINE union #-}
+    keys = Set.toList
+    {-# INLINE keys #-}
+instance Ord element => SetContainer (Set.Set element) where
     unions = Set.unions . otoList
     {-# INLINE unions #-}
     difference = Set.difference
     {-# INLINE difference #-}
     intersection = Set.intersection
     {-# INLINE intersection #-}
-    keys = Set.toList
-    {-# INLINE keys #-}
 
-instance (Eq element, Hashable element) => SetContainer (HashSet.HashSet element) where
+instance (Hashable element) => SemiSetContainer (HashSet.HashSet element) where
     type ContainerKey (HashSet.HashSet element) = element
     member = HashSet.member
     {-# INLINE member #-}
@@ -140,14 +150,15 @@ instance (Eq element, Hashable element) => SetContainer (HashSet.HashSet element
     {-# INLINE notMember #-}
     union = HashSet.union
     {-# INLINE union #-}
+    keys = HashSet.toList
+    {-# INLINE keys #-}
+instance (Hashable element) => SetContainer (HashSet.HashSet element) where
     difference = HashSet.difference
     {-# INLINE difference #-}
     intersection = HashSet.intersection
     {-# INLINE intersection #-}
-    keys = HashSet.toList
-    {-# INLINE keys #-}
 
-instance SetContainer IntSet.IntSet where
+instance SemiSetContainer IntSet.IntSet where
     type ContainerKey IntSet.IntSet = Int
     member = IntSet.member
     {-# INLINE member #-}
@@ -155,14 +166,15 @@ instance SetContainer IntSet.IntSet where
     {-# INLINE notMember #-}
     union = IntSet.union
     {-# INLINE union #-}
+    keys = IntSet.toList
+    {-# INLINE keys #-}
+instance SetContainer IntSet.IntSet where
     difference = IntSet.difference
     {-# INLINE difference #-}
     intersection = IntSet.intersection
     {-# INLINE intersection #-}
-    keys = IntSet.toList
-    {-# INLINE keys #-}
 
-instance Eq key => SetContainer [(key, value)] where
+instance (Eq key) => SemiSetContainer [(key, value)] where
     type ContainerKey [(key, value)] = key
     member k = List.any ((== k) . fst)
     {-# INLINE member #-}
@@ -170,6 +182,9 @@ instance Eq key => SetContainer [(key, value)] where
     {-# INLINE notMember #-}
     union = List.unionBy ((==) `on` fst)
     {-# INLINE union #-}
+    keys = map fst
+    {-# INLINE keys #-}
+instance (Eq key) => SetContainer [(key, value)] where
     x `difference` y =
         loop x
       where
@@ -180,8 +195,6 @@ instance Eq key => SetContainer [(key, value)] where
                 Just _ -> loop rest
     intersection = List.intersectBy ((==) `on` fst)
     {-# INLINE intersection #-}
-    keys = map fst
-    {-# INLINE keys #-}
 
 -- | A guaranteed-polymorphic @Map@, which allows for more polymorphic versions
 -- of functions.
@@ -252,7 +265,7 @@ instance BiPolyMap HashMap.HashMap where
     {-# INLINE mapKeysWith #-}
 
 -- | Polymorphic typeclass for interacting with different map types
-class (MonoTraversable map, SetContainer map) => IsMap map where
+class (MonoTraversable map, SemiSetContainer map) => SemiIsMap map where
     -- | In some cases, 'MapValue' and 'Element' will be different, e.g., the
     -- 'IsMap' instance of associated lists.
     type MapValue map
@@ -262,15 +275,10 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
 
     -- | Insert a key-value pair into a map.
     insertMap    :: ContainerKey map -> MapValue map -> map -> map
-
-    -- | Delete a key-value pair of a map using a specified key.
-    deleteMap    :: ContainerKey map -> map -> map
+    insertMap = insertWith const
 
     -- | Create a map from a single key-value pair.
     singletonMap :: ContainerKey map -> MapValue map -> map
-
-    -- | Convert a list of key-value pairs to a map
-    mapFromList  :: [(ContainerKey map, MapValue map)] -> map
 
     -- | Convert a map to a list of key-value pairs.
     mapToList    :: map -> [(ContainerKey map, MapValue map)]
@@ -293,13 +301,7 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                -> MapValue map     -- ^ new value to insert
                -> map              -- ^ input map
                -> map              -- ^ resulting map
-    insertWith f k v m =
-        v' `seq` insertMap k v' m
-      where
-        v' =
-            case lookup k m of
-                Nothing -> v
-                Just vold -> f v vold
+    insertWith = insertWithKey . const
 
     -- | Insert a key-value pair into a map.
     --
@@ -315,13 +317,7 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
         -> MapValue map     -- ^ new value to insert
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    insertWithKey f k v m =
-        v' `seq` insertMap k v' m
-      where
-        v' =
-            case lookup k m of
-                Nothing -> v
-                Just vold -> f k v vold
+    insertWithKey f k v = snd . insertLookupWithKey f k v
 
     -- | Insert a key-value pair into a map, return the previous key's value
     -- if it existed.
@@ -355,12 +351,7 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
         -> ContainerKey map -- ^ key
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    adjustMap f k m =
-        case lookup k m of
-            Nothing -> m
-            Just v ->
-                let v' = f v
-                 in v' `seq` insertMap k v' m
+    adjustMap = adjustWithKey . const
 
     -- | Equivalent to 'adjustMap', but the function accepts the key,
     -- as well as the previous value.
@@ -378,6 +369,63 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
                 let v' = f k v
                  in v' `seq` insertMap k v' m
 
+    -- | Combine two maps.
+    --
+    -- When a key exists in both maps, apply a function
+    -- to both of the values and use the result of that as the value
+    -- of the key in the resulting map.
+    unionWith
+        :: (MapValue map -> MapValue map -> MapValue map)
+           -- ^ function that accepts the first map's value and the second map's value
+           -- and returns the new value that will be used
+        -> map -- ^ first map
+        -> map -- ^ second map
+        -> map -- ^ resulting map
+    unionWith = unionWithKey . const
+
+    -- Equivalent to 'unionWith', but the function accepts the key,
+    -- as well as both of the map's values.
+    unionWithKey
+        :: (ContainerKey map -> MapValue map -> MapValue map -> MapValue map)
+           -- ^ function that accepts the key, the first map's value and the
+           -- second map's value and returns the new value that will be used
+        -> map -- ^ first map
+        -> map -- ^ second map
+        -> map -- ^ resulting map
+    unionWithKey f x y = ofoldl' (flip (uncurry (insertWithKey f))) x (mapToList y)
+
+    -- | Apply a function over every key-value pair of a map.
+    mapWithKey
+        :: (ContainerKey map -> MapValue map -> MapValue map)
+           -- ^ function that accepts the key and the previous value
+           -- and returns the new value
+        -> map -- ^ input map
+        -> map -- ^ resulting map
+    mapWithKey f x = ofoldl' (\x' (k, v) -> insertMap k (f k v) x') x (mapToList x)
+
+    -- | Apply a function over every key of a pair and run
+    -- 'unionsWith' over the results.
+    omapKeysWith
+        :: (MapValue map -> MapValue map -> MapValue map)
+           -- ^ function that accepts the first map's value and the second map's value
+           -- and returns the new value that will be used
+        -> (ContainerKey map -> ContainerKey map)
+           -- ^ function that accepts the previous key and
+           -- returns the new key
+        -> map -- ^ input map
+        -> map -- ^ resulting map
+    omapKeysWith g f x = case NE.nonEmpty (mapToList x) of
+        Nothing -> x -- empty map, we don't have to change anything
+        Just ((key1, val1) NE.:| rest) -> ofoldl' (\x' (key, val) -> insertWith g (f key) val x') (singletonMap (f key1) val1) rest
+
+-- | Polymorphic typeclass for interacting with different map types
+class (SetContainer map, SemiIsMap map) => IsMap map where
+    -- | Delete a key-value pair of a map using a specified key.
+    deleteMap    :: ContainerKey map -> map -> map
+
+    -- | Convert a list of key-value pairs to a map
+    mapFromList  :: [(ContainerKey map, MapValue map)] -> map
+
     -- | Apply a function to the value of a given key.
     --
     -- If the function returns 'Nothing', this deletes the key-value pair.
@@ -390,13 +438,7 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
         -> ContainerKey map -- ^ key
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    updateMap f k m =
-        case lookup k m of
-            Nothing -> m
-            Just v ->
-                case f v of
-                    Nothing -> deleteMap k m
-                    Just v' -> v' `seq` insertMap k v' m
+    updateMap = updateWithKey . const
 
     -- | Equivalent to 'updateMap', but the function accepts the key,
     -- as well as the previous value.
@@ -407,13 +449,7 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
         -> ContainerKey map -- ^ key
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    updateWithKey f k m =
-        case lookup k m of
-            Nothing -> m
-            Just v ->
-                case f k v of
-                    Nothing -> deleteMap k m
-                    Just v' -> v' `seq` insertMap k v' m
+    updateWithKey f k = snd . updateLookupWithKey f k
 
     -- | Apply a function to the value of a given key.
     --
@@ -462,45 +498,6 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
       where
         mold = lookup k m
 
-    -- | Combine two maps.
-    --
-    -- When a key exists in both maps, apply a function
-    -- to both of the values and use the result of that as the value
-    -- of the key in the resulting map.
-    unionWith
-        :: (MapValue map -> MapValue map -> MapValue map)
-           -- ^ function that accepts the first map's value and the second map's value
-           -- and returns the new value that will be used
-        -> map -- ^ first map
-        -> map -- ^ second map
-        -> map -- ^ resulting map
-    unionWith f x y =
-        mapFromList $ loop $ mapToList x ++ mapToList y
-      where
-        loop [] = []
-        loop ((k, v):rest) =
-            case List.lookup k rest of
-                Nothing -> (k, v) : loop rest
-                Just v' -> (k, f v v') : loop (deleteMap k rest)
-
-    -- Equivalent to 'unionWith', but the function accepts the key,
-    -- as well as both of the map's values.
-    unionWithKey
-        :: (ContainerKey map -> MapValue map -> MapValue map -> MapValue map)
-           -- ^ function that accepts the key, the first map's value and the
-           -- second map's value and returns the new value that will be used
-        -> map -- ^ first map
-        -> map -- ^ second map
-        -> map -- ^ resulting map
-    unionWithKey f x y =
-        mapFromList $ loop $ mapToList x ++ mapToList y
-      where
-        loop [] = []
-        loop ((k, v):rest) =
-            case List.lookup k rest of
-                Nothing -> (k, v) : loop rest
-                Just v' -> (k, f k v v') : loop (deleteMap k rest)
-
     -- | Combine a list of maps.
     --
     -- When a key exists in two different maps, apply a function
@@ -514,35 +511,8 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
         -> map   -- ^ resulting map
     unionsWith _ [] = mempty
     unionsWith _ [x] = x
-    unionsWith f (x:y:z) = unionsWith f (unionWith f x y:z)
-
-    -- | Apply a function over every key-value pair of a map.
-    mapWithKey
-        :: (ContainerKey map -> MapValue map -> MapValue map)
-           -- ^ function that accepts the key and the previous value
-           -- and returns the new value
-        -> map -- ^ input map
-        -> map -- ^ resulting map
-    mapWithKey f =
-        mapFromList . map go . mapToList
-      where
-        go (k, v) = (k, f k v)
-
-    -- | Apply a function over every key of a pair and run
-    -- 'unionsWith' over the results.
-    omapKeysWith
-        :: (MapValue map -> MapValue map -> MapValue map)
-           -- ^ function that accepts the first map's value and the second map's value
-           -- and returns the new value that will be used
-        -> (ContainerKey map -> ContainerKey map)
-           -- ^ function that accepts the previous key and
-           -- returns the new key
-        -> map -- ^ input map
-        -> map -- ^ resulting map
-    omapKeysWith g f =
-        mapFromList . unionsWith g . map go . mapToList
-      where
-        go (k, v) = [(f k, v)]
+    unionsWith f (x:y:z) = xy `seq` unionsWith f (xy:z)
+        where xy = unionWith f x y
 
     -- | Filter values in a map.
     --
@@ -558,18 +528,14 @@ class (MonoTraversable map, SetContainer map) => IsMap map where
     filterWithKey p = mapFromList . filter (uncurry p) . mapToList
 
 -- | This instance uses the functions from "Data.Map.Strict".
-instance Ord key => IsMap (Map.Map key value) where
+instance Ord key => SemiIsMap (Map.Map key value) where
     type MapValue (Map.Map key value) = value
     lookup = Map.lookup
     {-# INLINE lookup #-}
     insertMap = Map.insert
     {-# INLINE insertMap #-}
-    deleteMap = Map.delete
-    {-# INLINE deleteMap #-}
     singletonMap = Map.singleton
     {-# INLINE singletonMap #-}
-    mapFromList = Map.fromList
-    {-# INLINE mapFromList #-}
     mapToList = Map.toList
     {-# INLINE mapToList #-}
 
@@ -585,6 +551,21 @@ instance Ord key => IsMap (Map.Map key value) where
     {-# INLINE adjustMap #-}
     adjustWithKey = Map.adjustWithKey
     {-# INLINE adjustWithKey #-}
+    unionWith = Map.unionWith
+    {-# INLINE unionWith #-}
+    unionWithKey = Map.unionWithKey
+    {-# INLINE unionWithKey #-}
+    mapWithKey = Map.mapWithKey
+    {-# INLINE mapWithKey #-}
+    omapKeysWith = Map.mapKeysWith
+    {-# INLINE omapKeysWith #-}
+
+instance Ord key => IsMap (Map.Map key value) where
+    deleteMap = Map.delete
+    {-# INLINE deleteMap #-}
+    mapFromList = Map.fromList
+    {-# INLINE mapFromList #-}
+
     updateMap = Map.update
     {-# INLINE updateMap #-}
     updateWithKey = Map.updateWithKey
@@ -593,34 +574,22 @@ instance Ord key => IsMap (Map.Map key value) where
     {-# INLINE updateLookupWithKey #-}
     alterMap = Map.alter
     {-# INLINE alterMap #-}
-    unionWith = Map.unionWith
-    {-# INLINE unionWith #-}
-    unionWithKey = Map.unionWithKey
-    {-# INLINE unionWithKey #-}
     unionsWith = Map.unionsWith
     {-# INLINE unionsWith #-}
-    mapWithKey = Map.mapWithKey
-    {-# INLINE mapWithKey #-}
-    omapKeysWith = Map.mapKeysWith
-    {-# INLINE omapKeysWith #-}
     filterMap = Map.filter
     {-# INLINE filterMap #-}
     filterWithKey = Map.filterWithKey
     {-# INLINE filterWithKey #-}
 
 -- | This instance uses the functions from "Data.HashMap.Strict".
-instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
+instance (Hashable key) => SemiIsMap (HashMap.HashMap key value) where
     type MapValue (HashMap.HashMap key value) = value
     lookup = HashMap.lookup
     {-# INLINE lookup #-}
     insertMap = HashMap.insert
     {-# INLINE insertMap #-}
-    deleteMap = HashMap.delete
-    {-# INLINE deleteMap #-}
     singletonMap = HashMap.singleton
     {-# INLINE singletonMap #-}
-    mapFromList = HashMap.fromList
-    {-# INLINE mapFromList #-}
     mapToList = HashMap.toList
     {-# INLINE mapToList #-}
 
@@ -632,34 +601,38 @@ instance (Eq key, Hashable key) => IsMap (HashMap.HashMap key value) where
     adjustMap = HashMap.adjust
     {-# INLINE adjustMap #-}
     --adjustWithKey = HashMap.adjustWithKey
+    unionWith = HashMap.unionWith
+    {-# INLINE unionWith #-}
+    --unionWithKey = HashMap.unionWithKey
+    --mapWithKey = HashMap.mapWithKey
+    --mapKeysWith = HashMap.mapKeysWith
+
+-- | This instance uses the functions from "Data.HashMap.Strict".
+instance (Hashable key) => IsMap (HashMap.HashMap key value) where
+    deleteMap = HashMap.delete
+    {-# INLINE deleteMap #-}
+    mapFromList = HashMap.fromList
+    {-# INLINE mapFromList #-}
+
     --updateMap = HashMap.update
     --updateWithKey = HashMap.updateWithKey
     --updateLookupWithKey = HashMap.updateLookupWithKey
     --alterMap = HashMap.alter
-    unionWith = HashMap.unionWith
-    {-# INLINE unionWith #-}
-    --unionWithKey = HashMap.unionWithKey
     --unionsWith = HashMap.unionsWith
-    --mapWithKey = HashMap.mapWithKey
-    --mapKeysWith = HashMap.mapKeysWith
     filterMap = HashMap.filter
     {-# INLINE filterMap #-}
     filterWithKey = HashMap.filterWithKey
     {-# INLINE filterWithKey #-}
 
 -- | This instance uses the functions from "Data.IntMap.Strict".
-instance IsMap (IntMap.IntMap value) where
+instance SemiIsMap (IntMap.IntMap value) where
     type MapValue (IntMap.IntMap value) = value
     lookup = IntMap.lookup
     {-# INLINE lookup #-}
     insertMap = IntMap.insert
     {-# INLINE insertMap #-}
-    deleteMap = IntMap.delete
-    {-# INLINE deleteMap #-}
     singletonMap = IntMap.singleton
     {-# INLINE singletonMap #-}
-    mapFromList = IntMap.fromList
-    {-# INLINE mapFromList #-}
     mapToList = IntMap.toList
     {-# INLINE mapToList #-}
 
@@ -675,6 +648,21 @@ instance IsMap (IntMap.IntMap value) where
     {-# INLINE adjustMap #-}
     adjustWithKey = IntMap.adjustWithKey
     {-# INLINE adjustWithKey #-}
+    unionWith = IntMap.unionWith
+    {-# INLINE unionWith #-}
+    unionWithKey = IntMap.unionWithKey
+    {-# INLINE unionWithKey #-}
+    mapWithKey = IntMap.mapWithKey
+    {-# INLINE mapWithKey #-}
+    omapKeysWith = IntMap.mapKeysWith
+    {-# INLINE omapKeysWith #-}
+
+instance IsMap (IntMap.IntMap value) where
+    deleteMap = IntMap.delete
+    {-# INLINE deleteMap #-}
+    mapFromList = IntMap.fromList
+    {-# INLINE mapFromList #-}
+
     updateMap = IntMap.update
     {-# INLINE updateMap #-}
     updateWithKey = IntMap.updateWithKey
@@ -682,52 +670,46 @@ instance IsMap (IntMap.IntMap value) where
     --updateLookupWithKey = IntMap.updateLookupWithKey
     alterMap = IntMap.alter
     {-# INLINE alterMap #-}
-    unionWith = IntMap.unionWith
-    {-# INLINE unionWith #-}
-    unionWithKey = IntMap.unionWithKey
-    {-# INLINE unionWithKey #-}
     unionsWith = IntMap.unionsWith
     {-# INLINE unionsWith #-}
-    mapWithKey = IntMap.mapWithKey
-    {-# INLINE mapWithKey #-}
-    omapKeysWith = IntMap.mapKeysWith
-    {-# INLINE omapKeysWith #-}
     filterMap = IntMap.filter
     {-# INLINE filterMap #-}
     filterWithKey = IntMap.filterWithKey
     {-# INLINE filterWithKey #-}
 
-instance Eq key => IsMap [(key, value)] where
+instance Eq key => SemiIsMap [(key, value)] where
     type MapValue [(key, value)] = value
     lookup = List.lookup
     {-# INLINE lookup #-}
     insertMap k v = ((k, v):) . deleteMap k
     {-# INLINE insertMap #-}
-    deleteMap k = List.filter ((/= k) . fst)
-    {-# INLINE deleteMap #-}
     singletonMap k v = [(k, v)]
     {-# INLINE singletonMap #-}
-    mapFromList = id
-    {-# INLINE mapFromList #-}
     mapToList = id
     {-# INLINE mapToList #-}
+instance Eq key => IsMap [(key, value)] where
+    deleteMap k = List.filter ((/= k) . fst)
+    {-# INLINE deleteMap #-}
+    mapFromList = id
+    {-# INLINE mapFromList #-}
 
 -- | Polymorphic typeclass for interacting with different set types
-class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
+class (SemiSetContainer set, Element set ~ ContainerKey set) => SemiIsSet set where
     -- | Insert a value into a set.
     insertSet :: Element set -> set -> set
-
-    -- | Delete a value from a set.
-    deleteSet :: Element set -> set -> set
 
     -- | Create a set from a single element.
     singletonSet :: Element set -> set
 
-    -- | Convert a list to a set.
-    setFromList :: [Element set] -> set
-
     -- | Convert a set to a list.
     setToList :: set -> [Element set]
+
+class (SemiIsSet set, SetContainer set) => IsSet set where
+    -- | Delete a value from a set.
+    deleteSet :: Element set -> set -> set
+
+    -- | Convert a list to a set.
+    setFromList :: [Element set] -> set
 
     -- | Filter values in a set.
     --
@@ -735,45 +717,51 @@ class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
     filterSet :: (Element set -> Bool) -> set -> set
     filterSet p = setFromList . filter p . setToList
 
-instance Ord element => IsSet (Set.Set element) where
+instance Ord element => SemiIsSet (Set.Set element) where
     insertSet = Set.insert
     {-# INLINE insertSet #-}
-    deleteSet = Set.delete
-    {-# INLINE deleteSet #-}
     singletonSet = Set.singleton
     {-# INLINE singletonSet #-}
-    setFromList = Set.fromList
-    {-# INLINE setFromList #-}
     setToList = Set.toList
     {-# INLINE setToList #-}
+
+instance Ord element => IsSet (Set.Set element) where
+    deleteSet = Set.delete
+    {-# INLINE deleteSet #-}
+    setFromList = Set.fromList
+    {-# INLINE setFromList #-}
     filterSet = Set.filter
     {-# INLINE filterSet #-}
 
-instance (Eq element, Hashable element) => IsSet (HashSet.HashSet element) where
+instance (Hashable element) => SemiIsSet (HashSet.HashSet element) where
     insertSet = HashSet.insert
     {-# INLINE insertSet #-}
-    deleteSet = HashSet.delete
-    {-# INLINE deleteSet #-}
     singletonSet = HashSet.singleton
     {-# INLINE singletonSet #-}
-    setFromList = HashSet.fromList
-    {-# INLINE setFromList #-}
     setToList = HashSet.toList
     {-# INLINE setToList #-}
+
+instance (Hashable element) => IsSet (HashSet.HashSet element) where
+    deleteSet = HashSet.delete
+    {-# INLINE deleteSet #-}
+    setFromList = HashSet.fromList
+    {-# INLINE setFromList #-}
     filterSet = HashSet.filter
     {-# INLINE filterSet #-}
 
-instance IsSet IntSet.IntSet where
+instance SemiIsSet IntSet.IntSet where
     insertSet = IntSet.insert
     {-# INLINE insertSet #-}
-    deleteSet = IntSet.delete
-    {-# INLINE deleteSet #-}
     singletonSet = IntSet.singleton
     {-# INLINE singletonSet #-}
-    setFromList = IntSet.fromList
-    {-# INLINE setFromList #-}
     setToList = IntSet.toList
     {-# INLINE setToList #-}
+
+instance IsSet IntSet.IntSet where
+    deleteSet = IntSet.delete
+    {-# INLINE deleteSet #-}
+    setFromList = IntSet.fromList
+    {-# INLINE setFromList #-}
     filterSet = IntSet.filter
     {-# INLINE filterSet #-}
 
@@ -821,7 +809,7 @@ instance MonoZip LText.Text where
     {-# INLINE ozipWith #-}
 
 -- | Type class for maps whose keys can be converted into sets.
-class SetContainer set => HasKeysSet set where
+class SemiSetContainer set => HasKeysSet set where
     -- | Type of the key set.
     type KeySet set
 
