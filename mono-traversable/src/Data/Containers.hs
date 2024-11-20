@@ -705,21 +705,22 @@ instance Eq key => IsMap [(key, value)] where
     {-# INLINE mapFromList #-}
 
 -- | Polymorphic typeclass for interacting with different set types
-class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
+class (SemiSetContainer set, Element set ~ ContainerKey set) => SemiIsSet set where
     -- | Insert a value into a set.
     insertSet :: Element set -> set -> set
-
-    -- | Delete a value from a set.
-    deleteSet :: Element set -> set -> set
 
     -- | Create a set from a single element.
     singletonSet :: Element set -> set
 
-    -- | Convert a list to a set.
-    setFromList :: [Element set] -> set
-
     -- | Convert a set to a list.
     setToList :: set -> [Element set]
+
+class (SemiIsSet set, SetContainer set) => IsSet set where
+    -- | Delete a value from a set.
+    deleteSet :: Element set -> set -> set
+
+    -- | Convert a list to a set.
+    setFromList :: [Element set] -> set
 
     -- | Filter values in a set.
     --
@@ -727,45 +728,51 @@ class (SetContainer set, Element set ~ ContainerKey set) => IsSet set where
     filterSet :: (Element set -> Bool) -> set -> set
     filterSet p = setFromList . filter p . setToList
 
-instance Ord element => IsSet (Set.Set element) where
+instance Ord element => SemiIsSet (Set.Set element) where
     insertSet = Set.insert
     {-# INLINE insertSet #-}
-    deleteSet = Set.delete
-    {-# INLINE deleteSet #-}
     singletonSet = Set.singleton
     {-# INLINE singletonSet #-}
-    setFromList = Set.fromList
-    {-# INLINE setFromList #-}
     setToList = Set.toList
     {-# INLINE setToList #-}
+
+instance Ord element => IsSet (Set.Set element) where
+    deleteSet = Set.delete
+    {-# INLINE deleteSet #-}
+    setFromList = Set.fromList
+    {-# INLINE setFromList #-}
     filterSet = Set.filter
     {-# INLINE filterSet #-}
 
-instance (Eq element, Hashable element) => IsSet (HashSet.HashSet element) where
+instance (Hashable element) => SemiIsSet (HashSet.HashSet element) where
     insertSet = HashSet.insert
     {-# INLINE insertSet #-}
-    deleteSet = HashSet.delete
-    {-# INLINE deleteSet #-}
     singletonSet = HashSet.singleton
     {-# INLINE singletonSet #-}
-    setFromList = HashSet.fromList
-    {-# INLINE setFromList #-}
     setToList = HashSet.toList
     {-# INLINE setToList #-}
+
+instance (Hashable element) => IsSet (HashSet.HashSet element) where
+    deleteSet = HashSet.delete
+    {-# INLINE deleteSet #-}
+    setFromList = HashSet.fromList
+    {-# INLINE setFromList #-}
     filterSet = HashSet.filter
     {-# INLINE filterSet #-}
 
-instance IsSet IntSet.IntSet where
+instance SemiIsSet IntSet.IntSet where
     insertSet = IntSet.insert
     {-# INLINE insertSet #-}
-    deleteSet = IntSet.delete
-    {-# INLINE deleteSet #-}
     singletonSet = IntSet.singleton
     {-# INLINE singletonSet #-}
-    setFromList = IntSet.fromList
-    {-# INLINE setFromList #-}
     setToList = IntSet.toList
     {-# INLINE setToList #-}
+
+instance IsSet IntSet.IntSet where
+    deleteSet = IntSet.delete
+    {-# INLINE deleteSet #-}
+    setFromList = IntSet.fromList
+    {-# INLINE setFromList #-}
     filterSet = IntSet.filter
     {-# INLINE filterSet #-}
 
