@@ -1,5 +1,7 @@
 # ChangeLog for mono-traversable
 
+## 1.1.0.0
+
 ## 1.0.20.0
 
 * Added instances for [`Reverse`](https://hackage.haskell.org/package/transformers-0.6.1.1/docs/Data-Functor-Reverse.html#t:Reverse) data structure.
