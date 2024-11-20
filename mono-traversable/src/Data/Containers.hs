@@ -511,7 +511,8 @@ class (SetContainer map, SemiIsMap map) => IsMap map where
         -> map   -- ^ resulting map
     unionsWith _ [] = mempty
     unionsWith _ [x] = x
-    unionsWith f (x:y:z) = unionsWith f (unionWith f x y:z)
+    unionsWith f (x:y:z) = xy `seq` unionsWith f (xy:z)
+        where xy = unionWith f x y
 
     -- | Filter values in a map.
     --
