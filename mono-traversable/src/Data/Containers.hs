@@ -438,13 +438,7 @@ class (SetContainer map, SemiIsMap map) => IsMap map where
         -> ContainerKey map -- ^ key
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    updateMap f k m =
-        case lookup k m of
-            Nothing -> m
-            Just v ->
-                case f v of
-                    Nothing -> deleteMap k m
-                    Just v' -> v' `seq` insertMap k v' m
+    updateMap = updateWithKey . const
 
     -- | Equivalent to 'updateMap', but the function accepts the key,
     -- as well as the previous value.
@@ -455,13 +449,7 @@ class (SetContainer map, SemiIsMap map) => IsMap map where
         -> ContainerKey map -- ^ key
         -> map              -- ^ input map
         -> map              -- ^ resulting map
-    updateWithKey f k m =
-        case lookup k m of
-            Nothing -> m
-            Just v ->
-                case f k v of
-                    Nothing -> deleteMap k m
-                    Just v' -> v' `seq` insertMap k v' m
+    updateWithKey f k = snd . updateLookupWithKey f k
 
     -- | Apply a function to the value of a given key.
     --
