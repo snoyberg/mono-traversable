@@ -94,41 +94,63 @@ instance SemiSetContainer set => SemiSetContainer (NonNull set) where
     type ContainerKey (NonNull set) = ContainerKey set
 
     member k = member k . toNullable
+    {-# INLINE member #-}
     notMember k = notMember k . toNullable
+    {-# INLINE notMember #-}
     union = unsafeMap2 union
+    {-# INLINE union #-}
     keys = keys . toNullable
+    {-# INLINE keys #-}
 
 instance SemiIsMap map => SemiIsMap (NonNull map) where
     type MapValue (NonNull map) = MapValue map
 
     lookup k = Data.Containers.lookup k . toNullable
+    {-# INLINE lookup #-}
     insertMap k v = unsafeMap $ insertMap k v
+    {-# INLINE insertMap #-}
     singletonMap k v = NonNull $ singletonMap k v
+    {-# INLINE singletonMap #-}
     mapToList = mapToList . toNullable
+    {-# INLINE mapToList #-}
     findWithDefault def k = findWithDefault def k . toNullable
+    {-# INLINE findWithDefault #-}
 
     insertWith f k v = unsafeMap $ insertWith f k v
+    {-# INLINE insertWith #-}
     insertWithKey f k v = unsafeMap $ insertWithKey f k v
+    {-# INLINE insertWithKey #-}
     insertLookupWithKey f k v (NonNull mp) = NonNull <$> insertLookupWithKey f k v mp
+    {-# INLINE insertLookupWithKey #-}
 
     adjustMap f k = unsafeMap $ adjustMap f k
+    {-# INLINE adjustMap #-}
     adjustWithKey f k = unsafeMap $ adjustWithKey f k
+    {-# INLINE adjustWithKey #-}
 
     unionWith f = unsafeMap2 (unionWith f)
+    {-# INLINE unionWith #-}
     unionWithKey f = unsafeMap2 (unionWithKey f)
+    {-# INLINE unionWithKey #-}
 
     mapWithKey f = unsafeMap (mapWithKey f)
+    {-# INLINE mapWithKey #-}
     omapKeysWith g f = unsafeMap (omapKeysWith g f)
+    {-# INLINE omapKeysWith #-}
 
 instance SemiIsSet set => SemiIsSet (NonNull set) where
     insertSet e = unsafeMap (insertSet e)
+    {-# INLINE insertSet #-}
     singletonSet = NonNull . singletonSet
+    {-# INLINE singletonSet #-}
     setToList = setToList . toNullable
+    {-# INLINE setToList #-}
 
 instance HasKeysSet set => HasKeysSet (NonNull set) where
     type KeySet (NonNull set) = NonNull (KeySet set)
 
     keysSet = NonNull . keysSet . toNullable
+    {-# INLINE keysSet #-}
 
 -- | This function is unsafe, and must not be exposed from this module.
 unsafeMap :: (mono -> mono) -> NonNull mono -> NonNull mono
