@@ -105,482 +105,492 @@ instance IsString (VS.Vector Char) where fromString = VS.fromList
 instance IsString (VSC.Vector Char) where fromString = VSC.fromList
 #endif
 
+-- | Untested functionality due to macros goes heree
+warnUntested :: IO ()
+warnUntested = do
+#if !MIN_VERSION_vector(0,13,2)
+    Prelude.putStrLn "WARNING: Data.Vector.Strict is untested as the vector dependency is too old. Need vector-0.13.2 or greater."
+#endif
+    return ()
+
 main :: IO ()
-main = hspec $ do
-    describe "onull" $ do
-        it "works on empty lists"     $ onull []              @?= True
-        it "works on non-empty lists" $ onull [()]            @?= False
-        it "works on empty texts"     $ onull ("" :: Text)    @?= True
-        it "works on non-empty texts" $ onull ("foo" :: Text) @?= False
+main = do
+    warnUntested
+    hspec $ do
+        describe "onull" $ do
+            it "works on empty lists"     $ onull []              @?= True
+            it "works on non-empty lists" $ onull [()]            @?= False
+            it "works on empty texts"     $ onull ("" :: Text)    @?= True
+            it "works on non-empty texts" $ onull ("foo" :: Text) @?= False
 
-    describe "osum" $ do
-        prop "works on lists" $ \(Small x) (Small y) ->
-            y >= x ==> osum [x..y] @?= ((x + y) * (y - x + 1) `div` (2 :: Int))
+        describe "osum" $ do
+            prop "works on lists" $ \(Small x) (Small y) ->
+                y >= x ==> osum [x..y] @?= ((x + y) * (y - x + 1) `div` (2 :: Int))
 
-    describe "oproduct" $ do
-        prop "works on lists" $ \(Positive x) (Positive y) ->
-            let fact n = oproduct [1..n]
-             in (y :: Integer) > (x :: Integer) ==>
-                    oproduct [x..y] @?= fact y `div` fact (x - 1)
+        describe "oproduct" $ do
+            prop "works on lists" $ \(Positive x) (Positive y) ->
+                let fact n = oproduct [1..n]
+                 in (y :: Integer) > (x :: Integer) ==>
+                        oproduct [x..y] @?= fact y `div` fact (x - 1)
 
-    describe "olength" $ do
-        prop "works on lists" $ \(NonNegative i) ->
-            olength (replicate i () :: [()]) @?= i
-        prop "works on texts" $ \(NonNegative i) ->
-            olength (replicate i 'a' :: Text) @?= i
-        prop "works on lazy bytestrings" $ \(NonNegative (Small i)) ->
-            olength64 (replicate i 6 :: L.ByteString) @?= i
+        describe "olength" $ do
+            prop "works on lists" $ \(NonNegative i) ->
+                olength (replicate i () :: [()]) @?= i
+            prop "works on texts" $ \(NonNegative i) ->
+                olength (replicate i 'a' :: Text) @?= i
+            prop "works on lazy bytestrings" $ \(NonNegative (Small i)) ->
+                olength64 (replicate i 6 :: L.ByteString) @?= i
 
-    describe "omap" $ do
-        prop "works on lists" $ \xs ->
-            omap (+1) xs @?= map (+1) (xs :: [Int])
-        prop "works on lazy bytestrings" $ \xs ->
-            omap (+1) (fromList xs :: L.ByteString) @?= fromList (map (+1) xs)
-        prop "works on texts" $ \xs ->
-            omap succ (fromList xs :: Text) @?= fromList (map succ xs)
+        describe "omap" $ do
+            prop "works on lists" $ \xs ->
+                omap (+1) xs @?= map (+1) (xs :: [Int])
+            prop "works on lazy bytestrings" $ \xs ->
+                omap (+1) (fromList xs :: L.ByteString) @?= fromList (map (+1) xs)
+            prop "works on texts" $ \xs ->
+                omap succ (fromList xs :: Text) @?= fromList (map succ xs)
 
-    describe "oconcatMap" $ do
-        prop "works on lists" $ \xs ->
-            oconcatMap (: []) xs @?= (xs :: [Int])
+        describe "oconcatMap" $ do
+            prop "works on lists" $ \xs ->
+                oconcatMap (: []) xs @?= (xs :: [Int])
 
-    describe "ocompareLength" $ do
-        prop "works on lists" $ \(Positive i) j ->
-            ocompareLength (replicate i () :: [()]) j @?= compare i j
+        describe "ocompareLength" $ do
+            prop "works on lists" $ \(Positive i) j ->
+                ocompareLength (replicate i () :: [()]) j @?= compare i j
 
-    describe "groupAll" $ do
-        it "works on lists" $ groupAll ("abcabcabc" :: String) @?= ["aaa", "bbb", "ccc"]
-        it "works on texts" $ groupAll ("abcabcabc" :: Text)   @?= ["aaa", "bbb", "ccc"]
+        describe "groupAll" $ do
+            it "works on lists" $ groupAll ("abcabcabc" :: String) @?= ["aaa", "bbb", "ccc"]
+            it "works on texts" $ groupAll ("abcabcabc" :: Text)   @?= ["aaa", "bbb", "ccc"]
 
-    describe "unsnoc" $ do
-        let test name dummy = prop name $ \(QCM.NonEmpty xs) ->
-                let seq' = fromListAs xs dummy
-                 in case unsnoc seq' of
-                        Just (y, z) -> do
-                            y SG.<> singleton z @?= seq'
-                            snoc y z            @?= seq'
-                            otoList (snoc y z)  @?= xs
-                        Nothing -> expectationFailure "unsnoc returned Nothing"
-        test "works on lists" ([] :: [Int])
-        test "works on texts" ("" :: Text)
-        test "works on lazy bytestrings" L.empty
+        describe "unsnoc" $ do
+            let test name dummy = prop name $ \(QCM.NonEmpty xs) ->
+                    let seq' = fromListAs xs dummy
+                     in case unsnoc seq' of
+                            Just (y, z) -> do
+                                y SG.<> singleton z @?= seq'
+                                snoc y z            @?= seq'
+                                otoList (snoc y z)  @?= xs
+                            Nothing -> expectationFailure "unsnoc returned Nothing"
+            test "works on lists" ([] :: [Int])
+            test "works on texts" ("" :: Text)
+            test "works on lazy bytestrings" L.empty
 
-    describe "index" $ do
-        let test name dummy = prop name $
-              \i' (QCM.NonEmpty xs) ->
-                let seq' = fromListAs xs dummy
-                    mx   = index xs (fromIntegral i)
-                    i    = fromIntegral (i' :: Int)
-                 in do
-                    mx @?= index seq' i
-                    case mx of
-                        Nothing -> return ()
-                        Just x  -> indexEx seq' i @?= x
-        test "works on lists" ([] :: [Int])
-        test "works on strict texts" ("" :: Text)
-        test "works on lazy texts" ("" :: TL.Text)
-        test "works on strict bytestrings" S.empty
-        test "works on lazy bytestrings" L.empty
-        test "works on Vector" (V.singleton (1 :: Int))
-        test "works on SVector" (VS.singleton (1 :: Int))
-#if MIN_VERSION_vector(0,13,2)
-        test "works on StrictVector" (VSC.singleton (1 :: Int))
-#endif
-        test "works on UVector" (U.singleton (1 :: Int))
-        test "works on Seq" (Seq.fromList [1 :: Int])
-
-    describe "groupAllOn" $ do
-        it "works on lists" $
-            groupAllOn (`mod` 3) ([1..9] :: [Int]) @?= [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
-
-    describe "breakWord" $ do
-        let test x y z = it (show (x, y, z)) $ breakWord (x :: Text) @?= (y, z)
-        test "hello world" "hello" "world"
-        test "hello     world" "hello" "world"
-        test "hello\r\nworld" "hello" "world"
-        test "hello there  world" "hello" "there  world"
-        test "" "" ""
-        test "hello    \n\r\t" "hello" ""
-
-    describe "breakLine" $ do
-        let test x y z = it (show (x, y, z)) $ breakLine (x :: Text) @?= (y, z)
-        test "hello world" "hello world" ""
-        test "hello\r\n world" "hello" " world"
-        test "hello\n world" "hello" " world"
-        test "hello\r world" "hello\r world" ""
-        test "hello\r\nworld" "hello" "world"
-        test "hello\r\nthere\nworld" "hello" "there\nworld"
-        test "hello\n\r\nworld" "hello" "\r\nworld"
-        test "" "" ""
-
-    describe "omapM_" $ do
-        let test typ dummy = prop typ $ \input ->
-                input @?= execWriter (omapM_ (tell . return) (fromListAs input dummy))
-        test "works on strict bytestrings" S.empty
-        test "works on lazy bytestrings" L.empty
-        test "works on strict texts" T.empty
-        test "works on lazy texts" TL.empty
-
-    describe "inits" $ do
-        let test typ emptyTyp = describe typ $ do
-              it "empty" $ inits emptyTyp @?= [""]
-              it "one element" $ inits ("a" <> emptyTyp) @?= ["", "a"]
-              it "two elements" $ inits ("ab" <> emptyTyp) @?= ["", "a", "ab"]
-        test "String" (mempty :: String)
-        test "StrictBytestring" S.empty
-        test "LazyBytestring" L.empty
-        test "StrictText" T.empty
-        test "LazyText" TL.empty
-        test "Seq" Seq.empty
-        test "Vector" (mempty :: V.Vector Char)
-        test "Unboxed Vector" (mempty :: U.Vector Char)
-        test "Storable Vector" (mempty :: VS.Vector Char)
-#if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (mempty :: VSC.Vector Char)
-#endif
-
-    describe "tails" $ do
-        let test typ emptyTyp = describe typ $ do
-              it "empty" $ tails emptyTyp @?= [""]
-              it "one element" $ tails ("a" <> emptyTyp) @?= ["a", ""]
-              it "two elements" $ tails ("ab" <> emptyTyp) @?= ["ab", "b", ""]
-        test "String" (mempty :: String)
-        test "StrictBytestring" S.empty
-        test "LazyBytestring" L.empty
-        test "StrictText" T.empty
-        test "LazyText" TL.empty
-        test "Seq" Seq.empty
-        test "Vector" (mempty :: V.Vector Char)
-        test "Unboxed Vector" (mempty :: U.Vector Char)
-        test "Storable Vector" (mempty :: VS.Vector Char)
-#if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (mempty :: VSC.Vector Char)
-#endif
-
-    describe "initTails" $ do
-        let test typ emptyTyp = describe typ $ do
-              it "empty" $ initTails emptyTyp @?= [("","")]
-              it "one element" $ initTails ("a" <> emptyTyp) @?= [("","a"), ("a","")]
-              it "two elements" $ initTails ("ab" <> emptyTyp) @?= [("","ab"), ("a","b"), ("ab","")]
-        test "String" (mempty :: String)
-        test "StrictBytestring" S.empty
-        test "LazyBytestring" L.empty
-        test "StrictText" T.empty
-        test "LazyText" TL.empty
-        test "Seq" Seq.empty
-        test "Vector" (mempty :: V.Vector Char)
-        test "Unboxed Vector" (mempty :: U.Vector Char)
-        test "Storable Vector" (mempty :: VS.Vector Char)
-#if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (mempty :: VSC.Vector Char)
-#endif
-
-    describe "NonNull" $ do
-        describe "fromNonEmpty" $ do
-            prop "toMinList" $ \(NonEmpty' ne) ->
-                (NE.toList ne :: [Int]) @?= NN.toNullable (NN.toMinList ne)
-        describe "toNonEmpty" $ do
-            it "converts nonnull to nonempty" $ do
-                NN.toNonEmpty (NN.impureNonNull [1,2,3]) @?= NE.fromList [1,2,3]
-
-        describe "mapNonNull" $ do
-            prop "mapNonNull id == id" $ \x xs ->
-                let nonNull = NN.ncons x (xs :: [Int])
-                in NN.mapNonNull Prelude.id nonNull @?= nonNull
-            prop "mapNonNull (f . g) == mapNonNull f . mapNonNull g" $
-                \(Fn (f :: Integer -> String)) (Fn (g :: Int -> Integer)) x xs ->
-                    let nns = NN.ncons x (xs :: [Int])
-                    in NN.mapNonNull (f . g) nns @?= NN.mapNonNull f (NN.mapNonNull g nns)
-
-        let -- | Type restricted 'NN.ncons'
-            nconsAs :: IsSequence seq => Element seq -> [Element seq] -> seq -> NN.NonNull seq
-            nconsAs x xs _ = NN.ncons x (fromList xs)
-
-            test :: (IsSequence typ, Ord (Element typ), Arbitrary (Element typ), Show (Element typ), Show typ, Eq typ, Eq (Element typ))
-                 => String -> typ -> Spec
-            test typ du = describe typ $ do
-                prop "head" $ \x xs ->
-                    NN.head (nconsAs x xs du) @?= x
-                prop "tail" $ \x xs ->
-                    NN.tail (nconsAs x xs du) @?= fromList xs
-                prop "last" $ \x xs ->
-                    NN.last (reverse $ nconsAs x xs du) @?= x
-                prop "init" $ \x xs ->
-                    NN.init (reverse $ nconsAs x xs du) @?= reverse (fromList xs)
-                prop "maximum" $ \x xs ->
-                    NN.maximum (nconsAs x xs du) @?= Prelude.maximum (x:xs)
-                prop "maximumBy" $ \x xs ->
-                    NN.maximumBy compare (nconsAs x xs du) @?= Prelude.maximum (x:xs)
-                prop "minimum" $ \x xs ->
-                    NN.minimum (nconsAs x xs du) @?= Prelude.minimum (x:xs)
-                prop "minimumBy" $ \x xs ->
-                    NN.minimumBy compare (nconsAs x xs du) @?= Prelude.minimum (x:xs)
-                prop "ofoldMap1" $ \x xs ->
-                    SG.getMax (NN.ofoldMap1 SG.Max $ nconsAs x xs du) @?= Prelude.maximum (x:xs)
-                prop "ofoldr1" $ \x xs ->
-                    NN.ofoldr1 Prelude.min (nconsAs x xs du) @?= Prelude.minimum (x:xs)
-                prop "ofoldl1'" $ \x xs ->
-                    NN.ofoldl1' Prelude.min (nconsAs x xs du) @?= Prelude.minimum (x:xs)
-
-        test "Strict ByteString" S.empty
-        test "Lazy ByteString" L.empty
-        test "Strict Text" T.empty
-        test "Lazy Text" TL.empty
-        test "Vector" (V.empty :: V.Vector Int)
-        test "Unboxed Vector" (U.empty :: U.Vector Int)
-        test "Storable Vector" (VS.empty :: VS.Vector Int)
-#if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
-#endif
-        test "List" ([5 :: Int])
-
-    describe "Containers" $ do
-        let test typ dummy xlookup xinsert xdelete = describe typ $ do
-                prop "difference" $ \(DuplPairs xs) (DuplPairs ys) ->
-                    let m1 = mapFromList xs `difference` mapFromList ys
-                        m2 = mapFromListAs (xs `difference` ys) dummy
-                     in m1 @?= m2
-
-                prop "lookup" $ \(DuplPairs xs) -> indexIn xs $ \k ->
-                    let m = mapFromListAs xs dummy
-                        v1 = lookup k m
-                    in do
-                        v1 @?= lookup k xs
-                        v1 @?= xlookup k m
-
-                prop "insert" $ \(DuplPairs xs) v -> indexIn xs $ \k ->
-                    let m = mapFromListAs xs dummy
-                        m1 = insertMap k v m
+        describe "index" $ do
+            let test name dummy = prop name $
+                  \i' (QCM.NonEmpty xs) ->
+                    let seq' = fromListAs xs dummy
+                        mx   = index xs (fromIntegral i)
+                        i    = fromIntegral (i' :: Int)
                      in do
-                        m1 @?= mapFromList (insertMap k v xs)
-                        m1 @?= xinsert k v m
+                        mx @?= index seq' i
+                        case mx of
+                            Nothing -> return ()
+                            Just x  -> indexEx seq' i @?= x
+            test "works on lists" ([] :: [Int])
+            test "works on strict texts" ("" :: Text)
+            test "works on lazy texts" ("" :: TL.Text)
+            test "works on strict bytestrings" S.empty
+            test "works on lazy bytestrings" L.empty
+            test "works on Vector" (V.singleton (1 :: Int))
+            test "works on SVector" (VS.singleton (1 :: Int))
+#if MIN_VERSION_vector(0,13,2)
+            test "works on StrictVector" (VSC.singleton (1 :: Int))
+#endif
+            test "works on UVector" (U.singleton (1 :: Int))
+            test "works on Seq" (Seq.fromList [1 :: Int])
 
-                prop "delete" $ \(DuplPairs xs) -> indexIn xs $ \k ->
-                    let m = mapFromListAs xs dummy
-                        m1 = deleteMap k m
-                     in do
-                        m1 @?= mapFromList (deleteMap k xs)
-                        m1 @?= xdelete k m
+        describe "groupAllOn" $ do
+            it "works on lists" $
+                groupAllOn (`mod` 3) ([1..9] :: [Int]) @?= [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
 
-                prop "singletonMap" $ \k v ->
-                    singletonMap k v @?= (mapFromListAs [(k, v)] dummy)
+        describe "breakWord" $ do
+            let test x y z = it (show (x, y, z)) $ breakWord (x :: Text) @?= (y, z)
+            test "hello world" "hello" "world"
+            test "hello     world" "hello" "world"
+            test "hello\r\nworld" "hello" "world"
+            test "hello there  world" "hello" "there  world"
+            test "" "" ""
+            test "hello    \n\r\t" "hello" ""
 
-                prop "findWithDefault" $ \(DuplPairs xs) k v ->
-                    findWithDefault v k (mapFromListAs xs dummy)
-                        @?= findWithDefault v k xs
+        describe "breakLine" $ do
+            let test x y z = it (show (x, y, z)) $ breakLine (x :: Text) @?= (y, z)
+            test "hello world" "hello world" ""
+            test "hello\r\n world" "hello" " world"
+            test "hello\n world" "hello" " world"
+            test "hello\r world" "hello\r world" ""
+            test "hello\r\nworld" "hello" "world"
+            test "hello\r\nthere\nworld" "hello" "there\nworld"
+            test "hello\n\r\nworld" "hello" "\r\nworld"
+            test "" "" ""
 
-                prop "insertWith" $ \(DuplPairs xs) k v ->
-                    insertWith (+) k v (mapFromListAs xs dummy)
-                        @?= mapFromList (insertWith (+) k v xs)
+        describe "omapM_" $ do
+            let test typ dummy = prop typ $ \input ->
+                    input @?= execWriter (omapM_ (tell . return) (fromListAs input dummy))
+            test "works on strict bytestrings" S.empty
+            test "works on lazy bytestrings" L.empty
+            test "works on strict texts" T.empty
+            test "works on lazy texts" TL.empty
 
-                prop "insertWithKey" $ \(DuplPairs xs) k v ->
-                    let m = mapFromListAs xs dummy
-                        f x y z = x + y + z
-                     in insertWithKey f k v m
-                            @?= mapFromList (insertWithKey f k v xs)
+        describe "inits" $ do
+            let test typ emptyTyp = describe typ $ do
+                  it "empty" $ inits emptyTyp @?= [""]
+                  it "one element" $ inits ("a" <> emptyTyp) @?= ["", "a"]
+                  it "two elements" $ inits ("ab" <> emptyTyp) @?= ["", "a", "ab"]
+            test "String" (mempty :: String)
+            test "StrictBytestring" S.empty
+            test "LazyBytestring" L.empty
+            test "StrictText" T.empty
+            test "LazyText" TL.empty
+            test "Seq" Seq.empty
+            test "Vector" (mempty :: V.Vector Char)
+            test "Unboxed Vector" (mempty :: U.Vector Char)
+            test "Storable Vector" (mempty :: VS.Vector Char)
+#if MIN_VERSION_vector(0,13,2)
+            test "Strict Vector" (mempty :: VSC.Vector Char)
+#endif
 
-                prop "insertLookupWithKey" $ \(DuplPairs xs) k v ->
-                    let m = mapFromListAs xs dummy
-                        f x y z = x + y + z
-                     in insertLookupWithKey f k v m @?=
-                            second mapFromList (insertLookupWithKey f k v xs)
+        describe "tails" $ do
+            let test typ emptyTyp = describe typ $ do
+                  it "empty" $ tails emptyTyp @?= [""]
+                  it "one element" $ tails ("a" <> emptyTyp) @?= ["a", ""]
+                  it "two elements" $ tails ("ab" <> emptyTyp) @?= ["ab", "b", ""]
+            test "String" (mempty :: String)
+            test "StrictBytestring" S.empty
+            test "LazyBytestring" L.empty
+            test "StrictText" T.empty
+            test "LazyText" TL.empty
+            test "Seq" Seq.empty
+            test "Vector" (mempty :: V.Vector Char)
+            test "Unboxed Vector" (mempty :: U.Vector Char)
+            test "Storable Vector" (mempty :: VS.Vector Char)
+#if MIN_VERSION_vector(0,13,2)
+            test "Strict Vector" (mempty :: VSC.Vector Char)
+#endif
 
-                prop "adjustMap" $ \(DuplPairs xs) k ->
-                    adjustMap succ k (mapFromListAs xs dummy)
-                        @?= mapFromList (adjustMap succ k xs)
+        describe "initTails" $ do
+            let test typ emptyTyp = describe typ $ do
+                  it "empty" $ initTails emptyTyp @?= [("","")]
+                  it "one element" $ initTails ("a" <> emptyTyp) @?= [("","a"), ("a","")]
+                  it "two elements" $ initTails ("ab" <> emptyTyp) @?= [("","ab"), ("a","b"), ("ab","")]
+            test "String" (mempty :: String)
+            test "StrictBytestring" S.empty
+            test "LazyBytestring" L.empty
+            test "StrictText" T.empty
+            test "LazyText" TL.empty
+            test "Seq" Seq.empty
+            test "Vector" (mempty :: V.Vector Char)
+            test "Unboxed Vector" (mempty :: U.Vector Char)
+            test "Storable Vector" (mempty :: VS.Vector Char)
+#if MIN_VERSION_vector(0,13,2)
+            test "Strict Vector" (mempty :: VSC.Vector Char)
+#endif
 
-                prop "adjustWithKey" $ \(DuplPairs xs) k ->
-                    adjustWithKey (+) k (mapFromListAs xs dummy)
-                        @?= mapFromList (adjustWithKey (+) k xs)
+        describe "NonNull" $ do
+            describe "fromNonEmpty" $ do
+                prop "toMinList" $ \(NonEmpty' ne) ->
+                    (NE.toList ne :: [Int]) @?= NN.toNullable (NN.toMinList ne)
+            describe "toNonEmpty" $ do
+                it "converts nonnull to nonempty" $ do
+                    NN.toNonEmpty (NN.impureNonNull [1,2,3]) @?= NE.fromList [1,2,3]
 
-                prop "updateMap" $ \(DuplPairs xs) k ->
-                    let f i = if i < 0 then Nothing else Just $ i * 2
-                     in updateMap f k (mapFromListAs xs dummy)
-                            @?= mapFromList (updateMap f k xs)
+            describe "mapNonNull" $ do
+                prop "mapNonNull id == id" $ \x xs ->
+                    let nonNull = NN.ncons x (xs :: [Int])
+                    in NN.mapNonNull Prelude.id nonNull @?= nonNull
+                prop "mapNonNull (f . g) == mapNonNull f . mapNonNull g" $
+                    \(Fn (f :: Integer -> String)) (Fn (g :: Int -> Integer)) x xs ->
+                        let nns = NN.ncons x (xs :: [Int])
+                        in NN.mapNonNull (f . g) nns @?= NN.mapNonNull f (NN.mapNonNull g nns)
 
-                prop "updateWithKey" $ \(DuplPairs xs) k' ->
-                    let f k i = if i < 0 then Nothing else Just $ i * k
-                     in updateWithKey f k' (mapFromListAs xs dummy)
-                            @?= mapFromList (updateWithKey f k' xs)
+            let -- | Type restricted 'NN.ncons'
+                nconsAs :: IsSequence seq => Element seq -> [Element seq] -> seq -> NN.NonNull seq
+                nconsAs x xs _ = NN.ncons x (fromList xs)
 
-                prop "updateLookupWithKey" $ \(DuplPairs xs) k' ->
-                    let f k i = if i < 0 then Nothing else Just $ i * k
-                     in updateLookupWithKey f k' (mapFromListAs xs dummy)
-                            @?= second mapFromList (updateLookupWithKey f k' xs)
+                test :: (IsSequence typ, Ord (Element typ), Arbitrary (Element typ), Show (Element typ), Show typ, Eq typ, Eq (Element typ))
+                     => String -> typ -> Spec
+                test typ du = describe typ $ do
+                    prop "head" $ \x xs ->
+                        NN.head (nconsAs x xs du) @?= x
+                    prop "tail" $ \x xs ->
+                        NN.tail (nconsAs x xs du) @?= fromList xs
+                    prop "last" $ \x xs ->
+                        NN.last (reverse $ nconsAs x xs du) @?= x
+                    prop "init" $ \x xs ->
+                        NN.init (reverse $ nconsAs x xs du) @?= reverse (fromList xs)
+                    prop "maximum" $ \x xs ->
+                        NN.maximum (nconsAs x xs du) @?= Prelude.maximum (x:xs)
+                    prop "maximumBy" $ \x xs ->
+                        NN.maximumBy compare (nconsAs x xs du) @?= Prelude.maximum (x:xs)
+                    prop "minimum" $ \x xs ->
+                        NN.minimum (nconsAs x xs du) @?= Prelude.minimum (x:xs)
+                    prop "minimumBy" $ \x xs ->
+                        NN.minimumBy compare (nconsAs x xs du) @?= Prelude.minimum (x:xs)
+                    prop "ofoldMap1" $ \x xs ->
+                        SG.getMax (NN.ofoldMap1 SG.Max $ nconsAs x xs du) @?= Prelude.maximum (x:xs)
+                    prop "ofoldr1" $ \x xs ->
+                        NN.ofoldr1 Prelude.min (nconsAs x xs du) @?= Prelude.minimum (x:xs)
+                    prop "ofoldl1'" $ \x xs ->
+                        NN.ofoldl1' Prelude.min (nconsAs x xs du) @?= Prelude.minimum (x:xs)
 
-                prop "alter" $ \(DuplPairs xs) k ->
-                    let m = mapFromListAs xs dummy
-                        f Nothing = Just (-1)
-                        f (Just i) = if i < 0 then Nothing else Just (i * 2)
-                     in lookup k (alterMap f k m) @?= f (lookup k m)
+            test "Strict ByteString" S.empty
+            test "Lazy ByteString" L.empty
+            test "Strict Text" T.empty
+            test "Lazy Text" TL.empty
+            test "Vector" (V.empty :: V.Vector Int)
+            test "Unboxed Vector" (U.empty :: U.Vector Int)
+            test "Storable Vector" (VS.empty :: VS.Vector Int)
+#if MIN_VERSION_vector(0,13,2)
+            test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+#endif
+            test "List" ([5 :: Int])
 
-                prop "unionWith" $ \(DuplPairs xs) (DuplPairs ys) ->
-                    let m1 = unionWith (+)
-                                (mapFromListAs xs dummy)
-                                (mapFromListAs ys dummy)
-                        m2 = mapFromList (unionWith (+) xs ys)
-                     in m1 @?= m2
+        describe "Containers" $ do
+            let test typ dummy xlookup xinsert xdelete = describe typ $ do
+                    prop "difference" $ \(DuplPairs xs) (DuplPairs ys) ->
+                        let m1 = mapFromList xs `difference` mapFromList ys
+                            m2 = mapFromListAs (xs `difference` ys) dummy
+                         in m1 @?= m2
 
-                prop "unionWithKey" $ \(DuplPairs xs) (DuplPairs ys) ->
-                    let f k x y = k + x + y
-                        m1 = unionWithKey f
-                                (mapFromListAs xs dummy)
-                                (mapFromListAs ys dummy)
-                        m2 = mapFromList (unionWithKey f xs ys)
-                     in m1 @?= m2
+                    prop "lookup" $ \(DuplPairs xs) -> indexIn xs $ \k ->
+                        let m = mapFromListAs xs dummy
+                            v1 = lookup k m
+                        in do
+                            v1 @?= lookup k xs
+                            v1 @?= xlookup k m
 
-                prop "unionsWith" $ \(SmallList xss) ->
-                    let duplXss = map unDupl xss
-                        ms = map mapFromList duplXss `asTypeOf` [dummy]
-                     in unionsWith (+) ms
-                            @?= mapFromList (unionsWith (+) duplXss)
+                    prop "insert" $ \(DuplPairs xs) v -> indexIn xs $ \k ->
+                        let m = mapFromListAs xs dummy
+                            m1 = insertMap k v m
+                         in do
+                            m1 @?= mapFromList (insertMap k v xs)
+                            m1 @?= xinsert k v m
 
-                prop "mapWithKey" $ \(DuplPairs xs) ->
-                    let m1 = mapWithKey (+) (mapFromList xs) `asTypeOf` dummy
-                        m2 = mapFromList $ mapWithKey (+) xs
-                     in m1 @?= m2
+                    prop "delete" $ \(DuplPairs xs) -> indexIn xs $ \k ->
+                        let m = mapFromListAs xs dummy
+                            m1 = deleteMap k m
+                         in do
+                            m1 @?= mapFromList (deleteMap k xs)
+                            m1 @?= xdelete k m
 
-                prop "omapKeysWith" $ \(DuplPairs xs) ->
-                    let f = flip mod 5
-                        m1 = omapKeysWith (+) f (mapFromList xs) `asTypeOf` dummy
-                        m2 = mapFromList $ omapKeysWith (+) f xs
-                     in m1 @?= m2
+                    prop "singletonMap" $ \k v ->
+                        singletonMap k v @?= (mapFromListAs [(k, v)] dummy)
 
-        test "Data.Map" (Map.empty :: Map.Map Int Int)
-            Map.lookup Map.insert Map.delete
-        test "Data.IntMap" (IntMap.empty :: IntMap.IntMap Int)
-            IntMap.lookup IntMap.insert IntMap.delete
-        test "Data.HashMap" (HashMap.empty :: HashMap.HashMap Int Int)
-            HashMap.lookup HashMap.insert HashMap.delete
+                    prop "findWithDefault" $ \(DuplPairs xs) k v ->
+                        findWithDefault v k (mapFromListAs xs dummy)
+                            @?= findWithDefault v k xs
 
-    describe "Foldl Integration" $ do
-        prop "vector" $ \xs -> do
+                    prop "insertWith" $ \(DuplPairs xs) k v ->
+                        insertWith (+) k v (mapFromListAs xs dummy)
+                            @?= mapFromList (insertWith (+) k v xs)
+
+                    prop "insertWithKey" $ \(DuplPairs xs) k v ->
+                        let m = mapFromListAs xs dummy
+                            f x y z = x + y + z
+                         in insertWithKey f k v m
+                                @?= mapFromList (insertWithKey f k v xs)
+
+                    prop "insertLookupWithKey" $ \(DuplPairs xs) k v ->
+                        let m = mapFromListAs xs dummy
+                            f x y z = x + y + z
+                         in insertLookupWithKey f k v m @?=
+                                second mapFromList (insertLookupWithKey f k v xs)
+
+                    prop "adjustMap" $ \(DuplPairs xs) k ->
+                        adjustMap succ k (mapFromListAs xs dummy)
+                            @?= mapFromList (adjustMap succ k xs)
+
+                    prop "adjustWithKey" $ \(DuplPairs xs) k ->
+                        adjustWithKey (+) k (mapFromListAs xs dummy)
+                            @?= mapFromList (adjustWithKey (+) k xs)
+
+                    prop "updateMap" $ \(DuplPairs xs) k ->
+                        let f i = if i < 0 then Nothing else Just $ i * 2
+                         in updateMap f k (mapFromListAs xs dummy)
+                                @?= mapFromList (updateMap f k xs)
+
+                    prop "updateWithKey" $ \(DuplPairs xs) k' ->
+                        let f k i = if i < 0 then Nothing else Just $ i * k
+                         in updateWithKey f k' (mapFromListAs xs dummy)
+                                @?= mapFromList (updateWithKey f k' xs)
+
+                    prop "updateLookupWithKey" $ \(DuplPairs xs) k' ->
+                        let f k i = if i < 0 then Nothing else Just $ i * k
+                         in updateLookupWithKey f k' (mapFromListAs xs dummy)
+                                @?= second mapFromList (updateLookupWithKey f k' xs)
+
+                    prop "alter" $ \(DuplPairs xs) k ->
+                        let m = mapFromListAs xs dummy
+                            f Nothing = Just (-1)
+                            f (Just i) = if i < 0 then Nothing else Just (i * 2)
+                         in lookup k (alterMap f k m) @?= f (lookup k m)
+
+                    prop "unionWith" $ \(DuplPairs xs) (DuplPairs ys) ->
+                        let m1 = unionWith (+)
+                                    (mapFromListAs xs dummy)
+                                    (mapFromListAs ys dummy)
+                            m2 = mapFromList (unionWith (+) xs ys)
+                         in m1 @?= m2
+
+                    prop "unionWithKey" $ \(DuplPairs xs) (DuplPairs ys) ->
+                        let f k x y = k + x + y
+                            m1 = unionWithKey f
+                                    (mapFromListAs xs dummy)
+                                    (mapFromListAs ys dummy)
+                            m2 = mapFromList (unionWithKey f xs ys)
+                         in m1 @?= m2
+
+                    prop "unionsWith" $ \(SmallList xss) ->
+                        let duplXss = map unDupl xss
+                            ms = map mapFromList duplXss `asTypeOf` [dummy]
+                         in unionsWith (+) ms
+                                @?= mapFromList (unionsWith (+) duplXss)
+
+                    prop "mapWithKey" $ \(DuplPairs xs) ->
+                        let m1 = mapWithKey (+) (mapFromList xs) `asTypeOf` dummy
+                            m2 = mapFromList $ mapWithKey (+) xs
+                         in m1 @?= m2
+
+                    prop "omapKeysWith" $ \(DuplPairs xs) ->
+                        let f = flip mod 5
+                            m1 = omapKeysWith (+) f (mapFromList xs) `asTypeOf` dummy
+                            m2 = mapFromList $ omapKeysWith (+) f xs
+                         in m1 @?= m2
+
+            test "Data.Map" (Map.empty :: Map.Map Int Int)
+                Map.lookup Map.insert Map.delete
+            test "Data.IntMap" (IntMap.empty :: IntMap.IntMap Int)
+                IntMap.lookup IntMap.insert IntMap.delete
+            test "Data.HashMap" (HashMap.empty :: HashMap.HashMap Int Int)
+                HashMap.lookup HashMap.insert HashMap.delete
+
+        describe "Foldl Integration" $ do
+            prop "vector" $ \xs -> do
 #if MIN_VERSION_foldl(1,3,0)
-            let x1 = Foldl.fold Foldl.vector (xs :: [Int])
-                x2 = Foldl.purely ofoldlUnwrap Foldl.vector xs
+                let x1 = Foldl.fold Foldl.vector (xs :: [Int])
+                    x2 = Foldl.purely ofoldlUnwrap Foldl.vector xs
 #else
-            x1 <- Foldl.foldM Foldl.vector (xs :: [Int])
-            x2 <- Foldl.impurely ofoldMUnwrap Foldl.vector xs
+                x1 <- Foldl.foldM Foldl.vector (xs :: [Int])
+                x2 <- Foldl.impurely ofoldMUnwrap Foldl.vector xs
 #endif
-            x2 @?= (x1 :: V.Vector Int)
-        prop "length" $ \xs -> do
-            let x1 = Foldl.fold Foldl.length (xs :: [Int])
-                x2 = Foldl.purely ofoldlUnwrap Foldl.length xs
-            x2 @?= x1
+                x2 @?= (x1 :: V.Vector Int)
+            prop "length" $ \xs -> do
+                let x1 = Foldl.fold Foldl.length (xs :: [Int])
+                    x2 = Foldl.purely ofoldlUnwrap Foldl.length xs
+                x2 @?= x1
 
-    describe "Replacing" $ do
-        let test typ dummy = describe typ $ do
-                prop "replaceElem old new === omap (\\x -> if x == old then new else x)" $
-                    -- replace random element or any random value with random new value
-                    \x list new -> forAll (elements (x:list)) $ \old ->
-                    let seq' = fromListAs list dummy
-                    in replaceElem old new seq' @?= omap (\x' -> if x' == old then new else x') seq'
+        describe "Replacing" $ do
+            let test typ dummy = describe typ $ do
+                    prop "replaceElem old new === omap (\\x -> if x == old then new else x)" $
+                        -- replace random element or any random value with random new value
+                        \x list new -> forAll (elements (x:list)) $ \old ->
+                        let seq' = fromListAs list dummy
+                        in replaceElem old new seq' @?= omap (\x' -> if x' == old then new else x') seq'
 #if MIN_VERSION_QuickCheck(2,8,0)
-                prop "replaceSeq old new === ointercalate new . splitSeq old" $
-                    -- replace random subsequence with random new sequence
-                    \list new -> forAll (sublistOf list) $ \old ->
-                    let [seq', old', new'] = map (`fromListAs` dummy) [list, old, new]
-                    in replaceSeq old' new' seq' @?= ointercalate new' (splitSeq old' seq')
-                prop "replaceSeq old old === id" $ \list -> forAll (sublistOf list) $ \old ->
-                    let [seq', old'] = map (`fromListAs` dummy) [list, old]
-                    in replaceSeq old' old' seq' @?= seq'
+                    prop "replaceSeq old new === ointercalate new . splitSeq old" $
+                        -- replace random subsequence with random new sequence
+                        \list new -> forAll (sublistOf list) $ \old ->
+                        let [seq', old', new'] = map (`fromListAs` dummy) [list, old, new]
+                        in replaceSeq old' new' seq' @?= ointercalate new' (splitSeq old' seq')
+                    prop "replaceSeq old old === id" $ \list -> forAll (sublistOf list) $ \old ->
+                        let [seq', old'] = map (`fromListAs` dummy) [list, old]
+                        in replaceSeq old' old' seq' @?= seq'
 #endif
-        test "List" ([] :: [Int])
-        test "Vector" (V.empty :: V.Vector Int)
-        test "Storable Vector" (VS.empty :: VS.Vector Int)
-        test "Unboxed Vector" (U.empty :: U.Vector Int)
+            test "List" ([] :: [Int])
+            test "Vector" (V.empty :: V.Vector Int)
+            test "Storable Vector" (VS.empty :: VS.Vector Int)
+            test "Unboxed Vector" (U.empty :: U.Vector Int)
 #if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+            test "Strict Vector" (VSC.empty :: VSC.Vector Int)
 #endif
-        test "Strict ByteString" S.empty
-        test "Lazy ByteString" L.empty
-        test "Strict Text" T.empty
-        test "Lazy Text" TL.empty
+            test "Strict ByteString" S.empty
+            test "Lazy ByteString" L.empty
+            test "Strict Text" T.empty
+            test "Lazy Text" TL.empty
 
-    describe "Sorting" $ do
-        let test typ dummy = describe typ $ do
-                prop "sortBy" $ \input -> do
-                    let f x y = compare y x
-                    fromList (sortBy f input) @?= sortBy f (fromListAs input dummy)
-                prop "sort" $ \input ->
-                    fromList (sort input) @?= sort (fromListAs input dummy)
-        test "List" ([] :: [Int])
-        test "Vector" (V.empty :: V.Vector Int)
-        test "Storable Vector" (VS.empty :: VS.Vector Int)
-        test "Unboxed Vector" (U.empty :: U.Vector Int)
+        describe "Sorting" $ do
+            let test typ dummy = describe typ $ do
+                    prop "sortBy" $ \input -> do
+                        let f x y = compare y x
+                        fromList (sortBy f input) @?= sortBy f (fromListAs input dummy)
+                    prop "sort" $ \input ->
+                        fromList (sort input) @?= sort (fromListAs input dummy)
+            test "List" ([] :: [Int])
+            test "Vector" (V.empty :: V.Vector Int)
+            test "Storable Vector" (VS.empty :: VS.Vector Int)
+            test "Unboxed Vector" (U.empty :: U.Vector Int)
 #if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+            test "Strict Vector" (VSC.empty :: VSC.Vector Int)
 #endif
-        test "Strict ByteString" S.empty
-        test "Lazy ByteString" L.empty
-        test "Strict Text" T.empty
-        test "Lazy Text" TL.empty
+            test "Strict ByteString" S.empty
+            test "Lazy ByteString" L.empty
+            test "Strict Text" T.empty
+            test "Lazy Text" TL.empty
 
-    describe "Intercalate" $ do
-        let test typ dummy = describe typ $ do
-                prop "intercalate === defaultIntercalate" $ \list lists ->
-                    let seq' = fromListAs list dummy
-                        seqs = map (`fromListAs` dummy) lists
-                    in ointercalate seq' seqs @?= fromList (List.intercalate list lists)
-        test "List" ([] :: [Int])
-        test "Vector" (V.empty :: V.Vector Int)
-        test "Storable Vector" (VS.empty :: VS.Vector Int)
-        test "Unboxed Vector" (U.empty :: U.Vector Int)
+        describe "Intercalate" $ do
+            let test typ dummy = describe typ $ do
+                    prop "intercalate === defaultIntercalate" $ \list lists ->
+                        let seq' = fromListAs list dummy
+                            seqs = map (`fromListAs` dummy) lists
+                        in ointercalate seq' seqs @?= fromList (List.intercalate list lists)
+            test "List" ([] :: [Int])
+            test "Vector" (V.empty :: V.Vector Int)
+            test "Storable Vector" (VS.empty :: VS.Vector Int)
+            test "Unboxed Vector" (U.empty :: U.Vector Int)
 #if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+            test "Strict Vector" (VSC.empty :: VSC.Vector Int)
 #endif
-        test "Strict ByteString" S.empty
-        test "Lazy ByteString" L.empty
-        test "Strict Text" T.empty
-        test "Lazy Text" TL.empty
+            test "Strict ByteString" S.empty
+            test "Lazy ByteString" L.empty
+            test "Strict Text" T.empty
+            test "Lazy Text" TL.empty
 
-    describe "Splitting" $ do
-        let test typ dummy = describe typ $ do
-                let fromList' = (`fromListAs` dummy)
-                let fromSepList sep = fromList' . map (fromMaybe sep)
-                prop "intercalate sep . splitSeq sep === id" $
-                    \(fromList' -> sep) ->
-                    \(mconcat . map (maybe sep fromList') -> xs) ->
-                    ointercalate sep (splitSeq sep xs) @?= xs
-                prop "splitSeq mempty xs === mempty : map singleton (otoList xs)" $
-                    \input ->
-                    splitSeq mempty (fromList' input) @?= mempty : map singleton input
-                prop "splitSeq _ mempty == [mempty]" $
-                    \(fromList' -> sep) ->
-                    splitSeq sep mempty @?= [mempty]
-                prop "intercalate (singleton sep) . splitElem sep === id" $
-                    \sep -> \(fromSepList sep -> xs) ->
-                    ointercalate (singleton sep) (splitElem sep xs) @?= xs
-                prop "length . splitElem sep === succ . length . filter (== sep)" $
-                    \sep -> \(fromSepList sep -> xs) ->
-                    olength (splitElem sep xs) @?= olength (filter (== sep) xs) + 1
-                prop "splitElem sep (replicate n sep) == replicate (n+1) mempty" $
-                    \(NonNegative n) sep ->
-                    splitElem sep (fromList' (replicate n sep)) @?= replicate (n + 1) mempty
-                prop "splitElem sep === splitWhen (== sep)" $
-                    \sep -> \(fromSepList sep -> xs) ->
-                    splitElem sep xs @?= splitWhen (== sep) xs
-                prop "splitElem sep === splitSeq (singleton sep)" $
-                    \sep -> \(fromSepList sep -> xs) ->
-                    splitElem sep xs @?= splitSeq (singleton sep) xs
-        test "List" ([] :: [Int])
-        test "Vector" (V.empty :: V.Vector Int)
-        test "Storable Vector" (VS.empty :: VS.Vector Int)
-        test "Unboxed Vector" (U.empty :: U.Vector Int)
+        describe "Splitting" $ do
+            let test typ dummy = describe typ $ do
+                    let fromList' = (`fromListAs` dummy)
+                    let fromSepList sep = fromList' . map (fromMaybe sep)
+                    prop "intercalate sep . splitSeq sep === id" $
+                        \(fromList' -> sep) ->
+                        \(mconcat . map (maybe sep fromList') -> xs) ->
+                        ointercalate sep (splitSeq sep xs) @?= xs
+                    prop "splitSeq mempty xs === mempty : map singleton (otoList xs)" $
+                        \input ->
+                        splitSeq mempty (fromList' input) @?= mempty : map singleton input
+                    prop "splitSeq _ mempty == [mempty]" $
+                        \(fromList' -> sep) ->
+                        splitSeq sep mempty @?= [mempty]
+                    prop "intercalate (singleton sep) . splitElem sep === id" $
+                        \sep -> \(fromSepList sep -> xs) ->
+                        ointercalate (singleton sep) (splitElem sep xs) @?= xs
+                    prop "length . splitElem sep === succ . length . filter (== sep)" $
+                        \sep -> \(fromSepList sep -> xs) ->
+                        olength (splitElem sep xs) @?= olength (filter (== sep) xs) + 1
+                    prop "splitElem sep (replicate n sep) == replicate (n+1) mempty" $
+                        \(NonNegative n) sep ->
+                        splitElem sep (fromList' (replicate n sep)) @?= replicate (n + 1) mempty
+                    prop "splitElem sep === splitWhen (== sep)" $
+                        \sep -> \(fromSepList sep -> xs) ->
+                        splitElem sep xs @?= splitWhen (== sep) xs
+                    prop "splitElem sep === splitSeq (singleton sep)" $
+                        \sep -> \(fromSepList sep -> xs) ->
+                        splitElem sep xs @?= splitSeq (singleton sep) xs
+            test "List" ([] :: [Int])
+            test "Vector" (V.empty :: V.Vector Int)
+            test "Storable Vector" (VS.empty :: VS.Vector Int)
+            test "Unboxed Vector" (U.empty :: U.Vector Int)
 #if MIN_VERSION_vector(0,13,2)
-        test "Strict Vector" (VSC.empty :: VSC.Vector Int)
+            test "Strict Vector" (VSC.empty :: VSC.Vector Int)
 #endif
-        test "Strict ByteString" S.empty
-        test "Lazy ByteString" L.empty
-        test "Strict Text" T.empty
-        test "Lazy Text" TL.empty
+            test "Strict ByteString" S.empty
+            test "Lazy ByteString" L.empty
+            test "Strict Text" T.empty
+            test "Lazy Text" TL.empty
 
-    describe "Other Issues" $ do
-        it "#26 headEx on a list works" $
-            headEx (1 : filter Prelude.odd [2,4..]) @?= (1 :: Int)
+        describe "Other Issues" $ do
+            it "#26 headEx on a list works" $
+                headEx (1 : filter Prelude.odd [2,4..]) @?= (1 :: Int)
 
-        it "#31 find doesn't infinitely loop on NonEmpty" $
-            find (== "a") ("a" NE.:| ["d","fgf"]) @?= Just ("a" :: String)
+            it "#31 find doesn't infinitely loop on NonEmpty" $
+                find (== "a") ("a" NE.:| ["d","fgf"]) @?= Just ("a" :: String)
 
-        it "#83 head on Seq works correctly" $ do
-            headEx (Seq.fromList [1 :: Int,2,3]) @?= (1 :: Int)
-            headMay (Seq.fromList [] :: Seq.Seq Int) @?= Nothing
+            it "#83 head on Seq works correctly" $ do
+                headEx (Seq.fromList [1 :: Int,2,3]) @?= (1 :: Int)
+                headMay (Seq.fromList [] :: Seq.Seq Int) @?= Nothing
