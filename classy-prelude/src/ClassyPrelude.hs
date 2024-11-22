@@ -1,7 +1,10 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
+
 module ClassyPrelude
     ( -- * CorePrelude
       module CorePrelude
@@ -129,6 +132,9 @@ module ClassyPrelude
     , DList
     , asDList
     , applyDList
+      -- ** Pattern synonyms for sequences
+    , pattern Empty
+    , pattern Cons
       -- ** Exceptions
     , module Control.DeepSeq
       -- ** Force types
@@ -627,6 +633,18 @@ getContents = liftIO LTextIO.getContents
 interact :: MonadIO m => (LText -> LText) -> m ()
 interact = liftIO . LTextIO.interact
 
+-- | Pattern synonyms for working with sequences,
+-- corresponding to [] and (x : xs) for List
+--
+-- @since 1.5.1
+{-# COMPLETE Empty, Cons #-}
+pattern Empty :: IsSequence seq => seq
+pattern Empty <- (uncons -> Nothing) where
+  Empty = fromList []
+
+pattern Cons :: IsSequence seq => Element seq -> seq -> seq
+pattern Cons x xs <- (uncons -> Just (x, xs)) where
+  Cons = cons
 
 #if MIN_VERSION_time(1,10,0)
 parseTime 
