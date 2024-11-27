@@ -1102,6 +1102,7 @@ instance IsSequence (V.Vector a) where
     {-# INLINE unsafeIndex #-}
 
 #if MIN_VERSION_vector(0,13,2)
+-- | @since 1.0.21.0
 instance SemiSequence (VSC.Vector a) where
     type Index (VSC.Vector a) = Int
     reverse = VSC.reverse
@@ -1118,6 +1119,7 @@ instance SemiSequence (VSC.Vector a) where
     {-# INLINE cons #-}
     {-# INLINE snoc #-}
 
+-- | @since 1.0.21.0
 instance IsSequence (VSC.Vector a) where
     fromList = VSC.fromList
     lengthIndex = VSC.length
