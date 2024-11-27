@@ -28,7 +28,6 @@
 -- instead.\" (Agreed, it's not a great mangling scheme, input is welcome!)
 module Data.MonoTraversable where
 
-
 import           Control.Applicative
 import           Control.Category
 import           Control.Monad        (Monad (..))
@@ -166,6 +165,7 @@ type instance Element (Product f g a) = a
 type instance Element (U.Vector a) = a
 type instance Element (VS.Vector a) = a
 #if MIN_VERSION_vector(0,13,2)
+-- | @since 1.0.21.0
 type instance Element (VSC.Vector a) = a
 #endif
 type instance Element (Arg a b) = b
@@ -268,6 +268,7 @@ instance VS.Storable a => MonoFunctor (VS.Vector a) where
     omap = VS.map
     {-# INLINE omap #-}
 #if MIN_VERSION_vector(0,13,2)
+-- | @since 1.0.21.0
 instance MonoFunctor (VSC.Vector a)
 #endif
 -- | @since 1.0.20.0
@@ -778,6 +779,7 @@ instance VS.Storable a => MonoFoldable (VS.Vector a) where
     {-# INLINE maximumByEx #-}
     {-# INLINE minimumByEx #-}
 #if MIN_VERSION_vector(0,13,2)
+-- | @since 1.0.21.0
 instance MonoFoldable (VSC.Vector a) where
     ofoldr = VSC.foldr
     ofoldl' = VSC.foldl'
@@ -1106,6 +1108,7 @@ instance VS.Storable a => MonoTraversable (VS.Vector a) where
     {-# INLINE otraverse #-}
     {-# INLINE omapM #-}
 #if MIN_VERSION_vector(0,13,2)
+-- | @since 1.0.21.0
 instance MonoTraversable (VSC.Vector a)
 #endif
 instance MonoTraversable (Either a b) where
@@ -1276,6 +1279,7 @@ instance VS.Storable a => MonoPointed (VS.Vector a) where
     opoint = VS.singleton
     {-# INLINE opoint #-}
 #if MIN_VERSION_vector(0,13,2)
+-- | @since 1.0.21.0
 instance MonoPointed (VSC.Vector a)
 #endif
 instance MonoPointed (Either a b) where
@@ -1389,6 +1393,7 @@ instance GrowingAppend (V.Vector a)
 instance U.Unbox a => GrowingAppend (U.Vector a)
 instance VS.Storable a => GrowingAppend (VS.Vector a)
 #if MIN_VERSION_vector(0,13,2)
+-- | @since 1.0.21.0
 instance GrowingAppend (VSC.Vector a)
 #endif
 instance GrowingAppend S.ByteString
