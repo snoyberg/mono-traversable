@@ -32,6 +32,8 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 #if MIN_VERSION_vector(0,13,2)
 import qualified Data.Vector.Strict as VSC
+#else
+{-# DependencyDeprecation "Support for vector < 0.13.2 will be removed when GHC 9.12 reaches Stackage nightly. Please upgrade to vector >= 0.13.2." #-}
 #endif
 import Data.String (IsString)
 import qualified Data.List.NonEmpty as NE
@@ -1139,7 +1141,7 @@ instance IsSequence (VSC.Vector a) where
     unsnoc v
         | VSC.null v = Nothing
         | otherwise = Just (VSC.init v, VSC.last v)
-    --groupBy = VSC.groupBy
+    groupBy = VSC.groupBy
     tailEx = VSC.tail
     initEx = VSC.init
     unsafeTail = VSC.unsafeTail

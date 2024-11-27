@@ -28,6 +28,7 @@
 -- instead.\" (Agreed, it's not a great mangling scheme, input is welcome!)
 module Data.MonoTraversable where
 
+
 import           Control.Applicative
 import           Control.Category
 import           Control.Monad        (Monad (..))
@@ -95,6 +96,8 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Storable as VS
 #if MIN_VERSION_vector(0,13,2)
 import qualified Data.Vector.Strict as VSC
+#else
+{-# DependencyDeprecation "Support for vector < 0.13.2 will be removed when GHC 9.12 reaches Stackage nightly. Please upgrade to vector >= 0.13.2." #-}
 #endif
 import qualified Data.IntSet as IntSet
 import Data.Semigroup
