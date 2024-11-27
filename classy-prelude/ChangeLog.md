@@ -1,5 +1,9 @@
 # ChangeLog for classy-prelude
 
+## 1.5.1.0
+
+* Added Empty and Cons pattern synonyms for sequences [#241](https://github.com/snoyberg/mono-traversable/issues/241)
+
 ## 1.5.0.3
 
 * Don't import Data.Functor.unzip [#215](https://github.com/snoyberg/mono-traversable/pull/215)
