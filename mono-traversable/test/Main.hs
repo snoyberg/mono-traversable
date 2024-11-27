@@ -149,6 +149,26 @@ main = hspec $ do
         prop "works on lists" $ \(Positive i) j ->
             ocompareLength (replicate i () :: [()]) j @?= compare i j
 
+    describe "groupBy" $ do
+        let test name dummy = prop name $ \(QCM.NonEmpty xs) -> do
+                let seq' = fromListAs xs dummy
+                let listDef f = Prelude.fmap fromList . List.groupBy f . otoList
+                groupBy (==) seq' @?= listDef (==) seq'
+                groupBy (/=) seq' @?= listDef (/=) seq'
+                groupBy (<) seq' @?= listDef (<) seq'
+                groupBy (>) seq' @?= listDef (>) seq'
+        test "works on lists" ([] :: [Char])
+        test "works on texts" ("" :: Text)
+        test "works on strict bytestrings" S.empty
+        test "works on lazy bytestrings" L.empty
+        test "works on Vector" (V.singleton ('a' :: Char))
+        test "works on SVector" (VS.singleton ('a' :: Char))
+#if MIN_VERSION_vector(0,13,2)
+        test "works on StrictVector" (VSC.singleton ('a' :: Char))
+#endif
+        test "works on UVector" (U.singleton ('a' :: Char))
+        test "works on Seq" (Seq.fromList ['a' :: Char])
+
     describe "groupAll" $ do
         it "works on lists" $ groupAll ("abcabcabc" :: String) @?= ["aaa", "bbb", "ccc"]
         it "works on texts" $ groupAll ("abcabcabc" :: Text)   @?= ["aaa", "bbb", "ccc"]
