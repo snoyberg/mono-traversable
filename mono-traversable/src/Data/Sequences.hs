@@ -1165,6 +1165,7 @@ instance IsSequence (VSC.Vector a) where
     {-# INLINE filterM #-}
     {-# INLINE replicate #-}
     {-# INLINE replicateM #-}
+    {-# INLINE groupBy #-}
     {-# INLINE tailEx #-}
     {-# INLINE initEx #-}
     {-# INLINE unsafeTail #-}
