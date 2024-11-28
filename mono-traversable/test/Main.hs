@@ -150,7 +150,7 @@ main = hspec $ do
             ocompareLength (replicate i () :: [()]) j @?= compare i j
 
     describe "groupBy" $ do
-        let test name dummy = prop name $ \(QCM.NonEmpty xs) -> do
+        let test name dummy = prop name $ \xs -> do
                 let seq' = fromListAs xs dummy
                 let listDef f = Prelude.fmap fromList . List.groupBy f . otoList
                 groupBy (==) seq' @?= listDef (==) seq'
