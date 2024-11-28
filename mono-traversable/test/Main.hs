@@ -150,13 +150,14 @@ main = hspec $ do
             ocompareLength (replicate i () :: [()]) j @?= compare i j
 
     describe "groupBy" $ do
-        let test name dummy = prop name $ \xs -> do
+        let test name dummy = prop name $ \xs (Fn2 g) -> do
                 let seq' = fromListAs xs dummy
                 let listDef f = Prelude.fmap fromList . List.groupBy f . otoList
                 groupBy (==) seq' @?= listDef (==) seq'
                 groupBy (/=) seq' @?= listDef (/=) seq'
                 groupBy (<) seq' @?= listDef (<) seq'
                 groupBy (>) seq' @?= listDef (>) seq'
+                groupBy g seq' @?= listDef g seq'
         test "works on lists" ([] :: [Char])
         test "works on texts" ("" :: Text)
         test "works on strict bytestrings" S.empty
