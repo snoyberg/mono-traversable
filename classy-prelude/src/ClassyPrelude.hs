@@ -632,15 +632,17 @@ getContents = liftIO LTextIO.getContents
 interact :: MonadIO m => (LText -> LText) -> m ()
 interact = liftIO . LTextIO.interact
 
--- | Pattern synonyms for working with sequences,
--- corresponding to [] and (x : xs) for List
+{-# COMPLETE Empty, Cons #-}
+-- | Corresponds to [] for List
 --
 -- @since 1.5.1
-{-# COMPLETE Empty, Cons #-}
 pattern Empty :: IsSequence seq => seq
 pattern Empty <- (uncons -> Nothing) where
   Empty = fromList []
 
+-- | Corresponds to (x : xs) for List
+--
+-- @since 1.5.1
 pattern Cons :: IsSequence seq => Element seq -> seq -> seq
 pattern Cons x xs <- (uncons -> Just (x, xs)) where
   Cons = cons
