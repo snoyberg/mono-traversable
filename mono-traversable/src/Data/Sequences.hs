@@ -1067,7 +1067,11 @@ instance IsSequence (V.Vector a) where
     unsnoc v
         | V.null v = Nothing
         | otherwise = Just (V.init v, V.last v)
-    --groupBy = V.groupBy
+#if MIN_VERSION_vector(0,13,0)
+    -- | since 1.0.21.1
+    groupBy = V.groupBy
+    {-# INLINE groupBy #-}
+#endif
     tailEx = V.tail
     initEx = V.init
     unsafeTail = V.unsafeTail
@@ -1218,7 +1222,11 @@ instance U.Unbox a => IsSequence (U.Vector a) where
     unsnoc v
         | U.null v = Nothing
         | otherwise = Just (U.init v, U.last v)
-    --groupBy = U.groupBy
+#if MIN_VERSION_vector(0,13,0)
+    -- | since 1.0.21.1
+    groupBy = U.groupBy
+    {-# INLINE groupBy #-}
+#endif
     tailEx = U.tail
     initEx = U.init
     unsafeTail = U.unsafeTail
@@ -1291,7 +1299,11 @@ instance VS.Storable a => IsSequence (VS.Vector a) where
     unsnoc v
         | VS.null v = Nothing
         | otherwise = Just (VS.init v, VS.last v)
-    --groupBy = U.groupBy
+#if MIN_VERSION_vector(0,13,0)
+    -- | since 1.0.21.1
+    groupBy = VS.groupBy
+    {-# INLINE groupBy #-}
+#endif
     tailEx = VS.tail
     initEx = VS.init
     unsafeTail = VS.unsafeTail

@@ -1,5 +1,10 @@
 # ChangeLog for mono-traversable
 
+## 1.0.21.1
+
+* Enabled native `groupBy` for Vector, U.Vector, VS.Vector since they have been available since vector-0.13.0.0
+  [#251](https://github.com/snoyberg/mono-traversable/issues/251)
+
 ## 1.0.21.0
 
 * Support for vector 0.13.2.0, adding instances for [`Data.Vector.Strict`](https://hackage.haskell.org/package/vector-0.13.2.0/docs/Data-Vector-Strict.html) data structure.
