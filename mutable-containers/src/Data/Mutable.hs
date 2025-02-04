@@ -34,11 +34,15 @@ module Data.Mutable
     , asBDeque
     , DLList
     , asDLList
+    , Array (..)
+    , ArrayMemoryProperties (..)
       -- * Type classes
     , MutableContainer (..)
     , MutableRef (..)
     , MutableAtomicRef (..)
     , MutableCollection (..)
+    , MutableAllocatedCollection (..)
+    , MutableIndexingWrite (..)
     , MutablePushFront (..)
     , MutablePushBack (..)
     , MutablePopFront (..)
@@ -63,6 +67,7 @@ import Data.Mutable.PRef
 import Data.Mutable.BRef
 import Data.Mutable.Deque
 import Data.Mutable.DLList
+import Data.Mutable.Array
 import Data.Vector.Unboxed (Unbox)
 import Data.Primitive (Prim)
 import Data.Vector.Storable (Storable)

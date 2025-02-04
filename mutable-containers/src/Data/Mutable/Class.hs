@@ -21,6 +21,9 @@ module Data.Mutable.Class
     , MutableRef (..)
     , MutableAtomicRef (..)
     , MutableCollection (..)
+    , MutableAllocatedCollection (..)
+    , CollIndex
+    , MutableIndexingWrite (..)
     , MutablePushFront (..)
     , MutablePushBack (..)
     , MutablePopFront (..)
@@ -38,6 +41,16 @@ import           Data.MonoTraversable    (Element)
 import           Data.Primitive.MutVar
 import qualified Data.Sequences          as Seqs
 import           Data.STRef
+import           Control.Monad.ST                  (ST)
+import qualified Data.Vector.Mutable               as MV
+import qualified Data.Vector.Primitive.Mutable     as MPV
+import qualified Data.Vector.Storable.Mutable      as MSV
+import qualified Data.Vector.Unboxed.Mutable       as MUV
+import qualified GHC.Arr
+import qualified Foreign.Marshal.Array             as Foreign
+import           Foreign.Ptr                       (Ptr)
+import           Foreign.Storable                  (Storable)
+import qualified Foreign.Storable                  as Foreign
 
 -- | The parent typeclass for all mutable containers.
 --
@@ -55,6 +68,18 @@ instance MutableContainer (STRef s a) where
     type MCState (STRef s a) = s
 instance MutableContainer (MutVar s a) where
     type MCState (MutVar s a) = s
+instance MutableContainer (MV.MVector s a) where
+    type MCState (MV.MVector s a) = s
+instance MutableContainer (MPV.MVector s a) where
+    type MCState (MPV.MVector s a) = s
+instance MutableContainer (MSV.MVector s a) where
+    type MCState (MSV.MVector s a) = s
+instance MutableContainer (MUV.MVector s a) where
+    type MCState (MUV.MVector s a) = s
+instance MutableContainer (GHC.Arr.STArray s i e) where
+    type MCState (GHC.Arr.STArray s i e) = s
+instance MutableContainer (Ptr a) where
+    type MCState (Ptr a) = PrimState IO
 
 -- | Typeclass for single-cell mutable references.
 --
@@ -202,6 +227,90 @@ instance Monoid w => MutableCollection (MutVar s w) where
     type CollElement (MutVar s w) = Element w
     newColl = newRef mempty
     {-# INLINE newColl #-}
+instance MutableCollection (MV.MVector s a) where
+    type CollElement (MV.MVector s a) = a
+    newColl = MV.new 0
+instance MPV.Prim a => MutableCollection (MPV.MVector s a) where
+    type CollElement (MPV.MVector s a) = a
+    newColl = MPV.new 0
+instance Storable a => MutableCollection (MSV.MVector s a) where
+    type CollElement (MSV.MVector s a) = a
+    newColl = MSV.new 0
+instance MUV.Unbox a => MutableCollection (MUV.MVector s a) where
+    type CollElement (MUV.MVector s a) = a
+    newColl = MUV.new 0
+instance (GHC.Arr.Ix i, Num i) => MutableCollection (GHC.Arr.STArray s i e) where
+    type CollElement (GHC.Arr.STArray s i e) = e
+    newColl = primToPrim $ GHC.Arr.newSTArray (0,0) undefined
+instance Storable a => MutableCollection (Ptr a) where
+    type CollElement (Ptr a) = a
+    newColl = primToPrim $ Foreign.mallocArray 0
+
+-- | Containers that can be initialized with n elements.
+type family CollIndex c
+
+class MutableCollection c => MutableAllocatedCollection c where
+    newCollOfSize :: (PrimMonad m, PrimState m ~ MCState c)
+            => CollIndex c
+            -> m c
+type instance CollIndex (MV.MVector s a) = Int
+instance MutableAllocatedCollection (MV.MVector s a) where
+    newCollOfSize = MV.new
+    {-# INLINE newCollOfSize #-}
+type instance CollIndex (MPV.MVector s a) = Int
+instance MPV.Prim a => MutableAllocatedCollection (MPV.MVector s a) where
+    newCollOfSize = MPV.new
+    {-# INLINE newCollOfSize #-}
+type instance CollIndex (MSV.MVector s a) = Int
+instance Storable a => MutableAllocatedCollection (MSV.MVector s a) where
+    newCollOfSize = MSV.new
+    {-# INLINE newCollOfSize #-}
+type instance CollIndex (MUV.MVector s a) = Int
+instance MUV.Unbox a => MutableAllocatedCollection (MUV.MVector s a) where
+    newCollOfSize = MUV.new
+    {-# INLINE newCollOfSize #-}
+type instance CollIndex (GHC.Arr.STArray s i e) = i
+instance (GHC.Arr.Ix i, Num i) => MutableAllocatedCollection (GHC.Arr.STArray s i e) where
+    newCollOfSize x = primToPrim $ GHC.Arr.newSTArray (0,x) undefined
+    {-# INLINE newCollOfSize #-}
+type instance CollIndex (Ptr a) = Int
+instance Storable a => MutableAllocatedCollection (Ptr a) where
+    newCollOfSize = primToPrim . Foreign.mallocArray 
+    {-# INLINE newCollOfSize #-}
+
+class MutableAllocatedCollection c => MutableIndexingWrite c where
+--    readIndex :: (PrimMonad m, PrimState m ~ MCState c) => c -> CollIndex c -> m (CollElement c)
+    writeIndex :: (PrimMonad m, PrimState m ~ MCState c) => c -> CollIndex c -> CollElement c -> m ()
+instance MutableIndexingWrite (MV.MVector s a) where
+--    readIndex = MV.read
+--    {-# INLINE readIndex #-}
+    writeIndex = MV.write
+    {-# INLINE writeIndex #-}
+instance MPV.Prim a => MutableIndexingWrite (MPV.MVector s a) where
+--    readIndex = MPV.read
+--    {-# INLINE readIndex #-}
+    writeIndex = MPV.write
+    {-# INLINE writeIndex #-}
+instance Storable a => MutableIndexingWrite (MSV.MVector s a) where
+--    readIndex = MSV.read
+--    {-# INLINE readIndex #-}
+    writeIndex = MSV.write
+    {-# INLINE writeIndex #-}
+instance MUV.Unbox a => MutableIndexingWrite (MUV.MVector s a) where
+--    readIndex = MUV.read
+--    {-# INLINE readIndex #-}
+    writeIndex = MUV.write
+    {-# INLINE writeIndex #-}
+instance (GHC.Arr.Ix i, Num i) => MutableIndexingWrite (GHC.Arr.STArray s i e) where
+--    readIndex c i = primToPrim $ GHC.Arr.readSTArray c i
+--    {-# INLINE readIndex #-}
+    writeIndex c i e = primToPrim $ GHC.Arr.writeSTArray c i e
+    {-# INLINE writeIndex #-}
+instance Storable a => MutableIndexingWrite (Ptr a) where
+--    readIndex p i = primToPrim $ Foreign.peekElemOff p i
+--    {-# INLINE readIndex #-}
+    writeIndex p i e = primToPrim $ Foreign.pokeElemOff p i e
+    {-# INLINE writeIndex #-}
 
 -- | Take a value from the front of the collection, if available.
 --
