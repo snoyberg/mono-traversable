@@ -1328,10 +1328,8 @@ instance MonoComonad (ViewR a) where
 -- in order to provide guarantees of correctness (see, for instance,
 -- "Data.NonNull").
 --
--- This should have a @Semigroup@ superclass constraint, however, due to
--- @Semigroup@ only recently moving to base, some packages do not provide
--- instances.
-class MonoFoldable mono => GrowingAppend mono
+-- Requires @Semigroup@ superclass @since 1.1.0.0
+class (Semigroup mono, MonoFoldable mono) => GrowingAppend mono
 
 instance GrowingAppend (Seq.Seq a)
 instance GrowingAppend [a]
