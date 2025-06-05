@@ -17,7 +17,11 @@ import Data.Int (Int64, Int)
 import qualified Data.List as List
 import qualified Data.List.Split as List
 import qualified Control.Monad (filterM, replicateM)
+#if MIN_VERSION_GLASGOW_HASKELL(9,4,0,0)
+import Prelude (type (~), Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), fst, snd, Integral, ($), flip, maybe, error, (||))
+#else
 import Prelude (Bool (..), Monad (..), Maybe (..), Ordering (..), Ord (..), Eq (..), Functor (..), fromIntegral, otherwise, (-), fst, snd, Integral, ($), flip, maybe, error, (||))
+#endif
 import Data.Char (Char, isSpace)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Lazy as L
