@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -33,16 +33,13 @@ library
       src
   ghc-options: -Wall -fno-warn-orphans
   build-depends:
-      async
-    , base >=4.13 && <5
+      base >=4.13 && <5
     , basic-prelude >=0.7
-    , bifunctors
     , bytestring
     , chunked-data >=0.3
     , containers >=0.4.2
     , deepseq
     , dlist >=0.7
-    , ghc-prim
     , hashable
     , mono-traversable >=1.0
     , mono-traversable-instances

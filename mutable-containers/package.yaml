@@ -25,7 +25,6 @@ library:
   dependencies:
   - primitive >=0.5.2.1
   - mono-traversable
-  - ghc-prim
 tests:
   test:
     main: Spec.hs
