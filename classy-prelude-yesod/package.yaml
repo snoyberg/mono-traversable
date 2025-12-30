@@ -14,7 +14,6 @@ extra-source-files:
 
 dependencies:
 - base >= 4.13 && <5
-- classy-prelude >=1.5.0 && <1.5.1
 - classy-prelude-conduit >=1.5.0 && <1.5.1
 - yesod >=1.2
 - yesod-newsfeed
@@ -22,7 +21,6 @@ dependencies:
 - http-types
 - http-conduit
 - persistent >=1.1
-- aeson
 - data-default
 library:
   source-dirs: src
