@@ -357,7 +357,13 @@ main = hspec $ do
         test "List" ([5 :: Int])
 
     describe "Containers" $ do
-        let test typ dummy xlookup xinsert xdelete = describe typ $ do
+        let test :: (IsMap m, Eq m, Show m, ContainerKey m ~ Int, MapValue m ~ Int)
+                 => String -> m
+                 -> (Int -> m -> Maybe Int)
+                 -> (Int -> Int -> m -> m)
+                 -> (Int -> m -> m)
+                 -> Spec
+            test typ dummy xlookup xinsert xdelete = describe typ $ do
                 prop "difference" $ \(DuplPairs xs) (DuplPairs ys) ->
                     let m1 = mapFromList xs `difference` mapFromList ys
                         m2 = mapFromListAs (xs `difference` ys) dummy
