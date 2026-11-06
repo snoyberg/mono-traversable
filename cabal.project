@@ -3,3 +3,11 @@ packages:
 
 program-options
   ghc-options: -Wall -Werror
+
+tests: True
+
+-- https://github.com/psibi/crypton-conduit/issues/5
+-- https://github.com/yesodweb/yesod/issues/1917
+constraints:
+    crypton <2.1
+  , ram < 0
