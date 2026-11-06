@@ -16,8 +16,6 @@ module Data.Builder
     , textToBuilder
     ) where
 
-import Data.Monoid (Monoid)
-
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TB

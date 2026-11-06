@@ -44,7 +44,6 @@ module Data.MinLen
 
 import Prelude (Num (..), Maybe (..), Int, Ordering (..), Eq, Ord (..), Read, Show, Functor (..), ($), flip, const)
 import Data.Data (Data)
-import Data.Typeable (Typeable)
 import Control.Category
 import Data.MonoTraversable
 import Data.Sequences
@@ -161,7 +160,7 @@ type instance MaxNat (Succ x) (Succ y) = Succ (MaxNat x y)
 newtype MinLen nat mono =
     MinLen {
         unMinLen :: mono -- ^ Get the monomorphic container out of a 'MinLen' wrapper.
-    } deriving (Eq, Ord, Read, Show, Data, Typeable)
+    } deriving (Eq, Ord, Read, Show, Data)
 
 type instance Element (MinLen nat mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (MinLen nat mono)
