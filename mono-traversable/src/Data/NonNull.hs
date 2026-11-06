@@ -51,7 +51,7 @@ import Data.MonoTraversable
 import Data.Sequences
 import Control.Monad.Trans.State.Strict (evalState, state)
 
-data NullError = NullError String deriving (Show, Typeable)
+data NullError = NullError String deriving Show
 instance Exception NullError
 
 -- | A monomorphic container that is not null.
@@ -59,7 +59,7 @@ newtype NonNull mono = NonNull
     { toNullable :: mono
     -- ^ __Safely__ convert from a non-null monomorphic container to a nullable monomorphic container.
     }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Read, Show, Data)
 type instance Element (NonNull mono) = Element mono
 deriving instance MonoFunctor mono => MonoFunctor (NonNull mono)
 deriving instance MonoFoldable mono => MonoFoldable (NonNull mono)

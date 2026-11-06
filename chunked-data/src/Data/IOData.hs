@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP          #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 module Data.IOData where
 
 import           Control.Monad                 (liftM)
@@ -12,7 +13,11 @@ import qualified Data.Text                     as Text
 import qualified Data.Text.IO                  as Text
 import qualified Data.Text.Lazy                as LText
 import qualified Data.Text.Lazy.IO             as LText
+#if MIN_VERSION_GLASGOW_HASKELL(9,4,0,0)
+import           Prelude                       (type (~), Char, flip, ($), (.), FilePath)
+#else
 import           Prelude                       (Char, flip, ($), (.), FilePath)
+#endif
 import qualified Prelude
 import           System.IO                     (Handle)
 import qualified System.IO
@@ -33,18 +38,18 @@ class IOData a where
 instance IOData ByteString.ByteString where
     readFile = liftIO . ByteString.readFile
     writeFile fp = liftIO . ByteString.writeFile fp
-    getLine = liftIO ByteString.getLine
+    getLine = liftIO ByteString8.getLine
     hGetContents = liftIO . ByteString.hGetContents
-    hGetLine = liftIO . ByteString.hGetLine
+    hGetLine = liftIO . ByteString8.hGetLine
     hPut h = liftIO . ByteString.hPut h
     hPutStrLn h = liftIO . ByteString8.hPutStrLn h
     hGetChunk = liftIO . flip ByteString.hGetSome defaultChunkSize
 instance IOData LByteString.ByteString where
     readFile = liftIO . LByteString.readFile
     writeFile fp = liftIO . LByteString.writeFile fp
-    getLine = liftM LByteString.fromStrict (liftIO ByteString.getLine)
+    getLine = liftM LByteString.fromStrict (liftIO ByteString8.getLine)
     hGetContents = liftIO . LByteString.hGetContents
-    hGetLine = liftM LByteString.fromStrict . liftIO . ByteString.hGetLine
+    hGetLine = liftM LByteString.fromStrict . liftIO . ByteString8.hGetLine
     hPut h = liftIO . LByteString.hPut h
     hPutStrLn h lbs = liftIO $ do
         LByteString.hPutStr h lbs

@@ -2,6 +2,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 module ClassyPrelude
     ( -- * CorePrelude
       module CorePrelude
@@ -152,9 +153,15 @@ module ClassyPrelude
     ) where
 
 import qualified Prelude
+#if MIN_VERSION_GLASGOW_HASKELL(9,4,0,0)
+import Prelude (type (~))
+#endif
 import Control.Applicative ((<**>),liftA,liftA2,liftA3,Alternative (..), optional)
+#if MIN_VERSION_base(4,19,0)
 import Data.Functor hiding (unzip)
-import Control.Exception (assert)
+#else
+import Data.Functor
+#endif
 import Control.DeepSeq (deepseq, ($!!), force, NFData (..))
 import Control.Monad (when, unless, void, liftM, ap, forever, join, replicateM_, guard, MonadPlus (..), (=<<), (>=>), (<=<), liftM2, liftM3, liftM4, liftM5)
 import qualified Control.Concurrent.STM as STM
@@ -200,7 +207,9 @@ import Data.Time
     , getCurrentTime
     , defaultTimeLocale
     )
+#if MIN_VERSION_time(1,10,0)
 import qualified Data.Time as Time
+#endif
 
 import qualified Data.Set as Set
 import qualified Data.Map as Map

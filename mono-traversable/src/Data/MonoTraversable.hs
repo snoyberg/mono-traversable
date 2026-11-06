@@ -47,9 +47,15 @@ import           Data.Word            (Word8)
 import Data.Int (Int, Int64)
 import           GHC.Exts             (build)
 import           GHC.Generics         ((:.:), (:*:), (:+:)(..), K1(..), M1(..), Par1(..), Rec1(..), U1(..), V1)
+#if MIN_VERSION_GLASGOW_HASKELL(9,4,0,0)
+import           Prelude              (type (~), Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
+                                       (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
+                                       (==), seq, otherwise, Eq, Ord, (-), (*))
+#else
 import           Prelude              (Bool (..), const, Char, flip, IO, Maybe (..), Either (..),
                                        (+), Integral, Ordering (..), compare, fromIntegral, Num, (>=),
                                        (==), seq, otherwise, Eq, Ord, (-), (*))
+#endif
 import qualified Prelude
 import qualified Data.ByteString.Internal as Unsafe
 import qualified Foreign.ForeignPtr.Unsafe as Unsafe
