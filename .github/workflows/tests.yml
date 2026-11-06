@@ -12,6 +12,7 @@ jobs:
     name: Stack
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - macos-latest
@@ -78,6 +79,7 @@ jobs:
     name: Cabal ${{ matrix.ghc }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - macos-latest
