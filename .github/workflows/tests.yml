@@ -12,23 +12,22 @@ jobs:
     name: Stack
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - macos-latest
           - ubuntu-latest
           - windows-latest
+        # manually sync with cabal
         versions:
-          #- <lts version> <ghc version>
-          - 22.28 9.6.6
+          #- <snapshot version> <ghc version>
+          # - nosnapshot 9.14
+          - nightly-2026-11-03 9.12.4
+          - 24.11 9.10.3
+          - 23.28 9.8.4
+          - 22.44 9.6.7
           - 21.25 9.4.8
           - 20.26 9.2.8
-          - 19.33 9.0.2
-          - 18.28 8.10.7
-        exclude:
-          - os: macos-latest
-            versions: 19.33 9.0.2
-          - os: macos-latest
-            versions: 18.28 8.10.7
     steps:
       - name: Parse lts and ghc versions
         shell: sh
@@ -76,40 +75,46 @@ jobs:
             >&2 echo 'ERROR: Source Changed After Build'
             exit 1
           fi
-
   Cabal:
-    name: Cabal
+    name: Cabal ${{ matrix.ghc }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - macos-latest
-          - macos-13
           - ubuntu-latest
           - windows-latest
+        # manually sync with stack
+        ghc:
+          - 9.14
+          - 9.12.4
+          - 9.10.3
+          - 9.8.4
+          - 9.6.7
+          - 9.4.8
+          - 9.2.8
     steps:
+      - name: Clone project
+        uses: actions/checkout@v7
       - name: Setup Haskell
         id: setup-haskell-cabal
         uses: haskell-actions/setup@v2.7
         with:
-          ghc-version: 9.6.6
-      - name: Clone project
-        uses: actions/checkout@v4
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: "latest"
+      - name: "Cabal: Update cabal package database, generate build plan"
+        run: |
+          cabal update
+          cabal build all --dry-run
       - name: Use Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
-          key: ${{ matrix.os }}_cabal_${{ github.head_ref }}
-          restore-keys: |
-            ${{ matrix.os }}_cabal_${{ github.head_ref }}
-            ${{ matrix.os }}_cabal_${{ github.base_ref }}
-            ${{ matrix.os }}_cabal_
-            ${{ matrix.os }}_cabal
+          key: ${{ matrix.os }}_cabal_ghc_${{ matrix.ghc }}_${{ hashFiles('**/plan.json') }}
+          restore-keys: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-
           path: |
             ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
             dist-newstyle
       - name: Build and run tests
-        shell: bash
         run: |
-          ghc --version
-          cabal --version
-          cabal test --minimize-conflict-set -O0 all
+          cabal test --enable-tests --minimize-conflict-set -O0 all

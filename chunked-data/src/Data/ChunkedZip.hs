@@ -4,7 +4,9 @@ module Data.ChunkedZip where
 
 import Prelude hiding (zipWith, zipWith3)
 import Control.Arrow ((&&&), (***))
+#if MIN_VERSION_base(4,19,0)
 import qualified Data.Functor as Functor
+#endif
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)

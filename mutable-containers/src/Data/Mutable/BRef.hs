@@ -12,7 +12,6 @@ module Data.Mutable.BRef
     ) where
 
 import           Control.Monad               (liftM)
-import           Data.Monoid                 (Monoid, mempty)
 import           Data.MonoTraversable        (Element)
 import           Data.Mutable.Class
 import           Data.Sequences              (IsSequence)
