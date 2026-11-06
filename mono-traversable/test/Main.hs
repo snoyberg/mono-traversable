@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wwarn -Wno-orphans #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -6,6 +7,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ExplicitNamespaces #-}
 
 module Main where
 
@@ -22,7 +24,6 @@ import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.HUnit ((@?=))
 import Test.QuickCheck hiding (NonEmptyList(..))
-import Test.QuickCheck.Function (pattern Fn)
 import qualified Test.QuickCheck.Modifiers as QCM
 
 import Data.Text (Text)
@@ -51,9 +52,15 @@ import Control.Arrow (second)
 import Control.Applicative
 import Control.Monad.Trans.Writer
 
-import Prelude (Bool (..), ($), IO, Eq (..), fromIntegral, Ord (..), String, mod, Int, Integer, show,
-                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe, Char)
 import qualified Prelude
+
+#if MIN_VERSION_GLASGOW_HASKELL(9,4,0,0)
+import Prelude (type (~), Bool (..), ($), IO, Eq (..), fromIntegral, Ord (..), String, mod, Int, Integer, show,
+                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe, Char, odd, minimum, maximum, id, fmap)
+#else
+import Prelude (Bool (..), ($), IO, Eq (..), fromIntegral, Ord (..), String, mod, Int, Integer, show,
+                return, asTypeOf, (.), Show, (+), succ, Maybe (..), (*), mod, map, flip, otherwise, (-), div, maybe, Char, odd, minimum, maximum, id, fmap)
+#endif
 
 newtype NonEmpty' a = NonEmpty' (NE.NonEmpty a)
     deriving (Show, Eq)
@@ -303,7 +310,7 @@ main = hspec $ do
                 (NE.toList ne :: [Int]) @?= NN.toNullable (NN.toMinList ne)
         describe "toNonEmpty" $ do
             it "converts nonnull to nonempty" $ do
-                NN.toNonEmpty (NN.impureNonNull [1,2,3]) @?= NE.fromList [1,2,3]
+                NN.toNonEmpty (NN.impureNonNull [1,2,3]) @?= NE.fromList [1::Int,2,3]
 
         describe "mapNonNull" $ do
             prop "mapNonNull id == id" $ \x xs ->
