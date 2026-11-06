@@ -104,7 +104,7 @@ jobs:
       - name: "Cabal: Update cabal package database, generate build plan"
         run: |
           cabal update
-          cabal build --dry-run
+          cabal build all --dry-run
       - name: Use Cache
         uses: actions/cache@v6
         with:
