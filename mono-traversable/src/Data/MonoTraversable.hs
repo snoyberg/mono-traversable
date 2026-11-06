@@ -1337,28 +1337,6 @@ class MonoFunctor mono => MonoComonad mono where
     -- glimpsed from the given function.
     oextend :: (mono -> Element mono) -> mono -> mono
 
--- Not Comonad
-instance MonoComonad (ViewL a) where
-    oextract ~(x :< _) = x
-    {-# INLINE oextract #-}
-    oextend f w@(~(_ :< xxs)) =
-        f w :< case Seq.viewl xxs of
-                 EmptyL -> Seq.empty
-                 xs     -> case oextend f xs of
-                             EmptyL  -> Seq.empty
-                             y :< ys -> y Seq.<| ys
-
-instance MonoComonad (ViewR a) where
-    oextract ~(_ :> x) = x
-    {-# INLINE oextract #-}
-    oextend f w@(~(xxs :> _)) =
-        (case Seq.viewr xxs of
-           EmptyR -> Seq.empty
-           xs     -> case oextend f xs of
-                       EmptyR  -> Seq.empty
-                       ys :> y -> ys Seq.|> y
-        ) :> f w
-
 -- | Containers which, when two values are combined, the combined length is no
 -- less than the larger of the two inputs. In code:
 --
