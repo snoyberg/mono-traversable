@@ -31,7 +31,7 @@ library:
   - hashable
   #- lifted-base >=0.2
   #- lifted-async >=0.3
-  - async
+  #- async
   - mono-traversable >=1.0
   - mono-traversable-instances
   #- exceptions >=0.5
@@ -39,11 +39,10 @@ library:
   - time >= 1.5
   #- time-locale-compat
   - chunked-data >=0.3
-  - ghc-prim
   - stm
   - primitive
   - mtl
-  - bifunctors
+  #- bifunctors
   - mutable-containers >=0.3 && <0.4
   - dlist >=0.7
   #- transformers-base

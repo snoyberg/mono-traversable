@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.39.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -32,9 +32,7 @@ library
   hs-source-dirs:
       src
   build-depends:
-      aeson
-    , base >=4.13 && <5
-    , classy-prelude ==1.5.0.*
+      base >=4.13 && <5
     , classy-prelude-conduit ==1.5.0.*
     , data-default
     , http-conduit
