@@ -1,7 +1,9 @@
 /dist/
 *.swp
+.ghc.environment.*
 .cabal-sandbox/
 cabal.sandbox.config
+cabal.project.local
 .stack-work/
 tarballs/
 *~
